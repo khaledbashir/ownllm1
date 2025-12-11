@@ -33,7 +33,7 @@ import Turkish from "./tr/common.js";
 import Arabic from "./ar/common.js";
 import Danish from "./da/common.js";
 import Japanese from "./ja/common.js";
-import Lativian from "./lv/common.js";
+import Latvian from "./lv/common.js";
 import Polish from "./pl/common.js";
 import Romanian from "./ro/common.js";
 
@@ -97,7 +97,7 @@ export const resources = {
     common: Japanese,
   },
   lv: {
-    common: Lativian,
+    common: Latvian,
   },
   pl: {
     common: Polish,

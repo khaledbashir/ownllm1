@@ -178,6 +178,49 @@ function workspaceThreadEndpoints(app) {
     }
   );
 
+  // Get thread notes
+  app.get(
+    "/workspace/:slug/thread/:threadSlug/notes",
+    [
+      validatedRequest,
+      flexUserRoleValid([ROLES.all]),
+      validWorkspaceAndThreadSlug,
+    ],
+    async (_, response) => {
+      try {
+        const thread = response.locals.thread;
+        response.status(200).json({ notes: thread.notes || "" });
+      } catch (e) {
+        console.error(e.message, e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
+
+  // Update thread notes
+  app.put(
+    "/workspace/:slug/thread/:threadSlug/notes",
+    [
+      validatedRequest,
+      flexUserRoleValid([ROLES.all]),
+      validWorkspaceAndThreadSlug,
+    ],
+    async (request, response) => {
+      try {
+        const { notes } = reqBody(request);
+        const currentThread = response.locals.thread;
+        const { thread, message } = await WorkspaceThread.update(
+          currentThread,
+          { notes: notes || "" }
+        );
+        response.status(200).json({ thread, message });
+      } catch (e) {
+        console.error(e.message, e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
+
   app.delete(
     "/workspace/:slug/thread/:threadSlug/delete-edited-chats",
     [

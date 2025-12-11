@@ -147,7 +147,7 @@ const WorkspaceThread = {
           try {
             const chatResult = JSON.parse(msg.data);
             handleChat(chatResult);
-          } catch {}
+          } catch { }
         },
         onerror(err) {
           handleChat({
@@ -208,6 +208,35 @@ const WorkspaceThread = {
         console.log(e);
         return false;
       });
+  },
+  getNotes: async function (workspaceSlug, threadSlug) {
+    const { notes } = await fetch(
+      `${API_BASE}/workspace/${workspaceSlug}/thread/${threadSlug}/notes`,
+      {
+        method: "GET",
+        headers: baseHeaders(),
+      }
+    )
+      .then((res) => res.json())
+      .catch(() => {
+        return { notes: "" };
+      });
+    return notes;
+  },
+  updateNotes: async function (workspaceSlug, threadSlug, notes) {
+    const { thread, message } = await fetch(
+      `${API_BASE}/workspace/${workspaceSlug}/thread/${threadSlug}/notes`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ notes }),
+        headers: baseHeaders(),
+      }
+    )
+      .then((res) => res.json())
+      .catch((e) => {
+        return { thread: null, message: e.message };
+      });
+    return { thread, message };
   },
 };
 

@@ -1,4 +1,7 @@
 /** @type {import('tailwindcss').Config} */
+import tailwindcssAnimate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
+
 export default {
   darkMode: "class",
   content: {
@@ -287,6 +290,8 @@ export default {
     }
   ],
   plugins: [
+    tailwindcssAnimate,
+    typography,
     function ({ addVariant }) {
       addVariant('light', '.light &') // Add the `light:` variant
       addVariant('pwa', '.pwa &') // Add the `pwa:` variant

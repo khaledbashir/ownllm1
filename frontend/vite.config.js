@@ -18,8 +18,8 @@ export default defineConfig({
     format: 'es'
   },
   server: {
-    port: 3000,
-    host: "localhost"
+    port: 3002,
+    host: "0.0.0.0"
   },
   define: {
     "process.env": process.env

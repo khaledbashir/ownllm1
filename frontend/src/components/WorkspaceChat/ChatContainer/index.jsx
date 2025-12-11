@@ -22,6 +22,8 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 import { ChatTooltips } from "./ChatTooltips";
 import { MetricsProvider } from "./ChatHistory/HistoricalMessage/Actions/RenderMetrics";
+import ThreadNotes from "../ThreadNotes";
+import { ChatText, NotePencil } from "@phosphor-icons/react";
 
 export default function ChatContainer({ workspace, knownHistory = [] }) {
   const { threadSlug = null } = useParams();
@@ -30,7 +32,13 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
   const [chatHistory, setChatHistory] = useState(knownHistory);
   const [socketId, setSocketId] = useState(null);
   const [websocket, setWebsocket] = useState(null);
+  const [activeTab, setActiveTab] = useState("chat");
   const { files, parseAttachments } = useContext(DndUploaderContext);
+
+  // Reset to chat tab when thread changes
+  useEffect(() => {
+    setActiveTab("chat");
+  }, [threadSlug]);
 
   // Maintain state of message from whatever is in PromptInput
   const handleMessageChange = (event) => {
@@ -302,29 +310,65 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
   return (
     <div
       style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
-      className="transition-all duration-500 relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[16px] bg-theme-bg-secondary w-full h-full overflow-y-scroll no-scroll z-[2]"
+      className="transition-all duration-500 relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[16px] bg-theme-bg-secondary w-full h-full overflow-hidden z-[2] flex flex-col"
     >
       {isMobile && <SidebarMobileHeader />}
-      <DnDFileUploaderWrapper>
-        <MetricsProvider>
-          <ChatHistory
-            history={chatHistory}
-            workspace={workspace}
-            sendCommand={sendCommand}
-            updateHistory={setChatHistory}
-            regenerateAssistantMessage={regenerateAssistantMessage}
-            hasAttachments={files.length > 0}
-          />
-        </MetricsProvider>
-        <PromptInput
-          submit={handleSubmit}
-          onChange={handleMessageChange}
-          isStreaming={loadingResponse}
-          sendCommand={sendCommand}
-          attachments={files}
-        />
-      </DnDFileUploaderWrapper>
-      <ChatTooltips />
+
+      {/* Tab Header - Only show when in a thread */}
+      {threadSlug && (
+        <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
+          <button
+            onClick={() => setActiveTab("chat")}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              }`}
+          >
+            <ChatText size={18} />
+            Chat
+          </button>
+          <button
+            onClick={() => setActiveTab("notes")}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              }`}
+          >
+            <NotePencil size={18} />
+            Notes
+          </button>
+        </div>
+      )}
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto no-scroll">
+        {activeTab === "chat" ? (
+          <DnDFileUploaderWrapper>
+            <MetricsProvider>
+              <ChatHistory
+                history={chatHistory}
+                workspace={workspace}
+                sendCommand={sendCommand}
+                updateHistory={setChatHistory}
+                regenerateAssistantMessage={regenerateAssistantMessage}
+                hasAttachments={files.length > 0}
+              />
+            </MetricsProvider>
+            <PromptInput
+              submit={handleSubmit}
+              onChange={handleMessageChange}
+              isStreaming={loadingResponse}
+              sendCommand={sendCommand}
+              attachments={files}
+            />
+          </DnDFileUploaderWrapper>
+        ) : (
+          <ThreadNotes workspace={workspace} />
+        )}
+      </div>
+
+      {activeTab === "chat" && <ChatTooltips />}
     </div>
   );
 }
+
