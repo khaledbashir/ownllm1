@@ -62,6 +62,8 @@ yarn dev:all
 ```
 This will start the server, frontend, and collector in development mode. Changes to the code will be hot reloaded.
 
+If you develop on a remote machine/VPS, VS Code's **Remote - SSH (Antigravity)** extension is a good default for a stable workflow.
+
 ## Best practices for pull requests
 
 For the best chance of having your pull request accepted, please follow these guidelines:

@@ -84,6 +84,9 @@ model users {
   prompt_history              prompt_history[]
   desktop_mobile_devices      desktop_mobile_devices[]
   workspace_parsed_files      workspace_parsed_files[]
+  artifacts                   artifacts[]
+  pdf_templates               pdf_templates[]
+  smart_plugins               smart_plugins[]
 }
 
 model recovery_codes {
@@ -152,6 +155,8 @@ model workspaces {
   workspace_agent_invocations  workspace_agent_invocations[]
   prompt_history               prompt_history[]
   workspace_parsed_files       workspace_parsed_files[]
+  artifacts                    artifacts[]
+  smart_plugins                smart_plugins[]
 }
 
 model workspace_threads {
@@ -393,3 +398,62 @@ model workspace_parsed_files {
   @@index([workspaceId])
   @@index([userId])
 }
+
+model artifacts {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String
+  language    String
+  userId      Int?
+  workspaceId Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt // using @updatedAt for auto-update
+
+  user        users?     @relation(fields: [userId], references: [id])
+  workspace   workspaces @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model pdf_templates {
+  id             Int      @id @default(autoincrement())
+  name           String
+  logoPath       String?
+  headerText     String?
+  footerText     String?
+  primaryColor   String   @default("#3b82f6")
+  secondaryColor String   @default("#1e293b")
+  fontFamily     String   @default("Inter")
+  userId         Int?
+  isDefault      Boolean  @default(false)
+  backgroundImage String?
+  cssOverrides   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model smart_plugins {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  schema      Json
+  uiConfig    Json?
+  active      Boolean   @default(true)
+  workspaceId Int
+  createdBy   Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspace   workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        users?     @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@index([createdBy])
+}
+

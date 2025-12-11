@@ -129,8 +129,9 @@ function systemEndpoints(app) {
           message: null,
         });
       } else {
-        res.status(500).json({
-          success: false,
+        res.status(200).json({
+          valid: false,
+          user: null,
           message: "Multi-User Mode is not enabled.",
         });
       }

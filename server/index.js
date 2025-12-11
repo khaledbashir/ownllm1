@@ -28,6 +28,9 @@ const { browserExtensionEndpoints } = require("./endpoints/browserExtension");
 const { communityHubEndpoints } = require("./endpoints/communityHub");
 const { agentFlowEndpoints } = require("./endpoints/agentFlows");
 const { mcpServersEndpoints } = require("./endpoints/mcpServers");
+const { artifactsEndpoints } = require("./endpoints/artifacts");
+const { templatesEndpoints } = require("./endpoints/templates");
+const { smartPluginsEndpoints } = require("./endpoints/smartPlugins");
 const { mobileEndpoints } = require("./endpoints/mobile");
 const { httpLogger } = require("./middleware/httpLogger");
 const app = express();
@@ -78,6 +81,9 @@ developerEndpoints(app, apiRouter);
 communityHubEndpoints(apiRouter);
 agentFlowEndpoints(apiRouter);
 mcpServersEndpoints(apiRouter);
+artifactsEndpoints(apiRouter);
+templatesEndpoints(apiRouter);
+smartPluginsEndpoints(apiRouter);
 mobileEndpoints(apiRouter);
 
 // Externally facing embedder endpoints

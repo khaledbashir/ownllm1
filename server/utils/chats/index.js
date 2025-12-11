@@ -4,6 +4,75 @@ const { resetMemory } = require("./commands/reset");
 const { convertToPromptHistory } = require("../helpers/chat/responses");
 const { SlashCommandPresets } = require("../../models/slashCommandsPresets");
 const { SystemPromptVariables } = require("../../models/systemPromptVariables");
+const { SmartPlugins } = require("../../models/smartPlugins");
+
+const SMART_PLUGIN_PROMPT_CACHE_TTL_MS = 30_000;
+const SMART_PLUGIN_PROMPT_MAX_CHARS = 3_000;
+const smartPluginPromptCache = new Map();
+
+function safeTrimTo(text, maxChars) {
+  if (typeof text !== "string") return "";
+  if (text.length <= maxChars) return text;
+  return text.slice(0, Math.max(0, maxChars - 3)) + "...";
+}
+
+function buildSmartPluginsAppendix(plugins = []) {
+  if (!Array.isArray(plugins) || plugins.length === 0) return "";
+
+  const lines = [
+    "\n\nSmart Plugins (data-driven; no code execution):",
+    "- When asked to produce a Smart Plugin table, respond with a fenced JSON code block.",
+    "- Format: a JSON array of row objects; keys must match the plugin field keys.",
+    "- Do not include HTML/JS; output plain JSON only.",
+  ];
+
+  for (const plugin of plugins) {
+    const name = safeTrimTo(String(plugin?.name ?? ""), 80);
+    if (!name) continue;
+    const schema = plugin?.schema;
+    const uiConfig = plugin?.uiConfig;
+
+    lines.push(`\nPlugin: ${name}`);
+    if (schema?.fields && Array.isArray(schema.fields)) {
+      const fieldParts = schema.fields
+        .slice(0, 20)
+        .map((f) => {
+          const key = safeTrimTo(String(f?.key ?? ""), 64);
+          const label = safeTrimTo(String(f?.label ?? ""), 80);
+          const type = safeTrimTo(String(f?.type ?? ""), 32);
+          return key ? `${key}${label ? ` (${label})` : ""}${type ? `:${type}` : ""}` : null;
+        })
+        .filter(Boolean);
+      if (fieldParts.length) lines.push(`Fields: ${fieldParts.join(", ")}`);
+    }
+
+    if (uiConfig?.prompt && typeof uiConfig.prompt === "string") {
+      const prompt = safeTrimTo(uiConfig.prompt, 500);
+      if (prompt) lines.push(`Notes: ${prompt}`);
+    }
+  }
+
+  return safeTrimTo(lines.join("\n"), SMART_PLUGIN_PROMPT_MAX_CHARS);
+}
+
+async function smartPluginsPromptAppendix(workspaceId) {
+  if (!workspaceId) return "";
+  const cached = smartPluginPromptCache.get(workspaceId);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+  try {
+    const plugins = await SmartPlugins.activeForWorkspace(workspaceId);
+    const appendix = buildSmartPluginsAppendix(plugins);
+    smartPluginPromptCache.set(workspaceId, {
+      value: appendix,
+      expiresAt: Date.now() + SMART_PLUGIN_PROMPT_CACHE_TTL_MS,
+    });
+    return appendix;
+  } catch (e) {
+    // Never block chat because of plugin lookup issues.
+    return "";
+  }
+}
 
 const VALID_COMMANDS = {
   "/reset": resetMemory,
@@ -92,11 +161,14 @@ async function chatPrompt(workspace, user = null) {
   const { SystemSettings } = require("../../models/systemSettings");
   const basePrompt =
     workspace?.openAiPrompt ?? SystemSettings.saneDefaultSystemPrompt;
-  return await SystemPromptVariables.expandSystemPromptVariables(
+  const expanded = await SystemPromptVariables.expandSystemPromptVariables(
     basePrompt,
     user?.id,
     workspace?.id
   );
+
+  const appendix = await smartPluginsPromptAppendix(workspace?.id);
+  return `${expanded}${appendix}`;
 }
 
 // We use this util function to deduplicate sources from similarity searching

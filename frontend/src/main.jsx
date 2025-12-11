@@ -220,6 +220,24 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "/settings/brand-manager",
+        lazy: async () => {
+          const { default: BrandManager } = await import(
+            "@/pages/GeneralSettings/BrandManager"
+          );
+          return { element: <ManagerRoute Component={BrandManager} /> };
+        },
+      },
+      {
+        path: "/settings/smart-plugins",
+        lazy: async () => {
+          const { default: SmartPlugins } = await import(
+            "@/pages/GeneralSettings/SmartPlugins"
+          );
+          return { element: <ManagerRoute Component={SmartPlugins} /> };
+        },
+      },
+      {
         path: "/settings/default-system-prompt",
         lazy: async () => {
           const { default: DefaultSystemPrompt } = await import(

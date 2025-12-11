@@ -12,7 +12,7 @@ export default function LogRow({ log }) {
         let data = JSON.parse(log.metadata);
         setHasMetadata(Object.keys(data)?.length > 0);
         setMetadata(data);
-      } catch {}
+      } catch { }
     }
     parseAndSetMetadata();
   }, [log.metadata]);
@@ -27,13 +27,12 @@ export default function LogRow({ log }) {
     <>
       <tr
         onClick={handleRowClick}
-        className={`bg-transparent text-white text-opacity-80 text-xs font-medium border-b border-white/10 h-10 ${
-          hasMetadata ? "cursor-pointer hover:bg-white/5" : ""
-        }`}
+        className={`bg-transparent text-white text-opacity-80 text-xs font-medium border-b border-white/10 h-10 ${hasMetadata ? "cursor-pointer hover:bg-white/5" : ""
+          }`}
       >
         <EventBadge event={log.event} />
         <td className="px-6 border-transparent transform transition-transform duration-200">
-          {log.user.username}
+          {log.user?.username || "Unknown"}
         </td>
         <td className="px-6 border-transparent transform transition-transform duration-200">
           {log.occurredAt}

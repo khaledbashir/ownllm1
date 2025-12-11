@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef, useCallback } from "react";
 import ChatHistory from "./ChatHistory";
 import { CLEAR_ATTACHMENTS_EVENT, DndUploaderContext } from "./DnDWrapper";
 import PromptInput, {
@@ -24,6 +24,10 @@ import { ChatTooltips } from "./ChatTooltips";
 import { MetricsProvider } from "./ChatHistory/HistoricalMessage/Actions/RenderMetrics";
 import ThreadNotes from "../ThreadNotes";
 import { ChatText, NotePencil } from "@phosphor-icons/react";
+import { toast } from "react-toastify";
+
+// Event for AI to insert content into notes
+export const NOTE_INSERT_EVENT = "note-insert-content";
 
 export default function ChatContainer({ workspace, knownHistory = [] }) {
   const { threadSlug = null } = useParams();
@@ -35,10 +39,28 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
   const [activeTab, setActiveTab] = useState("chat");
   const { files, parseAttachments } = useContext(DndUploaderContext);
 
+  // Ref for notes editor to allow AI to insert content
+  const notesEditorRef = useRef(null);
+
   // Reset to chat tab when thread changes
   useEffect(() => {
     setActiveTab("chat");
   }, [threadSlug]);
+
+  // Listen for AI note insert events
+  useEffect(() => {
+    const handleNoteInsert = (event) => {
+      const { content } = event.detail || {};
+      if (content && notesEditorRef.current) {
+        notesEditorRef.current.insertMarkdown(content);
+        toast.success("Content added to your Notes!");
+        setActiveTab("notes"); // Switch to notes tab to show the inserted content
+      }
+    };
+
+    window.addEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
+    return () => window.removeEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
+  }, []);
 
   // Maintain state of message from whatever is in PromptInput
   const handleMessageChange = (event) => {
@@ -320,8 +342,8 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
           <button
             onClick={() => setActiveTab("chat")}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
-                ? "border-theme-text-primary text-theme-text-primary"
-                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              ? "border-theme-text-primary text-theme-text-primary"
+              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
               }`}
           >
             <ChatText size={18} />
@@ -330,8 +352,8 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
           <button
             onClick={() => setActiveTab("notes")}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
-                ? "border-theme-text-primary text-theme-text-primary"
-                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              ? "border-theme-text-primary text-theme-text-primary"
+              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
               }`}
           >
             <NotePencil size={18} />
@@ -363,7 +385,7 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
             />
           </DnDFileUploaderWrapper>
         ) : (
-          <ThreadNotes workspace={workspace} />
+          <ThreadNotes workspace={workspace} editorRef={notesEditorRef} />
         )}
       </div>
 

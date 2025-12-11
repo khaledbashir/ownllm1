@@ -80,7 +80,7 @@ export default function DefaultChatContainer() {
           className=" w-[200px] h-fit mb-5 rounded-lg"
         />
         <h1 className="text-white text-2xl font-semibold">
-          {t("home.welcome")}, {user.username}!
+          {t("home.welcome")}, {user?.username || "User"}!
         </h1>
         <p className="text-theme-home-text-secondary text-base text-center whitespace-pre-line">
           {hasWorkspaces ? t("home.chooseWorkspace") : t("home.notAssigned")}

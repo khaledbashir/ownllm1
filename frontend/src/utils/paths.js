@@ -142,6 +142,12 @@ export default {
     branding: () => {
       return "/settings/branding";
     },
+    brandManager: () => {
+      return "/settings/brand-manager";
+    },
+    smartPlugins: () => {
+      return "/settings/smart-plugins";
+    },
     agentSkills: () => {
       return "/settings/agents";
     },

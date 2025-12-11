@@ -268,3 +268,202 @@
   top: 0;
   width: 4px;
 }
+
+/* ========================================
+   BlockNote Slash Menu Dark Theme Overrides
+   ======================================== */
+
+/* Slash Menu Container */
+.bn-container[data-theming="dark"],
+.bn-slash-menu {
+  --bn-colors-editor-background: #1e1e2e !important;
+  --bn-colors-editor-text: #ffffff !important;
+  --bn-colors-menu-background: #1e1e2e !important;
+  --bn-colors-menu-text: #ffffff !important;
+  --bn-colors-tooltip-background: #313244 !important;
+  --bn-colors-tooltip-text: #ffffff !important;
+  --bn-colors-hovered-background: #313244 !important;
+  --bn-colors-hovered-text: #ffffff !important;
+  --bn-colors-selected-background: #45475a !important;
+  --bn-colors-selected-text: #ffffff !important;
+  --bn-colors-disabled-background: #11111b !important;
+  --bn-colors-disabled-text: #6c7086 !important;
+  --bn-colors-border: #45475a !important;
+  --bn-colors-side-menu: #ffffff !important;
+}
+
+/* Mantine-based dropdown menu styling */
+.mantine-Menu-dropdown {
+  background-color: #1e1e2e !important;
+  border: 1px solid #45475a !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.mantine-Menu-item {
+  background-color: transparent !important;
+  color: #ffffff !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  margin: 2px 4px !important;
+}
+
+.mantine-Menu-item:hover {
+  background-color: #313244 !important;
+}
+
+.mantine-Menu-item[data-hovered="true"] {
+  background-color: #45475a !important;
+}
+
+.mantine-Menu-itemLabel {
+  color: #ffffff !important;
+}
+
+.mantine-Menu-itemSection {
+  color: #a6adc8 !important;
+}
+
+/* BlockNote Suggestion Menu */
+[data-bn-suggestion-menu],
+.bn-suggestion-menu {
+  background-color: #1e1e2e !important;
+  border: 1px solid #45475a !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6) !important;
+  padding: 6px !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+}
+
+/* Suggestion Menu Items */
+[data-bn-menu-item],
+.bn-menu-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  background-color: transparent !important;
+  transition: background-color 0.15s ease !important;
+}
+
+[data-bn-menu-item]:hover,
+.bn-menu-item:hover {
+  background-color: #313244 !important;
+}
+
+[data-bn-menu-item][data-selected="true"],
+.bn-menu-item[data-selected="true"],
+[data-bn-menu-item].selected,
+.bn-menu-item.selected {
+  background-color: #45475a !important;
+}
+
+/* Menu Item Text */
+[data-bn-menu-item] .bn-menu-item-title,
+.bn-menu-item-title {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+[data-bn-menu-item] .bn-menu-item-subtitle,
+.bn-menu-item-subtitle {
+  color: #a6adc8 !important;
+  font-size: 12px !important;
+}
+
+/* Menu Item Icons */
+[data-bn-menu-item] svg,
+.bn-menu-item svg {
+  color: #89b4fa !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Group Labels */
+.bn-menu-group-title,
+[data-bn-group-label] {
+  color: #6c7086 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 8px 14px 4px !important;
+}
+
+/* Scrollbar in menu */
+.bn-suggestion-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.bn-suggestion-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bn-suggestion-menu::-webkit-scrollbar-thumb {
+  background: #45475a;
+  border-radius: 3px;
+}
+
+.bn-suggestion-menu::-webkit-scrollbar-thumb:hover {
+  background: #585b70;
+}
+
+/* Drag Handle */
+.bn-side-menu [data-drag-handle],
+.bn-drag-handle {
+  background-color: transparent !important;
+  color: #6c7086 !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+.bn-side-menu [data-drag-handle]:hover,
+.bn-drag-handle:hover {
+  background-color: #313244 !important;
+  color: #ffffff !important;
+}
+
+/* Add Block Button */
+.bn-side-menu [data-add-block],
+.bn-add-block-button {
+  color: #6c7086 !important;
+  transition: color 0.15s ease !important;
+}
+
+.bn-side-menu [data-add-block]:hover,
+.bn-add-block-button:hover {
+  color: #89b4fa !important;
+}
+
+/* Formatting Toolbar */
+.bn-toolbar,
+.bn-formatting-toolbar {
+  background-color: #1e1e2e !important;
+  border: 1px solid #45475a !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  padding: 4px !important;
+}
+
+.bn-toolbar button,
+.bn-formatting-toolbar button {
+  color: #ffffff !important;
+  background-color: transparent !important;
+  border-radius: 4px !important;
+  padding: 6px !important;
+}
+
+.bn-toolbar button:hover,
+.bn-formatting-toolbar button:hover {
+  background-color: #313244 !important;
+}
+
+.bn-toolbar button[data-active="true"],
+.bn-formatting-toolbar button[data-active="true"] {
+  background-color: #45475a !important;
+  color: #89b4fa !important;
+}

@@ -1,11 +1,12 @@
 import React, { memo, useState } from "react";
 import useCopyText from "@/hooks/useCopyText";
-import { Check, ThumbsUp, ArrowsClockwise, Copy } from "@phosphor-icons/react";
+import { Check, ThumbsUp, ArrowsClockwise, Copy, NotePencil } from "@phosphor-icons/react";
 import Workspace from "@/models/workspace";
 import { EditMessageAction } from "./EditMessage";
 import RenderMetrics from "./RenderMetrics";
 import ActionMenu from "./ActionMenu";
 import { useTranslation } from "react-i18next";
+import { NOTE_INSERT_EVENT } from "../../../index";
 
 const Actions = ({
   message,
@@ -54,6 +55,9 @@ const Actions = ({
               tooltipContent={t("chat_window.good_response")}
               IconComponent={ThumbsUp}
             />
+          )}
+          {role !== "user" && !isEditing && (
+            <SaveToNotes message={message} />
           )}
           <ActionMenu
             chatId={chatId}
@@ -150,4 +154,35 @@ function RegenerateMessage({ regenerateMessage, chatId }) {
   );
 }
 
+function SaveToNotes({ message }) {
+  const { t } = useTranslation();
+
+  const handleSaveToNotes = () => {
+    window.dispatchEvent(
+      new CustomEvent(NOTE_INSERT_EVENT, {
+        detail: { content: message },
+      })
+    );
+  };
+
+  return (
+    <div className="mt-3 relative">
+      <button
+        onClick={handleSaveToNotes}
+        data-tooltip-id="save-to-notes"
+        data-tooltip-content="Save to Notes"
+        className="text-zinc-300"
+        aria-label="Save to Notes"
+      >
+        <NotePencil
+          color="var(--theme-sidebar-footer-icon-fill)"
+          size={20}
+          className="mb-1"
+        />
+      </button>
+    </div>
+  );
+}
+
 export default memo(Actions);
+

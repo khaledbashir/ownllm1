@@ -20,6 +20,10 @@ import paths from "@/utils/paths";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { chatQueryRefusalResponse } from "@/utils/chat";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
+import SandpackRenderer from "../../../../Artifacts/SandpackRenderer";
 
 const HistoricalMessage = ({
   uuid = v4(),
@@ -83,9 +87,8 @@ const HistoricalMessage = ({
     <div
       key={uuid}
       onAnimationEnd={onEndAnimation}
-      className={`${
-        isDeleted ? "animate-remove" : ""
-      } flex justify-center items-end w-full group bg-theme-bg-chat`}
+      className={`${isDeleted ? "animate-remove" : ""
+        } flex justify-center items-end w-full group bg-theme-bg-chat`}
     >
       <div className="py-8 px-4 w-full flex gap-x-5 md:max-w-[80%] flex-col">
         <div className={`flex gap-x-5 ${alignmentCls}`}>
@@ -116,6 +119,7 @@ const HistoricalMessage = ({
                 role={role}
                 message={message}
                 expanded={isLastMessage}
+                workspace={workspace}
               />
               {isRefusalMessage && (
                 <Link
@@ -212,7 +216,7 @@ function ChatAttachments({ attachments = [] }) {
 }
 
 const RenderChatContent = memo(
-  ({ role, message, expanded = false }) => {
+  ({ role, message, expanded = false, workspace }) => {
     // If the message is not from the assistant, we can render it directly
     // as normal since the user cannot think (lol)
     if (role !== "assistant")
@@ -253,12 +257,38 @@ const RenderChatContent = memo(
         {thoughtChain && (
           <ThoughtChainComponent content={thoughtChain} expanded={expanded} />
         )}
-        <span
+        <ReactMarkdown
+          rehypePlugins={[rehypeRaw]}
+          remarkPlugins={[remarkGfm]}
           className="flex flex-col gap-y-1"
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(renderMarkdown(msgToRender)),
+          components={{
+            // Preserve styling for standard elements
+            p: ({ node, ...props }) => <p className="mb-2 text-white" {...props} />,
+            a: ({ node, ...props }) => <a className="text-blue-400 hover:underline" target="_blank" {...props} />,
+            // The Sandpack Trigger
+            code({ node, inline, className, children, ...props }) {
+              const match = /language-(\w+)/.exec(className || '');
+              const lang = match ? match[1].toLowerCase() : '';
+
+              // Add robustness for React/HTML
+              const isReact = ['react', 'jsx', 'tsx', 'js', 'javascript'].includes(lang);
+              const isHTML = ['html', 'xml'].includes(lang);
+
+              if (!inline && (isReact || isHTML)) {
+                return (
+                  <SandpackRenderer
+                    code={String(children).replace(/\n$/, '')}
+                    language={isReact ? 'react' : 'html'}
+                    workspace={workspace}
+                  />
+                );
+              }
+              return <code className={`bg-gray-800 rounded p-1 ${className || ''}`} {...props}>{children}</code>;
+            }
           }}
-        />
+        >
+          {msgToRender}
+        </ReactMarkdown>
       </>
     );
   },
