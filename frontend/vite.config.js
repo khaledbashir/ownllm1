@@ -60,9 +60,11 @@ export default defineConfig({
       output: {
         // These settings ensure the primary JS and CSS file references are always index.{js,css}
         // so we can SSR the index.html as text response from server/index.js without breaking references each build.
-        // Entry and asset file names will use default hashing for better cache busting
-        // entryFileNames: 'assets/[name]-[hash].js',
-        // assetFileNames: 'assets/[name]-[hash][extname]',
+        entryFileNames: 'index.js',
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name === 'index.css') return 'index.css';
+          return 'assets/[name]-[hash][extname]';
+        },
       },
       external: [
         // Reduces transformation time by 50% and we don't even use this variant, so we can ignore.
