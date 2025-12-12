@@ -95,10 +95,14 @@ const SmartBlock = createReactBlockSpec(
     }
 );
 
-// Create Schema
+// Create Schema with defensive check
+const filteredBlockSpecs = Object.fromEntries(
+    Object.entries(defaultBlockSpecs).filter(([key, value]) => value !== undefined)
+);
+
 const schema = BlockNoteSchema.create({
     blockSpecs: {
-        ...defaultBlockSpecs,
+        ...filteredBlockSpecs,
         "smart-block": SmartBlock,
     },
 });
