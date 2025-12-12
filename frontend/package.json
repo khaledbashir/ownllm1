@@ -17,6 +17,7 @@
     "@codesandbox/sandpack-react": "^2.20.0",
     "@mantine/core": "^8.3.10",
     "@mantine/hooks": "^8.3.10",
+    "@mantine/utils": "^6.0.22",
     "@microsoft/fetch-event-source": "^2.0.1",
     "@mintplex-labs/piper-tts-web": "^1.0.4",
     "@myriaddreamin/typst.ts": "^0.6.1-rc5",
