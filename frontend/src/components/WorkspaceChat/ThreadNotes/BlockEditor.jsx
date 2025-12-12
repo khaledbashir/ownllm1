@@ -1,6 +1,8 @@
 import React, { useState, useCallback, forwardRef, useImperativeHandle } from "react";
-import { BlockNoteView, useCreateBlockNote } from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote/react";
+import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/react/style.css";
+import "@blocknote/mantine/style.css";
 import { MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { FilePdf, CircleNotch } from "@phosphor-icons/react";
