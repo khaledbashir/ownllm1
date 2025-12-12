@@ -1,10 +1,49 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useParams } from "react-router-dom";
 import WorkspaceThread from "@/models/workspaceThread";
-import BlockEditor from "./BlockEditor";
 import AICommandModal from "./AICommandModal";
-import { NotePencil } from "@phosphor-icons/react";
+import { NotePencil, WarningCircle } from "@phosphor-icons/react";
 import "./editor.css";
+
+// Lazy load BlockEditor to isolate any initialization errors
+const BlockEditor = React.lazy(() => import("./BlockEditor"));
+
+// Error boundary to catch BlockNote crashes
+class BlockEditorErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error("[BlockEditor Error]", error);
+        console.error("[BlockEditor ErrorInfo]", errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="flex flex-col items-center justify-center h-full text-theme-text-secondary p-8">
+                    <WarningCircle size={48} className="mb-4 text-red-400" />
+                    <p className="text-center text-red-400 font-medium mb-2">
+                        Notes Editor Failed to Load
+                    </p>
+                    <p className="text-center text-sm opacity-75 max-w-md">
+                        There was an error initializing the notes editor. This is a known issue being investigated.
+                    </p>
+                    <pre className="mt-4 p-4 bg-theme-bg-primary rounded text-xs text-red-300 max-w-lg overflow-auto">
+                        {this.state.error?.message || "Unknown error"}
+                    </pre>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
 
 export default function ThreadNotes({ workspace, editorRef: externalEditorRef }) {
     const { threadSlug } = useParams();
@@ -90,12 +129,22 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
 
     return (
         <div className="flex-1 overflow-hidden relative">
-            <BlockEditor
-                key={threadSlug}
-                ref={editorRef}
-                content={content}
-                onSave={handleSave}
-            />
+            <BlockEditorErrorBoundary>
+                <Suspense fallback={
+                    <div className="flex items-center justify-center h-full">
+                        <div className="animate-pulse text-theme-text-secondary">
+                            Loading editor...
+                        </div>
+                    </div>
+                }>
+                    <BlockEditor
+                        key={threadSlug}
+                        ref={editorRef}
+                        content={content}
+                        onSave={handleSave}
+                    />
+                </Suspense>
+            </BlockEditorErrorBoundary>
             <AICommandModal
                 isOpen={isAIModalOpen}
                 onClose={() => setIsAIModalOpen(false)}
@@ -104,3 +153,4 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
         </div>
     );
 }
+
