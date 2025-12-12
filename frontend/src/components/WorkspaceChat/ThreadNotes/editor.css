@@ -206,9 +206,24 @@
   }
 }
 
-/* Editor content area */
-.rich-editor-container .ProseMirror {
-  min-height: calc(100vh - 300px);
+/* Editor content area - FULL HEIGHT */
+.rich-editor-container .ProseMirror,
+.blocknote-editor-full .ProseMirror,
+.bn-editor {
+  min-height: 100% !important;
+  height: 100% !important;
+  padding: 16px !important;
+}
+
+.blocknote-editor-full,
+.bn-container {
+  height: 100% !important;
+  min-height: 100% !important;
+}
+
+/* Ensure the BlockNote container fills parent */
+.blocknote-editor-full > div {
+  height: 100% !important;
 }
 
 /* Prose styles for dark mode */

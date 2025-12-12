@@ -1,9 +1,9 @@
-import React, { useState, useCallback, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
-import "@blocknote/react/style.css";
+import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider, createTheme } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { FilePdf, CircleNotch } from "@phosphor-icons/react";
 import debounce from "lodash.debounce";
@@ -34,13 +34,31 @@ function safeImageSrc(input) {
     return "";
 }
 
+// Dark theme for Mantine
+const darkTheme = createTheme({
+    primaryColor: 'blue',
+    colors: {
+        dark: [
+            '#C1C2C5',
+            '#A6A7AB',
+            '#909296',
+            '#5C5F66',
+            '#373A40',
+            '#2C2E33',
+            '#25262B',
+            '#1A1B1E',
+            '#141517',
+            '#101113',
+        ],
+    },
+});
+
 const BlockEditor = forwardRef(({ content, onSave }, ref) => {
-    const [blocks, setBlocks] = useState([]);
     const [exporting, setExporting] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
 
     // Safe Content Loading Logic
-    const initialContent = React.useMemo(() => {
+    const initialContent = useMemo(() => {
         if (!content) return undefined;
         try {
             const parsed = JSON.parse(content);
@@ -55,31 +73,34 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
         }
     }, [content]);
 
-    // Initialize editor with default schema
+    // Initialize editor with all default features
     const editor = useCreateBlockNote({
         initialContent: initialContent,
     });
 
     // Auto-save debounce
-    const debouncedSave = useCallback(
-        debounce((newBlocks) => {
+    const debouncedSave = useMemo(
+        () => debounce((newBlocks) => {
             onSave(JSON.stringify(newBlocks));
         }, 1000),
         [onSave]
     );
 
     const onChange = useCallback(() => {
-        const newBlocks = editor.topLevelBlocks;
-        setBlocks(newBlocks);
+        const newBlocks = editor.document;
         debouncedSave(newBlocks);
     }, [editor, debouncedSave]);
 
     // AI Insertion handler
     useImperativeHandle(ref, () => ({
         insertMarkdown: async (markdown) => {
-            const blocks = await editor.tryParseMarkdownToBlocks(markdown);
-            const currentBlock = editor.getTextCursorPosition().block;
-            editor.insertBlocks(blocks, currentBlock, "after");
+            try {
+                const blocks = await editor.tryParseMarkdownToBlocks(markdown);
+                const currentBlock = editor.getTextCursorPosition().block;
+                editor.insertBlocks(blocks, currentBlock, "after");
+            } catch (e) {
+                console.error("Failed to insert markdown:", e);
+            }
         },
         getEditor: () => editor,
     }));
@@ -89,10 +110,9 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
         setExporting(true);
         try {
             const html2pdf = (await import("html2pdf.js")).default;
-            const htmlContent = await editor.blocksToHTMLLossy(editor.topLevelBlocks);
+            const htmlContent = await editor.blocksToHTMLLossy(editor.document);
 
             const primaryColor = template?.primaryColor || "#3b82f6";
-            const secondaryColor = template?.secondaryColor || "#1e293b";
             const fontFamily = template?.fontFamily || "Inter";
             const headerText = escapeHtml(template?.headerText || "");
             const footerText = escapeHtml(template?.footerText || "");
@@ -107,10 +127,15 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
                     .pdf-container { padding: 40px; }
                     h1 { font-size: 28px; color: ${primaryColor}; }
                     h2 { font-size: 22px; color: ${primaryColor}; }
+                    h3 { font-size: 18px; color: ${primaryColor}; }
                     p { font-size: 14px; line-height: 1.7; }
+                    ul, ol { margin-left: 20px; }
                     table { border-collapse: collapse; width: 100%; }
                     th, td { border: 1px solid #ddd; padding: 10px; }
                     th { background-color: ${primaryColor}; color: white; }
+                    code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; }
+                    pre { background: #1e293b; color: #e4e4e4; padding: 16px; border-radius: 8px; overflow-x: auto; }
+                    blockquote { border-left: 4px solid ${primaryColor}; padding-left: 16px; color: #555; font-style: italic; }
                 </style>
                 <div class="pdf-container">
                     ${logoPath ? `<img src="${logoPath}" style="max-height:60px;margin-bottom:20px;" />` : ''}
@@ -139,7 +164,7 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
     };
 
     return (
-        <MantineProvider>
+        <MantineProvider theme={darkTheme} forceColorScheme="dark">
             <div className="flex flex-col h-full relative">
                 <div className="absolute top-2 right-2 z-10">
                     <button
@@ -157,8 +182,13 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
                         </span>
                     </button>
                 </div>
-                <div className="flex-1 overflow-y-auto rich-editor-container bg-theme-bg-secondary p-4">
-                    <BlockNoteView editor={editor} onChange={onChange} theme="dark" />
+                <div className="flex-1 overflow-y-auto bg-theme-bg-secondary" style={{ minHeight: '100%' }}>
+                    <BlockNoteView
+                        editor={editor}
+                        onChange={onChange}
+                        theme="dark"
+                        className="blocknote-editor-full"
+                    />
                 </div>
             </div>
             <ExportPdfModal
