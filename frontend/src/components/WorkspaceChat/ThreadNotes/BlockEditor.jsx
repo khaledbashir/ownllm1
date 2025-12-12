@@ -130,9 +130,8 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
         }
     }, [content]);
 
-    // Initialize editor
+    // Initialize editor with default schema (no custom blocks)
     const editor = useCreateBlockNote({
-        schema, // Use custom schema
         initialContent: initialContent,
         uploadFile: async (file) => {
             return URL.createObjectURL(file);
