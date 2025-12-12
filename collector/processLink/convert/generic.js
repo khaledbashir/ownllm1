@@ -178,6 +178,40 @@ async function getPageContent({ link, captureAs = "text", headers = {} }) {
       },
     });
 
+    // Check for Remote Chromium
+    if (process.env.PUPPETEER_WSS_ENDPOINT) {
+      loader.scrape = async function () {
+        const { connect } = await PuppeteerWebBaseLoader.imports();
+        const browser = await connect({
+          browserWSEndpoint: process.env.PUPPETEER_WSS_ENDPOINT,
+          ignoreHTTPSErrors: true,
+        });
+        const page = await browser.newPage();
+
+        // Setup headers if needed
+        let overrideHeaders = validatedHeaders(headers);
+        if (Object.keys(overrideHeaders).length > 0) {
+          await page.setExtraHTTPHeaders(overrideHeaders);
+        }
+
+        await page.goto(this.webPath, {
+          timeout: 180000,
+          waitUntil: "networkidle2",
+          ...this.options?.gotoOptions,
+        });
+
+        const bodyHTML = this.options?.evaluate
+          ? await this.options.evaluate(page, browser)
+          : await page.evaluate(() => document.body.innerHTML);
+
+        // Important: For remote browser, we usually want to close the page but maybe not the browser?
+        // But PuppeteerWebBaseLoader logic usually closes browser. 
+        // With connect(), closing browser disconnects. That is fine.
+        await browser.close();
+        return bodyHTML;
+      };
+    }
+
     // Override scrape method if headers are available
     let overrideHeaders = validatedHeaders(headers);
     if (Object.keys(overrideHeaders).length > 0) {

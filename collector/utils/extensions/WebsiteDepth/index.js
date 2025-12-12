@@ -46,10 +46,34 @@ async function discoverLinks(startUrl, maxDepth = 1, maxLinks = 20) {
 
 async function getPageLinks(url, baseUrl) {
   try {
-    const loader = new PuppeteerWebBaseLoader(url, {
-      launchOptions: { headless: "new" },
-      gotoOptions: { waitUntil: "networkidle2" },
-    });
+    let loader;
+    if (process.env.PUPPETEER_WSS_ENDPOINT) {
+      loader = new PuppeteerWebBaseLoader(url, {
+        launchOptions: { headless: "new" },
+        gotoOptions: { waitUntil: "networkidle2" },
+      });
+      loader.scrape = async function () {
+        const { connect } = await PuppeteerWebBaseLoader.imports();
+        const browser = await connect({
+          browserWSEndpoint: process.env.PUPPETEER_WSS_ENDPOINT,
+          ignoreHTTPSErrors: true,
+        });
+        const page = await browser.newPage();
+        await page.goto(this.webPath, {
+          timeout: 180000,
+          waitUntil: "networkidle2",
+          ...this.options?.gotoOptions,
+        });
+        const bodyHTML = await page.evaluate(() => document.body.innerHTML);
+        await browser.close();
+        return bodyHTML;
+      };
+    } else {
+      loader = new PuppeteerWebBaseLoader(url, {
+        launchOptions: { headless: "new" },
+        gotoOptions: { waitUntil: "networkidle2" },
+      });
+    }
     const docs = await loader.load();
     const html = docs[0].pageContent;
     const links = extractLinks(html, baseUrl);
@@ -90,15 +114,44 @@ async function bulkScrapePages(links, outFolderPath) {
     console.log(`Scraping ${i + 1}/${links.length}: ${link}`);
 
     try {
-      const loader = new PuppeteerWebBaseLoader(link, {
-        launchOptions: { headless: "new" },
-        gotoOptions: { waitUntil: "networkidle2" },
-        async evaluate(page, browser) {
+      let loader;
+      if (process.env.PUPPETEER_WSS_ENDPOINT) {
+        loader = new PuppeteerWebBaseLoader(link, {
+          launchOptions: { headless: "new" },
+          gotoOptions: { waitUntil: "networkidle2" },
+          async evaluate(page, browser) {
+            const result = await page.evaluate(() => document.body.innerText);
+            await browser.close();
+            return result;
+          },
+        });
+        loader.scrape = async function () {
+          const { connect } = await PuppeteerWebBaseLoader.imports();
+          const browser = await connect({
+            browserWSEndpoint: process.env.PUPPETEER_WSS_ENDPOINT,
+            ignoreHTTPSErrors: true,
+          });
+          const page = await browser.newPage();
+          await page.goto(this.webPath, {
+            timeout: 180000,
+            waitUntil: "networkidle2",
+            ...this.options?.gotoOptions,
+          });
           const result = await page.evaluate(() => document.body.innerText);
           await browser.close();
           return result;
-        },
-      });
+        }
+      } else {
+        loader = new PuppeteerWebBaseLoader(link, {
+          launchOptions: { headless: "new" },
+          gotoOptions: { waitUntil: "networkidle2" },
+          async evaluate(page, browser) {
+            const result = await page.evaluate(() => document.body.innerText);
+            await browser.close();
+            return result;
+          },
+        });
+      }
       const docs = await loader.load();
       const content = docs[0].pageContent;
 
@@ -149,9 +202,9 @@ async function websiteScraper(startUrl, depth = 1, maxLinks = 20) {
   const outFolderPath =
     process.env.NODE_ENV === "development"
       ? path.resolve(
-          __dirname,
-          `../../../../server/storage/documents/${outFolder}`
-        )
+        __dirname,
+        `../../../../server/storage/documents/${outFolder}`
+      )
       : path.resolve(process.env.STORAGE_DIR, `documents/${outFolder}`);
 
   console.log("Discovering links...");

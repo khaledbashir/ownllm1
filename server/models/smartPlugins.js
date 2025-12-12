@@ -166,17 +166,27 @@ function validateUpdatePayload(payload = {}) {
 
 const SmartPlugins = {
   listForWorkspace: async function (workspaceId) {
-    return await prisma.smart_plugins.findMany({
+    const plugins = await prisma.smart_plugins.findMany({
       where: { workspaceId },
       orderBy: { updatedAt: "desc" },
     });
+    return plugins.map((p) => ({
+      ...p,
+      schema: tryParse(p.schema),
+      uiConfig: tryParse(p.uiConfig),
+    }));
   },
 
   activeForWorkspace: async function (workspaceId) {
-    return await prisma.smart_plugins.findMany({
+    const plugins = await prisma.smart_plugins.findMany({
       where: { workspaceId, active: true },
       orderBy: { updatedAt: "desc" },
     });
+    return plugins.map((p) => ({
+      ...p,
+      schema: tryParse(p.schema),
+      uiConfig: tryParse(p.uiConfig),
+    }));
   },
 
   createForWorkspace: async function ({ workspaceId, createdBy = null, payload }) {
@@ -186,11 +196,20 @@ const SmartPlugins = {
       const plugin = await prisma.smart_plugins.create({
         data: {
           ...valid.value,
+          schema: JSON.stringify(valid.value.schema),
+          uiConfig: valid.value.uiConfig ? JSON.stringify(valid.value.uiConfig) : null,
           workspaceId,
           createdBy,
         },
       });
-      return { ok: true, plugin };
+      return {
+        ok: true,
+        plugin: {
+          ...plugin,
+          schema: tryParse(plugin.schema),
+          uiConfig: tryParse(plugin.uiConfig),
+        },
+      };
     } catch (e) {
       if (String(e?.message || "").toLowerCase().includes("unique")) {
         return { ok: false, error: "A plugin with this name already exists in this workspace" };
@@ -207,11 +226,22 @@ const SmartPlugins = {
     if (!existing) return { ok: false, error: "Plugin not found" };
 
     try {
+      const data = { ...valid.value };
+      if (data.schema !== undefined) data.schema = JSON.stringify(data.schema);
+      if (data.uiConfig !== undefined) data.uiConfig = data.uiConfig ? JSON.stringify(data.uiConfig) : null;
+
       const plugin = await prisma.smart_plugins.update({
         where: { id },
-        data: valid.value,
+        data,
       });
-      return { ok: true, plugin };
+      return {
+        ok: true,
+        plugin: {
+          ...plugin,
+          schema: tryParse(plugin.schema),
+          uiConfig: tryParse(plugin.uiConfig),
+        },
+      };
     } catch (e) {
       if (String(e?.message || "").toLowerCase().includes("unique")) {
         return { ok: false, error: "A plugin with this name already exists in this workspace" };
@@ -227,5 +257,13 @@ const SmartPlugins = {
     return { ok: true };
   },
 };
+
+function tryParse(input) {
+  try {
+    return typeof input === "string" ? JSON.parse(input) : input;
+  } catch {
+    return input;
+  }
+}
 
 module.exports = { SmartPlugins };

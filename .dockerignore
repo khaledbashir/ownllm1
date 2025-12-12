@@ -15,4 +15,7 @@
 **/tmp/**
 **/.log
 !docker/.env.example
-!frontend/.env.production
+!frontend/.env.productionnode_modules
+frontend/node_modules
+server/node_modules
+collector/node_modules

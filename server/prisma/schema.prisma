@@ -441,8 +441,8 @@ model smart_plugins {
   id          Int       @id @default(autoincrement())
   name        String
   description String?
-  schema      Json
-  uiConfig    Json?
+  schema      String
+  uiConfig    String?
   active      Boolean   @default(true)
   workspaceId Int
   createdBy   Int?
