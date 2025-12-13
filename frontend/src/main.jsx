@@ -390,6 +390,24 @@ const router = createBrowserRouter([
           return { element: <ManagerRoute Component={MobileConnections} /> };
         },
       },
+      // Dashboard - Command Center
+      {
+        path: "/dashboard",
+        lazy: async () => {
+          const { default: Dashboard } = await import("@/pages/Dashboard");
+          return { element: <PrivateRoute Component={Dashboard} /> };
+        },
+      },
+      // CRM Pipeline
+      {
+        path: "/settings/crm",
+        lazy: async () => {
+          const { default: CRMPage } = await import(
+            "@/pages/GeneralSettings/CRM"
+          );
+          return { element: <ManagerRoute Component={CRMPage} /> };
+        },
+      },
     ],
   },
 ]);

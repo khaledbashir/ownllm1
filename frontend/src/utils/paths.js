@@ -182,6 +182,12 @@ export default {
     mobileConnections: () => {
       return `/settings/mobile-connections`;
     },
+    crm: () => {
+      return `/settings/crm`;
+    },
+  },
+  dashboard: () => {
+    return `/dashboard`;
   },
   agents: {
     builder: () => {

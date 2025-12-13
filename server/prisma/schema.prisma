@@ -87,6 +87,8 @@ model users {
   artifacts                   artifacts[]
   pdf_templates               pdf_templates[]
   smart_plugins               smart_plugins[]
+  crm_pipelines               crm_pipelines[]
+  crm_cards                   crm_cards[]
 }
 
 model recovery_codes {
@@ -160,6 +162,7 @@ model workspaces {
   workspace_parsed_files       workspace_parsed_files[]
   artifacts                    artifacts[]
   smart_plugins                smart_plugins[]
+  crm_pipelines                crm_pipelines[]
 }
 
 model workspace_threads {
@@ -460,3 +463,57 @@ model smart_plugins {
   @@index([createdBy])
 }
 
+model crm_pipelines {
+  id          Int      @id @default(autoincrement())
+  name        String   // e.g., "Embed Leads", "Proposals", "Sales Pipeline"
+  description String?
+  type        String   @default("custom") // embed, proposal, custom
+  stages      String   // JSON array: ["New", "Contacted", "Qualified", "Won", "Lost"]
+  color       String?  @default("#3b82f6") // Pipeline accent color
+  userId      Int?
+  workspaceId Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        users?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   workspaces? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  cards       crm_cards[]
+
+  @@index([userId])
+  @@index([workspaceId])
+}
+
+model crm_cards {
+  id             Int      @id @default(autoincrement())
+  pipelineId     Int
+  stage          String   // Current stage name
+  position       Int      @default(0) // Order within stage
+
+  // Contact/Lead Info
+  title          String   // Card title (e.g., name or "Lead #123")
+  name           String?
+  email          String?
+  phone          String?
+  company        String?
+
+  // Context linking
+  embedSessionId String?  // Links to embed_chats.session_id
+  threadId       Int?     // Links to workspace_threads
+  
+  // Custom data
+  notes          String?
+  metadata       String?  // JSON for custom fields
+  value          Float?   // Deal value
+
+  // Audit
+  userId         Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  pipeline       crm_pipelines @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  user           users?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([pipelineId])
+  @@index([stage])
+  @@index([userId])
+}
