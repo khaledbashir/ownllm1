@@ -36,6 +36,16 @@ const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =>
     useEffect(() => {
         if (!containerRef.current) return;
 
+        // Fix: Ensure PageEditor is registered as a custom element before instantiation
+        // This prevents "Illegal constructor" error when calling new PageEditor()
+        try {
+            if (!customElements.get("affine-page-editor")) {
+                customElements.define("affine-page-editor", PageEditor);
+            }
+        } catch (e) {
+            console.warn("Failed to register PageEditor custom element:", e);
+        }
+
         // Use the official createEmptyDoc helper
         const doc = createEmptyDoc().init();
         docRef.current = doc;
