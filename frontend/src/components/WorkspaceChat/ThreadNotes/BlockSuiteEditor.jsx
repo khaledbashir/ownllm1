@@ -16,16 +16,12 @@ import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
 import "./editor.css";
 
-// CRITICAL: Register PageEditor as custom element IMMEDIATELY at module load
-// This prevents "Illegal constructor" error by ensuring registration happens
-// before any BlockSuite code tries to instantiate the element
 try {
-    if (!customElements.get("affine-page-editor")) {
-        customElements.define("affine-page-editor", PageEditor);
-        console.log("✅ PageEditor custom element registered successfully");
+    if (!customElements.get("page-editor")) {
+        customElements.define("page-editor", PageEditor);
     }
 } catch (e) {
-    console.warn("⚠️ Failed to register PageEditor custom element:", e);
+    console.warn("Failed to register PageEditor custom element:", e);
 }
 
 const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) => {
@@ -74,8 +70,7 @@ const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =>
             }
         }
 
-        // Create editor using official PageEditor
-        const editor = new PageEditor();
+        const editor = document.createElement("page-editor");
         editor.doc = doc;
         editorRef.current = editor;
 
