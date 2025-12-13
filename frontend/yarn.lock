@@ -435,10 +435,10 @@
     lit "^3.2.0"
     zod "^3.23.8"
 
-"@blocksuite/icons@^2.1.75":
-  version "2.2.17"
-  resolved "https://registry.yarnpkg.com/@blocksuite/icons/-/icons-2.2.17.tgz#a3c21edb84673d76ad220b9a151f3f1deadf5783"
-  integrity sha512-JSetbNEyE+/HnefmDR8J1Tt6ebWn7F150tkKfaqPegOU+s1lLWN/4cRel8z6IiQ/ft3qrO+Mqd115AHfp1eTDA==
+"@blocksuite/icons@2.1.75", "@blocksuite/icons@^2.1.75":
+  version "2.1.75"
+  resolved "https://registry.yarnpkg.com/@blocksuite/icons/-/icons-2.1.75.tgz#f549b365cc18b3b123e27c67b21a5868f90a0c47"
+  integrity sha512-LM/3UKExo/bcextR0V0VN7nvRmY4HQ6ajj1vA7EfuwsxrJFBQMGN2OgaIUQOuwEWNknfeVKWZCiJJzg8UJ1Ixg==
 
 "@blocksuite/inline@0.19.4":
   version "0.19.4"

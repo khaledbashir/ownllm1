@@ -10,6 +10,9 @@
     "lint": "yarn prettier --ignore-path ../.prettierignore --write ./src",
     "preview": "vite preview"
   },
+  "resolutions": {
+    "@blocksuite/icons": "2.1.75"
+  },
   "dependencies": {
     "@blocksuite/blocks": "0.19.4",
     "@blocksuite/presets": "0.19.4",
