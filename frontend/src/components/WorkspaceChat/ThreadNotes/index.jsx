@@ -4,6 +4,7 @@ import WorkspaceThread from "@/models/workspaceThread";
 import AICommandModal from "./AICommandModal";
 import { NotePencil, WarningCircle } from "@phosphor-icons/react";
 import showToast from "@/utils/toast";
+import { EditorProvider, useEditorContext } from "./EditorContext";
 import "./editor.css";
 
 // Lazy load BlockSuite editor to isolate any initialization errors
@@ -160,61 +161,63 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
     }
 
     return (
-        <div className="flex-1 overflow-hidden relative flex flex-col">
-            <div className="sticky top-0 z-10 bg-theme-bg-secondary border-b border-theme-sidebar-border flex items-center justify-between gap-x-2 px-3 py-2">
-                <div className="text-sm font-semibold text-white">
-                    Smart Actions
-                </div>
-                <div className="flex items-center gap-x-2">
-                    <button
-                        type="button"
-                        disabled={!!smartActionLoading}
-                        onClick={() => runSmartAction("meeting_notes")}
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {smartActionLoading === "meeting_notes" ? "Working..." : "Meeting Notes"}
-                    </button>
-                    <button
-                        type="button"
-                        disabled={!!smartActionLoading}
-                        onClick={() => runSmartAction("draft_proposal")}
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {smartActionLoading === "draft_proposal" ? "Working..." : "Draft Proposal"}
-                    </button>
-                    <button
-                        type="button"
-                        disabled={!!smartActionLoading}
-                        onClick={() => runSmartAction("quick_quote")}
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {smartActionLoading === "quick_quote" ? "Working..." : "Quick Quote"}
-                    </button>
-                </div>
-            </div>
-            <BlockEditorErrorBoundary>
-                <Suspense fallback={
-                    <div className="flex items-center justify-center h-full">
-                        <div className="animate-pulse text-theme-text-secondary">
-                            Loading editor...
-                        </div>
+        <EditorProvider>
+            <div className="flex-1 overflow-hidden relative flex flex-col">
+                <div className="sticky top-0 z-10 bg-theme-bg-secondary border-b border-theme-sidebar-border flex items-center justify-between gap-x-2 px-3 py-2">
+                    <div className="text-sm font-semibold text-white">
+                        Smart Actions
                     </div>
-                }>
-                    <BlockEditor
-                        key={threadSlug}
-                        ref={editorRef}
-                        content={content}
-                        onSave={handleSave}
-                        workspaceSlug={workspace?.slug}
-                    />
-                </Suspense>
-            </BlockEditorErrorBoundary>
-            <AICommandModal
-                isOpen={isAIModalOpen}
-                onClose={() => setIsAIModalOpen(false)}
-                onInsertText={handleInsertAI}
-            />
-        </div>
+                    <div className="flex items-center gap-x-2">
+                        <button
+                            type="button"
+                            disabled={!!smartActionLoading}
+                            onClick={() => runSmartAction("meeting_notes")}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {smartActionLoading === "meeting_notes" ? "Working..." : "Meeting Notes"}
+                        </button>
+                        <button
+                            type="button"
+                            disabled={!!smartActionLoading}
+                            onClick={() => runSmartAction("draft_proposal")}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {smartActionLoading === "draft_proposal" ? "Working..." : "Draft Proposal"}
+                        </button>
+                        <button
+                            type="button"
+                            disabled={!!smartActionLoading}
+                            onClick={() => runSmartAction("quick_quote")}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {smartActionLoading === "quick_quote" ? "Working..." : "Quick Quote"}
+                        </button>
+                    </div>
+                </div>
+                <BlockEditorErrorBoundary>
+                    <Suspense fallback={
+                        <div className="flex items-center justify-center h-full">
+                            <div className="animate-pulse text-theme-text-secondary">
+                                Loading editor...
+                            </div>
+                        </div>
+                    }>
+                        <BlockEditor
+                            key={threadSlug}
+                            ref={editorRef}
+                            content={content}
+                            onSave={handleSave}
+                            workspaceSlug={workspace?.slug}
+                        />
+                    </Suspense>
+                </BlockEditorErrorBoundary>
+                <AICommandModal
+                    isOpen={isAIModalOpen}
+                    onClose={() => setIsAIModalOpen(false)}
+                    onInsertText={handleInsertAI}
+                />
+            </div>
+        </EditorProvider>
     );
 }
 

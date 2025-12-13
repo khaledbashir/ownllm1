@@ -15,6 +15,7 @@ import { FilePdf, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
+import { useEditorContext } from "./EditorContext";
 import "./editor.css";
 
 /**
@@ -30,6 +31,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     const containerRef = useRef(null);
     const editorRef = useRef(null);
     const collectionRef = useRef(null);
+
+    // Get context for global editor access
+    const editorContext = useEditorContext();
 
     const [isReady, setIsReady] = useState(false);
     const [exporting, setExporting] = useState(false);
@@ -95,6 +99,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
             // Store refs
             editorRef.current = editor;
+
+            // Register with context for global access
+            if (editorContext?.registerEditor) {
+                editorContext.registerEditor(editor);
+            }
             collectionRef.current = collection;
 
             // Listen for changes and autosave
@@ -114,6 +123,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         return () => {
             debouncedSave.cancel();
+            // Unregister from context
+            if (editorContext?.unregisterEditor) {
+                editorContext.unregisterEditor();
+            }
             if (containerRef.current) {
                 containerRef.current.innerHTML = "";
             }

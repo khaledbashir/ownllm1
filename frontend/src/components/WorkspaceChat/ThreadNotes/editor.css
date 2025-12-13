@@ -196,3 +196,235 @@
 .blocksuite-editor-wrapper {
   background: #141414 !important;
 }
+
+/* =========================================================
+   GLOBAL PORTAL OVERRIDES - These render at body level
+   Slash menus, modals, dialogs, etc.
+   ========================================================= */
+
+/* Force data-theme on body for BlockSuite portals */
+body {
+  --affine-theme-mode: dark;
+  --affine-background-primary-color: #141414;
+  --affine-background-secondary-color: #252525;
+  --affine-background-tertiary-color: #303030;
+  --affine-background-overlay-panel-color: #1e1e1e;
+  --affine-text-primary-color: #eaeaea;
+  --affine-text-secondary-color: #9c9ca0;
+  --affine-border-color: #2e2e2e;
+  --affine-divider-color: #727272;
+  --affine-placeholder-color: #3e3e3f;
+  --affine-hover-color: rgba(255, 255, 255, 0.1);
+  --affine-hover-color-filled: #2a2a2a;
+  --affine-link-color: #78BEFF;
+  --affine-icon-color: #a8a8a0;
+  --affine-white: #000;
+  --affine-black: #fff;
+}
+
+/* ALL Affine/BlockSuite popups, menus, overlays */
+[class*="affine-"][class*="-menu"],
+[class*="affine-"][class*="-popup"],
+[class*="affine-"][class*="-modal"],
+[class*="affine-"][class*="-dialog"],
+[class*="affine-"][class*="-overlay"],
+[class*="affine-"][class*="-panel"],
+[class*="affine-"][class*="-toolbar"],
+[class*="affine-"][class*="-tooltip"],
+.affine-menu-container,
+.affine-slash-menu,
+.affine-linked-doc-popover,
+.affine-reference-popover,
+.affine-embed-card-toolbar,
+.affine-toolbar-widget,
+.blocksuite-portal,
+.blocksuite-overlay,
+affine-portal,
+affine-overlay-root {
+  background-color: #1e1e1e !important;
+  background: #1e1e1e !important;
+  border-color: #2e2e2e !important;
+  color: #eaeaea !important;
+}
+
+/* Modal dialogs (like Link input) */
+.affine-modal,
+.affine-modal-container,
+.affine-dialog,
+.affine-link-popover,
+.affine-embed-link-input,
+.affine-confirm-modal,
+[role="dialog"],
+[role="alertdialog"] {
+  background-color: #1e1e1e !important;
+  background: #1e1e1e !important;
+  border-color: #2e2e2e !important;
+  color: #eaeaea !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Modal backdrop */
+.affine-modal-backdrop,
+.affine-overlay-mask,
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Modal content areas */
+.affine-modal *,
+.affine-dialog *,
+[role="dialog"] *,
+.affine-link-popover *,
+.affine-embed-card-modal * {
+  color: #eaeaea !important;
+}
+
+/* Modal headers */
+.affine-modal h1,
+.affine-modal h2,
+.affine-modal h3,
+.affine-modal-title,
+.affine-dialog-title,
+[role="dialog"] h1,
+[role="dialog"] h2,
+[role="dialog"] h3 {
+  color: #ffffff !important;
+}
+
+/* Modal inputs */
+.affine-modal input,
+.affine-modal textarea,
+.affine-dialog input,
+.affine-dialog textarea,
+[role="dialog"] input,
+[role="dialog"] textarea,
+.affine-link-popover input {
+  background-color: #303030 !important;
+  border-color: #444 !important;
+  color: #eaeaea !important;
+}
+
+.affine-modal input::placeholder,
+.affine-dialog input::placeholder,
+[role="dialog"] input::placeholder {
+  color: #6b6b6b !important;
+}
+
+.affine-modal input:focus,
+.affine-dialog input:focus,
+[role="dialog"] input:focus {
+  border-color: #1E96EB !important;
+  outline: none !important;
+}
+
+/* Modal buttons */
+.affine-modal button,
+.affine-dialog button,
+[role="dialog"] button {
+  color: #eaeaea !important;
+}
+
+.affine-modal button:hover,
+.affine-dialog button:hover,
+[role="dialog"] button:hover {
+  background-color: #3a3a3a !important;
+}
+
+/* Cancel/secondary buttons */
+.affine-modal button[class*="cancel"],
+.affine-modal button[class*="secondary"],
+.affine-dialog button[class*="cancel"],
+[role="dialog"] button:not([class*="primary"]):not([class*="confirm"]) {
+  background-color: transparent !important;
+  border-color: #444 !important;
+}
+
+/* Primary/confirm buttons */
+.affine-modal button[class*="primary"],
+.affine-modal button[class*="confirm"],
+.affine-dialog button[class*="primary"],
+.affine-dialog button[class*="confirm"],
+[role="dialog"] button[class*="primary"],
+[role="dialog"] button[class*="confirm"] {
+  background-color: #1E96EB !important;
+  color: #ffffff !important;
+  border-color: #1E96EB !important;
+}
+
+/* Slash menu specific */
+.affine-slash-menu,
+.affine-slash-menu-container {
+  background-color: #1e1e1e !important;
+  border: 1px solid #2e2e2e !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+.affine-slash-menu-item,
+.affine-menu-item {
+  color: #eaeaea !important;
+}
+
+.affine-slash-menu-item:hover,
+.affine-menu-item:hover,
+.affine-slash-menu-item[data-selected="true"],
+.affine-menu-item[aria-selected="true"] {
+  background-color: #2a2a2a !important;
+}
+
+.affine-slash-menu-item-icon,
+.affine-menu-item-icon {
+  color: #a8a8a0 !important;
+}
+
+.affine-slash-menu-category,
+.affine-menu-category {
+  color: #6b6b6b !important;
+}
+
+/* Format toolbar */
+.affine-format-bar,
+.affine-format-bar-widget,
+.affine-inline-toolbar {
+  background-color: #1e1e1e !important;
+  border: 1px solid #2e2e2e !important;
+  border-radius: 8px !important;
+}
+
+.affine-format-bar button,
+.affine-inline-toolbar button {
+  color: #eaeaea !important;
+}
+
+.affine-format-bar button:hover,
+.affine-inline-toolbar button:hover {
+  background-color: #2a2a2a !important;
+}
+
+/* Tooltips */
+[class*="tooltip"],
+.affine-tooltip {
+  background-color: #303030 !important;
+  color: #eaeaea !important;
+  border-color: #444 !important;
+}
+
+/* Dropdown menus */
+[class*="dropdown"],
+.affine-dropdown-menu,
+.affine-select-menu {
+  background-color: #1e1e1e !important;
+  border-color: #2e2e2e !important;
+}
+
+[class*="dropdown"] li,
+[class*="dropdown"] button,
+.affine-dropdown-menu li,
+.affine-dropdown-menu button {
+  color: #eaeaea !important;
+}
+
+[class*="dropdown"] li:hover,
+[class*="dropdown"] button:hover {
+  background-color: #2a2a2a !important;
+}
