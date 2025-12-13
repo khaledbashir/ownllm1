@@ -238,6 +238,23 @@ const WorkspaceThread = {
       });
     return { thread, message };
   },
+
+  smartAction: async function (workspaceSlug, threadSlug, action) {
+    const res = await fetch(
+      `${API_BASE}/workspace/${workspaceSlug}/thread/${threadSlug}/smart-action`,
+      {
+        method: "POST",
+        body: JSON.stringify({ action }),
+        headers: baseHeaders(),
+      }
+    ).catch((e) => null);
+
+    if (!res) return { success: false, error: "Network error" };
+    const data = await res
+      .json()
+      .catch(() => ({ success: false, error: "Invalid server response" }));
+    return data;
+  },
 };
 
 export default WorkspaceThread;

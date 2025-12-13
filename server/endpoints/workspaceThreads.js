@@ -19,6 +19,10 @@ const {
 const { WorkspaceChats } = require("../models/workspaceChats");
 const { convertToChatHistory } = require("../utils/helpers/chat/responses");
 const { getModelTag } = require("./utils");
+const {
+  isValidSmartAction,
+  runThreadSmartAction,
+} = require("../utils/chats/smartActions");
 
 function workspaceThreadEndpoints(app) {
   if (!app) return;
@@ -288,6 +292,45 @@ function workspaceThreadEndpoints(app) {
       } catch (e) {
         console.error(e.message, e);
         response.sendStatus(500).end();
+      }
+    }
+  );
+
+  // Smart Actions: generate markdown outputs (meeting notes / proposal / quote) from last N messages
+  app.post(
+    "/workspace/:slug/thread/:threadSlug/smart-action",
+    [
+      validatedRequest,
+      flexUserRoleValid([ROLES.all]),
+      validWorkspaceAndThreadSlug,
+    ],
+    async (request, response) => {
+      try {
+        const { action } = reqBody(request);
+        if (!isValidSmartAction(action)) {
+          return response
+            .status(400)
+            .json({ success: false, error: "Invalid smart action." });
+        }
+
+        const user = await userFromSession(request, response);
+        const workspace = response.locals.workspace;
+        const thread = response.locals.thread;
+
+        const markdown = await runThreadSmartAction({
+          workspace,
+          thread,
+          user,
+          action,
+          messageLimit: 10,
+        });
+
+        return response.status(200).json({ success: true, markdown });
+      } catch (e) {
+        console.error(e.message, e);
+        return response
+          .status(500)
+          .json({ success: false, error: "Failed to run smart action." });
       }
     }
   );

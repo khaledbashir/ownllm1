@@ -41,7 +41,10 @@ export default class SmartPlugins {
     if (!workspaceSlug) return { success: false, error: "Missing workspace" };
     return await fetch(`${API_BASE}/workspace/${workspaceSlug}/smart-plugins`, {
       method: "POST",
-      headers: baseHeaders(),
+      headers: {
+        ...baseHeaders(),
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(data),
     })
       .then(async (res) => {
@@ -60,7 +63,10 @@ export default class SmartPlugins {
       return { success: false, error: "Missing workspace or plugin id" };
     return await fetch(`${API_BASE}/workspace/${workspaceSlug}/smart-plugins/${id}`, {
       method: "PUT",
-      headers: baseHeaders(),
+      headers: {
+        ...baseHeaders(),
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(data),
     })
       .then(async (res) => {

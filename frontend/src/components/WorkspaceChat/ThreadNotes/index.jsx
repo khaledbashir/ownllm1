@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import WorkspaceThread from "@/models/workspaceThread";
 import AICommandModal from "./AICommandModal";
 import { NotePencil, WarningCircle } from "@phosphor-icons/react";
+import showToast from "@/utils/toast";
 import "./editor.css";
 
 // Lazy load Yoopta editor to isolate any initialization errors
@@ -49,6 +50,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
     const { threadSlug } = useParams();
     const [content, setContent] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [smartActionLoading, setSmartActionLoading] = useState(null);
 
     // ALL HOOKS MUST BE BEFORE ANY CONDITIONAL RETURNS
     const internalEditorRef = useRef(null);
@@ -61,6 +63,36 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
             editorRef.current.insertMarkdown(text);
         }
     }, [editorRef]);
+
+    const runSmartAction = useCallback(async (action) => {
+        if (!workspace?.slug || !threadSlug) return;
+        if (!editorRef.current) {
+            showToast("Notes editor is not ready yet.", "error");
+            return;
+        }
+
+        setSmartActionLoading(action);
+        try {
+            const res = await WorkspaceThread.smartAction(workspace.slug, threadSlug, action);
+            if (!res?.success) {
+                showToast(res?.error || "Smart action failed.", "error");
+                return;
+            }
+
+            const markdown = String(res?.markdown || "").trim();
+            if (!markdown) {
+                showToast("Smart action returned empty output.", "error");
+                return;
+            }
+
+            editorRef.current.insertMarkdown(`\n\n${markdown}\n`);
+            showToast("Inserted into notes.", "success");
+        } catch (e) {
+            showToast(e?.message || "Smart action failed.", "error");
+        } finally {
+            setSmartActionLoading(null);
+        }
+    }, [workspace?.slug, threadSlug, editorRef]);
 
     // Fetch notes on mount or thread change
     useEffect(() => {
@@ -128,7 +160,38 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
     }
 
     return (
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 overflow-hidden relative flex flex-col">
+            <div className="flex items-center justify-between gap-x-2 px-3 py-2 border-b border-theme-sidebar-border bg-theme-bg-secondary/80">
+                <div className="text-xs font-medium text-theme-text-secondary">
+                    Smart Actions
+                </div>
+                <div className="flex items-center gap-x-2">
+                    <button
+                        type="button"
+                        disabled={!!smartActionLoading}
+                        onClick={() => runSmartAction("meeting_notes")}
+                        className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
+                    >
+                        {smartActionLoading === "meeting_notes" ? "Working..." : "Turn to Meeting Notes"}
+                    </button>
+                    <button
+                        type="button"
+                        disabled={!!smartActionLoading}
+                        onClick={() => runSmartAction("draft_proposal")}
+                        className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
+                    >
+                        {smartActionLoading === "draft_proposal" ? "Working..." : "Draft Proposal"}
+                    </button>
+                    <button
+                        type="button"
+                        disabled={!!smartActionLoading}
+                        onClick={() => runSmartAction("quick_quote")}
+                        className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
+                    >
+                        {smartActionLoading === "quick_quote" ? "Working..." : "Quick Quote"}
+                    </button>
+                </div>
+            </div>
             <BlockEditorErrorBoundary>
                 <Suspense fallback={
                     <div className="flex items-center justify-center h-full">

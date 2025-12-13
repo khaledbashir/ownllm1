@@ -2009,6 +2009,107 @@
         }
       }
     },
+    "/v1/workspace/{slug}/import-products": {
+      "post": {
+        "tags": [
+          "Workspaces"
+        ],
+        "description": "Import products from a website URL",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique slug of workspace"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "products": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "description": "JSON object containing url",
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "url": "https://example.com/pricing"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/workspace/{slug}/export-pdf": {
+      "post": {
+        "tags": [
+          "Workspaces"
+        ],
+        "description": "Export HTML content to PDF via server-side rendering",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique slug of workspace"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF File",
+            "content": {
+              "application/pdf": {}
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "description": "JSON object containing html content",
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "html": "<html>...</html>"
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/workspace/{slug}/chats": {
       "get": {
         "tags": [

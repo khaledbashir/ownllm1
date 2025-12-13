@@ -37,6 +37,7 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
   const [socketId, setSocketId] = useState(null);
   const [websocket, setWebsocket] = useState(null);
   const [activeTab, setActiveTab] = useState("chat");
+  const [pendingNoteInsert, setPendingNoteInsert] = useState(null);
   const { files, parseAttachments } = useContext(DndUploaderContext);
 
   // Ref for notes editor to allow AI to insert content
@@ -51,16 +52,51 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
   useEffect(() => {
     const handleNoteInsert = (event) => {
       const { content } = event.detail || {};
-      if (content && notesEditorRef.current) {
-        notesEditorRef.current.insertMarkdown(content);
-        toast.success("Content added to your Notes!");
-        setActiveTab("notes"); // Switch to notes tab to show the inserted content
-      }
+      if (!content) return;
+
+      // Notes editor isn't mounted while on the Chat tab.
+      // Queue the content and switch to Notes. A separate effect will
+      // insert once the editor ref becomes available.
+      setPendingNoteInsert(String(content));
+      setActiveTab("notes");
     };
 
     window.addEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
     return () => window.removeEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
   }, []);
+
+  // When switching to Notes, insert any queued content once the editor is ready.
+  useEffect(() => {
+    if (!pendingNoteInsert) return;
+
+    let cancelled = false;
+    let attempts = 0;
+
+    const tryInsert = () => {
+      if (cancelled) return;
+      const target = notesEditorRef.current;
+      if (target && typeof target.insertMarkdown === "function") {
+        target.insertMarkdown(pendingNoteInsert);
+        toast.success("Content added to your Notes!");
+        setPendingNoteInsert(null);
+        return;
+      }
+
+      attempts += 1;
+      if (attempts >= 60) {
+        toast.error("Notes editor is not ready yet.");
+        setPendingNoteInsert(null);
+        return;
+      }
+
+      setTimeout(tryInsert, 100);
+    };
+
+    tryInsert();
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingNoteInsert]);
 
   // Maintain state of message from whatever is in PromptInput
   const handleMessageChange = (event) => {

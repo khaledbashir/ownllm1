@@ -18,10 +18,19 @@ export default class PdfTemplates {
     static async create(data) {
         return await fetch(`${API_BASE}/templates`, {
             method: "POST",
-            headers: baseHeaders(),
+            headers: {
+                ...baseHeaders(),
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify(data),
         })
-            .then((res) => res.json())
+            .then(async (res) => {
+                const payload = await res
+                    .json()
+                    .catch(() => ({ success: false, error: "Invalid server response" }));
+                if (res.ok) return payload;
+                return { success: false, error: payload?.error || "Request failed" };
+            })
             .catch((e) => {
                 console.error(e);
                 return { success: false, error: e.message };
@@ -31,10 +40,19 @@ export default class PdfTemplates {
     static async update(id, data) {
         return await fetch(`${API_BASE}/templates/${id}`, {
             method: "PUT",
-            headers: baseHeaders(),
+            headers: {
+                ...baseHeaders(),
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify(data),
         })
-            .then((res) => res.json())
+            .then(async (res) => {
+                const payload = await res
+                    .json()
+                    .catch(() => ({ success: false, error: "Invalid server response" }));
+                if (res.ok) return payload;
+                return { success: false, error: payload?.error || "Request failed" };
+            })
             .catch((e) => {
                 console.error(e);
                 return { success: false, error: e.message };

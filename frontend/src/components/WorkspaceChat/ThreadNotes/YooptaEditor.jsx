@@ -22,6 +22,7 @@ import { HeadingOne, HeadingTwo, HeadingThree } from "@yoopta/headings";
 import Link from "@yoopta/link";
 import { Bold, Italic, Underline, Strike, Highlight, CodeMark } from "@yoopta/marks";
 import { html, markdown, plainText } from "@yoopta/exports";
+import MarkdownIt from "markdown-it";
 
 import { FilePdf, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
@@ -112,6 +113,15 @@ function parseInitialContent(rawContent) {
 const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) => {
   const containerRef = useRef(null);
   const editor = useMemo(() => createYooptaEditor(), []);
+  const markdownIt = useMemo(
+    () =>
+      new MarkdownIt({
+        html: false,
+        linkify: true,
+        breaks: true,
+      }),
+    []
+  );
 
   const [value, setValue] = useState(undefined);
   const [isReady, setIsReady] = useState(false);
@@ -155,7 +165,39 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
   useImperativeHandle(ref, () => ({
     insertMarkdown: async (markdownToInsert) => {
       if (!markdownToInsert || typeof markdownToInsert !== "string") return;
+      insertMarkdownIntoDocument(markdownToInsert);
+    },
+    getEditor: () => editor,
+  }));
 
+  const looksLikeMarkdown = useCallback((text) => {
+    if (typeof text !== "string") return false;
+    const t = text.trim();
+    if (!t) return false;
+
+    // Heuristics for markdown-ish paste (tables, headings, lists, code fences)
+    if (/^#{1,6}\s/m.test(t)) return true;
+    if (/^\s*([-*+]\s+|\d+\.\s+)/m.test(t)) return true;
+    if (/^```/m.test(t)) return true;
+    if (/\|.+\|/m.test(t) && /\n\s*\|?\s*:?[-]{3,}:?\s*\|/m.test(t)) return true; // table
+    return false;
+  }, []);
+
+  const deserializeFromMarkdown = useCallback(
+    (markdownText) => {
+      // Prefer HTML deserialization when available because it tends to be more
+      // complete for tables/layout (markdown importer is often minimal).
+      if (typeof html?.deserialize === "function") {
+        const rendered = markdownIt.render(markdownText);
+        return html.deserialize(editor, rendered);
+      }
+      return markdown.deserialize(editor, markdownText);
+    },
+    [editor, markdownIt]
+  );
+
+  const insertMarkdownIntoDocument = useCallback(
+    (markdownToInsert) => {
       try {
         const currentValue = editor.getEditorValue();
         const currentMd = markdown.serialize(editor, currentValue || value);
@@ -164,7 +206,7 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
           .join("\n\n")
           .trim();
 
-        const nextValue = markdown.deserialize(editor, combinedMd);
+        const nextValue = deserializeFromMarkdown(combinedMd);
         editor.setEditorValue(nextValue);
         setValue(nextValue);
         toast.success("Content inserted");
@@ -173,8 +215,23 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
         toast.error("Failed to insert content");
       }
     },
-    getEditor: () => editor,
-  }));
+    [editor, value, deserializeFromMarkdown]
+  );
+
+  const handlePaste = useCallback(
+    (e) => {
+      const text = e?.clipboardData?.getData("text/plain");
+      if (!text) return;
+      if (!looksLikeMarkdown(text)) return;
+
+      // Convert markdown-ish paste into real blocks so tables/headings render.
+      // Note: this currently appends into the document (re-deserializes the whole doc)
+      // to avoid relying on private Yoopta cursor insertion APIs.
+      e.preventDefault();
+      insertMarkdownIntoDocument(text);
+    },
+    [insertMarkdownIntoDocument, looksLikeMarkdown]
+  );
 
   const handleExport = async (template) => {
     if (!workspaceSlug || !isReady) {
@@ -220,7 +277,7 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
             `;
 
       const response = await fetch(
-        `${API_BASE}/workspace/${workspaceSlug}/export-pdf`,
+        `${API_BASE}/v1/workspace/${workspaceSlug}/export-pdf`,
         {
           method: "POST",
           headers: {
@@ -286,6 +343,7 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
           ref={containerRef}
           className="flex-1 overflow-y-auto bg-theme-bg-secondary yoopta-editor-wrapper"
           style={{ minHeight: "100%" }}
+          onPasteCapture={handlePaste}
         >
           <YooptaEditor
             editor={editor}
