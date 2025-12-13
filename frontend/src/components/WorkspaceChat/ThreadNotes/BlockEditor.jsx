@@ -9,6 +9,7 @@ import debounce from "lodash.debounce";
 import { toast } from "react-toastify";
 import ExportPdfModal from "./ExportPdfModal";
 import "./editor.css";
+import "./editor-fixes.css";
 
 function escapeHtml(str) {
     return String(str)

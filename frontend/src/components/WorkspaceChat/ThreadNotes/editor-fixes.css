@@ -1,0 +1,81 @@
+/* ========================================
+   CRITICAL UI FIXES: Slash Menu & Emoji Picker
+   ======================================== */
+
+/* 1. Force menus to "break out" via fixed positioning and high z-index */
+/* Target every possible variation of the suggestion/slash menu */
+.bn-suggestion-menu,
+[data-bn-suggestion-menu],
+.mantine-Menu-dropdown,
+.mantine-Popover-dropdown,
+[role="menu"],
+[data-floating-ui-portal] {
+    z-index: 99999 !important;
+    /* Ensure it's not trapped by overflow:hidden parents */
+    position: fixed !important;
+    /* Visuals */
+    background-color: #1e1e2e !important;
+    border: 1px solid #45475a !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
+    /* Sizing behavior */
+    max-height: 50vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    /* Reset conflicting transforms that might crush it */
+    transform: none !important;
+    /* Use top/left/right/bottom from the library, but ensure visibility */
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* 2. Fix the "Tiny" Emoji Picker */
+/* The emoji picker often renders in a separate popover */
+.bn-emoji-picker,
+[data-bn-type="emoji-picker"],
+.emoji-picker-container,
+div[class*="emoji-picker"] {
+    height: 400px !important;
+    min-height: 350px !important;
+    max-height: 50vh !important;
+    width: 350px !important;
+    min-width: 300px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Ensure the list inside the emoji picker scrolls properly */
+.bn-emoji-picker .bn-emoji-picker-list,
+[data-bn-type="emoji-picker"]>div:last-child {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+/* 3. Ensure Editor Containers allow popups (though fixed positioning helps) */
+.rich-editor-container,
+.blocknote-editor-full,
+.bn-editor,
+.bn-container,
+.ProseMirror {
+    overflow: visible !important;
+}
+
+/* 4. Fix specific Mantine ScrollArea issues that might be crushing content */
+.mantine-ScrollArea-root,
+.mantine-ScrollArea-viewport {
+    overflow: visible !important;
+}
+
+/* 5. Mobile/Small Screen safeguards */
+@media (max-width: 768px) {
+
+    .bn-suggestion-menu,
+    [data-bn-suggestion-menu],
+    .bn-emoji-picker {
+        max-height: 40vh !important;
+        max-width: 90vw !important;
+    }
+}
