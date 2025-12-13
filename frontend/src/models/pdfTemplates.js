@@ -16,25 +16,32 @@ export default class PdfTemplates {
     }
 
     static async create(data) {
-        return await fetch(`${API_BASE}/templates`, {
-            method: "POST",
-            headers: {
-                ...baseHeaders(),
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        })
-            .then(async (res) => {
-                const payload = await res
-                    .json()
-                    .catch(() => ({ success: false, error: "Invalid server response" }));
-                if (res.ok) return payload;
-                return { success: false, error: payload?.error || "Request failed" };
-            })
-            .catch((e) => {
-                console.error(e);
-                return { success: false, error: e.message };
+        console.log("[PdfTemplates] Creating template with data:", data);
+        try {
+            const response = await fetch(`${API_BASE}/templates`, {
+                method: "POST",
+                headers: {
+                    ...baseHeaders(),
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
             });
+            console.log("[PdfTemplates] Response status:", response.status);
+            console.log("[PdfTemplates] Response ok:", response.ok);
+
+            const payload = await response.json().catch((e) => {
+                console.error("[PdfTemplates] JSON parse error:", e);
+                return { success: false, error: "Invalid server response" };
+            });
+
+            console.log("[PdfTemplates] Response payload:", payload);
+
+            if (response.ok) return payload;
+            return { success: false, error: payload?.error || "Request failed" };
+        } catch (e) {
+            console.error("[PdfTemplates] Network error:", e);
+            return { success: false, error: e.message };
+        }
     }
 
     static async update(id, data) {
