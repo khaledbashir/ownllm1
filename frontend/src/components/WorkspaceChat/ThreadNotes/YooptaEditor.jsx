@@ -33,6 +33,41 @@ import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
 import "./editor.css";
 
+function sanitizeProgrammaticMarkdown(raw) {
+  if (raw == null) return "";
+  let text = String(raw);
+
+  // Remove <think> blocks (raw + HTML-escaped)
+  text = text.replace(/<think\b[^>]*>[\s\S]*?<\/think>/gi, "");
+  text = text.replace(/<think\b[^>]*>/gi, "").replace(/<\/think>/gi, "");
+  text = text.replace(/&lt;think\b[^&]*&gt;[\s\S]*?&lt;\/think&gt;/gi, "");
+  text = text.replace(/&lt;think\b[^&]*&gt;/gi, "").replace(/&lt;\/think&gt;/gi, "");
+
+  // Remove fenced JSON blocks
+  text = text.replace(/```([\w/+.-]+)?\s*\n([\s\S]*?)```/g, (match, lang, body) => {
+    const normalizedLang = String(lang || "").trim().toLowerCase();
+    const trimmedBody = String(body || "").trim();
+
+    if (normalizedLang === "json" || normalizedLang === "application/json") return "";
+
+    const looksLikeJson =
+      (trimmedBody.startsWith("{") && trimmedBody.endsWith("}")) ||
+      (trimmedBody.startsWith("[") && trimmedBody.endsWith("]"));
+    if (looksLikeJson) {
+      try {
+        JSON.parse(trimmedBody);
+        return "";
+      } catch {
+        // keep
+      }
+    }
+
+    return match;
+  });
+
+  return text.replace(/\n{3,}/g, "\n\n").trim();
+}
+
 const PLUGINS = [
   Paragraph,
   HeadingOne,
@@ -166,7 +201,9 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
   useImperativeHandle(ref, () => ({
     insertMarkdown: async (markdownToInsert) => {
       if (!markdownToInsert || typeof markdownToInsert !== "string") return;
-      insertMarkdownIntoDocument(markdownToInsert);
+      const cleaned = sanitizeProgrammaticMarkdown(markdownToInsert);
+      if (!cleaned) return;
+      insertMarkdownIntoDocument(cleaned);
     },
     getEditor: () => editor,
   }));
@@ -340,7 +377,7 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
               ) : (
                 <FilePdf className="w-4 h-4 text-red-400" />
               )}
-              <span className="text-base-content">
+              <span className="text-theme-text-primary">
                 {exporting ? "Exporting..." : "Export PDF"}
               </span>
             </button>

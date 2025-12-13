@@ -171,11 +171,11 @@ function SaveToNotes({ message }) {
         onClick={handleSaveToNotes}
         data-tooltip-id="save-to-notes"
         data-tooltip-content="Save to Notes"
-        className="text-zinc-300"
+        className="text-theme-text-primary hover:text-theme-text-primary"
         aria-label="Save to Notes"
       >
         <NotePencil
-          color="var(--theme-sidebar-footer-icon-fill)"
+          color="currentColor"
           size={20}
           className="mb-1"
         />

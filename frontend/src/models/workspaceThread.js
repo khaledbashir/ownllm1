@@ -245,7 +245,7 @@ const WorkspaceThread = {
       {
         method: "POST",
         body: JSON.stringify({ action }),
-        headers: baseHeaders(),
+        headers: { ...baseHeaders(), "Content-Type": "application/json" },
       }
     ).catch((e) => null);
 

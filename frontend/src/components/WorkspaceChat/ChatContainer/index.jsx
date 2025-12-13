@@ -38,6 +38,10 @@ function sanitizeNotesMarkdown(raw) {
   // Remove any dangling think tags
   text = text.replace(/<think\b[^>]*>/gi, "").replace(/<\/think>/gi, "");
 
+  // Also handle escaped tags like &lt;think&gt; ... &lt;/think&gt;
+  text = text.replace(/&lt;think\b[^&]*&gt;[\s\S]*?&lt;\/think&gt;/gi, "");
+  text = text.replace(/&lt;think\b[^&]*&gt;/gi, "").replace(/&lt;\/think&gt;/gi, "");
+
   // Remove fenced code blocks that are JSON (explicit lang or JSON-parsable body)
   text = text.replace(/```([\w/+.-]+)?\s*\n([\s\S]*?)```/g, (match, lang, body) => {
     const normalizedLang = String(lang || "").trim().toLowerCase();
