@@ -198,6 +198,65 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // NUCLEAR: Strip all inline margin/padding styles that Yoopta applies via JS
+  // CSS !important cannot override inline styles, so we use MutationObserver
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const stripInlineStyles = (el) => {
+      if (!el || el.nodeType !== 1) return;
+      const style = el.getAttribute("style");
+      if (style && (style.includes("margin") || style.includes("padding"))) {
+        // Remove margin/padding from inline style but keep other properties
+        const newStyle = style
+          .split(";")
+          .filter((s) => {
+            const prop = s.split(":")[0]?.trim().toLowerCase();
+            return prop && !prop.startsWith("margin") && !prop.startsWith("padding");
+          })
+          .join(";");
+        if (newStyle !== style) {
+          el.setAttribute("style", newStyle || "");
+        }
+      }
+    };
+
+    const stripAllInlineStyles = () => {
+      const elements = container.querySelectorAll("[style]");
+      elements.forEach(stripInlineStyles);
+    };
+
+    // Initial strip
+    stripAllInlineStyles();
+
+    // Watch for changes and strip new inline styles
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === "attributes" && mutation.attributeName === "style") {
+          stripInlineStyles(mutation.target);
+        }
+        if (mutation.type === "childList") {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1) {
+              stripInlineStyles(node);
+              node.querySelectorAll?.("[style]")?.forEach(stripInlineStyles);
+            }
+          });
+        }
+      });
+    });
+
+    observer.observe(container, {
+      attributes: true,
+      attributeFilter: ["style"],
+      childList: true,
+      subtree: true,
+    });
+
+    return () => observer.disconnect();
+  }, [isReady]);
+
   useImperativeHandle(ref, () => ({
     insertMarkdown: async (markdownToInsert) => {
       if (!markdownToInsert || typeof markdownToInsert !== "string") return;
