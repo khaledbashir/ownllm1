@@ -366,11 +366,11 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
           style={{ minHeight: "100%" }}
           onPasteCapture={handlePaste}
         >
-          <div className="sticky top-2 z-10 flex justify-end px-4 pt-2">
+          <div className="sticky top-0 z-20 flex justify-end px-4 py-2 bg-theme-bg-secondary border-b border-theme-sidebar-border">
             <button
               onClick={() => setShowExportModal(true)}
               disabled={exporting || !isReady}
-              className="flex items-center gap-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-x-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {exporting ? (
                 <CircleNotch className="w-4 h-4 animate-spin" />

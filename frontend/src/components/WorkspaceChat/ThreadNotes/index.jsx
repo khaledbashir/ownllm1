@@ -170,7 +170,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                         type="button"
                         disabled={!!smartActionLoading}
                         onClick={() => runSmartAction("meeting_notes")}
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {smartActionLoading === "meeting_notes" ? "Working..." : "Meeting Notes"}
                     </button>
@@ -178,7 +178,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                         type="button"
                         disabled={!!smartActionLoading}
                         onClick={() => runSmartAction("draft_proposal")}
-                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {smartActionLoading === "draft_proposal" ? "Working..." : "Draft Proposal"}
                     </button>
@@ -186,7 +186,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                         type="button"
                         disabled={!!smartActionLoading}
                         onClick={() => runSmartAction("quick_quote")}
-                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {smartActionLoading === "quick_quote" ? "Working..." : "Quick Quote"}
                     </button>

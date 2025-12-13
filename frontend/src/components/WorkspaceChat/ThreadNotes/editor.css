@@ -1,6 +1,6 @@
 /* Thread Notes Rich Editor Styles */
 /* ========================================
-   Yoopta Notes Editor - FULL WIDTH OVERHAUL
+   COMPACT LAYOUT - REDUCED SPACING
    ======================================== */
 
 /* Container wrapper */
@@ -20,10 +20,10 @@
 }
 
 /* Force ALL Yoopta child containers to full width */
-.yoopta-notes-editor > div,
-.yoopta-notes-editor > div > div,
+.yoopta-notes-editor>div,
+.yoopta-notes-editor>div>div,
 .yoopta-notes-editor [data-yoopta-editor],
-.yoopta-notes-editor [data-yoopta-editor] > div {
+.yoopta-notes-editor [data-yoopta-editor]>div {
   width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
@@ -31,67 +31,77 @@
   padding-right: 0 !important;
 }
 
-/* The actual slate editor */
+/* The actual slate editor - COMPACT PADDING */
 .yoopta-notes-editor [data-slate-editor="true"] {
-  padding: 20px 24px !important;
+  padding: 12px 16px !important;
   color: var(--theme-text-primary) !important;
   caret-color: var(--theme-text-primary) !important;
   width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
-  min-height: 300px;
+  min-height: 200px;
 }
 
 /* Force child blocks to full width */
-.yoopta-notes-editor [data-slate-editor="true"] > * {
+.yoopta-notes-editor [data-slate-editor="true"]>* {
   width: 100% !important;
   max-width: 100% !important;
+  margin-bottom: 6px !important;
 }
 
-/* Text styling */
+/* ========================================
+   TEXT STYLING - COMPACT SPACING
+   ======================================== */
+
+/* Paragraphs - tight spacing */
 .yoopta-notes-editor .yoopta-paragraph,
 .yoopta-notes-editor p,
 .yoopta-notes-editor span[data-slate-string="true"] {
   color: var(--theme-text-primary) !important;
-  font-size: 15px !important;
-  line-height: 1.6 !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  margin-bottom: 6px !important;
 }
 
-/* Headings */
+/* Headings - COMPACT margins */
 .yoopta-notes-editor h1 {
-  font-size: 2em !important;
+  font-size: 1.75em !important;
   font-weight: 700 !important;
   color: var(--theme-text-primary) !important;
-  margin: 0.67em 0 !important;
+  margin: 8px 0 4px 0 !important;
 }
 
 .yoopta-notes-editor h2 {
-  font-size: 1.5em !important;
+  font-size: 1.35em !important;
   font-weight: 600 !important;
   color: var(--theme-text-primary) !important;
-  margin: 0.75em 0 !important;
+  margin: 8px 0 4px 0 !important;
 }
 
 .yoopta-notes-editor h3 {
-  font-size: 1.25em !important;
+  font-size: 1.15em !important;
   font-weight: 600 !important;
   color: var(--theme-text-primary) !important;
-  margin: 0.83em 0 !important;
+  margin: 6px 0 3px 0 !important;
 }
 
-/* Tables - full width and properly styled */
+/* ========================================
+   TABLES - COMPACT
+   ======================================== */
 .yoopta-notes-editor table {
   width: 100% !important;
   border-collapse: collapse !important;
-  margin: 16px 0 !important;
+  margin: 8px 0 !important;
 }
 
 .yoopta-notes-editor th,
 .yoopta-notes-editor td {
   border: 1px solid var(--theme-sidebar-border) !important;
-  padding: 8px 12px !important;
+  padding: 6px 10px !important;
   text-align: left !important;
   color: var(--theme-text-primary) !important;
+  line-height: 1.3 !important;
+  font-size: 14px !important;
 }
 
 .yoopta-notes-editor th {
@@ -103,19 +113,24 @@
   background: rgba(255, 255, 255, 0.02) !important;
 }
 
-/* Lists */
+/* ========================================
+   LISTS - COMPACT
+   ======================================== */
 .yoopta-notes-editor ul,
 .yoopta-notes-editor ol {
-  padding-left: 24px !important;
-  margin: 8px 0 !important;
+  padding-left: 20px !important;
+  margin: 4px 0 !important;
 }
 
 .yoopta-notes-editor li {
   color: var(--theme-text-primary) !important;
-  margin: 4px 0 !important;
+  margin: 2px 0 !important;
+  line-height: 1.4 !important;
 }
 
-/* Code blocks */
+/* ========================================
+   CODE BLOCKS - COMPACT
+   ======================================== */
 .yoopta-notes-editor pre,
 .yoopta-notes-editor code {
   background: var(--theme-bg-primary) !important;
@@ -125,23 +140,53 @@
 }
 
 .yoopta-notes-editor pre {
-  padding: 16px !important;
+  padding: 10px !important;
   overflow-x: auto !important;
-  margin: 12px 0 !important;
+  margin: 6px 0 !important;
 }
 
 .yoopta-notes-editor code {
-  padding: 2px 6px !important;
+  padding: 1px 4px !important;
   font-size: 0.9em !important;
 }
 
-/* Blockquotes */
+/* ========================================
+   BLOCKQUOTES - COMPACT
+   ======================================== */
 .yoopta-notes-editor blockquote {
-  border-left: 4px solid var(--theme-sidebar-border) !important;
-  padding-left: 16px !important;
-  margin: 16px 0 !important;
+  border-left: 3px solid var(--theme-sidebar-border) !important;
+  padding-left: 12px !important;
+  margin: 6px 0 !important;
   color: var(--theme-text-secondary) !important;
   font-style: italic !important;
+}
+
+/* ========================================
+   HIDE REASONING/THINKING TAGS COMPLETELY
+   ======================================== */
+reasoning,
+.reasoning,
+think,
+.think,
+.thinking,
+.ai-thinking,
+[data-type="reasoning"],
+[data-type="thinking"] {
+  display: none !important;
+}
+
+/* Hide any element containing reasoning text */
+*:has(> reasoning),
+*:has(> think) {
+  display: none !important;
+}
+
+/* ========================================
+   NO ANIMATIONS - INSTANT CLICKS
+   ======================================== */
+.yoopta-notes-editor button,
+.yoopta-notes-editor [role="button"] {
+  transition: none !important;
 }
 
 /* Selection */
@@ -161,15 +206,15 @@
 [data-yoopta-action-menu] {
   background: var(--theme-bg-secondary) !important;
   border: 1px solid var(--theme-modal-border) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   color: var(--theme-text-primary) !important;
 }
 
 .yoopta-action-menu-list-content button,
 [data-yoopta-action-menu] button {
   color: var(--theme-text-primary) !important;
-  padding: 8px 12px !important;
+  padding: 6px 10px !important;
 }
 
 .yoopta-action-menu-list-content button:hover,
@@ -187,7 +232,7 @@
 }
 
 /* Icon box inside action menu items */
-.yoopta-action-menu-list-content button > div:first-child {
+.yoopta-action-menu-list-content button>div:first-child {
   background: var(--theme-bg-primary) !important;
   border-color: var(--theme-modal-border) !important;
 }
