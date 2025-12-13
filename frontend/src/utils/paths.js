@@ -90,6 +90,12 @@ export default {
       agentConfig: (slug) => {
         return `/workspace/${slug}/settings/agent-config`;
       },
+      products: (slug) => {
+        return `/workspace/${slug}/settings/products`;
+      },
+      rateCard: (slug) => {
+        return `/workspace/${slug}/settings/rate-card`;
+      },
     },
     thread: (wsSlug, threadSlug) => {
       return `/workspace/${wsSlug}/t/${threadSlug}`;

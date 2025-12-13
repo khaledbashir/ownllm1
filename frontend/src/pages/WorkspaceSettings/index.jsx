@@ -12,6 +12,8 @@ import {
   Robot,
   User,
   Wrench,
+  ShoppingBag,
+  CurrencyDollar,
 } from "@phosphor-icons/react";
 import paths from "@/utils/paths";
 import { Link } from "react-router-dom";
@@ -21,6 +23,8 @@ import ChatSettings from "./ChatSettings";
 import VectorDatabase from "./VectorDatabase";
 import Members from "./Members";
 import WorkspaceAgentConfiguration from "./AgentConfig";
+import ProductsManager from "@/components/Modals/ManageWorkspace/ProductsManager";
+import RateCardManager from "@/components/Modals/ManageWorkspace/RateCardManager";
 import useUser from "@/hooks/useUser";
 import { useTranslation } from "react-i18next";
 import System from "@/models/system";
@@ -31,6 +35,8 @@ const TABS = {
   "vector-database": VectorDatabase,
   members: Members,
   "agent-config": WorkspaceAgentConfiguration,
+  products: ProductsManager,
+  "rate-card": RateCardManager,
 };
 
 export default function WorkspaceSettings() {
@@ -82,7 +88,7 @@ function ShowWorkspaceChat() {
         style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
         className="transition-all duration-500 relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[16px] bg-theme-bg-secondary w-full h-full overflow-y-scroll"
       >
-        <div className="flex gap-x-10 pt-6 pb-4 ml-16 mr-8 border-b-2 border-white light:border-theme-chat-input-border border-opacity-10">
+        <div className="flex gap-x-10 pt-6 pb-4 ml-16 mr-8 border-b-2 border-white light:border-theme-chat-input-border border-opacity-10 overflow-x-auto">
           <Link
             to={paths.workspace.chat(slug)}
             className="absolute top-2 left-2 md:top-4 md:left-4 transition-all duration-300 p-2 rounded-full text-white bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover z-10"
@@ -98,6 +104,16 @@ function ShowWorkspaceChat() {
             title={t("workspaces—settings.chat")}
             icon={<ChatText className="h-6 w-6" />}
             to={paths.workspace.settings.chatSettings(slug)}
+          />
+          <TabItem
+            title="Products"
+            icon={<ShoppingBag className="h-6 w-6" />}
+            to={paths.workspace.settings.products(slug)}
+          />
+          <TabItem
+            title="Rate Card"
+            icon={<CurrencyDollar className="h-6 w-6" />}
+            to={paths.workspace.settings.rateCard(slug)}
           />
           <TabItem
             title={t("workspaces—settings.vector")}
@@ -117,7 +133,7 @@ function ShowWorkspaceChat() {
           />
         </div>
         <div className="px-16 py-6">
-          <TabContent slug={slug} workspace={workspace} />
+          {TabContent && <TabContent slug={slug} workspace={workspace} />}
         </div>
       </div>
     </div>
@@ -130,11 +146,10 @@ function TabItem({ title, icon, to, visible = true }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `${
-          isActive
-            ? "text-sky-400 pb-4 border-b-[4px] -mb-[19px] border-sky-400"
-            : "text-white/60 hover:text-sky-400"
-        } ` + " flex gap-x-2 items-center font-medium"
+        `${isActive
+          ? "text-sky-400 pb-4 border-b-[4px] -mb-[19px] border-sky-400"
+          : "text-white/60 hover:text-sky-400"
+        } ` + " flex gap-x-2 items-center font-medium whitespace-nowrap"
       }
     >
       {icon}
