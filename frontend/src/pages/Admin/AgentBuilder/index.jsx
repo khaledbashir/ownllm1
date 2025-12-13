@@ -10,6 +10,7 @@ import { useTheme } from "@/hooks/useTheme";
 import HeaderMenu from "./HeaderMenu";
 import paths from "@/utils/paths";
 import PublishEntityModal from "@/components/CommunityHub/PublishEntityModal";
+import FlowBuilderChat from "@/components/FlowBuilderChat";
 
 const DEFAULT_BLOCKS = [
   {
@@ -391,6 +392,61 @@ export default function AgentBuilder() {
           the original content.
         </p>
       </Tooltip>
+
+      {/* AI Flow Builder Chat */}
+      <FlowBuilderChat
+        onFlowGenerated={(generatedFlow) => {
+          // Convert AI-generated flow to builder blocks
+          if (!generatedFlow) return;
+
+          const newBlocks = [
+            {
+              id: "flow_info",
+              type: BLOCK_TYPES.FLOW_INFO,
+              config: {
+                name: generatedFlow.name || "AI Generated Flow",
+                description: generatedFlow.description || "",
+              },
+              isExpanded: true,
+            },
+            {
+              id: "start",
+              type: BLOCK_TYPES.START,
+              config: {
+                variables: generatedFlow.variables || [{ name: "", value: "" }],
+              },
+              isExpanded: true,
+            },
+          ];
+
+          // Add generated blocks
+          if (generatedFlow.blocks) {
+            generatedFlow.blocks.forEach((block, idx) => {
+              const blockType = block.type?.toUpperCase().replace(/-/g, "_");
+              if (BLOCK_TYPES[blockType]) {
+                newBlocks.push({
+                  id: `block_${idx + 1}`,
+                  type: BLOCK_TYPES[blockType],
+                  config: block.config || {},
+                  isExpanded: true,
+                });
+              }
+            });
+          }
+
+          // Add finish block
+          newBlocks.push({
+            id: "finish",
+            type: BLOCK_TYPES.FINISH,
+            config: {},
+            isExpanded: false,
+          });
+
+          setBlocks(newBlocks);
+          setAgentName(generatedFlow.name || "AI Generated Flow");
+          setCurrentFlowUuid(null); // New flow, no UUID yet
+        }}
+      />
     </div>
   );
 }
