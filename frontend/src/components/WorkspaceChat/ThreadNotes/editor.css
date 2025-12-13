@@ -17,6 +17,14 @@
   padding: 16px;
   color: var(--theme-text-primary);
   caret-color: var(--theme-text-primary);
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+/* Some Yoopta themes center content with a max-width wrapper. Force full width. */
+.yoopta-notes-editor [data-slate-editor="true"] > * {
+  max-width: none !important;
 }
 
 .yoopta-notes-editor .yoopta-paragraph {

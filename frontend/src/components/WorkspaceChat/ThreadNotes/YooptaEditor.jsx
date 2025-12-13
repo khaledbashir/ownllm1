@@ -323,29 +323,29 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
   return (
     <>
       <div className="flex flex-col h-full relative">
-        <div className="absolute top-2 right-2 z-10">
-          <button
-            onClick={() => setShowExportModal(true)}
-            disabled={exporting || !isReady}
-            className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
-          >
-            {exporting ? (
-              <CircleNotch className="w-4 h-4 text-blue-400 animate-spin" />
-            ) : (
-              <FilePdf className="w-4 h-4 text-red-400" />
-            )}
-            <span className="text-theme-text-primary">
-              {exporting ? "Exporting..." : "Export PDF"}
-            </span>
-          </button>
-        </div>
-
         <div
           ref={containerRef}
           className="flex-1 overflow-y-auto bg-theme-bg-secondary yoopta-editor-wrapper"
           style={{ minHeight: "100%" }}
           onPasteCapture={handlePaste}
         >
+          <div className="sticky top-2 z-10 flex justify-end px-2 pt-2">
+            <button
+              onClick={() => setShowExportModal(true)}
+              disabled={exporting || !isReady}
+              className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
+            >
+              {exporting ? (
+                <CircleNotch className="w-4 h-4 text-blue-400 animate-spin" />
+              ) : (
+                <FilePdf className="w-4 h-4 text-red-400" />
+              )}
+              <span className="text-base-content">
+                {exporting ? "Exporting..." : "Export PDF"}
+              </span>
+            </button>
+          </div>
+
           <YooptaEditor
             editor={editor}
             plugins={PLUGINS}

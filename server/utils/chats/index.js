@@ -160,6 +160,15 @@ function buildProposalContext(workspace) {
 
   let context = "";
 
+  const normalizeMoneyValue = (value) => {
+    if (value === null || value === undefined) return "Not Set";
+    const asString = String(value).trim();
+    if (!asString) return "Not Set";
+    // Treat 0/"0" as not configured to avoid "$0" proposals.
+    if (asString === "0" || asString === "0.0" || asString === "0.00") return "Not Set";
+    return asString;
+  };
+
   // Inject products/services if available
   if (workspace.products) {
     try {
@@ -167,9 +176,17 @@ function buildProposalContext(workspace) {
         ? JSON.parse(workspace.products)
         : workspace.products;
       if (Array.isArray(products) && products.length > 0) {
+        const normalizedProducts = products.map((p) => {
+          if (!p || typeof p !== "object") return p;
+          return {
+            ...p,
+            price: normalizeMoneyValue(p.price),
+          };
+        });
+
         context += "\n\n## AVAILABLE PRODUCTS & SERVICES\n";
         context += "Use these exact prices when creating proposals. Do NOT invent or hallucinate prices.\n";
-        context += JSON.stringify(products, null, 2);
+        context += JSON.stringify(normalizedProducts, null, 2);
       }
     } catch (e) {
       // Invalid JSON, skip
@@ -183,9 +200,17 @@ function buildProposalContext(workspace) {
         ? JSON.parse(workspace.rateCard)
         : workspace.rateCard;
       if (Array.isArray(rateCard) && rateCard.length > 0) {
+        const normalizedRateCard = rateCard.map((r) => {
+          if (!r || typeof r !== "object") return r;
+          return {
+            ...r,
+            hourlyRate: normalizeMoneyValue(r.hourlyRate),
+          };
+        });
+
         context += "\n\n## HOURLY RATE CARD\n";
         context += "Use these roles and hourly rates for time & materials estimates. Do NOT invent rates.\n";
-        context += JSON.stringify(rateCard, null, 2);
+        context += JSON.stringify(normalizedRateCard, null, 2);
       }
     } catch (e) {
       // Invalid JSON, skip

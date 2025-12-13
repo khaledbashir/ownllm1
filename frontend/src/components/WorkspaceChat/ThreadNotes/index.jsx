@@ -161,8 +161,8 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
 
     return (
         <div className="flex-1 overflow-hidden relative flex flex-col">
-            <div className="flex items-center justify-between gap-x-2 px-3 py-2 border-b border-theme-sidebar-border bg-theme-bg-secondary/80">
-                <div className="text-xs font-medium text-theme-text-secondary">
+            <div className="sticky top-0 z-10 bg-base-100 border-b border-base-300 flex items-center justify-between gap-x-2 px-3 py-2">
+                <div className="text-xs font-medium text-base-content">
                     Smart Actions
                 </div>
                 <div className="flex items-center gap-x-2">
@@ -170,7 +170,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                         type="button"
                         disabled={!!smartActionLoading}
                         onClick={() => runSmartAction("meeting_notes")}
-                        className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
+                        className="flex items-center gap-x-2 px-3 py-1 bg-base-100 hover:bg-base-200 border border-base-300 rounded-md text-sm text-base-content transition-colors disabled:opacity-50"
                     >
                         {smartActionLoading === "meeting_notes" ? "Working..." : "Turn to Meeting Notes"}
                     </button>
@@ -178,7 +178,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                         type="button"
                         disabled={!!smartActionLoading}
                         onClick={() => runSmartAction("draft_proposal")}
-                        className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
+                        className="flex items-center gap-x-2 px-3 py-1 bg-base-100 hover:bg-base-200 border border-base-300 rounded-md text-sm text-base-content transition-colors disabled:opacity-50"
                     >
                         {smartActionLoading === "draft_proposal" ? "Working..." : "Draft Proposal"}
                     </button>
@@ -186,7 +186,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                         type="button"
                         disabled={!!smartActionLoading}
                         onClick={() => runSmartAction("quick_quote")}
-                        className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
+                        className="flex items-center gap-x-2 px-3 py-1 bg-base-100 hover:bg-base-200 border border-base-300 rounded-md text-sm text-base-content transition-colors disabled:opacity-50"
                     >
                         {smartActionLoading === "quick_quote" ? "Working..." : "Quick Quote"}
                     </button>

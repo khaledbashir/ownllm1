@@ -29,6 +29,46 @@ import { toast } from "react-toastify";
 // Event for AI to insert content into notes
 export const NOTE_INSERT_EVENT = "note-insert-content";
 
+function sanitizeNotesMarkdown(raw) {
+  if (raw == null) return "";
+  let text = String(raw);
+
+  // Remove <think>...</think> blocks (multiline)
+  text = text.replace(/<think\b[^>]*>[\s\S]*?<\/think>/gi, "");
+  // Remove any dangling think tags
+  text = text.replace(/<think\b[^>]*>/gi, "").replace(/<\/think>/gi, "");
+
+  // Remove fenced code blocks that are JSON (explicit lang or JSON-parsable body)
+  text = text.replace(/```([\w/+.-]+)?\s*\n([\s\S]*?)```/g, (match, lang, body) => {
+    const normalizedLang = String(lang || "").trim().toLowerCase();
+    const trimmedBody = String(body || "").trim();
+
+    if (normalizedLang === "json" || normalizedLang === "application/json") {
+      return "";
+    }
+
+    // If the fenced block is valid JSON, drop it.
+    const looksLikeJson =
+      (trimmedBody.startsWith("{") && trimmedBody.endsWith("}")) ||
+      (trimmedBody.startsWith("[") && trimmedBody.endsWith("]"));
+
+    if (looksLikeJson) {
+      try {
+        JSON.parse(trimmedBody);
+        return "";
+      } catch {
+        // Keep non-JSON code blocks.
+      }
+    }
+
+    return match;
+  });
+
+  // Normalize excessive whitespace after stripping blocks
+  text = text.replace(/\n{3,}/g, "\n\n").trim();
+  return text;
+}
+
 export default function ChatContainer({ workspace, knownHistory = [] }) {
   const { threadSlug = null } = useParams();
   const [message, setMessage] = useState("");
@@ -54,10 +94,16 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
       const { content } = event.detail || {};
       if (!content) return;
 
+      const cleaned = sanitizeNotesMarkdown(content);
+      if (!cleaned) {
+        toast.error("Nothing client-facing to save.");
+        return;
+      }
+
       // Notes editor isn't mounted while on the Chat tab.
       // Queue the content and switch to Notes. A separate effect will
       // insert once the editor ref becomes available.
-      setPendingNoteInsert(String(content));
+      setPendingNoteInsert(cleaned);
       setActiveTab("notes");
     };
 
