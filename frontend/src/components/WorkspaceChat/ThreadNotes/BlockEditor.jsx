@@ -3,7 +3,6 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { MantineProvider, createTheme } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { FilePdf, CircleNotch } from "@phosphor-icons/react";
 import debounce from "lodash.debounce";
@@ -33,25 +32,6 @@ function safeImageSrc(input) {
     }
     return "";
 }
-
-// Dark theme for Mantine
-const darkTheme = createTheme({
-    primaryColor: 'blue',
-    colors: {
-        dark: [
-            '#C1C2C5',
-            '#A6A7AB',
-            '#909296',
-            '#5C5F66',
-            '#373A40',
-            '#2C2E33',
-            '#25262B',
-            '#1A1B1E',
-            '#141517',
-            '#101113',
-        ],
-    },
-});
 
 const BlockEditor = forwardRef(({ content, onSave }, ref) => {
     const [exporting, setExporting] = useState(false);
@@ -164,7 +144,7 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
     };
 
     return (
-        <MantineProvider theme={darkTheme} forceColorScheme="dark">
+        <>
             <div className="flex flex-col h-full relative">
                 <div className="absolute top-2 right-2 z-10">
                     <button
@@ -182,7 +162,7 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
                         </span>
                     </button>
                 </div>
-                <div className="flex-1 overflow-y-auto bg-theme-bg-secondary" style={{ minHeight: '100%' }}>
+                <div className="flex-1 overflow-y-auto bg-theme-bg-secondary blocknote-dark-wrapper" style={{ minHeight: '100%' }}>
                     <BlockNoteView
                         editor={editor}
                         onChange={onChange}
@@ -196,8 +176,9 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
                 onClose={() => setShowExportModal(false)}
                 onExport={handleExport}
             />
-        </MantineProvider>
+        </>
     );
 });
 
 export default BlockEditor;
+
