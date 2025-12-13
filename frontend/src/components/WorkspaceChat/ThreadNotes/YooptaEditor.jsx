@@ -282,17 +282,17 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
       const data = editor.getEditorValue();
       const htmlContent = html.serialize(editor, data);
 
-        const primaryColor = template?.primaryColor;
-        const fontFamily = template?.fontFamily;
+      const primaryColor = template?.primaryColor;
+      const fontFamily = template?.fontFamily;
       const headerText = template?.headerText || "";
       const footerText = template?.footerText || "";
       const logoPath = template?.logoPath || "";
 
-        const headingColorRule = primaryColor ? `color: ${primaryColor};` : "";
-        const headerBorderRule = primaryColor
+      const headingColorRule = primaryColor ? `color: ${primaryColor};` : "";
+      const headerBorderRule = primaryColor
         ? `border-bottom: 2px solid ${primaryColor};`
         : "border-bottom: 1px solid currentColor; opacity: 0.7;";
-        const headerColorRule = primaryColor ? `color: ${primaryColor};` : "";
+      const headerColorRule = primaryColor ? `color: ${primaryColor};` : "";
 
       const fullHtml = `
                 <!DOCTYPE html>
@@ -366,20 +366,18 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
           style={{ minHeight: "100%" }}
           onPasteCapture={handlePaste}
         >
-          <div className="sticky top-2 z-10 flex justify-end px-2 pt-2">
+          <div className="sticky top-2 z-10 flex justify-end px-4 pt-2">
             <button
               onClick={() => setShowExportModal(true)}
               disabled={exporting || !isReady}
-              className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
+              className="flex items-center gap-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {exporting ? (
-                <CircleNotch className="w-4 h-4 text-blue-400 animate-spin" />
+                <CircleNotch className="w-4 h-4 animate-spin" />
               ) : (
-                <FilePdf className="w-4 h-4 text-red-400" />
+                <FilePdf className="w-4 h-4" />
               )}
-              <span className="text-theme-text-primary">
-                {exporting ? "Exporting..." : "Export PDF"}
-              </span>
+              {exporting ? "Exporting..." : "Export PDF"}
             </button>
           </div>
 
