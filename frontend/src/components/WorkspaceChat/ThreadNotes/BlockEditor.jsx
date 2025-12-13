@@ -1,5 +1,5 @@
 import React, { useState, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
-import { useCreateBlockNote } from "@blocknote/react";
+import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
@@ -188,7 +188,17 @@ const BlockEditor = forwardRef(({ content, onSave }, ref) => {
                         onChange={onChange}
                         theme="dark"
                         className="blocknote-editor-full"
-                    />
+                        slashMenu={false}
+                    >
+                        <SuggestionMenuController
+                            triggerCharacter="/"
+                            getItems={async (query) =>
+                                getDefaultReactSlashMenuItems(editor).filter((item) =>
+                                    item.title.toLowerCase().includes(query.toLowerCase())
+                                )
+                            }
+                        />
+                    </BlockNoteView>
                 </div>
             </div>
             <ExportPdfModal

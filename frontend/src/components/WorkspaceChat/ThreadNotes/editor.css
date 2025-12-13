@@ -339,16 +339,47 @@
   color: #a6adc8 !important;
 }
 
-/* BlockNote Suggestion Menu */
+/* BlockNote Suggestion Menu - Full visibility fix */
 [data-bn-suggestion-menu],
-.bn-suggestion-menu {
+.bn-suggestion-menu,
+.mantine-Menu-dropdown[data-blocknote],
+[class*="suggestionMenu"],
+[class*="SuggestionMenu"],
+.bn-container .mantine-Menu-dropdown {
   background-color: #1e1e2e !important;
   border: 1px solid #45475a !important;
   border-radius: 12px !important;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6) !important;
   padding: 6px !important;
-  max-height: 400px !important;
+  max-height: 60vh !important;
+  min-height: 200px !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+/* Ensure all menu items are visible */
+.bn-suggestion-menu > div,
+[data-bn-suggestion-menu] > div,
+.mantine-Menu-dropdown > div {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+/* Prevent menu from being clipped by parent containers */
+.bn-container,
+.blocknote-editor-full,
+.bn-editor {
+  overflow: visible !important;
+}
+
+/* Ensure the slash menu parent doesn't clip */
+[data-slot="sideMenu"],
+[data-slot="suggestionMenu"],
+.bn-side-menu {
+  overflow: visible !important;
 }
 
 /* Suggestion Menu Items */
