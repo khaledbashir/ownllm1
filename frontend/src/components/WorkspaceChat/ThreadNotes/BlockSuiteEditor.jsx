@@ -7,7 +7,7 @@ import React, {
     useState,
 } from "react";
 import { AffineEditorContainer } from "@blocksuite/presets";
-import { Schema, DocCollection } from "@blocksuite/store";
+import { Schema, DocCollection, Text } from "@blocksuite/store";
 import { AffineSchemas } from "@blocksuite/blocks";
 import "@blocksuite/presets/themes/affine.css";
 
@@ -70,52 +70,51 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                         const parsed = JSON.parse(content);
                         if (parsed.type === "blocksuite" && parsed.value) {
                             // TODO: Restore from saved state
-                            doc.addBlock("affine:paragraph", { text: "" }, noteId);
+                            doc.addBlock("affine:paragraph", {}, noteId);
                         } else if (typeof parsed === "string") {
-                            doc.addBlock("affine:paragraph", { text: parsed }, noteId);
+                            // For now, just add empty paragraph (text model is created automatically)
+                            doc.addBlock("affine:paragraph", {}, noteId);
                         } else {
                             doc.addBlock("affine:paragraph", {}, noteId);
                         }
                     } catch {
-                        // Plain text content
-                        if (typeof content === "string" && content.trim()) {
-                            doc.addBlock("affine:paragraph", { text: content }, noteId);
-                        } else {
-                            doc.addBlock("affine:paragraph", {}, noteId);
-                        }
+                        // Plain text content - add empty paragraph
+                        doc.addBlock("affine:paragraph", {}, noteId);
                     }
                 } else {
                     doc.addBlock("affine:paragraph", {}, noteId);
                 }
-            });
 
-            // Create editor and attach to DOM
-            const editor = new AffineEditorContainer();
-            editor.doc = doc;
+                // Create editor AFTER blocks are ready
+                const editor = new AffineEditorContainer();
+                editor.doc = doc;
 
-            // Clear container and append editor
-            containerRef.current.innerHTML = "";
-            containerRef.current.appendChild(editor);
+                // Clear container and append editor
+                if (containerRef.current) {
+                    containerRef.current.innerHTML = "";
+                    containerRef.current.appendChild(editor);
+                }
 
-            // Store refs
-            editorRef.current = editor;
+                // Store refs
+                editorRef.current = editor;
 
-            // Register with context for global access
-            if (editorContext?.registerEditor) {
-                editorContext.registerEditor(editor);
-            }
-            collectionRef.current = collection;
+                // Register with context for global access
+                if (editorContext?.registerEditor) {
+                    editorContext.registerEditor(editor);
+                }
+                collectionRef.current = collection;
 
-            // Listen for changes and autosave
-            doc.slots.blockUpdated.on(() => {
-                const content = JSON.stringify({
-                    type: "blocksuite",
-                    docId: doc.id,
+                // Listen for changes and autosave
+                doc.slots.blockUpdated.on(() => {
+                    const content = JSON.stringify({
+                        type: "blocksuite",
+                        docId: doc.id,
+                    });
+                    debouncedSave(content);
                 });
-                debouncedSave(content);
-            });
 
-            setIsReady(true);
+                setIsReady(true);
+            });
         } catch (error) {
             console.error("Failed to initialize BlockSuite editor:", error);
             toast.error("Failed to load editor");
