@@ -105,32 +105,75 @@ const BlockEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) => {
             const footerText = escapeHtml(template?.footerText || "");
             const logoPath = safeImageSrc(template?.logoPath || "");
 
-            const container = document.createElement("div");
             container.innerHTML = `
+                <head>
+                    <meta charset="UTF-8">
+                    <script src="https://cdn.tailwindcss.com"></script>
+                </head>
                 <style>
                     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
                     * { box-sizing: border-box; }
-                    body { font-family: '${fontFamily}', sans-serif; }
-                    .pdf-container { padding: 40px; }
-                    h1 { font-size: 28px; color: ${primaryColor}; }
-                    h2 { font-size: 22px; color: ${primaryColor}; }
-                    h3 { font-size: 18px; color: ${primaryColor}; }
-                    p { font-size: 14px; line-height: 1.7; }
-                    ul, ol { margin-left: 20px; }
-                    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-                    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-                    th { background-color: ${primaryColor}; color: white; }
-                    code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; }
-                    pre { background: #1e293b; color: #e4e4e4; padding: 16px; border-radius: 8px; overflow-x: auto; }
-                    blockquote { border-left: 4px solid ${primaryColor}; padding-left: 16px; color: #555; font-style: italic; }
-                    img { max-width: 100%; }
+                    body { font-family: '${fontFamily}', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .pdf-container { padding: 40px; max-width: 100%; }
+                    
+                    /* Branding */
+                    h1 { font-size: 28px; color: ${primaryColor}; margin-bottom: 0.5em; font-weight: 700; }
+                    h2 { font-size: 22px; color: ${primaryColor}; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: 600; }
+                    h3 { font-size: 18px; color: ${primaryColor}; margin-top: 1.2em; margin-bottom: 0.5em; font-weight: 600; }
+                    
+                    p { font-size: 14px; line-height: 1.6; margin-bottom: 1em; color: #1f2937; }
+                    ul, ol { margin-left: 20px; margin-bottom: 1em; }
+                    li { margin-bottom: 0.5em; }
+                    
+                    /* Tables - Page Break Handling */
+                    table { 
+                        border-collapse: collapse; 
+                        width: 100%; 
+                        margin: 20px 0; 
+                        page-break-inside: auto;
+                    }
+                    tr { page-break-inside: avoid; page-break-after: auto; }
+                    thead { display: table-header-group; }
+                    tfoot { display: table-footer-group; }
+                    
+                    th, td { 
+                        border: 1px solid #e5e7eb; 
+                        padding: 12px; 
+                        text-align: left; 
+                        font-size: 14px;
+                    }
+                    th { 
+                        background-color: ${primaryColor} !important; 
+                        color: white !important; 
+                        font-weight: 600;
+                    }
+                    tr:nth-child(even) { background-color: #f9fafb; }
+                    
+                    /* Code Blocks */
+                    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
+                    pre { background: #1f2937; color: #e5e7eb; padding: 16px; border-radius: 8px; overflow-x: auto; margin-bottom: 1em; }
+                    
+                    /* Quotes */
+                    blockquote { border-left: 4px solid ${primaryColor}; padding-left: 16px; color: #4b5563; font-style: italic; margin: 1.5em 0; }
+                    
+                    /* Images */
+                    img { max-width: 100%; height: auto; display: block; margin: 1em 0; }
                 </style>
-                <div class="pdf-container">
-                    ${logoPath ? `<img src="${logoPath}" style="max-height:60px;margin-bottom:20px;" />` : ''}
-                    ${headerText ? `<div style="margin-bottom:20px;">${headerText}</div>` : ''}
-                    ${htmlContent}
-                    ${footerText ? `<div style="margin-top:30px;font-size:11px;color:#666;">${footerText}</div>` : ''}
-                </div>
+                <body class="pdf-container">
+                    ${logoPath ? `<img src="${logoPath}" style="max-height:80px;margin-bottom:30px;" />` : ''}
+                    ${headerText ? `<div style="margin-bottom:30px;font-size:18px;font-weight:500;color:${primaryColor};border-bottom:2px solid ${primaryColor};padding-bottom:10px;">${headerText}</div>` : ''}
+                    
+                    <div class="content">
+                        ${htmlContent}
+                    </div>
+
+                    ${footerText ? `
+                        <div style="margin-top:50px;padding-top:20px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;display:flex;justify-content:space-between;">
+                            <span>${footerText}</span>
+                            <span>Page <span class="pageNumber"></span></span>
+                        </div>
+                    ` : ''}
+                </body>
             `;
 
             // Server-side PDF generation
