@@ -16,6 +16,7 @@ const {
 const { ApiChatHandler } = require("../../../utils/chats/apiChatHandler");
 const { getModelTag } = require("../../utils");
 const { importProductsFromUrl } = require("../../../utils/productImport");
+const { generatePdf } = require("../../../utils/pdfExport");
 
 function apiWorkspaceEndpoints(app) {
   if (!app) return;
@@ -392,6 +393,53 @@ function apiWorkspaceEndpoints(app) {
 
         const products = await importProductsFromUrl(url);
         response.status(200).json({ products });
+      } catch (e) {
+        console.error(e.message, e);
+        response.status(500).json({ error: e.message });
+      }
+    }
+  );
+
+  app.post(
+    "/v1/workspace/:slug/export-pdf",
+    [validApiKey],
+    async (request, response) => {
+      /*
+      #swagger.tags = ['Workspaces']
+      #swagger.description = 'Export HTML content to PDF via server-side rendering'
+      #swagger.parameters['slug'] = {
+          in: 'path',
+          description: 'Unique slug of workspace',
+          required: true,
+          type: 'string'
+      }
+      #swagger.requestBody = {
+        description: 'JSON object containing html content',
+        required: true,
+        content: {
+          "application/json": {
+            example: {
+              html: "<html>...</html>"
+            }
+          }
+        }
+      }
+      #swagger.responses[200] = {
+        description: 'PDF File',
+        content: {
+          "application/pdf": {}
+        }
+      }
+      */
+      try {
+        const { html } = reqBody(request);
+        if (!html) return response.status(400).json({ error: "HTML content required" });
+
+        const pdfBuffer = await generatePdf(html);
+
+        response.setHeader('Content-Type', 'application/pdf');
+        response.setHeader('Content-Disposition', 'attachment; filename="export.pdf"');
+        response.send(pdfBuffer);
       } catch (e) {
         console.error(e.message, e);
         response.status(500).json({ error: e.message });

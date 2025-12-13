@@ -1,0 +1,49 @@
+const { chromium } = require('playwright-core');
+
+/**
+ * Generates a PDF from HTML content using a remote browser.
+ * @param {string} htmlContent - The full HTML string to render
+ * @returns {Promise<Buffer>} - The PDF buffer
+ */
+async function generatePdf(htmlContent) {
+    const browserWSEndpoint = process.env.BROWSER_WS_URL || 'ws://basheer-chromium:9222';
+
+    if (!htmlContent) throw new Error("HTML content is required");
+
+    let browser;
+    try {
+        // Connect to the remote browser
+        browser = await chromium.connect(browserWSEndpoint);
+        const context = await browser.newContext();
+        const page = await context.newPage();
+
+        // Set content and wait for network to be idle (ensures images/fonts load)
+        await page.setContent(htmlContent, { waitUntil: 'networkidle' });
+
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: {
+                top: '20px',
+                bottom: '20px',
+                left: '20px',
+                right: '20px'
+            }
+        });
+
+        await page.close();
+        await context.close();
+        await browser.close();
+
+        return pdfBuffer;
+    } catch (error) {
+        console.error('PDF Generation Error:', error);
+        // Cleanup if possible
+        if (browser) {
+            try { await browser.close(); } catch (e) { }
+        }
+        throw new Error(`Failed to generate PDF: ${error.message}. Ensure BROWSER_WS_URL is accessible.`);
+    }
+}
+
+module.exports = { generatePdf };
