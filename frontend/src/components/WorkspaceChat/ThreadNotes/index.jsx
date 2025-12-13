@@ -6,8 +6,8 @@ import { NotePencil, WarningCircle } from "@phosphor-icons/react";
 import showToast from "@/utils/toast";
 import "./editor.css";
 
-// Lazy load Yoopta editor to isolate any initialization errors
-const BlockEditor = React.lazy(() => import("./YooptaEditor"));
+// Lazy load BlockSuite editor to isolate any initialization errors
+const BlockEditor = React.lazy(() => import("./BlockSuiteEditor"));
 
 // Error boundary to catch BlockNote crashes
 class BlockEditorErrorBoundary extends React.Component {
