@@ -8,9 +8,11 @@ import { isMobile } from "react-device-detect";
 import useUser from "../../../hooks/useUser";
 import DocumentSettings from "./Documents";
 import DataConnectors from "./DataConnectors";
+import ProductsManager from "./ProductsManager";
+import RateCardManager from "./RateCardManager";
 import ModalWrapper from "@/components/ModalWrapper";
 
-const noop = () => {};
+const noop = () => { };
 const ManageWorkspace = ({ hideModal = noop, providedSlug = null }) => {
   const { t } = useTranslation();
   const { slug } = useParams();
@@ -103,6 +105,10 @@ const ManageWorkspace = ({ hideModal = noop, providedSlug = null }) => {
 
           {selectedTab === "documents" ? (
             <DocumentSettings workspace={workspace} systemSettings={settings} />
+          ) : selectedTab === "products" ? (
+            <ProductsManager workspace={workspace} />
+          ) : selectedTab === "rateCard" ? (
+            <RateCardManager workspace={workspace} />
           ) : (
             <DataConnectors workspace={workspace} systemSettings={settings} />
           )}
@@ -121,23 +127,39 @@ const ModalTabSwitcher = ({ selectedTab, setSelectedTab }) => {
       <div className="gap-x-2 flex justify-center -mt-[68px] mb-10 bg-theme-bg-secondary p-1 rounded-xl shadow border-2 border-theme-modal-border w-fit">
         <button
           onClick={() => setSelectedTab("documents")}
-          className={`border-none px-4 py-2 rounded-[8px] font-semibold hover:bg-theme-modal-border hover:bg-opacity-60 ${
-            selectedTab === "documents"
-              ? "bg-theme-modal-border font-bold text-white light:bg-[#E0F2FE] light:text-[#026AA2]"
-              : "text-white/20 font-medium hover:text-white light:bg-white light:text-[#535862] light:hover:bg-[#E0F2FE]"
-          }`}
+          className={`border-none px-4 py-2 rounded-[8px] font-semibold hover:bg-theme-modal-border hover:bg-opacity-60 ${selectedTab === "documents"
+            ? "bg-theme-modal-border font-bold text-white light:bg-[#E0F2FE] light:text-[#026AA2]"
+            : "text-white/20 font-medium hover:text-white light:bg-white light:text-[#535862] light:hover:bg-[#E0F2FE]"
+            }`}
         >
           {t("connectors.manage.documents")}
         </button>
         <button
           onClick={() => setSelectedTab("dataConnectors")}
-          className={`border-none px-4 py-2 rounded-[8px] font-semibold hover:bg-theme-modal-border hover:bg-opacity-60 ${
-            selectedTab === "dataConnectors"
-              ? "bg-theme-modal-border font-bold text-white light:bg-[#E0F2FE] light:text-[#026AA2]"
-              : "text-white/20 font-medium hover:text-white light:bg-white light:text-[#535862] light:hover:bg-[#E0F2FE]"
-          }`}
+          className={`border-none px-4 py-2 rounded-[8px] font-semibold hover:bg-theme-modal-border hover:bg-opacity-60 ${selectedTab === "dataConnectors"
+            ? "bg-theme-modal-border font-bold text-white light:bg-[#E0F2FE] light:text-[#026AA2]"
+            : "text-white/20 font-medium hover:text-white light:bg-white light:text-[#535862] light:hover:bg-[#E0F2FE]"
+            }`}
         >
           {t("connectors.manage.data-connectors")}
+        </button>
+        <button
+          onClick={() => setSelectedTab("products")}
+          className={`border-none px-4 py-2 rounded-[8px] font-semibold hover:bg-theme-modal-border hover:bg-opacity-60 ${selectedTab === "products"
+            ? "bg-theme-modal-border font-bold text-white light:bg-[#E0F2FE] light:text-[#026AA2]"
+            : "text-white/20 font-medium hover:text-white light:bg-white light:text-[#535862] light:hover:bg-[#E0F2FE]"
+            }`}
+        >
+          Products
+        </button>
+        <button
+          onClick={() => setSelectedTab("rateCard")}
+          className={`border-none px-4 py-2 rounded-[8px] font-semibold hover:bg-theme-modal-border hover:bg-opacity-60 ${selectedTab === "rateCard"
+            ? "bg-theme-modal-border font-bold text-white light:bg-[#E0F2FE] light:text-[#026AA2]"
+            : "text-white/20 font-medium hover:text-white light:bg-white light:text-[#535862] light:hover:bg-[#E0F2FE]"
+            }`}
+        >
+          Rate Card
         </button>
       </div>
     </div>
