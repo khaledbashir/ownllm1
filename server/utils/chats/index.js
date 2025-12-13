@@ -151,6 +151,61 @@ async function recentChatHistory({
 }
 
 /**
+ * Builds the products and rate card context to append to the system prompt.
+ * @param {Object|null} workspace - the workspace object
+ * @returns {string} - formatted context for products/rate card
+ */
+function buildProposalContext(workspace) {
+  if (!workspace) return "";
+
+  let context = "";
+
+  // Inject products/services if available
+  if (workspace.products) {
+    try {
+      const products = typeof workspace.products === "string"
+        ? JSON.parse(workspace.products)
+        : workspace.products;
+      if (Array.isArray(products) && products.length > 0) {
+        context += "\n\n## AVAILABLE PRODUCTS & SERVICES\n";
+        context += "Use these exact prices when creating proposals. Do NOT invent or hallucinate prices.\n";
+        context += JSON.stringify(products, null, 2);
+      }
+    } catch (e) {
+      // Invalid JSON, skip
+    }
+  }
+
+  // Inject rate card if available
+  if (workspace.rateCard) {
+    try {
+      const rateCard = typeof workspace.rateCard === "string"
+        ? JSON.parse(workspace.rateCard)
+        : workspace.rateCard;
+      if (Array.isArray(rateCard) && rateCard.length > 0) {
+        context += "\n\n## HOURLY RATE CARD\n";
+        context += "Use these roles and hourly rates for time & materials estimates. Do NOT invent rates.\n";
+        context += JSON.stringify(rateCard, null, 2);
+      }
+    } catch (e) {
+      // Invalid JSON, skip
+    }
+  }
+
+  // Add instruction if we have any proposal context
+  if (context) {
+    context += "\n\n## PROPOSAL INSTRUCTIONS\n";
+    context += "When asked to create a proposal, estimate, or quote:\n";
+    context += "1. ONLY use the products, services, and rates listed above.\n";
+    context += "2. Calculate totals accurately (price × quantity or rate × hours).\n";
+    context += "3. Format pricing clearly in tables when appropriate.\n";
+    context += "4. If a requested service is not in the list, say so rather than inventing a price.\n";
+  }
+
+  return context;
+}
+
+/**
  * Returns the base prompt for the chat. This method will also do variable
  * substitution on the prompt if there are any defined variables in the prompt.
  * @param {Object|null} workspace - the workspace object
@@ -167,8 +222,10 @@ async function chatPrompt(workspace, user = null) {
     workspace?.id
   );
 
-  const appendix = await smartPluginsPromptAppendix(workspace?.id);
-  return `${expanded}${appendix}`;
+  const smartPluginsAppendix = await smartPluginsPromptAppendix(workspace?.id);
+  const proposalContext = buildProposalContext(workspace);
+
+  return `${expanded}${proposalContext}${smartPluginsAppendix}`;
 }
 
 // We use this util function to deduplicate sources from similarity searching
