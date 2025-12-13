@@ -188,7 +188,7 @@ const Workspace = {
         try {
           const chatResult = JSON.parse(msg.data);
           handleChat(chatResult);
-        } catch {}
+        } catch { }
       },
       onerror(err) {
         handleChat({
@@ -574,6 +574,22 @@ const Workspace = {
         return { workspaces: [], threads: [] };
       });
     return response;
+  },
+
+  importProducts: async function (slug, url) {
+    const { products, error } = await fetch(
+      `${API_BASE}/workspace/${slug}/import-products`,
+      {
+        method: "POST",
+        body: JSON.stringify({ url }),
+        headers: baseHeaders(),
+      }
+    )
+      .then((res) => res.json())
+      .catch((e) => {
+        return { products: [], error: e.message };
+      });
+    return { products, error };
   },
 
   threads: WorkspaceThread,

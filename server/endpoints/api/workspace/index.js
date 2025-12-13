@@ -15,6 +15,7 @@ const {
 } = require("../../../utils/helpers/chat/responses");
 const { ApiChatHandler } = require("../../../utils/chats/apiChatHandler");
 const { getModelTag } = require("../../utils");
+const { importProductsFromUrl } = require("../../../utils/productImport");
 
 function apiWorkspaceEndpoints(app) {
   if (!app) return;
@@ -348,6 +349,56 @@ function apiWorkspaceEndpoints(app) {
     }
   );
 
+  app.post(
+    "/v1/workspace/:slug/import-products",
+    [validApiKey],
+    async (request, response) => {
+      /*
+      #swagger.tags = ['Workspaces']
+      #swagger.description = 'Import products from a website URL'
+      #swagger.parameters['slug'] = {
+          in: 'path',
+          description: 'Unique slug of workspace',
+          required: true,
+          type: 'string'
+      }
+      #swagger.requestBody = {
+        description: 'JSON object containing url',
+        required: true,
+        content: {
+          "application/json": {
+            example: {
+              url: "https://example.com/pricing"
+            }
+          }
+        }
+      }
+      #swagger.responses[200] = {
+        content: {
+          "application/json": {
+            schema: {
+              type: 'object',
+              example: {
+                products: []
+              }
+            }
+          }
+        }
+      }
+      */
+      try {
+        const { url } = reqBody(request);
+        if (!url) return response.status(400).json({ error: "URL is required" });
+
+        const products = await importProductsFromUrl(url);
+        response.status(200).json({ products });
+      } catch (e) {
+        console.error(e.message, e);
+        response.status(500).json({ error: e.message });
+      }
+    }
+  );
+
   app.get(
     "/v1/workspace/:slug/chats",
     [validApiKey],
@@ -429,14 +480,14 @@ function apiWorkspaceEndpoints(app) {
 
         const history = apiSessionId
           ? await WorkspaceChats.forWorkspaceByApiSessionId(
-              workspace.id,
-              apiSessionId,
-              validLimit,
-              { createdAt: validOrderBy }
-            )
+            workspace.id,
+            apiSessionId,
+            validLimit,
+            { createdAt: validOrderBy }
+          )
           : await WorkspaceChats.forWorkspace(workspace.id, validLimit, {
-              createdAt: validOrderBy,
-            });
+            createdAt: validOrderBy,
+          });
         response.status(200).json({ history: convertToChatHistory(history) });
       } catch (e) {
         console.error(e.message, e);

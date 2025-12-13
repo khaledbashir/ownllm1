@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Package, Plus, Trash, PencilSimple, FloppyDisk, X } from "@phosphor-icons/react";
+import { Package, Plus, Trash, PencilSimple, FloppyDisk, X, Globe, CircleNotch } from "@phosphor-icons/react";
 import Workspace from "@/models/workspace";
 
 const PRICING_TYPES = [
@@ -23,6 +23,23 @@ export default function ProductsManager({ workspace }) {
     const [editingId, setEditingId] = useState(null);
     const [saving, setSaving] = useState(false);
     const [newProduct, setNewProduct] = useState(null);
+    const [importUrl, setImportUrl] = useState("");
+    const [isImporting, setIsImporting] = useState(false);
+
+    const handleImport = async () => {
+        if (!importUrl) return;
+        setIsImporting(true);
+        const { products: importedProducts, error } = await Workspace.importProducts(workspace.slug, importUrl);
+        if (error) {
+            alert(error); // Simple alert for now
+        } else if (importedProducts?.length > 0) {
+            // Append and save
+            const updated = [...products, ...importedProducts];
+            await saveProducts(updated);
+            setImportUrl("");
+        }
+        setIsImporting(false);
+    };
 
     useEffect(() => {
         if (workspace?.products) {
@@ -100,6 +117,34 @@ export default function ProductsManager({ workspace }) {
             <p className="text-white/60 text-sm">
                 Define your products and services. The AI will use these when generating proposals.
             </p>
+
+            {/* Import Block */}
+            <div className="bg-theme-bg-secondary border border-theme-border rounded-lg p-4">
+                <label className="block text-white/60 text-xs uppercase font-bold mb-2">
+                    Auto-Fill from Website
+                </label>
+                <div className="flex gap-2">
+                    <input
+                        type="url"
+                        placeholder="https://your-agency.com/pricing"
+                        className="flex-1 bg-theme-bg-primary text-white text-sm rounded-lg px-3 py-2 border border-theme-border focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={importUrl}
+                        onChange={(e) => setImportUrl(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleImport()}
+                    />
+                    <button
+                        onClick={handleImport}
+                        disabled={isImporting || !importUrl}
+                        className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                    >
+                        {isImporting ? <CircleNotch className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                        {isImporting ? "Analyzing..." : "Import"}
+                    </button>
+                </div>
+                <p className="text-white/40 text-xs mt-2">
+                    Enter a URL. The AI will scrape products and estimate missing prices.
+                </p>
+            </div>
 
             {/* New Product Form */}
             {newProduct && (
