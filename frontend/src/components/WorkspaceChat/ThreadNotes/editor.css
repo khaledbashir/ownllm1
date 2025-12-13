@@ -1,305 +1,157 @@
 /* Thread Notes Rich Editor Styles */
 /* ========================================
-   NUCLEAR COMPACT LAYOUT - KILL ALL SPACING
+   BLOCKSUITE DARK THEME OVERRIDES
    ======================================== */
 
-/* Container wrapper */
-.yoopta-editor-wrapper {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+/* Force dark theme on BlockSuite editor */
+.blocksuite-editor-wrapper {
+  --affine-background-primary-color: #1e1e1e !important;
+  --affine-background-secondary-color: #252525 !important;
+  --affine-background-tertiary-color: #2d2d2d !important;
+  --affine-text-primary-color: #e0e0e0 !important;
+  --affine-text-secondary-color: #a0a0a0 !important;
+  --affine-divider-color: #3d3d3d !important;
+  --affine-border-color: #3d3d3d !important;
+  --affine-placeholder-color: #6b6b6b !important;
+  --affine-hover-color: rgba(255, 255, 255, 0.06) !important;
+  --affine-code-background: #2d2d2d !important;
+  --affine-tooltip-background: #3d3d3d !important;
+  --affine-white: #1e1e1e !important;
+  --affine-black: #e0e0e0 !important;
+  color-scheme: dark !important;
 }
 
-/* Main editor container */
-.yoopta-notes-editor {
-  height: 100%;
-  min-height: 0;
-  width: 100% !important;
-  max-width: 100% !important;
+/* Override the main editor background */
+.blocksuite-editor-wrapper,
+.blocksuite-editor-wrapper affine-editor-container,
+.blocksuite-editor-wrapper .affine-editor-container,
+.blocksuite-editor-wrapper [data-block-is-root],
+.blocksuite-editor-wrapper .affine-page-root,
+.blocksuite-editor-wrapper .affine-surface-container,
+.blocksuite-editor-wrapper .affine-page-viewport,
+.blocksuite-editor-wrapper .affine-doc-viewport,
+.blocksuite-editor-wrapper .doc-title-container,
+.blocksuite-editor-wrapper .affine-default-page-block-container {
+  background-color: #1e1e1e !important;
+  background: #1e1e1e !important;
 }
 
-/* Force ALL Yoopta child containers to full width + ZERO margins */
-.yoopta-notes-editor>div,
-.yoopta-notes-editor>div>div,
-.yoopta-notes-editor [data-yoopta-editor],
-.yoopta-notes-editor [data-yoopta-editor]>div {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
+/* Text colors */
+.blocksuite-editor-wrapper .affine-paragraph-block-container,
+.blocksuite-editor-wrapper [data-block-id],
+.blocksuite-editor-wrapper p,
+.blocksuite-editor-wrapper span,
+.blocksuite-editor-wrapper h1,
+.blocksuite-editor-wrapper h2,
+.blocksuite-editor-wrapper h3,
+.blocksuite-editor-wrapper h4,
+.blocksuite-editor-wrapper h5,
+.blocksuite-editor-wrapper h6,
+.blocksuite-editor-wrapper li,
+.blocksuite-editor-wrapper td,
+.blocksuite-editor-wrapper th,
+.blocksuite-editor-wrapper .doc-title {
+  color: #e0e0e0 !important;
 }
 
-/* The actual slate editor */
-.yoopta-notes-editor [data-slate-editor="true"] {
-  padding: 12px 16px !important;
-  color: var(--theme-text-primary) !important;
-  caret-color: var(--theme-text-primary) !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  min-height: 200px;
+/* Input and editable areas */
+.blocksuite-editor-wrapper [contenteditable="true"],
+.blocksuite-editor-wrapper input,
+.blocksuite-editor-wrapper textarea {
+  color: #e0e0e0 !important;
+  caret-color: #e0e0e0 !important;
 }
 
-/* ========================================
-   NUCLEAR: KILL ALL BLOCK SPACING
-   Yoopta wraps each block in divs with margins
-   ======================================== */
-
-/* Kill margin on EVERY div inside the editor */
-.yoopta-notes-editor [data-slate-editor="true"]>div,
-.yoopta-notes-editor [data-slate-editor="true"]>div>div,
-.yoopta-notes-editor [data-slate-editor="true"] div[data-slate-node],
-.yoopta-notes-editor [data-slate-node="element"],
-.yoopta-notes-editor [data-yoopta-block],
-.yoopta-notes-editor [class*="yoopta-block"],
-.yoopta-notes-editor [class*="yoopta-element"],
-.yoopta-notes-editor [class*="block-"],
-.yoopta-notes-editor div[style*="margin"] {
-  margin: 0 !important;
-  margin-top: 0 !important;
-  margin-bottom: 4px !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-/* Target Yoopta's specific block wrapper pattern */
-.yoopta-notes-editor [data-slate-editor="true"]>* {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 0 4px 0 !important;
-  padding: 0 !important;
-}
-
-/* Deeply nested content */
-.yoopta-notes-editor [data-slate-editor="true"]>*>* {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* ========================================
-   TEXT STYLING - COMPACT
-   ======================================== */
-
-/* Paragraphs */
-.yoopta-notes-editor .yoopta-paragraph,
-.yoopta-notes-editor p,
-.yoopta-notes-editor span[data-slate-string="true"] {
-  color: var(--theme-text-primary) !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* Headings - ZERO extra margin */
-.yoopta-notes-editor h1,
-.yoopta-notes-editor [class*="heading-one"],
-.yoopta-notes-editor [data-element-type="heading-one"] {
-  font-size: 1.6em !important;
-  font-weight: 700 !important;
-  color: var(--theme-text-primary) !important;
-  margin: 0 0 4px 0 !important;
-  padding: 0 !important;
-  line-height: 1.3 !important;
-}
-
-.yoopta-notes-editor h2,
-.yoopta-notes-editor [class*="heading-two"],
-.yoopta-notes-editor [data-element-type="heading-two"] {
-  font-size: 1.3em !important;
-  font-weight: 600 !important;
-  color: var(--theme-text-primary) !important;
-  margin: 0 0 4px 0 !important;
-  padding: 0 !important;
-  line-height: 1.3 !important;
-}
-
-.yoopta-notes-editor h3,
-.yoopta-notes-editor [class*="heading-three"],
-.yoopta-notes-editor [data-element-type="heading-three"] {
-  font-size: 1.15em !important;
-  font-weight: 600 !important;
-  color: var(--theme-text-primary) !important;
-  margin: 0 0 3px 0 !important;
-  padding: 0 !important;
-  line-height: 1.3 !important;
-}
-
-/* ========================================
-   TABLES - COMPACT
-   ======================================== */
-.yoopta-notes-editor table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  margin: 4px 0 !important;
-}
-
-.yoopta-notes-editor th,
-.yoopta-notes-editor td {
-  border: 1px solid var(--theme-sidebar-border) !important;
-  padding: 4px 8px !important;
-  text-align: left !important;
-  color: var(--theme-text-primary) !important;
-  line-height: 1.3 !important;
-  font-size: 14px !important;
-}
-
-.yoopta-notes-editor th {
-  background: var(--theme-bg-primary) !important;
-  font-weight: 600 !important;
-}
-
-.yoopta-notes-editor tr:nth-child(even) td {
-  background: rgba(255, 255, 255, 0.02) !important;
-}
-
-/* ========================================
-   LISTS - COMPACT
-   ======================================== */
-.yoopta-notes-editor ul,
-.yoopta-notes-editor ol {
-  padding-left: 18px !important;
-  margin: 2px 0 !important;
-}
-
-.yoopta-notes-editor li {
-  color: var(--theme-text-primary) !important;
-  margin: 1px 0 !important;
-  padding: 0 !important;
-  line-height: 1.35 !important;
-}
-
-/* ========================================
-   CODE BLOCKS - COMPACT
-   ======================================== */
-.yoopta-notes-editor pre,
-.yoopta-notes-editor code {
-  background: var(--theme-bg-primary) !important;
-  color: var(--theme-text-primary) !important;
-  border-radius: 4px !important;
-  font-family: 'Monaco', 'Menlo', monospace !important;
-}
-
-.yoopta-notes-editor pre {
-  padding: 8px !important;
-  overflow-x: auto !important;
-  margin: 4px 0 !important;
-}
-
-.yoopta-notes-editor code {
-  padding: 1px 4px !important;
-  font-size: 0.9em !important;
-}
-
-/* ========================================
-   BLOCKQUOTES - COMPACT
-   ======================================== */
-.yoopta-notes-editor blockquote {
-  border-left: 3px solid var(--theme-sidebar-border) !important;
-  padding-left: 10px !important;
-  margin: 4px 0 !important;
-  color: var(--theme-text-secondary) !important;
-  font-style: italic !important;
-}
-
-/* ========================================
-   HIDE REASONING/THINKING TAGS COMPLETELY
-   ======================================== */
-reasoning,
-.reasoning,
-think,
-.think,
-.thinking,
-.ai-thinking,
-[data-type="reasoning"],
-[data-type="thinking"] {
-  display: none !important;
-}
-
-/* ========================================
-   NO ANIMATIONS
-   ======================================== */
-.yoopta-notes-editor button,
-.yoopta-notes-editor [role="button"] {
-  transition: none !important;
+/* Placeholder text */
+.blocksuite-editor-wrapper [data-placeholder]::before,
+.blocksuite-editor-wrapper .placeholder {
+  color: #6b6b6b !important;
 }
 
 /* Selection */
-.yoopta-notes-editor ::selection {
-  background: rgba(59, 130, 246, 0.3) !important;
+.blocksuite-editor-wrapper ::selection {
+  background: rgba(59, 130, 246, 0.4) !important;
 }
 
-/* Contenteditable focus */
-.yoopta-notes-editor [contenteditable="true"] {
-  outline: none !important;
+/* Slash menu and popups */
+.blocksuite-editor-wrapper .affine-slash-menu,
+.blocksuite-editor-wrapper .affine-menu,
+.blocksuite-editor-wrapper .affine-format-bar,
+.blocksuite-editor-wrapper .blocksuite-overlay,
+.affine-slash-menu,
+.affine-menu-container,
+.affine-format-bar-widget {
+  background-color: #2d2d2d !important;
+  border-color: #3d3d3d !important;
+  color: #e0e0e0 !important;
 }
 
-/* ========================================
-   Yoopta Action Menu (slash command)
-   ======================================== */
-.yoopta-action-menu-list-content,
-[data-yoopta-action-menu] {
-  background: var(--theme-bg-secondary) !important;
-  border: 1px solid var(--theme-modal-border) !important;
-  border-radius: 6px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-  color: var(--theme-text-primary) !important;
+/* Menu items */
+.affine-slash-menu-item,
+.affine-menu-button,
+.affine-menu-action {
+  color: #e0e0e0 !important;
 }
 
-.yoopta-action-menu-list-content button,
-[data-yoopta-action-menu] button {
-  color: var(--theme-text-primary) !important;
-  padding: 6px 10px !important;
+.affine-slash-menu-item:hover,
+.affine-menu-button:hover,
+.affine-menu-action:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.yoopta-action-menu-list-content button:hover,
-[data-yoopta-action-menu] button:hover {
-  background: var(--theme-action-menu-item-hover) !important;
+/* Tables */
+.blocksuite-editor-wrapper table {
+  border-color: #3d3d3d !important;
 }
 
-.yoopta-action-menu-list-content [aria-selected="true"],
-[data-yoopta-action-menu] [aria-selected="true"] {
-  background: var(--theme-action-menu-item-hover) !important;
+.blocksuite-editor-wrapper td,
+.blocksuite-editor-wrapper th {
+  border-color: #3d3d3d !important;
+  background-color: #252525 !important;
 }
 
-.yoopta-action-menu-list-content .yoo-action-menu-text-muted-foreground {
-  color: var(--theme-text-secondary) !important;
+/* Code blocks */
+.blocksuite-editor-wrapper code,
+.blocksuite-editor-wrapper pre,
+.blocksuite-editor-wrapper .affine-code-block {
+  background-color: #2d2d2d !important;
+  color: #e0e0e0 !important;
 }
 
-/* Icon box inside action menu items */
-.yoopta-action-menu-list-content button>div:first-child {
-  background: var(--theme-bg-primary) !important;
-  border-color: var(--theme-modal-border) !important;
+/* Dividers */
+.blocksuite-editor-wrapper hr,
+.blocksuite-editor-wrapper .affine-divider {
+  border-color: #3d3d3d !important;
+  background-color: #3d3d3d !important;
 }
 
-/* ========================================
-   Toolbar + Link Tool
-   ======================================== */
-.yoopta-toolbar,
-.yoopta-link-tool,
-[data-yoopta-toolbar],
-[data-yoopta-link-tool] {
-  background: var(--theme-bg-secondary) !important;
-  border: 1px solid var(--theme-modal-border) !important;
-  border-radius: 6px !important;
-  color: var(--theme-text-primary) !important;
+/* Tags section (seen in screenshot) */
+.blocksuite-editor-wrapper .affine-database-title,
+.blocksuite-editor-wrapper .affine-kanban,
+.blocksuite-editor-wrapper .affine-database {
+  background-color: #252525 !important;
+  color: #e0e0e0 !important;
 }
 
-.yoopta-toolbar button,
-.yoopta-link-tool button {
-  color: var(--theme-text-primary) !important;
+/* Links */
+.blocksuite-editor-wrapper a {
+  color: #60a5fa !important;
 }
 
-.yoopta-toolbar button:hover,
-.yoopta-link-tool button:hover {
-  background: var(--theme-action-menu-item-hover) !important;
+/* Scrollbar for dark mode */
+.blocksuite-editor-wrapper::-webkit-scrollbar {
+  width: 8px;
 }
 
-.yoopta-toolbar [role="menu"],
-.yoopta-link-tool [role="menu"],
-.yoopta-toolbar [role="dialog"],
-.yoopta-link-tool [role="dialog"] {
-  background: var(--theme-bg-secondary) !important;
-  border-color: var(--theme-modal-border) !important;
+.blocksuite-editor-wrapper::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.blocksuite-editor-wrapper::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border-radius: 4px;
+}
+
+.blocksuite-editor-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
 }
