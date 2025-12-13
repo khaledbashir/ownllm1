@@ -6,9 +6,8 @@ import React, {
     useImperativeHandle,
     useMemo
 } from "react";
-import { AffineEditorContainer } from "@blocksuite/presets";
-import { Schema, DocCollection } from "@blocksuite/store";
-import { AffineSchemas } from "@blocksuite/blocks";
+import { createEmptyDoc, PageEditor } from "@blocksuite/presets";
+import { Text } from "@blocksuite/store";
 import { FilePdf, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 import { API_BASE } from "@/utils/constants";
@@ -21,7 +20,6 @@ const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =>
     const containerRef = useRef(null);
     const editorRef = useRef(null);
     const docRef = useRef(null);
-    const collectionRef = useRef(null);
     const [isReady, setIsReady] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
@@ -34,59 +32,38 @@ const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =>
         [onSave]
     );
 
-    // Initialize BlockSuite
+    // Initialize BlockSuite using official Quick Start pattern
     useEffect(() => {
         if (!containerRef.current) return;
 
-        // Create schema and collection
-        const schema = new Schema().register(AffineSchemas);
-        const collection = new DocCollection({ schema });
-        collection.meta.initialize();
-        collectionRef.current = collection;
-
-        // Create document
-        const doc = collection.createDoc({ id: "thread-notes" });
+        // Use the official createEmptyDoc helper
+        const doc = createEmptyDoc().init();
         docRef.current = doc;
 
-        doc.load(() => {
-            const pageBlockId = doc.addBlock("affine:page", {});
-            doc.addBlock("affine:surface", {}, pageBlockId);
-            const noteId = doc.addBlock("affine:note", {}, pageBlockId);
-
-            // Load saved content
-            if (content) {
-                try {
-                    const savedData = JSON.parse(content);
-                    // Check if it's BlockSuite format or legacy BlockNote format
-                    if (savedData.type === "blocksuite") {
-                        // Restore from BlockSuite snapshot
-                        // For now, just add placeholder - full restoration requires Job API
-                        doc.addBlock("affine:paragraph", { text: new doc.Text("Loading content...") }, noteId);
-                    } else if (Array.isArray(savedData)) {
-                        // Legacy BlockNote format - try to convert
-                        savedData.forEach(block => {
-                            if (block.type === "paragraph" && block.content) {
-                                const text = typeof block.content === "string"
-                                    ? block.content
-                                    : block.content.map(c => c.text || "").join("");
-                                doc.addBlock("affine:paragraph", {}, noteId);
-                            } else if (block.type === "heading") {
-                                doc.addBlock("affine:paragraph", {}, noteId);
-                            }
-                        });
-                    }
-                } catch (e) {
-                    // If content is plain text
-                    doc.addBlock("affine:paragraph", {}, noteId);
+        // Add initial content if empty
+        const paragraphs = doc.getBlockByFlavour("affine:paragraph");
+        if (paragraphs.length > 0 && content) {
+            try {
+                const savedData = JSON.parse(content);
+                if (savedData.type === "blocksuite" && savedData.text) {
+                    // Restore saved text
+                    const paragraph = paragraphs[0];
+                    doc.updateBlock(paragraph, { text: new Text(savedData.text) });
+                } else if (typeof savedData === "string") {
+                    const paragraph = paragraphs[0];
+                    doc.updateBlock(paragraph, { text: new Text(savedData) });
                 }
-            } else {
-                // Empty editor
-                doc.addBlock("affine:paragraph", {}, noteId);
+            } catch (e) {
+                // If content is plain text string
+                if (typeof content === "string" && content.trim()) {
+                    const paragraph = paragraphs[0];
+                    doc.updateBlock(paragraph, { text: new Text(content) });
+                }
             }
-        });
+        }
 
-        // Create editor
-        const editor = new AffineEditorContainer();
+        // Create editor using official PageEditor
+        const editor = new PageEditor();
         editor.doc = doc;
         editorRef.current = editor;
 
@@ -94,25 +71,24 @@ const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =>
         containerRef.current.innerHTML = "";
         containerRef.current.appendChild(editor);
 
-        // Setup auto-save
+        // Setup auto-save on block updates
         doc.slots.blockUpdated.on(() => {
-            // Simple serialization - save the doc structure
-            const blocks = [];
-            doc.getBlocksByFlavour("affine:paragraph").forEach(block => {
-                blocks.push({
-                    type: "paragraph",
-                    id: block.id,
-                    // text: block.text?.toString() || ""
-                });
+            // Get text content for saving
+            const allParagraphs = doc.getBlockByFlavour("affine:paragraph");
+            let textContent = "";
+            allParagraphs.forEach(block => {
+                if (block.text) {
+                    textContent += block.text.toString() + "\n";
+                }
             });
-            debouncedSave({ type: "blocksuite", blocks });
+            debouncedSave({ type: "blocksuite", text: textContent.trim() });
         });
 
         setIsReady(true);
 
         return () => {
             debouncedSave.cancel();
-            if (editorRef.current) {
+            if (editorRef.current && editorRef.current.remove) {
                 editorRef.current.remove();
             }
         };
@@ -123,15 +99,14 @@ const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =>
         insertMarkdown: async (markdown) => {
             if (!docRef.current || !editorRef.current) return;
             try {
-                // For now, insert as paragraph - BlockSuite has markdown transformer
                 const doc = docRef.current;
-                const noteBlocks = doc.getBlocksByFlavour("affine:note");
+                const noteBlocks = doc.getBlockByFlavour("affine:note");
                 if (noteBlocks.length > 0) {
                     const noteId = noteBlocks[0].id;
                     // Split by lines and add paragraphs
                     const lines = markdown.split("\n").filter(l => l.trim());
                     lines.forEach(line => {
-                        doc.addBlock("affine:paragraph", {}, noteId);
+                        doc.addBlock("affine:paragraph", { text: new Text(line) }, noteId);
                     });
                 }
                 toast.success("Content inserted");
@@ -152,13 +127,12 @@ const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =>
 
         setExporting(true);
         try {
-            // Get HTML from editor
-            // BlockSuite uses HtmlTransformer for export
             const doc = docRef.current;
 
-            // Build simple HTML from blocks
+            // Build HTML from blocks
             let htmlContent = "<div>";
-            doc.getBlocksByFlavour("affine:paragraph").forEach(block => {
+            const paragraphs = doc.getBlockByFlavour("affine:paragraph");
+            paragraphs.forEach(block => {
                 htmlContent += `<p>${block.text?.toString() || ""}</p>`;
             });
             htmlContent += "</div>";
@@ -179,9 +153,6 @@ const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =>
                         body { font-family: '${fontFamily}', sans-serif; padding: 40px; }
                         h1, h2, h3 { color: ${primaryColor}; }
                         p { font-size: 14px; line-height: 1.6; margin-bottom: 1em; }
-                        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-                        th, td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
-                        th { background-color: ${primaryColor}; color: white; }
                     </style>
                 </head>
                 <body>
