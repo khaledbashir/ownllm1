@@ -8,7 +8,19 @@ import React, {
 } from "react";
 import YooptaEditor, { createYooptaEditor } from "@yoopta/editor";
 import ActionMenuList, { DefaultActionMenuRender } from "@yoopta/action-menu-list";
+import Toolbar, { DefaultToolbarRender } from "@yoopta/toolbar";
+import LinkTool, { DefaultLinkToolRender } from "@yoopta/link-tool";
+
 import Paragraph from "@yoopta/paragraph";
+import Blockquote from "@yoopta/blockquote";
+import Callout from "@yoopta/callout";
+import Code from "@yoopta/code";
+import Divider from "@yoopta/divider";
+import Table, { TableCommands } from "@yoopta/table";
+import { BulletedList, NumberedList, TodoList } from "@yoopta/lists";
+import { HeadingOne, HeadingTwo, HeadingThree } from "@yoopta/headings";
+import Link from "@yoopta/link";
+import { Bold, Italic, Underline, Strike, Highlight, CodeMark } from "@yoopta/marks";
 import { html, markdown, plainText } from "@yoopta/exports";
 
 import { FilePdf, CircleNotch } from "@phosphor-icons/react";
@@ -19,12 +31,44 @@ import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
 import "./editor.css";
 
-const PLUGINS = [Paragraph];
+const PLUGINS = [
+  Paragraph,
+  HeadingOne,
+  HeadingTwo,
+  HeadingThree,
+  Blockquote,
+  Callout,
+  NumberedList,
+  BulletedList,
+  TodoList,
+  Code,
+  Divider,
+  Link,
+  Table.extend({
+    events: {
+      onBeforeCreate: (editor) => {
+        // Provide a good default so creating a table doesn't feel broken
+        // (matches the Yoopta demo behaviour)
+        return TableCommands.buildTableElements(editor, { rows: 3, columns: 3 });
+      },
+    },
+  }),
+];
+
+const MARKS = [Bold, Italic, Underline, Strike, Highlight, CodeMark];
 
 const TOOLS = {
   ActionMenu: {
     tool: ActionMenuList,
     render: DefaultActionMenuRender,
+  },
+  Toolbar: {
+    tool: Toolbar,
+    render: DefaultToolbarRender,
+  },
+  LinkTool: {
+    tool: LinkTool,
+    render: DefaultLinkToolRender,
   },
 };
 
@@ -246,6 +290,7 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
           <YooptaEditor
             editor={editor}
             plugins={PLUGINS}
+            marks={MARKS}
             tools={TOOLS}
             value={value}
             onChange={onChange}

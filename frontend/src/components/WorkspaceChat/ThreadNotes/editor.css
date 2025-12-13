@@ -53,3 +53,23 @@
 .yoopta-action-menu-list-content .yoo-action-menu-text-muted-foreground {
   color: var(--theme-text-secondary) !important;
 }
+
+/* Icon box inside action menu items (Yoopta default is white) */
+.yoopta-action-menu-list-content button > div:first-child {
+  background: var(--theme-bg-primary) !important;
+  border-color: var(--theme-modal-border) !important;
+}
+
+/* Toolbar + link tool (keep subtle, theme-aligned) */
+.yoopta-toolbar,
+.yoopta-link-tool {
+  color: var(--theme-text-primary) !important;
+}
+
+.yoopta-toolbar [role="menu"],
+.yoopta-link-tool [role="menu"],
+.yoopta-toolbar [role="dialog"],
+.yoopta-link-tool [role="dialog"] {
+  background: var(--theme-bg-secondary) !important;
+  border-color: var(--theme-modal-border) !important;
+}
