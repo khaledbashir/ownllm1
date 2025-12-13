@@ -39,20 +39,32 @@ export default function BrandManager() {
     const handleSave = async () => {
         let res;
         try {
+            console.log("[BrandManager] Saving template:", template);
+            console.log("[BrandManager] Template ID:", template.id);
+
             if (template.id) {
+                console.log("[BrandManager] Updating existing template...");
                 res = await PdfTemplates.update(template.id, template);
             } else {
+                console.log("[BrandManager] Creating new template...");
                 res = await PdfTemplates.create(template);
-                if (res.template) setTemplate(res.template);
+                console.log("[BrandManager] Create response:", res);
+                if (res.template) {
+                    console.log("[BrandManager] Stored new template with ID:", res.template.id);
+                    setTemplate(res.template);
+                }
             }
+
+            console.log("[BrandManager] Final response:", res);
 
             if (res && (res.success || res.template)) {
                 showToast(res.message || "Brand settings saved successfully!", "success");
             } else {
+                console.error("[BrandManager] Save failed:", res);
                 showToast(res?.error || "Failed to save brand settings.", "error");
             }
         } catch (e) {
-            console.error(e);
+            console.error("[BrandManager] Exception:", e);
             showToast(e.message || "An unexpected error occurred.", "error");
         }
     };
