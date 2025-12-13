@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import YooptaEditor, { createYooptaEditor } from "@yoopta/editor";
+import ActionMenuList, { DefaultActionMenuRender } from "@yoopta/action-menu-list";
 import Paragraph from "@yoopta/paragraph";
 import { html, markdown, plainText } from "@yoopta/exports";
 
@@ -19,6 +20,13 @@ import ExportPdfModal from "./ExportPdfModal";
 import "./editor.css";
 
 const PLUGINS = [Paragraph];
+
+const TOOLS = {
+  ActionMenu: {
+    tool: ActionMenuList,
+    render: DefaultActionMenuRender,
+  },
+};
 
 function parseInitialContent(rawContent) {
   if (rawContent == null) return { kind: "empty" };
@@ -238,6 +246,7 @@ const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =
           <YooptaEditor
             editor={editor}
             plugins={PLUGINS}
+            tools={TOOLS}
             value={value}
             onChange={onChange}
             autoFocus={true}

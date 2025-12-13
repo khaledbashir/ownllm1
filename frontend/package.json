@@ -46,6 +46,7 @@
     "@tiptap/starter-kit": "^2.5.0",
     "@tiptap/suggestion": "^2.5.0",
     "@tremor/react": "^3.15.1",
+    "@yoopta/action-menu-list": "^4.9.9",
     "@yoopta/editor": "^4.9.9",
     "@yoopta/exports": "^4.9.9",
     "@yoopta/paragraph": "^4.9.9",

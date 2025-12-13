@@ -13,6 +13,43 @@
   min-height: 0;
 }
 
+.yoopta-notes-editor [data-slate-editor="true"] {
+  padding: 16px;
+  color: var(--theme-text-primary);
+  caret-color: var(--theme-text-primary);
+}
+
+.yoopta-notes-editor .yoopta-paragraph {
+  color: var(--theme-text-primary);
+}
+
+.yoopta-notes-editor ::selection {
+  background: var(--theme-action-menu-item-hover);
+}
+
 .yoopta-notes-editor [contenteditable="true"] {
   outline: none;
+}
+
+/* Yoopta Action Menu (slash command) theming */
+.yoopta-action-menu-list-content {
+  background: var(--theme-bg-secondary) !important;
+  border-color: var(--theme-modal-border) !important;
+  color: var(--theme-text-primary) !important;
+}
+
+.yoopta-action-menu-list-content button {
+  color: var(--theme-text-primary) !important;
+}
+
+.yoopta-action-menu-list-content button:hover {
+  background: var(--theme-action-menu-item-hover) !important;
+}
+
+.yoopta-action-menu-list-content [aria-selected="true"] {
+  background: var(--theme-action-menu-item-hover) !important;
+}
+
+.yoopta-action-menu-list-content .yoo-action-menu-text-muted-foreground {
+  color: var(--theme-text-secondary) !important;
 }
