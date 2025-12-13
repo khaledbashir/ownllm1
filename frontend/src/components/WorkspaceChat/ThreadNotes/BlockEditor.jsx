@@ -1,3 +1,4 @@
+import React, { forwardRef, useState, useMemo, useCallback, useImperativeHandle } from "react";
 import { useCreateBlockNote, getDefaultReactSlashMenuItems } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
