@@ -38,17 +38,22 @@ export default function BrandManager() {
 
     const handleSave = async () => {
         let res;
-        if (template.id) {
-            res = await PdfTemplates.update(template.id, template);
-        } else {
-            res = await PdfTemplates.create(template);
-            if (res.template) setTemplate(res.template);
-        }
+        try {
+            if (template.id) {
+                res = await PdfTemplates.update(template.id, template);
+            } else {
+                res = await PdfTemplates.create(template);
+                if (res.template) setTemplate(res.template);
+            }
 
-        if (res.success || res.template) {
-            showToast("Brand settings saved successfully!", "success");
-        } else {
-            showToast("Failed to save brand settings.", "error");
+            if (res && (res.success || res.template)) {
+                showToast(res.message || "Brand settings saved successfully!", "success");
+            } else {
+                showToast(res?.error || "Failed to save brand settings.", "error");
+            }
+        } catch (e) {
+            console.error(e);
+            showToast(e.message || "An unexpected error occurred.", "error");
         }
     };
 

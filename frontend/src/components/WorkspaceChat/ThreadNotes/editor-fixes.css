@@ -4,29 +4,71 @@
 
 /* 1. Force menus to "break out" via fixed positioning and high z-index */
 /* Target every possible variation of the suggestion/slash menu */
+:root {
+    --bn-menu-width: 300px;
+    --bn-menu-bg: #1e1e2e;
+    --bn-menu-border: #45475a;
+    --bn-menu-active: #313244;
+}
+
 .bn-suggestion-menu,
 [data-bn-suggestion-menu],
 .mantine-Menu-dropdown,
 .mantine-Popover-dropdown,
 [role="menu"],
 [data-floating-ui-portal] {
-    z-index: 99999 !important;
-    /* Ensure it's not trapped by overflow:hidden parents */
+    z-index: 100000 !important;
     position: fixed !important;
-    /* Visuals */
-    background-color: #1e1e2e !important;
-    border: 1px solid #45475a !important;
-    border-radius: 12px !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6) !important;
-    /* Sizing behavior */
+    background-color: var(--bn-menu-bg) !important;
+    border: 1px solid var(--bn-menu-border) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+
+    /* Layout Fixes */
+    min-width: var(--bn-menu-width) !important;
+    width: auto !important;
+    max-width: 90vw !important;
+
     max-height: 50vh !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    /* Reset conflicting transforms that might crush it */
+
+    /* Reset transforms */
     transform: none !important;
-    /* Use top/left/right/bottom from the library, but ensure visibility */
     opacity: 1 !important;
     visibility: visible !important;
+
+    /* Padding */
+    padding: 6px !important;
+}
+
+/* Fix Suggestion Items */
+.bn-menu-item,
+.mantine-Menu-item {
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    margin-bottom: 2px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.bn-menu-item:hover,
+.bn-menu-item[data-hovered="true"],
+.bn-menu-item[aria-selected="true"],
+.mantine-Menu-item:hover,
+.mantine-Menu-item[data-hovered] {
+    background-color: var(--bn-menu-active) !important;
+}
+
+.bn-menu-item-text {
+    font-size: 14px !important;
+    color: #cdd6f4 !important;
+}
+
+.bn-menu-item-icon {
+    color: #89b4fa !important;
 }
 
 /* 2. Fix the "Tiny" Emoji Picker */
@@ -55,12 +97,43 @@ div[class*="emoji-picker"] {
 }
 
 /* 3. Ensure Editor Containers allow popups (though fixed positioning helps) */
+/* 3. Ensure Editor Containers allow popups and FILL HEIGHT */
 .rich-editor-container,
 .blocknote-editor-full,
-.bn-editor,
 .bn-container,
+.blocknote-dark-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
+    /* Allow scroll on inner */
+}
+
+.bn-editor {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100% !important;
+    background-color: transparent !important;
+    padding-bottom: 30vh !important;
+    /* Allow scrolling past end */
+}
+
+/* The actual clickable area */
 .ProseMirror {
-    overflow: visible !important;
+    flex: 1 !important;
+    min-height: 100% !important;
+    height: auto !important;
+    padding: 2rem !important;
+    /* Better padding */
+    outline: none !important;
+}
+
+/* Allow scrolling in the wrapper */
+.blocknote-dark-wrapper {
+    overflow-y: auto !important;
 }
 
 /* 4. Fix specific Mantine ScrollArea issues that might be crushing content */

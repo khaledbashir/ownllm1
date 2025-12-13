@@ -259,8 +259,23 @@ const BlockEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) => {
             },
         };
 
+        const insertDividerItem = {
+            name: "Divider",
+            aliases: ["line", "hr", "separator"],
+            group: "Basic Blocks",
+            icon: <div style={{ fontSize: "1.2em", fontWeight: "bold" }}>—</div>,
+            hint: "Insert a horizontal rule",
+            execute: async (editor) => {
+                const currentBlock = editor.getTextCursorPosition().block;
+                // Insert a markdown horizontal rule
+                const blocks = await editor.tryParseMarkdownToBlocks("---");
+                editor.insertBlocks(blocks, currentBlock, "after");
+            }
+        };
+
         return [
             insertProductsItem,
+            insertDividerItem,
             ...getDefaultReactSlashMenuItems(editor.schema),
         ];
     }, []);

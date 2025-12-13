@@ -235,49 +235,63 @@ export default function ExportPdfModal({ isOpen, onClose, onExport, htmlContent 
                             </div>
 
                             {/* Saved templates */}
-                            {templates.map((template) => (
-                                <div
-                                    key={template.id}
-                                    onClick={() => setSelectedTemplate(template)}
-                                    className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedTemplate?.id === template.id
-                                        ? "border-blue-500 bg-blue-500/10"
-                                        : "border-theme-border hover:border-theme-border-hover"
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div
-                                            className="w-10 h-10 rounded flex items-center justify-center"
-                                            style={{ backgroundColor: template.primaryColor + "20" }}
-                                        >
-                                            <div
-                                                className="w-6 h-6 rounded"
-                                                style={{ backgroundColor: template.primaryColor }}
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="font-medium text-theme-text-primary flex items-center gap-2">
-                                                {template.name}
-                                                {template.isDefault && (
-                                                    <span className="text-xs bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded">
-                                                        Default
-                                                    </span>
-                                                )}
-                                            </p>
-                                            <p className="text-xs text-theme-text-secondary">
-                                                {template.footerText || "No footer text"}
-                                            </p>
-                                        </div>
-                                    </div>
+                            {templates.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <p className="text-sm text-theme-text-secondary mb-3">No templates found.</p>
+                                    <button
+                                        onClick={() => setShowCreateForm(true)}
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm"
+                                    >
+                                        Create First Template
+                                    </button>
                                 </div>
-                            ))}
+                            ) : (
+                                <>
+                                    {templates.map((template) => (
+                                        <div
+                                            key={template.id}
+                                            onClick={() => setSelectedTemplate(template)}
+                                            className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedTemplate?.id === template.id
+                                                ? "border-blue-500 bg-blue-500/10"
+                                                : "border-theme-border hover:border-theme-border-hover"
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className="w-10 h-10 rounded flex items-center justify-center"
+                                                    style={{ backgroundColor: template.primaryColor + "20" }}
+                                                >
+                                                    <div
+                                                        className="w-6 h-6 rounded"
+                                                        style={{ backgroundColor: template.primaryColor }}
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-theme-text-primary flex items-center gap-2">
+                                                        {template.name}
+                                                        {template.isDefault && (
+                                                            <span className="text-xs bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded">
+                                                                Default
+                                                            </span>
+                                                        )}
+                                                    </p>
+                                                    <p className="text-xs text-theme-text-secondary">
+                                                        {template.footerText || "No footer text"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
 
-                            {/* Create new template button */}
-                            <button
-                                onClick={() => setShowCreateForm(true)}
-                                className="w-full p-3 rounded-lg border border-dashed border-theme-border hover:border-blue-500 hover:bg-blue-500/5 text-theme-text-secondary hover:text-blue-400 transition-all"
-                            >
-                                + Create New Template
-                            </button>
+                                    {/* Create new template button */}
+                                    <button
+                                        onClick={() => setShowCreateForm(true)}
+                                        className="w-full p-3 rounded-lg border border-dashed border-theme-border hover:border-blue-500 hover:bg-blue-500/5 text-theme-text-secondary hover:text-blue-400 transition-all"
+                                    >
+                                        + Create New Template
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
