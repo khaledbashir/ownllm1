@@ -11,7 +11,7 @@ async function validWorkspaceSlug(request, response, next) {
     : await Workspace.get({ slug });
 
   if (!workspace) {
-    response.status(404).send("Workspace does not exist.");
+    response.status(404).json({ success: false, error: "Workspace does not exist." });
     return;
   }
 
@@ -28,7 +28,7 @@ async function validWorkspaceAndThreadSlug(request, response, next) {
     : await Workspace.get({ slug });
 
   if (!workspace) {
-    response.status(404).send("Workspace does not exist.");
+    response.status(404).json({ success: false, error: "Workspace does not exist." });
     return;
   }
 
@@ -37,7 +37,9 @@ async function validWorkspaceAndThreadSlug(request, response, next) {
     user_id: user?.id || null,
   });
   if (!thread) {
-    response.status(404).send("Workspace thread does not exist.");
+    response
+      .status(404)
+      .json({ success: false, error: "Workspace thread does not exist." });
     return;
   }
 

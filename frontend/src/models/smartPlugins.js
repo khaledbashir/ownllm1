@@ -1,6 +1,24 @@
 import { API_BASE } from "@/utils/constants";
 import { baseHeaders } from "@/utils/request";
 
+async function readJsonOrText(response) {
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    try {
+      return await response.json();
+    } catch {
+      // fall through to text
+    }
+  }
+
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { success: false, error: text || "Invalid server response" };
+  }
+}
+
 export default class SmartPlugins {
   static async list(workspaceSlug) {
     if (!workspaceSlug) return [];
@@ -8,8 +26,11 @@ export default class SmartPlugins {
       method: "GET",
       headers: baseHeaders(),
     })
-      .then((res) => res.json())
-      .then((res) => res.plugins || [])
+      .then(async (res) => {
+        const payload = await readJsonOrText(res);
+        if (!res.ok) return [];
+        return payload.plugins || [];
+      })
       .catch((e) => {
         console.error(e);
         return [];
@@ -23,7 +44,11 @@ export default class SmartPlugins {
       headers: baseHeaders(),
       body: JSON.stringify(data),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        const payload = await readJsonOrText(res);
+        if (res.ok) return payload;
+        return { success: false, error: payload?.error || "Request failed" };
+      })
       .catch((e) => {
         console.error(e);
         return { success: false, error: e.message };
@@ -38,7 +63,11 @@ export default class SmartPlugins {
       headers: baseHeaders(),
       body: JSON.stringify(data),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        const payload = await readJsonOrText(res);
+        if (res.ok) return payload;
+        return { success: false, error: payload?.error || "Request failed" };
+      })
       .catch((e) => {
         console.error(e);
         return { success: false, error: e.message };
@@ -52,7 +81,11 @@ export default class SmartPlugins {
       method: "DELETE",
       headers: baseHeaders(),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        const payload = await readJsonOrText(res);
+        if (res.ok) return payload;
+        return { success: false, error: payload?.error || "Request failed" };
+      })
       .catch((e) => {
         console.error(e);
         return { success: false, error: e.message };
