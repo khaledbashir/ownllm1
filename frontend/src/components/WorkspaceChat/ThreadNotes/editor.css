@@ -1,6 +1,6 @@
 /* Thread Notes Rich Editor Styles */
 /* ========================================
-   COMPACT LAYOUT - REDUCED SPACING
+   NUCLEAR COMPACT LAYOUT - KILL ALL SPACING
    ======================================== */
 
 /* Container wrapper */
@@ -19,7 +19,7 @@
   max-width: 100% !important;
 }
 
-/* Force ALL Yoopta child containers to full width */
+/* Force ALL Yoopta child containers to full width + ZERO margins */
 .yoopta-notes-editor>div,
 .yoopta-notes-editor>div>div,
 .yoopta-notes-editor [data-yoopta-editor],
@@ -27,11 +27,10 @@
   width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding: 0 !important;
 }
 
-/* The actual slate editor - COMPACT PADDING */
+/* The actual slate editor */
 .yoopta-notes-editor [data-slate-editor="true"] {
   padding: 12px 16px !important;
   color: var(--theme-text-primary) !important;
@@ -42,47 +41,89 @@
   min-height: 200px;
 }
 
-/* Force child blocks to full width */
+/* ========================================
+   NUCLEAR: KILL ALL BLOCK SPACING
+   Yoopta wraps each block in divs with margins
+   ======================================== */
+
+/* Kill margin on EVERY div inside the editor */
+.yoopta-notes-editor [data-slate-editor="true"]>div,
+.yoopta-notes-editor [data-slate-editor="true"]>div>div,
+.yoopta-notes-editor [data-slate-editor="true"] div[data-slate-node],
+.yoopta-notes-editor [data-slate-node="element"],
+.yoopta-notes-editor [data-yoopta-block],
+.yoopta-notes-editor [class*="yoopta-block"],
+.yoopta-notes-editor [class*="yoopta-element"],
+.yoopta-notes-editor [class*="block-"],
+.yoopta-notes-editor div[style*="margin"] {
+  margin: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 4px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Target Yoopta's specific block wrapper pattern */
 .yoopta-notes-editor [data-slate-editor="true"]>* {
   width: 100% !important;
   max-width: 100% !important;
-  margin-bottom: 6px !important;
+  margin: 0 0 4px 0 !important;
+  padding: 0 !important;
+}
+
+/* Deeply nested content */
+.yoopta-notes-editor [data-slate-editor="true"]>*>* {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* ========================================
-   TEXT STYLING - COMPACT SPACING
+   TEXT STYLING - COMPACT
    ======================================== */
 
-/* Paragraphs - tight spacing */
+/* Paragraphs */
 .yoopta-notes-editor .yoopta-paragraph,
 .yoopta-notes-editor p,
 .yoopta-notes-editor span[data-slate-string="true"] {
   color: var(--theme-text-primary) !important;
   font-size: 14px !important;
   line-height: 1.4 !important;
-  margin-bottom: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Headings - COMPACT margins */
-.yoopta-notes-editor h1 {
-  font-size: 1.75em !important;
+/* Headings - ZERO extra margin */
+.yoopta-notes-editor h1,
+.yoopta-notes-editor [class*="heading-one"],
+.yoopta-notes-editor [data-element-type="heading-one"] {
+  font-size: 1.6em !important;
   font-weight: 700 !important;
   color: var(--theme-text-primary) !important;
-  margin: 8px 0 4px 0 !important;
+  margin: 0 0 4px 0 !important;
+  padding: 0 !important;
+  line-height: 1.3 !important;
 }
 
-.yoopta-notes-editor h2 {
-  font-size: 1.35em !important;
+.yoopta-notes-editor h2,
+.yoopta-notes-editor [class*="heading-two"],
+.yoopta-notes-editor [data-element-type="heading-two"] {
+  font-size: 1.3em !important;
   font-weight: 600 !important;
   color: var(--theme-text-primary) !important;
-  margin: 8px 0 4px 0 !important;
+  margin: 0 0 4px 0 !important;
+  padding: 0 !important;
+  line-height: 1.3 !important;
 }
 
-.yoopta-notes-editor h3 {
+.yoopta-notes-editor h3,
+.yoopta-notes-editor [class*="heading-three"],
+.yoopta-notes-editor [data-element-type="heading-three"] {
   font-size: 1.15em !important;
   font-weight: 600 !important;
   color: var(--theme-text-primary) !important;
-  margin: 6px 0 3px 0 !important;
+  margin: 0 0 3px 0 !important;
+  padding: 0 !important;
+  line-height: 1.3 !important;
 }
 
 /* ========================================
@@ -91,13 +132,13 @@
 .yoopta-notes-editor table {
   width: 100% !important;
   border-collapse: collapse !important;
-  margin: 8px 0 !important;
+  margin: 4px 0 !important;
 }
 
 .yoopta-notes-editor th,
 .yoopta-notes-editor td {
   border: 1px solid var(--theme-sidebar-border) !important;
-  padding: 6px 10px !important;
+  padding: 4px 8px !important;
   text-align: left !important;
   color: var(--theme-text-primary) !important;
   line-height: 1.3 !important;
@@ -118,14 +159,15 @@
    ======================================== */
 .yoopta-notes-editor ul,
 .yoopta-notes-editor ol {
-  padding-left: 20px !important;
-  margin: 4px 0 !important;
+  padding-left: 18px !important;
+  margin: 2px 0 !important;
 }
 
 .yoopta-notes-editor li {
   color: var(--theme-text-primary) !important;
-  margin: 2px 0 !important;
-  line-height: 1.4 !important;
+  margin: 1px 0 !important;
+  padding: 0 !important;
+  line-height: 1.35 !important;
 }
 
 /* ========================================
@@ -140,9 +182,9 @@
 }
 
 .yoopta-notes-editor pre {
-  padding: 10px !important;
+  padding: 8px !important;
   overflow-x: auto !important;
-  margin: 6px 0 !important;
+  margin: 4px 0 !important;
 }
 
 .yoopta-notes-editor code {
@@ -155,8 +197,8 @@
    ======================================== */
 .yoopta-notes-editor blockquote {
   border-left: 3px solid var(--theme-sidebar-border) !important;
-  padding-left: 12px !important;
-  margin: 6px 0 !important;
+  padding-left: 10px !important;
+  margin: 4px 0 !important;
   color: var(--theme-text-secondary) !important;
   font-style: italic !important;
 }
@@ -175,14 +217,8 @@ think,
   display: none !important;
 }
 
-/* Hide any element containing reasoning text */
-*:has(> reasoning),
-*:has(> think) {
-  display: none !important;
-}
-
 /* ========================================
-   NO ANIMATIONS - INSTANT CLICKS
+   NO ANIMATIONS
    ======================================== */
 .yoopta-notes-editor button,
 .yoopta-notes-editor [role="button"] {
