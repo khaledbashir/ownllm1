@@ -7,6 +7,7 @@ import React, {
     useMemo
 } from "react";
 import { createEmptyDoc, PageEditor } from "@blocksuite/presets";
+import { effects as registerBlocksuiteElements } from "@blocksuite/presets/effects";
 import { Text } from "@blocksuite/store";
 import { FilePdf, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
@@ -17,11 +18,11 @@ import ExportPdfModal from "./ExportPdfModal";
 import "./editor.css";
 
 try {
-    if (!customElements.get("page-editor")) {
-        customElements.define("page-editor", PageEditor);
+    if (typeof window !== "undefined" && window.customElements && !customElements.get("page-editor")) {
+        registerBlocksuiteElements();
     }
 } catch (e) {
-    console.warn("Failed to register PageEditor custom element:", e);
+    console.warn("Failed to register BlockSuite custom elements:", e);
 }
 
 const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) => {
