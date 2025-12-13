@@ -181,10 +181,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     </button>
                 </div>
 
-                {/* BlockSuite Editor Container */}
+                {/* BlockSuite Editor Container - data-theme forces dark mode */}
                 <div
                     ref={containerRef}
-                    className="flex-1 overflow-y-auto bg-theme-bg-secondary blocksuite-editor-wrapper"
+                    data-theme="dark"
+                    className="flex-1 overflow-y-auto blocksuite-editor-wrapper"
                     style={{ minHeight: "300px" }}
                 />
             </div>

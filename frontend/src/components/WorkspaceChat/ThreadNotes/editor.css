@@ -1,157 +1,198 @@
-/* Thread Notes Rich Editor Styles */
-/* ========================================
-   BLOCKSUITE DARK THEME OVERRIDES
-   ======================================== */
+/* =========================================================
+   BLOCKSUITE DARK THEME - OPERATION BLACKOUT
+   Complete dark mode fix using official Affine CSS variables
+   ========================================================= */
 
-/* Force dark theme on BlockSuite editor */
-.blocksuite-editor-wrapper {
-  --affine-background-primary-color: #1e1e1e !important;
-  --affine-background-secondary-color: #252525 !important;
-  --affine-background-tertiary-color: #2d2d2d !important;
-  --affine-text-primary-color: #e0e0e0 !important;
-  --affine-text-secondary-color: #a0a0a0 !important;
-  --affine-divider-color: #3d3d3d !important;
-  --affine-border-color: #3d3d3d !important;
-  --affine-placeholder-color: #6b6b6b !important;
-  --affine-hover-color: rgba(255, 255, 255, 0.06) !important;
-  --affine-code-background: #2d2d2d !important;
-  --affine-tooltip-background: #3d3d3d !important;
-  --affine-white: #1e1e1e !important;
-  --affine-black: #e0e0e0 !important;
-  color-scheme: dark !important;
-}
+/* 
+ * The container has data-theme="dark" which tells BlockSuite
+ * to use dark mode. But we also need to ensure any rogue
+ * elements respect our dark background.
+ */
 
-/* Override the main editor background */
+/* Force dark background on all BlockSuite containers */
 .blocksuite-editor-wrapper,
 .blocksuite-editor-wrapper affine-editor-container,
-.blocksuite-editor-wrapper .affine-editor-container,
 .blocksuite-editor-wrapper [data-block-is-root],
 .blocksuite-editor-wrapper .affine-page-root,
-.blocksuite-editor-wrapper .affine-surface-container,
 .blocksuite-editor-wrapper .affine-page-viewport,
 .blocksuite-editor-wrapper .affine-doc-viewport,
-.blocksuite-editor-wrapper .doc-title-container,
-.blocksuite-editor-wrapper .affine-default-page-block-container {
-  background-color: #1e1e1e !important;
-  background: #1e1e1e !important;
+.blocksuite-editor-wrapper .affine-default-page-block-container,
+.blocksuite-editor-wrapper .affine-surface-container {
+  background: var(--affine-background-primary-color, #141414) !important;
+  background-color: var(--affine-background-primary-color, #141414) !important;
 }
 
-/* Text colors */
-.blocksuite-editor-wrapper .affine-paragraph-block-container,
-.blocksuite-editor-wrapper [data-block-id],
-.blocksuite-editor-wrapper p,
-.blocksuite-editor-wrapper span,
-.blocksuite-editor-wrapper h1,
-.blocksuite-editor-wrapper h2,
-.blocksuite-editor-wrapper h3,
-.blocksuite-editor-wrapper h4,
-.blocksuite-editor-wrapper h5,
-.blocksuite-editor-wrapper h6,
-.blocksuite-editor-wrapper li,
-.blocksuite-editor-wrapper td,
-.blocksuite-editor-wrapper th,
-.blocksuite-editor-wrapper .doc-title {
-  color: #e0e0e0 !important;
+/* Note block container */
+.blocksuite-editor-wrapper .affine-note-block-container {
+  background: var(--affine-background-primary-color, #141414) !important;
 }
 
-/* Input and editable areas */
-.blocksuite-editor-wrapper [contenteditable="true"],
-.blocksuite-editor-wrapper input,
-.blocksuite-editor-wrapper textarea {
-  color: #e0e0e0 !important;
-  caret-color: #e0e0e0 !important;
+/* Ensure text is always light */
+.blocksuite-editor-wrapper,
+.blocksuite-editor-wrapper * {
+  color: var(--affine-text-primary-color, #eaeaea);
+}
+
+.blocksuite-editor-wrapper [contenteditable="true"] {
+  caret-color: var(--affine-text-primary-color, #eaeaea) !important;
 }
 
 /* Placeholder text */
 .blocksuite-editor-wrapper [data-placeholder]::before,
-.blocksuite-editor-wrapper .placeholder {
-  color: #6b6b6b !important;
+.blocksuite-editor-wrapper .placeholder,
+.blocksuite-editor-wrapper [placeholder]::before {
+  color: var(--affine-placeholder-color, #3e3e3f) !important;
+  opacity: 1 !important;
 }
 
-/* Selection */
+/* Selection highlight */
 .blocksuite-editor-wrapper ::selection {
-  background: rgba(59, 130, 246, 0.4) !important;
+  background: rgba(30, 150, 235, 0.3) !important;
 }
 
-/* Slash menu and popups */
-.blocksuite-editor-wrapper .affine-slash-menu,
-.blocksuite-editor-wrapper .affine-menu,
-.blocksuite-editor-wrapper .affine-format-bar,
-.blocksuite-editor-wrapper .blocksuite-overlay,
+/* Borders */
+.blocksuite-editor-wrapper hr,
+.blocksuite-editor-wrapper .affine-divider,
+.blocksuite-editor-wrapper .divider {
+  border-color: var(--affine-border-color, #2e2e2e) !important;
+  background-color: var(--affine-divider-color, #727272) !important;
+}
+
+/* Tables */
+.blocksuite-editor-wrapper table,
+.blocksuite-editor-wrapper td,
+.blocksuite-editor-wrapper th {
+  border-color: var(--affine-border-color, #2e2e2e) !important;
+}
+
+.blocksuite-editor-wrapper td,
+.blocksuite-editor-wrapper th {
+  background-color: var(--affine-background-secondary-color, #252525) !important;
+}
+
+/* Code blocks */
+.blocksuite-editor-wrapper pre,
+.blocksuite-editor-wrapper code,
+.blocksuite-editor-wrapper .affine-code-block {
+  background-color: var(--affine-background-code-block, #1f2022) !important;
+  color: var(--affine-text-primary-color, #eaeaea) !important;
+}
+
+/* Blockquotes */
+.blocksuite-editor-wrapper blockquote,
+.blocksuite-editor-wrapper .affine-quote {
+  border-left-color: var(--affine-quote-color, #8e8d91) !important;
+  color: var(--affine-quote-color, #8e8d91) !important;
+}
+
+/* Links */
+.blocksuite-editor-wrapper a {
+  color: var(--affine-link-color, #78BEFF) !important;
+}
+
+/* Menus and popups - ensure they inherit dark mode */
 .affine-slash-menu,
 .affine-menu-container,
-.affine-format-bar-widget {
-  background-color: #2d2d2d !important;
-  border-color: #3d3d3d !important;
-  color: #e0e0e0 !important;
+.affine-format-bar-widget,
+.affine-toolbar,
+.blocksuite-overlay {
+  background-color: var(--affine-background-overlay-panel-color, #1e1e1e) !important;
+  border-color: var(--affine-border-color, #2e2e2e) !important;
+  box-shadow: var(--affine-menu-shadow) !important;
 }
 
 /* Menu items */
 .affine-slash-menu-item,
 .affine-menu-button,
-.affine-menu-action {
-  color: #e0e0e0 !important;
+.affine-menu-action,
+.affine-toolbar-button {
+  color: var(--affine-text-primary-color, #eaeaea) !important;
 }
 
 .affine-slash-menu-item:hover,
 .affine-menu-button:hover,
-.affine-menu-action:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+.affine-menu-action:hover,
+.affine-toolbar-button:hover {
+  background-color: var(--affine-hover-color-filled, #2a2a2a) !important;
 }
 
-/* Tables */
-.blocksuite-editor-wrapper table {
-  border-color: #3d3d3d !important;
-}
-
-.blocksuite-editor-wrapper td,
-.blocksuite-editor-wrapper th {
-  border-color: #3d3d3d !important;
-  background-color: #252525 !important;
-}
-
-/* Code blocks */
-.blocksuite-editor-wrapper code,
-.blocksuite-editor-wrapper pre,
-.blocksuite-editor-wrapper .affine-code-block {
-  background-color: #2d2d2d !important;
-  color: #e0e0e0 !important;
-}
-
-/* Dividers */
-.blocksuite-editor-wrapper hr,
-.blocksuite-editor-wrapper .affine-divider {
-  border-color: #3d3d3d !important;
-  background-color: #3d3d3d !important;
-}
-
-/* Tags section (seen in screenshot) */
+/* Database/Kanban views */
 .blocksuite-editor-wrapper .affine-database-title,
 .blocksuite-editor-wrapper .affine-kanban,
 .blocksuite-editor-wrapper .affine-database {
-  background-color: #252525 !important;
-  color: #e0e0e0 !important;
+  background-color: var(--affine-background-secondary-color, #252525) !important;
 }
 
-/* Links */
-.blocksuite-editor-wrapper a {
-  color: #60a5fa !important;
+.blocksuite-editor-wrapper .affine-database-block-tag {
+  background-color: var(--affine-tag-gray, #292929) !important;
 }
 
-/* Scrollbar for dark mode */
+/* Doc title */
+.blocksuite-editor-wrapper .doc-title-container,
+.blocksuite-editor-wrapper .doc-title {
+  background: transparent !important;
+  color: var(--affine-text-primary-color, #eaeaea) !important;
+}
+
+/* Icons */
+.blocksuite-editor-wrapper svg {
+  color: var(--affine-icon-color, #a8a8a0) !important;
+  fill: currentColor;
+}
+
+/* Scrollbar - dark themed */
 .blocksuite-editor-wrapper::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 .blocksuite-editor-wrapper::-webkit-scrollbar-track {
-  background: #1e1e1e;
+  background: var(--affine-background-primary-color, #141414);
 }
 
 .blocksuite-editor-wrapper::-webkit-scrollbar-thumb {
-  background: #4a4a4a;
+  background: var(--affine-border-color, #2e2e2e);
   border-radius: 4px;
 }
 
 .blocksuite-editor-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #5a5a5a;
+  background: var(--affine-hover-color-filled, #2a2a2a);
+}
+
+/* Tags */
+.blocksuite-editor-wrapper .affine-tag-blue {
+  background-color: rgba(8, 67, 136, 1) !important;
+}
+
+.blocksuite-editor-wrapper .affine-tag-green {
+  background-color: rgba(44, 108, 63, 1) !important;
+}
+
+.blocksuite-editor-wrapper .affine-tag-teal {
+  background-color: rgba(26, 115, 110, 1) !important;
+}
+
+.blocksuite-editor-wrapper .affine-tag-purple {
+  background-color: rgba(47, 30, 113, 1) !important;
+}
+
+.blocksuite-editor-wrapper .affine-tag-red {
+  background-color: rgba(111, 50, 50, 1) !important;
+}
+
+.blocksuite-editor-wrapper .affine-tag-yellow {
+  background-color: rgba(150, 132, 49, 1) !important;
+}
+
+.blocksuite-editor-wrapper .affine-tag-orange {
+  background-color: rgba(185, 129, 46, 1) !important;
+}
+
+.blocksuite-editor-wrapper .affine-tag-gray {
+  background-color: rgba(41, 41, 41, 1) !important;
+}
+
+/* Ensure no white flash on load */
+.blocksuite-editor-wrapper {
+  background: #141414 !important;
 }
