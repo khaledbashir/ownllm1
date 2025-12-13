@@ -5,8 +5,8 @@ import AICommandModal from "./AICommandModal";
 import { NotePencil, WarningCircle } from "@phosphor-icons/react";
 import "./editor.css";
 
-// Lazy load BlockEditor to isolate any initialization errors
-const BlockEditor = React.lazy(() => import("./BlockEditor"));
+// Lazy load BlockSuiteEditor to isolate any initialization errors
+const BlockEditor = React.lazy(() => import("./BlockSuiteEditor"));
 
 // Error boundary to catch BlockNote crashes
 class BlockEditorErrorBoundary extends React.Component {

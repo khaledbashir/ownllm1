@@ -1,5 +1,30 @@
 /* Thread Notes Rich Editor Styles */
 
+/* ========================================
+   BlockSuite Dark Theme Overrides
+   ======================================== */
+.blocksuite-editor-wrapper {
+  --affine-background-primary-color: var(--theme-bg-secondary);
+  --affine-background-secondary-color: var(--theme-bg-primary);
+  --affine-background-tertiary-color: #2a2a3e;
+  --affine-text-primary-color: #ffffff;
+  --affine-text-secondary-color: rgba(255, 255, 255, 0.7);
+  --affine-border-color: var(--theme-border);
+  --affine-hover-color: rgba(255, 255, 255, 0.1);
+  --affine-brand-color: #3b82f6;
+  --affine-divider-color: rgba(255, 255, 255, 0.15);
+}
+
+.blocksuite-editor-wrapper affine-editor-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Ensure BlockSuite fills container */
+.blocksuite-editor-wrapper>* {
+  height: 100%;
+}
+
 /* Editor placeholder */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
@@ -222,7 +247,7 @@
 }
 
 /* Ensure the BlockNote container fills parent */
-.blocknote-editor-full > div {
+.blocknote-editor-full>div {
   height: 100% !important;
 }
 
@@ -360,9 +385,9 @@
 }
 
 /* Ensure all menu items are visible */
-.bn-suggestion-menu > div,
-[data-bn-suggestion-menu] > div,
-.mantine-Menu-dropdown > div {
+.bn-suggestion-menu>div,
+[data-bn-suggestion-menu]>div,
+.mantine-Menu-dropdown>div {
   display: flex !important;
   flex-direction: column !important;
   gap: 2px !important;

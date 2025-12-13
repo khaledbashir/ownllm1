@@ -11,12 +11,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@blocknote/core": "0.15.6",
-    "@blocknote/mantine": "0.15.6",
-    "@blocknote/react": "0.15.6",
+    "@blocksuite/blocks": "canary",
+    "@blocksuite/presets": "canary",
+    "@blocksuite/store": "canary",
     "@codesandbox/sandpack-react": "^2.20.0",
-    "@mantine/core": "^7.13.0",
-    "@mantine/hooks": "^7.13.0",
     "@microsoft/fetch-event-source": "^2.0.1",
     "@mintplex-labs/piper-tts-web": "^1.0.4",
     "@myriaddreamin/typst.ts": "^0.6.1-rc5",
