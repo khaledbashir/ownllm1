@@ -4,16 +4,13 @@ import React, {
     useRef,
     useState,
     useImperativeHandle,
-    useCallback,
     useMemo
 } from "react";
 import { AffineEditorContainer } from "@blocksuite/presets";
-import { Schema, DocCollection, Job } from "@blocksuite/store";
-import { AffineSchemas, HtmlTransformer } from "@blocksuite/blocks";
-import "@blocksuite/presets/themes/affine.css";
-import { FilePdf, CircleNotch, Package } from "@phosphor-icons/react";
+import { Schema, DocCollection } from "@blocksuite/store";
+import { AffineSchemas } from "@blocksuite/blocks";
+import { FilePdf, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
-import Workspace from "@/models/workspace";
 import { API_BASE } from "@/utils/constants";
 import { baseHeaders } from "@/utils/request";
 import debounce from "lodash.debounce";
