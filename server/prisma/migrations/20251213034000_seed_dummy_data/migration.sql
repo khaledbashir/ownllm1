@@ -1,0 +1,5 @@
+-- Seed dummy data for 'test' workspace
+UPDATE "workspaces" 
+SET "products" = '[{"id":"prod_1","name":"Website Redesign (Basic)","description":"5-page informational website with standard theme.","price":2500,"pricingType":"fixed","category":"Web Development","features":["5 Pages","Contact Form","Mobile Responsive","SEO Basic"]},{"id":"prod_2","name":"E-commerce Setup","description":"Shopify or WooCommerce setup with up to 50 products.","price":5000,"pricingType":"fixed","category":"E-commerce","features":["Product Upload","Payment Gateway Setup","Training"]},{"id":"prod_3","name":"SEO Audit","description":"Comprehensive technical and content audit.","price":1500,"pricingType":"fixed","category":"Marketing","features":["Site Crawl","Keyword Analysis","Action Plan"]}]',
+    "rateCard" = '[{"id":"role_1","name":"Senior Developer","rate":150,"category":"Technology"},{"id":"role_2","name":"UI/UX Designer","rate":125,"category":"Design"},{"id":"role_3","name":"Project Manager","rate":100,"category":"Management"}]'
+WHERE "slug" = 'test';
