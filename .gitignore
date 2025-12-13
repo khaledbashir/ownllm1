@@ -8,5 +8,9 @@ v-env
 .DS_Store
 aws_cf_deploy_anything_llm.json
 
+# Local/vendor directories (do not commit)
+blocksuite-upstream/
+frontend/dist/
+
 *.bak
 .idea

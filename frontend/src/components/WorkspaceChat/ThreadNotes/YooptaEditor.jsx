@@ -1,0 +1,260 @@
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import YooptaEditor, { createYooptaEditor } from "@yoopta/editor";
+import Paragraph from "@yoopta/paragraph";
+import { html, markdown, plainText } from "@yoopta/exports";
+
+import { FilePdf, CircleNotch } from "@phosphor-icons/react";
+import { toast } from "react-toastify";
+import { API_BASE } from "@/utils/constants";
+import { baseHeaders } from "@/utils/request";
+import debounce from "lodash.debounce";
+import ExportPdfModal from "./ExportPdfModal";
+import "./editor.css";
+
+const PLUGINS = [Paragraph];
+
+function parseInitialContent(rawContent) {
+  if (rawContent == null) return { kind: "empty" };
+
+  if (typeof rawContent !== "string") {
+    return { kind: "text", text: String(rawContent) };
+  }
+
+  const trimmed = rawContent.trim();
+  if (!trimmed) return { kind: "empty" };
+
+  try {
+    const parsed = JSON.parse(trimmed);
+
+    if (parsed && typeof parsed === "object") {
+      if (parsed.type === "yoopta" && parsed.value) {
+        return { kind: "yoopta", value: parsed.value };
+      }
+
+      if (parsed.type === "blocksuite" && typeof parsed.text === "string") {
+        return { kind: "text", text: parsed.text };
+      }
+
+      // Support legacy "plain string encoded as JSON"
+      if (typeof parsed === "string") {
+        return { kind: "text", text: parsed };
+      }
+
+      // If it looks like a Yoopta value without wrapper
+      return { kind: "yoopta", value: parsed };
+    }
+
+    return { kind: "text", text: trimmed };
+  } catch {
+    return { kind: "text", text: rawContent };
+  }
+}
+
+const YooptaNotesEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) => {
+  const containerRef = useRef(null);
+  const editor = useMemo(() => createYooptaEditor(), []);
+
+  const [value, setValue] = useState(undefined);
+  const [isReady, setIsReady] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+
+  const debouncedSave = useMemo(
+    () =>
+      debounce((nextValue) => {
+        onSave(JSON.stringify({ type: "yoopta", value: nextValue }));
+      }, 1000),
+    [onSave]
+  );
+
+  useEffect(() => {
+    const init = parseInitialContent(content);
+
+    try {
+      if (init.kind === "yoopta") {
+        editor.setEditorValue(init.value);
+        setValue(init.value);
+      } else if (init.kind === "text") {
+        const nextValue = plainText.deserialize(editor, init.text);
+        editor.setEditorValue(nextValue);
+        setValue(nextValue);
+      }
+
+      setIsReady(true);
+    } catch (e) {
+      console.error("Failed to initialize Yoopta content:", e);
+      toast.error("Failed to load notes content");
+      setIsReady(true);
+    }
+
+    return () => {
+      debouncedSave.cancel();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    insertMarkdown: async (markdownToInsert) => {
+      if (!markdownToInsert || typeof markdownToInsert !== "string") return;
+
+      try {
+        const currentValue = editor.getEditorValue();
+        const currentMd = markdown.serialize(editor, currentValue || value);
+        const combinedMd = [currentMd, markdownToInsert]
+          .filter(Boolean)
+          .join("\n\n")
+          .trim();
+
+        const nextValue = markdown.deserialize(editor, combinedMd);
+        editor.setEditorValue(nextValue);
+        setValue(nextValue);
+        toast.success("Content inserted");
+      } catch (e) {
+        console.error("Failed to insert markdown:", e);
+        toast.error("Failed to insert content");
+      }
+    },
+    getEditor: () => editor,
+  }));
+
+  const handleExport = async (template) => {
+    if (!workspaceSlug || !isReady) {
+      toast.error("Cannot export - editor not ready");
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const data = editor.getEditorValue();
+      const htmlContent = html.serialize(editor, data);
+
+        const primaryColor = template?.primaryColor;
+        const fontFamily = template?.fontFamily;
+      const headerText = template?.headerText || "";
+      const footerText = template?.footerText || "";
+      const logoPath = template?.logoPath || "";
+
+        const headingColorRule = primaryColor ? `color: ${primaryColor};` : "";
+        const headerBorderRule = primaryColor
+        ? `border-bottom: 2px solid ${primaryColor};`
+        : "border-bottom: 1px solid currentColor; opacity: 0.7;";
+        const headerColorRule = primaryColor ? `color: ${primaryColor};` : "";
+
+      const fullHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                body { font-family: ${fontFamily ? `'${fontFamily}', sans-serif` : "sans-serif"}; padding: 40px; }
+                h1, h2, h3 { ${headingColorRule} }
+                p { font-size: 14px; line-height: 1.6; margin-bottom: 1em; }
+                    </style>
+                </head>
+                <body>
+                    ${logoPath ? `<img src="${logoPath}" style="max-height:80px;margin-bottom:30px;" />` : ""}
+              ${headerText ? `<div style="margin-bottom:30px;font-size:18px;font-weight:500;${headerColorRule}${headerBorderRule};padding-bottom:10px;">${headerText}</div>` : ""}
+                    ${htmlContent}
+              ${footerText ? `<div style="margin-top:50px;padding-top:20px;border-top:1px solid currentColor;opacity:0.7;font-size:12px;">${footerText}</div>` : ""}
+                </body>
+                </html>
+            `;
+
+      const response = await fetch(
+        `${API_BASE}/workspace/${workspaceSlug}/export-pdf`,
+        {
+          method: "POST",
+          headers: {
+            ...baseHeaders(),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ html: fullHtml }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Server export failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = template?.name
+        ? `${template.name.toLowerCase().replace(/\s+/g, "-")}.pdf`
+        : "notes.pdf";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("PDF exported successfully!");
+    } catch (e) {
+      console.error("PDF export failed", e);
+      toast.error(`PDF export failed: ${e.message}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const onChange = (nextValue) => {
+    setValue(nextValue);
+    debouncedSave(nextValue);
+  };
+
+  return (
+    <>
+      <div className="flex flex-col h-full relative">
+        <div className="absolute top-2 right-2 z-10">
+          <button
+            onClick={() => setShowExportModal(true)}
+            disabled={exporting || !isReady}
+            className="flex items-center gap-x-2 px-3 py-1 bg-theme-bg-secondary hover:bg-theme-bg-primary border border-theme-border rounded-md text-sm transition-colors disabled:opacity-50"
+          >
+            {exporting ? (
+              <CircleNotch className="w-4 h-4 text-blue-400 animate-spin" />
+            ) : (
+              <FilePdf className="w-4 h-4 text-red-400" />
+            )}
+            <span className="text-theme-text-primary">
+              {exporting ? "Exporting..." : "Export PDF"}
+            </span>
+          </button>
+        </div>
+
+        <div
+          ref={containerRef}
+          className="flex-1 overflow-y-auto bg-theme-bg-secondary yoopta-editor-wrapper"
+          style={{ minHeight: "100%" }}
+        >
+          <YooptaEditor
+            editor={editor}
+            plugins={PLUGINS}
+            value={value}
+            onChange={onChange}
+            autoFocus={true}
+            placeholder="Write notes…"
+            selectionBoxRoot={containerRef}
+            className="yoopta-notes-editor"
+          />
+        </div>
+      </div>
+
+      <ExportPdfModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={handleExport}
+      />
+    </>
+  );
+});
+
+export default YooptaNotesEditor;
