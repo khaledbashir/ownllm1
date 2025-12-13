@@ -1,6 +1,6 @@
-const { CollectorApi } = require("../utils/agents/aibitat/collectorApi");
+const { CollectorApi } = require("./collectorApi");
 const { PromptTemplate } = require("@langchain/core/prompts");
-const Provider = require("../utils/agents/aibitat/providers/ai-provider");
+const Provider = require("./agents/aibitat/providers/ai-provider");
 const { SystemSettings } = require("../models/systemSettings");
 
 async function importProductsFromUrl(url) {
