@@ -266,7 +266,7 @@ export default function Dashboard() {
                     </Link>
 
                     <Link
-                        to={paths.settings.embeds()}
+                        to={paths.settings.embedChatWidgets()}
                         className="p-5 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-purple-500/50 hover:bg-slate-800 transition-all duration-300 group"
                     >
                         <Bot size={24} className="text-purple-400 mb-3 group-hover:scale-110 transition-transform" />

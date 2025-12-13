@@ -397,6 +397,13 @@ const SidebarOptions = ({ user = null, t }) => (
               flex: true,
               roles: ["admin", "manager"],
             },
+            {
+              btnText: "CRM Pipeline",
+              href: paths.settings.crm(),
+              icon: <UserCircleGear className="h-5 w-5 flex-shrink-0" />,
+              flex: true,
+              roles: ["admin", "manager"],
+            },
           ]}
         />
         <Option

@@ -189,127 +189,161 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-700/50 shadow-2xl">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-white">
-                        {card ? "Edit Card" : "New Card"}
-                    </h3>
-                    <button onClick={onClose} className="p-1 rounded hover:bg-slate-800 text-slate-400">
-                        <X size={20} />
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Title *</label>
-                        <input
-                            type="text"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-                            placeholder="Lead name or description"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
-                            <input
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-                                placeholder="Contact name"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Company</label>
-                            <input
-                                type="text"
-                                value={formData.company}
-                                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-                                placeholder="Company name"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
-                            <input
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-                                placeholder="email@example.com"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Phone</label>
-                            <input
-                                type="tel"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-                                placeholder="+1 234 567 890"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Stage</label>
-                            <select
-                                value={formData.stage}
-                                onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+            <div className="w-full max-w-2xl transform transition-all">
+                <div className="relative overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl">
+                    {/* Header with gradient */}
+                    <div className="relative px-8 py-6 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-transparent border-b border-slate-800/50">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                                    {card ? "Edit Opportunity" : "New Opportunity"}
+                                </h3>
+                                <p className="text-slate-500 text-sm mt-1">Manage lead details and pipeline status</p>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="p-2 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
                             >
-                                {stages.map((s) => (
-                                    <option key={s} value={s}>{s}</option>
-                                ))}
-                            </select>
+                                <X size={20} />
+                            </button>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">Deal Value</label>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                        {/* Main Title Input */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Opportunity Title <span className="text-red-400">*</span>
+                            </label>
                             <input
-                                type="number"
-                                value={formData.value}
-                                onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-                                placeholder="5000"
+                                type="text"
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                className="w-full px-4 py-3 rounded-xl bg-slate-950/50 border border-slate-800 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                placeholder="e.g. Enterprise License Deal - Acme Corp"
+                                autoFocus
                             />
                         </div>
-                    </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Notes</label>
-                        <textarea
-                            value={formData.notes}
-                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                            className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 resize-none"
-                            rows={3}
-                            placeholder="Additional notes..."
-                        />
-                    </div>
+                        {/* Contact Details Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                                    <User size={14} className="text-blue-400" />
+                                    Contact Info
+                                </h4>
+                                <div className="space-y-3">
+                                    <div className="relative group">
+                                        <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                                        <input
+                                            type="text"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-colors"
+                                            placeholder="Contact Name"
+                                        />
+                                    </div>
+                                    <div className="relative group">
+                                        <Building size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                                        <input
+                                            type="text"
+                                            value={formData.company}
+                                            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                                            className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-colors"
+                                            placeholder="Company Name"
+                                        />
+                                    </div>
+                                    <div className="relative group">
+                                        <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                                        <input
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-colors"
+                                            placeholder="Email Address"
+                                        />
+                                    </div>
+                                    <div className="relative group">
+                                        <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                                        <input
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-colors"
+                                            placeholder="Phone Number"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div className="flex gap-3 pt-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="flex-1 px-4 py-2.5 rounded-xl bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
-                        >
-                            {card ? "Save Changes" : "Create Card"}
-                        </button>
-                    </div>
-                </form>
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                                    <Settings size={14} className="text-purple-400" />
+                                    Deal Settings
+                                </h4>
+                                <div className="space-y-3">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-slate-500">Pipeline Stage</label>
+                                        <div className="relative">
+                                            <select
+                                                value={formData.stage}
+                                                onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
+                                                className="w-full px-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-purple-500/50 focus:outline-none appearance-none cursor-pointer"
+                                            >
+                                                {stages.map((s) => (
+                                                    <option key={s} value={s}>{s}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-slate-500">Est. Value ($)</label>
+                                        <div className="relative group">
+                                            <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-green-400 transition-colors" />
+                                            <input
+                                                type="number"
+                                                value={formData.value}
+                                                onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                                                className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-green-500/50 focus:outline-none transition-colors"
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-slate-500">Notes</label>
+                                        <textarea
+                                            value={formData.notes}
+                                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white placeholder:text-slate-600 focus:border-blue-500/50 focus:outline-none resize-none min-h-[88px]"
+                                            placeholder="Add notes about this deal..."
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-4 pt-4 border-t border-slate-800/50">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="flex-1 px-4 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-200 font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-blue-500/25 hover:from-blue-500 hover:to-purple-500 transition-all duration-200"
+                            >
+                                {card ? "Save Changes" : "Create Opportunity"}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );
