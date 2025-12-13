@@ -55,6 +55,8 @@ const Workspace = {
     "agentModel",
     "queryRefusalResponse",
     "vectorSearchMode",
+    "products",
+    "rateCard",
   ],
 
   validations: {
