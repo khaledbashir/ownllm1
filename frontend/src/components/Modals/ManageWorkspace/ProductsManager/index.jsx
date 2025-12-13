@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Package, Plus, Trash, PencilSimple, FloppyDisk, X, Globe, CircleNotch } from "@phosphor-icons/react";
 import Workspace from "@/models/workspace";
+import showToast from "@/utils/toast";
 
 const PRICING_TYPES = [
     { value: "fixed", label: "Fixed Price" },
@@ -31,12 +32,15 @@ export default function ProductsManager({ workspace }) {
         setIsImporting(true);
         const { products: importedProducts, error } = await Workspace.importProducts(workspace.slug, importUrl);
         if (error) {
-            alert(error); // Simple alert for now
+            showToast(error, "error");
         } else if (importedProducts?.length > 0) {
             // Append and save
             const updated = [...products, ...importedProducts];
             await saveProducts(updated);
             setImportUrl("");
+            showToast(`Imported ${importedProducts.length} products successfully!`, "success");
+        } else {
+            showToast("No products found on that page", "warning");
         }
         setIsImporting(false);
     };
