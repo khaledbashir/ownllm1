@@ -1031,7 +1031,7 @@
   dependencies:
     "@lit/reactive-element" "^1.6.2 || ^2.1.0"
 
-"@lit/reactive-element@^1.6.2 || ^2.1.0", "@lit/reactive-element@^2.1.0":
+"@lit/reactive-element@^1.6.2 || ^2.1.0", "@lit/reactive-element@^2.0.4", "@lit/reactive-element@^2.1.0":
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/@lit/reactive-element/-/reactive-element-2.1.1.tgz#0662ac4a43d4898974aef9a6c5cd47b9e331919a"
   integrity sha512-N+dm5PAYdQ8e6UlywyyrgI2t++wFGXfHx+dSJ1oBrg6FAxUj40jId++EaRm80MKX5JnlH1sBsyZ5h0bcZKemCg==
@@ -4532,7 +4532,7 @@ linkifyjs@^4.3.2:
   resolved "https://registry.yarnpkg.com/linkifyjs/-/linkifyjs-4.3.2.tgz#d97eb45419aabf97ceb4b05a7adeb7b8c8ade2b1"
   integrity sha512-NT1CJtq3hHIreOianA8aSXn6Cw0JzYOuDQbOrSPe7gqFnCpKP++MQe3ODgO3oh2GJFORkAAdqredOa60z63GbA==
 
-lit-element@^4.2.0:
+lit-element@^4.1.0:
   version "4.2.1"
   resolved "https://registry.yarnpkg.com/lit-element/-/lit-element-4.2.1.tgz#0a3782f36eaa545862fe07f84abcb14b2903a042"
   integrity sha512-WGAWRGzirAgyphK2urmYOV72tlvnxw7YfyLDgQ+OZnM9vQQBQnumQ7jUJe6unEzwGU3ahFOjuz1iz1jjrpCPuw==
@@ -4541,21 +4541,21 @@ lit-element@^4.2.0:
     "@lit/reactive-element" "^2.1.0"
     lit-html "^3.3.0"
 
-lit-html@^3.2.1, lit-html@^3.3.0:
+lit-html@^3.2.0, lit-html@^3.2.1, lit-html@^3.3.0:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/lit-html/-/lit-html-3.3.1.tgz#f0a7e4b9ea0a1d034eb28a4bf2d1b0a0096253e3"
   integrity sha512-S9hbyDu/vs1qNrithiNyeyv64c9yqiW9l+DBgI18fL+MTvOtWoFR0FWiyq1TxaYef5wNlpEmzlXoBlZEO+WjoA==
   dependencies:
     "@types/trusted-types" "^2.0.2"
 
-lit@^3.2.0, lit@^3.2.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/lit/-/lit-3.3.1.tgz#9dc79be626bc9a3b824de98b107dd662cabdeda6"
-  integrity sha512-Ksr/8L3PTapbdXJCk+EJVB78jDodUMaP54gD24W186zGRARvwrsPfS60wae/SSCTCNZVPd1chXqio1qHQmu4NA==
+lit@3.2.0, lit@^3.2.0, lit@^3.2.1:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/lit/-/lit-3.2.0.tgz#2189d72bccbc335f733a67bfbbd295f015e68e05"
+  integrity sha512-s6tI33Lf6VpDu7u4YqsSX78D28bYQulM+VAzsGch4fx2H0eLZnJsUBsPWmGYSGoKDNbjtRv02rio1o+UdPVwvw==
   dependencies:
-    "@lit/reactive-element" "^2.1.0"
-    lit-element "^4.2.0"
-    lit-html "^3.3.0"
+    "@lit/reactive-element" "^2.0.4"
+    lit-element "^4.1.0"
+    lit-html "^3.2.0"
 
 locate-path@^6.0.0:
   version "6.0.0"

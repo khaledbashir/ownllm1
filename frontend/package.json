@@ -11,7 +11,8 @@
     "preview": "vite preview"
   },
   "resolutions": {
-    "@blocksuite/icons": "2.1.75"
+    "@blocksuite/icons": "2.1.75",
+    "lit": "3.2.0"
   },
   "dependencies": {
     "@blocksuite/blocks": "0.19.4",
