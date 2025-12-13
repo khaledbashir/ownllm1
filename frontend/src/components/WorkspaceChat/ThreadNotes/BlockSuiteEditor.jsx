@@ -16,6 +16,18 @@ import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
 import "./editor.css";
 
+// CRITICAL: Register PageEditor as custom element IMMEDIATELY at module load
+// This prevents "Illegal constructor" error by ensuring registration happens
+// before any BlockSuite code tries to instantiate the element
+try {
+    if (!customElements.get("affine-page-editor")) {
+        customElements.define("affine-page-editor", PageEditor);
+        console.log("✅ PageEditor custom element registered successfully");
+    }
+} catch (e) {
+    console.warn("⚠️ Failed to register PageEditor custom element:", e);
+}
+
 const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) => {
     const containerRef = useRef(null);
     const editorRef = useRef(null);
@@ -35,16 +47,6 @@ const BlockSuiteEditor = forwardRef(({ content, onSave, workspaceSlug }, ref) =>
     // Initialize BlockSuite using official Quick Start pattern
     useEffect(() => {
         if (!containerRef.current) return;
-
-        // Fix: Ensure PageEditor is registered as a custom element before instantiation
-        // This prevents "Illegal constructor" error when calling new PageEditor()
-        try {
-            if (!customElements.get("affine-page-editor")) {
-                customElements.define("affine-page-editor", PageEditor);
-            }
-        } catch (e) {
-            console.warn("Failed to register PageEditor custom element:", e);
-        }
 
         // Use the official createEmptyDoc helper
         const doc = createEmptyDoc().init();
