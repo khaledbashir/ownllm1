@@ -360,7 +360,7 @@ const SidebarOptions = ({ user = null, t }) => (
               roles: ["admin", "manager"],
             },
             {
-              btnText: "Test Lab",
+              btnText: "The Lab",
               href: paths.settings.testLab(),
               flex: true,
               roles: ["admin", "manager"],
