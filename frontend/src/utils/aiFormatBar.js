@@ -39,15 +39,21 @@ export function createAIFormatBarItems(onAIAction) {
                             transition: all 0.2s;
                         "
                         @click=${() => {
+                        console.log("[AI Format Bar] AI button clicked!");
                         // Get selected text
                         const selection = window.getSelection();
                         const selectedText = selection?.toString() || "";
+                        console.log("[AI Format Bar] Selected text:", selectedText);
+                        console.log("[AI Format Bar] onAIAction:", onAIAction);
 
                         if (onAIAction && selectedText) {
+                            console.log("[AI Format Bar] Calling onAIAction with selection");
                             onAIAction("selection", {
                                 selectedText,
                                 host: formatBar.host,
                             });
+                        } else {
+                            console.warn("[AI Format Bar] Missing onAIAction or selectedText");
                         }
                     }}
                         @mouseenter=${(e) => {
@@ -72,15 +78,25 @@ export function createAIFormatBarItems(onAIAction) {
  * Call this after the format bar widget is available
  */
 export function setupAIFormatBar(formatBarWidget, onAIAction) {
-    if (!formatBarWidget || !formatBarWidget.addRawConfigItems) {
-        console.warn("[AI Format Bar] Format bar widget not found or not ready");
+    console.log("[AI Format Bar] Setup called with widget:", formatBarWidget);
+    console.log("[AI Format Bar] Widget methods:", formatBarWidget ? Object.keys(formatBarWidget) : "null");
+
+    if (!formatBarWidget) {
+        console.warn("[AI Format Bar] Format bar widget not found");
         return;
     }
 
-    const aiItems = createAIFormatBarItems(onAIAction);
-
-    // Add AI items at the beginning of the format bar (position 0)
-    formatBarWidget.addRawConfigItems(aiItems, 0);
-
-    console.log("[AI Format Bar] Added AI button to format bar");
+    // Try different methods that might exist on the widget
+    if (typeof formatBarWidget.addRawConfigItems === 'function') {
+        const aiItems = createAIFormatBarItems(onAIAction);
+        formatBarWidget.addRawConfigItems(aiItems, 0);
+        console.log("[AI Format Bar] Added AI button via addRawConfigItems");
+    } else if (typeof formatBarWidget.addConfigItems === 'function') {
+        const aiItems = createAIFormatBarItems(onAIAction);
+        formatBarWidget.addConfigItems(aiItems, 0);
+        console.log("[AI Format Bar] Added AI button via addConfigItems");
+    } else {
+        console.warn("[AI Format Bar] No addRawConfigItems or addConfigItems method on widget");
+        console.log("[AI Format Bar] Available properties:", Object.getOwnPropertyNames(Object.getPrototypeOf(formatBarWidget)));
+    }
 }
