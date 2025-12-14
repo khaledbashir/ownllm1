@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback, useRef, Suspense } from "react
 import { useParams } from "react-router-dom";
 import WorkspaceThread from "@/models/workspaceThread";
 import AICommandModal from "./AICommandModal";
-import { NotePencil, WarningCircle } from "@phosphor-icons/react";
+import { NotePencil, WarningCircle, CaretDown, FileText } from "@phosphor-icons/react";
 import showToast from "@/utils/toast";
 import { EditorProvider, useEditorContext } from "./EditorContext";
+import { DOC_TEMPLATES } from "./BlockSuiteEditor";
 import "./editor.css";
 
 // Lazy load BlockSuite editor to isolate any initialization errors
@@ -58,6 +59,30 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
     // Use external ref if provided, otherwise use internal
     const editorRef = externalEditorRef || internalEditorRef;
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+    const [showTemplateMenu, setShowTemplateMenu] = useState(false);
+    const templateMenuRef = useRef(null);
+
+    // Close template menu on outside click
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (templateMenuRef.current && !templateMenuRef.current.contains(e.target)) {
+                setShowTemplateMenu(false);
+            }
+        };
+        if (showTemplateMenu) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showTemplateMenu]);
+
+    const handleLoadTemplate = useCallback((templateKey) => {
+        if (editorRef.current?.loadTemplate) {
+            editorRef.current.loadTemplate(templateKey);
+        } else {
+            showToast("Editor not ready", "error");
+        }
+        setShowTemplateMenu(false);
+    }, [editorRef]);
 
     const handleInsertAI = useCallback((text) => {
         if (editorRef.current) {
@@ -164,8 +189,36 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
         <EditorProvider>
             <div className="flex-1 overflow-hidden relative flex flex-col">
                 <div className="sticky top-0 z-10 bg-theme-bg-secondary border-b border-theme-sidebar-border flex items-center justify-between gap-x-2 px-3 py-2">
-                    <div className="text-sm font-semibold text-white">
-                        Smart Actions
+                    <div className="flex items-center gap-x-3">
+                        <div className="text-sm font-semibold text-white">
+                            Actions
+                        </div>
+                        {/* Template Picker Dropdown */}
+                        <div className="relative" ref={templateMenuRef}>
+                            <button
+                                type="button"
+                                onClick={() => setShowTemplateMenu(!showTemplateMenu)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-md transition-colors"
+                            >
+                                <FileText size={16} />
+                                Templates
+                                <CaretDown size={14} className={`transition-transform ${showTemplateMenu ? "rotate-180" : ""}`} />
+                            </button>
+                            {showTemplateMenu && (
+                                <div className="absolute left-0 top-full mt-1 w-48 bg-theme-bg-secondary border border-theme-sidebar-border rounded-lg shadow-xl z-50 overflow-hidden">
+                                    {Object.entries(DOC_TEMPLATES).map(([key, template]) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => handleLoadTemplate(key)}
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-theme-bg-container transition-colors text-left"
+                                        >
+                                            <span>{template.icon}</span>
+                                            <span>{template.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="flex items-center gap-x-2">
                         <button
@@ -174,7 +227,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                             onClick={() => runSmartAction("meeting_notes")}
                             className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {smartActionLoading === "meeting_notes" ? "Working..." : "Meeting Notes"}
+                            {smartActionLoading === "meeting_notes" ? "Working..." : "AI Notes"}
                         </button>
                         <button
                             type="button"
@@ -182,7 +235,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                             onClick={() => runSmartAction("draft_proposal")}
                             className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {smartActionLoading === "draft_proposal" ? "Working..." : "Draft Proposal"}
+                            {smartActionLoading === "draft_proposal" ? "Working..." : "AI Proposal"}
                         </button>
                         <button
                             type="button"
@@ -190,7 +243,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                             onClick={() => runSmartAction("quick_quote")}
                             className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {smartActionLoading === "quick_quote" ? "Working..." : "Quick Quote"}
+                            {smartActionLoading === "quick_quote" ? "Working..." : "AI Quote"}
                         </button>
                     </div>
                 </div>
