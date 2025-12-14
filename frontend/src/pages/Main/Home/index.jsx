@@ -2,23 +2,17 @@ import React, { useState, useEffect } from "react";
 import {
   Sparkles,
   Database,
-  Brain,
-  PiggyBank,
   Activity,
   FileText,
   Globe,
   MessageSquare,
   Clock,
-  ChevronRight,
   Zap,
   FolderOpen,
-  Bot,
-  TrendingUp,
-  CheckCircle,
-  Layers,
   Wand2,
   Command,
-  TerminalSquare
+  TerminalSquare,
+  Layers
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import paths from "@/utils/paths";
@@ -44,7 +38,7 @@ const ACTIVITY_FEED = [
 const SPARKLINE_DATA = [40, 55, 45, 70, 65, 80, 75, 90, 85, 95, 88, 100];
 
 // Mini sparkline component
-function MiniSparkline({ data, color = "#3b82f6" }) {
+function MiniSparkline({ data, color = "#9ca3af" }) { // Default to neutral gray
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
@@ -58,11 +52,11 @@ function MiniSparkline({ data, color = "#3b82f6" }) {
   }).join(" ");
 
   return (
-    <svg width={width} height={height} className="opacity-60">
+    <svg width={width} height={height} className="opacity-50">
       <polyline
         fill="none"
         stroke={color}
-        strokeWidth="2"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         points={points}
@@ -80,7 +74,6 @@ function StatusDot({ status = "online" }) {
   };
   return (
     <span className="relative flex h-2.5 w-2.5">
-      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${colors[status]} opacity-75`}></span>
       <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${colors[status]}`}></span>
     </span>
   );
@@ -89,14 +82,14 @@ function StatusDot({ status = "online" }) {
 // Activity icon based on type
 function ActivityIcon({ type }) {
   const icons = {
-    create: <Sparkles size={14} className="text-purple-400" />,
-    embed: <FileText size={14} className="text-blue-400" />,
-    search: <Globe size={14} className="text-green-400" />,
-    workspace: <FolderOpen size={14} className="text-yellow-400" />,
-    flow: <Zap size={14} className="text-orange-400" />,
-    sync: <Database size={14} className="text-cyan-400" />,
+    create: <Sparkles size={14} className="text-theme-text-secondary" />,
+    embed: <FileText size={14} className="text-theme-text-secondary" />,
+    search: <Globe size={14} className="text-theme-text-secondary" />,
+    workspace: <FolderOpen size={14} className="text-theme-text-secondary" />,
+    flow: <Zap size={14} className="text-theme-text-secondary" />,
+    sync: <Database size={14} className="text-theme-text-secondary" />,
   };
-  return icons[type] || <Activity size={14} className="text-gray-400" />;
+  return icons[type] || <Activity size={14} className="text-theme-text-secondary" />;
 }
 
 export default function Home() {
@@ -135,146 +128,143 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 lg:p-8">
+    <div className="w-full h-full overflow-y-auto bg-theme-bg-container p-6 lg:p-12">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white">
-            {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">{username}</span>
+          <h1 className="text-2xl font-bold text-theme-text-primary tracking-tight">
+            {greeting}, <span className="text-theme-text-secondary">{username}</span>
           </h1>
-          <p className="text-slate-400 mt-1">Your AI command center is ready.</p>
+          <p className="text-theme-text-secondary text-sm mt-1">System operational.</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/50 border border-slate-700/50">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-theme-border bg-theme-bg-secondary">
             <StatusDot status="online" />
-            <span className="text-sm text-slate-300">System Online</span>
+            <span className="text-xs font-medium text-theme-text-secondary">System Online</span>
           </div>
         </div>
       </div>
 
-      {/* Bento Grid */}
-      <div className="grid grid-cols-12 gap-4 lg:gap-6">
+      {/* Main Grid */}
+      <div className="grid grid-cols-12 gap-6">
 
         {/* Hero Card - App Builder */}
-        <div className="col-span-12 lg:col-span-6 row-span-2">
-          <div className="h-full p-6 lg:p-8 rounded-3xl bg-gradient-to-br from-blue-600/20 via-purple-600/10 to-slate-900 border border-blue-500/20 backdrop-blur-sm hover:border-blue-500/40 transition-all duration-300 group cursor-pointer relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="flex items-start justify-between mb-6">
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/25">
-                  <Wand2 size={32} className="text-white" />
+        <div className="col-span-12 lg:col-span-8">
+          <div className="h-full p-6 lg:p-8 rounded-xl bg-theme-bg-secondary border border-theme-border flex flex-col justify-between group hover:border-theme-text-secondary/20 transition-colors duration-200">
+            <div>
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 rounded-lg bg-theme-bg-primary border border-theme-border">
+                  <Wand2 size={24} className="text-theme-text-primary" />
                 </div>
-                <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  NEW
-                </span>
               </div>
-              <h2 className="text-2xl lg:text-3xl font-bold text-white mb-3">
+              <h2 className="text-xl font-semibold text-theme-text-primary mb-2">
                 Custom AI Agents
               </h2>
-              <p className="text-slate-400 mb-8 text-lg">
-                Build powerful AI Agents and automations with no code. Just describe what you want.
+              <p className="text-theme-text-secondary text-sm leading-relaxed max-w-xl">
+                Configure autonomous agents to handle complex workflows. Define triggers, actions, and decision logic using the visual builder.
               </p>
+            </div>
 
-              <div className="flex gap-3">
-                <Link
-                  to={paths.agents.builder()}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold hover:from-blue-400 hover:to-purple-500 transition-all duration-300 shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40"
-                >
-                  <Sparkles size={20} />
-                  Build Agent Flow
-                </Link>
-                <button
-                  onClick={chatWithAgent}
-                  className="px-6 py-3 rounded-xl bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 hover:text-white transition-all duration-300 border border-slate-700"
-                >
-                  Chat with Agent
-                </button>
-              </div>
+            <div className="mt-8 flex gap-3">
+              <Link
+                to={paths.agents.builder()}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-theme-text-primary text-theme-bg-primary font-medium text-sm hover:opacity-90 transition-opacity"
+              >
+                <Sparkles size={16} />
+                Build Agent Flow
+              </Link>
+              <button
+                onClick={chatWithAgent}
+                className="px-4 py-2 rounded-lg border border-theme-border text-theme-text-primary text-sm font-medium hover:bg-theme-bg-primary transition-colors"
+              >
+                Chat with Agent
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions - Replaces Usage Metrics */}
-        <div className="col-span-12 lg:col-span-6 grid grid-cols-2 gap-4">
+        {/* Knowledge Base Stat */}
+        <div className="col-span-12 lg:col-span-4">
+          <div className="h-full p-6 rounded-xl bg-theme-bg-secondary border border-theme-border flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 rounded-lg bg-theme-bg-primary border border-theme-border">
+                  <Database size={20} className="text-theme-text-secondary" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-theme-text-primary tracking-tight">1,240</div>
+              <div className="text-sm text-theme-text-secondary">Indexed Documents</div>
+            </div>
+            <div className="mt-4">
+              <MiniSparkline data={SPARKLINE_DATA} color="var(--theme-text-secondary)" />
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions Row */}
+        <div className="col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
 
           {/* Slash Commands */}
           <button
             onClick={setSlashCommand}
-            className="col-span-1 p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-purple-500/50 hover:bg-slate-800 transition-all duration-300 group text-left"
+            className="col-span-1 p-5 rounded-xl bg-theme-bg-secondary border border-theme-border hover:border-theme-text-secondary/30 transition-all duration-200 text-left group"
           >
-            <div className="p-3 w-fit rounded-xl bg-purple-500/20 text-purple-400 mb-4 group-hover:scale-110 transition-transform">
-              <Command size={24} />
+            <div className="flex items-center gap-3 mb-3">
+              <Command size={20} className="text-theme-text-secondary group-hover:text-theme-text-primary transition-colors" />
+              <h3 className="font-semibold text-theme-text-primary text-sm">Slash Commands</h3>
             </div>
-            <h3 className="text-lg font-bold text-white mb-1">Slash Commands</h3>
-            <p className="text-sm text-slate-400">Save time and inject prompts.</p>
+            <p className="text-xs text-theme-text-secondary">Inject pre-defined prompts and context.</p>
           </button>
 
           {/* System Prompts */}
           <button
             onClick={setSystemPrompt}
-            className="col-span-1 p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-green-500/50 hover:bg-slate-800 transition-all duration-300 group text-left"
+            className="col-span-1 p-5 rounded-xl bg-theme-bg-secondary border border-theme-border hover:border-theme-text-secondary/30 transition-all duration-200 text-left group"
           >
-            <div className="p-3 w-fit rounded-xl bg-green-500/20 text-green-400 mb-4 group-hover:scale-110 transition-transform">
-              <TerminalSquare size={24} />
+            <div className="flex items-center gap-3 mb-3">
+              <TerminalSquare size={20} className="text-theme-text-secondary group-hover:text-theme-text-primary transition-colors" />
+              <h3 className="font-semibold text-theme-text-primary text-sm">System Prompts</h3>
             </div>
-            <h3 className="text-lg font-bold text-white mb-1">System Prompts</h3>
-            <p className="text-sm text-slate-400">Customize AI personality.</p>
+            <p className="text-xs text-theme-text-secondary">Configure base AI persona and behavior.</p>
           </button>
 
-          {/* Chat */}
+          {/* Live Chat */}
           <Link
             to={paths.home()}
-            className="col-span-1 p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-blue-500/50 hover:bg-slate-800 transition-all duration-300 group"
+            className="col-span-1 p-5 rounded-xl bg-theme-bg-secondary border border-theme-border hover:border-theme-text-secondary/30 transition-all duration-200 text-left group block"
           >
-            <div className="p-3 w-fit rounded-xl bg-blue-500/20 text-blue-400 mb-4 group-hover:scale-110 transition-transform">
-              <MessageSquare size={24} />
+            <div className="flex items-center gap-3 mb-3">
+              <MessageSquare size={20} className="text-theme-text-secondary group-hover:text-theme-text-primary transition-colors" />
+              <h3 className="font-semibold text-theme-text-primary text-sm">Live Chat</h3>
             </div>
-            <h3 className="text-lg font-bold text-white mb-1">Live Chat</h3>
-            <p className="text-sm text-slate-400">Start new conversation.</p>
+            <p className="text-xs text-theme-text-secondary">Start a new conversation thread.</p>
           </Link>
-
-          {/* Knowledge Base */}
-          <div className="col-span-1 p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 group">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 w-fit rounded-xl bg-cyan-500/20 text-cyan-400 group-hover:scale-110 transition-transform">
-                <Database size={24} />
-              </div>
-              <MiniSparkline data={SPARKLINE_DATA} color="#22d3ee" />
-            </div>
-            <div className="text-2xl font-bold text-white">1,240</div>
-            <div className="text-sm text-slate-400">Documents Indexed</div>
-          </div>
         </div>
 
-        {/* Recent Workspaces */}
-        <div className="col-span-12 lg:col-span-6 p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300">
+        {/* Bottom Row: Recent & Activity */}
+        <div className="col-span-12 lg:col-span-6 p-6 rounded-xl bg-theme-bg-secondary border border-theme-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Layers size={20} className="text-blue-400" />
+            <h3 className="text-sm font-semibold text-theme-text-primary flex items-center gap-2">
+              <Layers size={16} className="text-theme-text-secondary" />
               Recent Workspaces
             </h3>
-            <Link to={paths.home()} className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-              View All
-            </Link>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {RECENT_WORKSPACES.map((workspace, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-4 rounded-xl bg-slate-900/50 hover:bg-slate-900 border border-slate-700/30 hover:border-slate-600/50 transition-all duration-200 cursor-pointer group"
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-theme-bg-primary transition-colors cursor-pointer group"
               >
-                <div className="flex items-center gap-4">
-                  <span className="text-2xl">{workspace.icon}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg opacity-80">{workspace.icon}</span>
                   <div>
-                    <div className="text-white font-medium group-hover:text-blue-400 transition-colors">
+                    <div className="text-sm text-theme-text-primary font-medium">
                       {workspace.name}
                     </div>
-                    <div className="text-xs text-slate-500">{workspace.documents} documents</div>
+                    <div className="text-[10px] text-theme-text-secondary">{workspace.documents} docs</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <Clock size={14} />
+                <div className="text-[10px] text-theme-text-secondary">
                   {workspace.lastActive}
                 </div>
               </div>
@@ -282,30 +272,25 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Activity Feed */}
-        <div className="col-span-12 lg:col-span-6 p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300">
+        <div className="col-span-12 lg:col-span-6 p-6 rounded-xl bg-theme-bg-secondary border border-theme-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Activity size={20} className="text-green-400" />
-              Activity Feed
+            <h3 className="text-sm font-semibold text-theme-text-primary flex items-center gap-2">
+              <Activity size={16} className="text-theme-text-secondary" />
+              System Activity
             </h3>
-            <span className="flex items-center gap-1.5 text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded-full border border-green-500/20">
-              <StatusDot status="online" />
-              Live
-            </span>
           </div>
-          <div className="space-y-3 max-h-[320px] overflow-y-auto custom-scrollbar">
+          <div className="space-y-3 max-h-[240px] overflow-y-auto custom-scrollbar">
             {ACTIVITY_FEED.map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-start gap-4 p-4 rounded-xl bg-slate-900/50 border border-slate-700/30 hover:border-slate-600/50 transition-all duration-200"
+                className="flex items-start gap-3 p-2"
               >
-                <div className="p-2 rounded-lg bg-slate-800 shrink-0">
+                <div className="mt-0.5">
                   <ActivityIcon type={item.type} />
                 </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <div className="text-sm text-white truncate font-medium">{item.action}</div>
-                  <div className="text-xs text-slate-500 mt-1">{item.time}</div>
+                <div>
+                  <div className="text-xs text-theme-text-primary">{item.action}</div>
+                  <div className="text-[10px] text-theme-text-secondary mt-0.5">{item.time}</div>
                 </div>
               </div>
             ))}
@@ -313,23 +298,6 @@ export default function Home() {
         </div>
 
       </div>
-
-      {/* Custom scrollbar style */}
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #475569;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #64748b;
-        }
-      `}</style>
     </div>
   );
 }
