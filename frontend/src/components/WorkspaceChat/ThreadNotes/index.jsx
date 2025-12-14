@@ -208,6 +208,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                             content={content}
                             onSave={handleSave}
                             workspaceSlug={workspace?.slug}
+                            threadSlug={threadSlug}
                         />
                     </Suspense>
                 </BlockEditorErrorBoundary>

@@ -285,6 +285,38 @@ const WorkspaceThread = {
         return null;
       });
   },
+
+  /**
+   * Embed doc content into workspace vector database for AI retrieval
+   * @param {string} workspaceSlug
+   * @param {string} threadSlug
+   * @param {string} content - The text content to embed
+   * @param {string} title - Optional title for the embedded doc
+   * @returns {Promise<{success: boolean, message?: string, error?: string}>}
+   */
+  embedDoc: async function (workspaceSlug, threadSlug, content, title = null) {
+    try {
+      const res = await fetch(
+        `${API_BASE}/workspace/${workspaceSlug}/thread/${threadSlug}/embed-doc`,
+        {
+          method: "POST",
+          body: JSON.stringify({ content, title }),
+          headers: { ...baseHeaders(), "Content-Type": "application/json" },
+        }
+      );
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return { success: false, error: data.error || "Failed to embed doc" };
+      }
+
+      return await res.json();
+    } catch (e) {
+      console.error("embedDoc error:", e);
+      return { success: false, error: e.message || "Network error" };
+    }
+  },
 };
 
 export default WorkspaceThread;
+

@@ -23,7 +23,7 @@ import SpeechRecognition, {
 import { ChatTooltips } from "./ChatTooltips";
 import { MetricsProvider } from "./ChatHistory/HistoricalMessage/Actions/RenderMetrics";
 import ThreadNotes from "../ThreadNotes";
-import { ChatText, NotePencil } from "@phosphor-icons/react";
+import { ChatText, FileText } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 
 // Event for AI to insert content into notes
@@ -499,8 +499,8 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
               : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
               }`}
           >
-            <NotePencil size={18} />
-            Notes
+            <FileText size={18} />
+            Doc
           </button>
         </div>
       )}

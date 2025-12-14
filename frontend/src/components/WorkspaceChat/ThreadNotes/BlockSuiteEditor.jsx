@@ -11,7 +11,7 @@ import { Schema, DocCollection, Text, Job } from "@blocksuite/store";
 import { AffineSchemas } from "@blocksuite/blocks";
 import "@blocksuite/presets/themes/affine.css";
 
-import { FilePdf, CircleNotch } from "@phosphor-icons/react";
+import { FilePdf, CircleNotch, Database } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
@@ -28,7 +28,7 @@ import "./editor.css";
  * - This preserves all content, formatting, and structure
  */
 const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
-    { content, onSave, workspaceSlug },
+    { content, onSave, workspaceSlug, threadSlug },
     ref
 ) {
     const containerRef = useRef(null);
@@ -41,6 +41,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
     const [isReady, setIsReady] = useState(false);
     const [exporting, setExporting] = useState(false);
+    const [embedding, setEmbedding] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
 
     // Helper to save the full document snapshot
@@ -418,7 +419,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     /* Add any critical blocksuite styles here if they are missing in the export */
                 </style>
                 <div>
-                    <h1>Notes Export</h1>
+                    <h1>Doc Export</h1>
                     ${containerRef.current.innerHTML}
                 </div>
             `;
@@ -428,7 +429,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = `notes-${new Date().toISOString().slice(0, 10)}.pdf`;
+                a.download = `doc-${new Date().toISOString().slice(0, 10)}.pdf`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -446,11 +447,128 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         }
     };
 
+    /**
+     * Extract plain text content from the BlockSuite document
+     * for embedding into the vector database
+     */
+    const extractTextContent = () => {
+        if (!editorRef.current?.doc) return { title: "", content: "" };
+
+        const doc = editorRef.current.doc;
+        const textParts = [];
+        let docTitle = "";
+
+        // Get page title if available
+        const pageBlock = doc.getBlocksByFlavour("affine:page")[0];
+        if (pageBlock?.title) {
+            const titleText = pageBlock.title.toString?.() || pageBlock.title.yText?.toString?.() || "";
+            if (titleText && titleText !== "Title") {
+                docTitle = titleText;
+            }
+        }
+
+        // Get all paragraph and list blocks
+        const extractFromBlock = (block) => {
+            if (!block) return;
+
+            // Get text from paragraph blocks
+            if (block.flavour === "affine:paragraph" && block.text) {
+                const text = block.text.toString?.() || "";
+                if (text.trim()) textParts.push(text);
+            }
+
+            // Get text from list blocks
+            if (block.flavour === "affine:list" && block.text) {
+                const text = block.text.toString?.() || "";
+                if (text.trim()) textParts.push(`• ${text}`);
+            }
+
+            // Get text from code blocks
+            if (block.flavour === "affine:code" && block.text) {
+                const text = block.text.toString?.() || "";
+                if (text.trim()) textParts.push(`\`\`\`\n${text}\n\`\`\``);
+            }
+
+            // Recursively extract from children
+            if (block.children?.length) {
+                block.children.forEach(extractFromBlock);
+            }
+        };
+
+        // Extract from all note blocks
+        const noteBlocks = doc.getBlocksByFlavour("affine:note");
+        noteBlocks.forEach(noteBlock => {
+            if (noteBlock.children) {
+                noteBlock.children.forEach(extractFromBlock);
+            }
+        });
+
+        return {
+            title: docTitle,
+            content: textParts.join("\n\n")
+        };
+    };
+
+    /**
+     * Handle embedding doc content into workspace vector database
+     */
+    const handleEmbed = async () => {
+        if (!workspaceSlug || !threadSlug) {
+            toast.error("Missing workspace or thread information");
+            return;
+        }
+
+        setEmbedding(true);
+        try {
+            const { title, content } = extractTextContent();
+
+            if (!content.trim()) {
+                toast.error("Doc is empty - nothing to embed");
+                return;
+            }
+
+            console.log("[BlockSuiteEditor] Embedding doc:", { title, contentLength: content.length });
+
+            const result = await WorkspaceThread.embedDoc(
+                workspaceSlug,
+                threadSlug,
+                content,
+                title || undefined
+            );
+
+            if (result.success) {
+                toast.success(result.message || "Doc embedded successfully! AI can now retrieve this content.");
+            } else {
+                toast.error(result.error || "Failed to embed doc");
+            }
+        } catch (error) {
+            console.error("Embed failed:", error);
+            toast.error("Failed to embed doc");
+        } finally {
+            setEmbedding(false);
+        }
+    };
+
     return (
         <>
             <div className="flex flex-col h-full relative">
-                {/* Export PDF Button - Sticky */}
-                <div className="sticky top-0 z-20 flex justify-end px-4 py-2 bg-theme-bg-secondary border-b border-theme-sidebar-border">
+                {/* Header with buttons */}
+                <div className="sticky top-0 z-20 flex justify-end gap-x-2 px-4 py-2 bg-theme-bg-secondary border-b border-theme-sidebar-border">
+                    {/* Embed to Workspace button */}
+                    <button
+                        onClick={handleEmbed}
+                        disabled={embedding || !isReady || !threadSlug}
+                        className="flex items-center gap-x-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Embed this doc into workspace for AI retrieval"
+                    >
+                        {embedding ? (
+                            <CircleNotch className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Database className="w-4 h-4" />
+                        )}
+                        {embedding ? "Embedding..." : "Embed to Workspace"}
+                    </button>
+                    {/* Export PDF button */}
                     <button
                         onClick={() => setShowExportModal(true)}
                         disabled={exporting || !isReady}

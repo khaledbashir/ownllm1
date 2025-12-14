@@ -334,6 +334,84 @@ function workspaceThreadEndpoints(app) {
       }
     }
   );
+
+  // Embed doc content into workspace vector database
+  app.post(
+    "/workspace/:slug/thread/:threadSlug/embed-doc",
+    [
+      validatedRequest,
+      flexUserRoleValid([ROLES.all]),
+      validWorkspaceAndThreadSlug,
+    ],
+    async (request, response) => {
+      try {
+        const { content, title } = reqBody(request);
+        if (!content || !String(content).trim()) {
+          return response
+            .status(400)
+            .json({ success: false, error: "Content is required." });
+        }
+
+        const workspace = response.locals.workspace;
+        const thread = response.locals.thread;
+        const { v4: uuidv4 } = require("uuid");
+        const { getVectorDbClass } = require("../utils/helpers");
+
+        const docTitle = title || `Thread Doc - ${thread.name || thread.slug}`;
+        const docContent = String(content).trim();
+
+        const vectorDB = getVectorDbClass();
+        const { vectorized, error } = await vectorDB.addDocumentToNamespace(
+          workspace.slug,
+          {
+            docId: uuidv4(),
+            id: uuidv4(),
+            url: `file://thread-doc-${thread.slug}.md`,
+            title: docTitle,
+            docAuthor: "@thread-doc",
+            description: `Doc from thread: ${thread.name || thread.slug}`,
+            docSource: "Thread doc embedded by user.",
+            chunkSource: "",
+            published: new Date().toLocaleString(),
+            wordCount: docContent.split(" ").length,
+            pageContent: docContent,
+            token_count_estimate: Math.ceil(docContent.length / 4),
+          },
+          null
+        );
+
+        if (error) {
+          console.error("Embed doc error:", error);
+          return response
+            .status(500)
+            .json({ success: false, error: "Failed to embed document." });
+        }
+
+        // Log the event
+        await EventLogs.logEvent(
+          "thread_doc_embedded",
+          {
+            workspaceName: workspace?.name || "Unknown",
+            threadName: thread?.name || thread?.slug,
+            docTitle,
+            wordCount: docContent.split(" ").length,
+          },
+          null
+        );
+
+        return response.status(200).json({
+          success: true,
+          message: `Doc "${docTitle}" embedded successfully! AI can now retrieve this content.`,
+          vectorized,
+        });
+      } catch (e) {
+        console.error("Embed doc error:", e.message, e);
+        return response
+          .status(500)
+          .json({ success: false, error: "Failed to embed document." });
+      }
+    }
+  );
 }
 
 module.exports = { workspaceThreadEndpoints };
