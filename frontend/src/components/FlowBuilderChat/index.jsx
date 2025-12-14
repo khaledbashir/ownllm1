@@ -73,7 +73,15 @@ function MessageBubble({ message, onApplyFlow }) {
 
                 {/* Main content with markdown */}
                 <div
-                    className="text-sm prose prose-sm max-w-none markdown"
+                    className="text-sm prose prose-sm prose-invert max-w-none 
+                        prose-headings:text-white prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-2
+                        prose-p:text-white/80 prose-p:leading-relaxed prose-p:my-1
+                        prose-strong:text-white prose-strong:font-semibold
+                        prose-code:text-white/90 prose-code:bg-white/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+                        prose-pre:bg-black/30 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-lg prose-pre:p-3 prose-pre:my-2
+                        prose-ul:text-white/80 prose-li:text-white/80 prose-li:my-0.5
+                        prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
+                        [&_ul]:pl-4 [&_ol]:pl-4 [&_li]:marker:text-white/50"
                     dangerouslySetInnerHTML={{
                         __html: renderMarkdown(mainContent || message.content)
                     }}
