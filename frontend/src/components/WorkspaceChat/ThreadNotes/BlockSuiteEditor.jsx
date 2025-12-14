@@ -15,6 +15,7 @@ import { FilePdf, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
+import WorkspaceThread from "@/models/workspaceThread";
 import { useEditorContext } from "./EditorContext";
 import "./editor.css";
 
@@ -25,7 +26,7 @@ import "./editor.css";
  * 2. Append to DOM via ref
  */
 const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
-    { content, onSave },
+    { content, onSave, workspaceSlug },
     ref
 ) {
     const containerRef = useRef(null);
@@ -160,11 +161,38 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         getEditor: () => editorRef.current,
     }));
 
-    const handleExport = async (templateId) => {
+    const handleExport = async () => {
+        if (!containerRef.current || !workspaceSlug) return;
         setExporting(true);
         try {
-            // TODO: Implement PDF export
-            toast.info("PDF export coming soon");
+            // Get HTML content from the editor container
+            // We clone it to remove any interactive elements if needed, but for now just raw HTML
+            // Note: We might want to wrap it in a basic styling wrapper
+            const editorHtml = `
+                <style>
+                    body { font-family: sans-serif; color: black; }
+                    /* Add any critical blocksuite styles here if they are missing in the export */
+                </style>
+                <div>
+                    <h1>Notes Export</h1>
+                    ${containerRef.current.innerHTML}
+                </div>
+            `;
+
+            const blob = await WorkspaceThread.exportPdf(workspaceSlug, editorHtml);
+            if (blob) {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `notes-${new Date().toISOString().slice(0, 10)}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                toast.success("PDF exported successfully");
+            } else {
+                throw new Error("Failed to generate PDF");
+            }
         } catch (error) {
             console.error("Export failed:", error);
             toast.error("Export failed");

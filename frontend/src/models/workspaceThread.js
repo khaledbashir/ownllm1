@@ -255,6 +255,24 @@ const WorkspaceThread = {
       .catch(() => ({ success: false, error: "Invalid server response" }));
     return data;
   },
+  exportPdf: async function (workspaceSlug, html) {
+    return await fetch(
+      `${API_BASE}/workspace/${workspaceSlug}/export-pdf`,
+      {
+        method: "POST",
+        body: JSON.stringify({ html }),
+        headers: baseHeaders(),
+      }
+    )
+      .then((res) => {
+        if (res.ok) return res.blob();
+        throw new Error("Failed to export PDF");
+      })
+      .catch((e) => {
+        console.error(e);
+        return null;
+      });
+  },
 };
 
 export default WorkspaceThread;
