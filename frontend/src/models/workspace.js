@@ -63,7 +63,19 @@ const Workspace = {
       .then((res) => res.json())
       .then((res) => res.history || [])
       .catch(() => []);
-    return history;
+
+    // Sanitize chat history to fix corrupted content (React Error #31)
+    // Some LLMs return {textResponse, metrics} instead of a string
+    return history.map((msg) => {
+      if (msg.content && typeof msg.content !== "string") {
+        console.warn("[chatHistory] Fixing corrupted content:", msg.content);
+        if (msg.content.textResponse) {
+          return { ...msg, content: msg.content.textResponse };
+        }
+        return { ...msg, content: JSON.stringify(msg.content) };
+      }
+      return msg;
+    });
   },
   updateChatFeedback: async function (chatId, slug, feedback) {
     const result = await fetch(
