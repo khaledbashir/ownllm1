@@ -6,7 +6,7 @@ const { chromium } = require('playwright-core');
  * @returns {Promise<Buffer>} - The PDF buffer
  */
 async function generatePdf(htmlContent) {
-    const browserWSEndpoint = process.env.BROWSER_WS_URL || 'ws://basheer-chromium:9222';
+    const browserWSEndpoint = process.env.PUPPETEER_WSS_URL || process.env.BROWSER_WS_URL || 'ws://browserless:3000';
 
     if (!htmlContent) throw new Error("HTML content is required");
 
