@@ -1,13 +1,13 @@
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 const {
   formatChatHistory,
   writeResponseChunk,
   clientAbortedHandler,
-} = require("../../helpers/chat/responses");
-const { toValidNumber } = require("../../http");
+} = require("../../../utils/helpers/chat/responses");
+const { toValidNumber } = require("../../../utils/http");
 const { getAnythingLLMUserAgent } = require("../../../endpoints/utils");
 
 class GenericOpenAiLLM {
@@ -367,7 +367,7 @@ class GenericOpenAiLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

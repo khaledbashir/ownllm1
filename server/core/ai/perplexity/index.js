@@ -1,12 +1,12 @@
 const { v4: uuidv4 } = require("uuid");
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   writeResponseChunk,
   clientAbortedHandler,
-} = require("../../helpers/chat/responses");
+} = require("../../../utils/helpers/chat/responses");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 
 function perplexityModels() {
   const { MODELS } = require("./models.js");
@@ -285,7 +285,7 @@ class PerplexityLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

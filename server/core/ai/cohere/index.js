@@ -1,10 +1,10 @@
 const { v4 } = require("uuid");
-const { writeResponseChunk } = require("../../helpers/chat/responses");
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { writeResponseChunk } = require("../../../utils/helpers/chat/responses");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const { MODEL_MAP } = require("../modelMap");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 
 class CohereLLM {
   constructor(embedder = null) {
@@ -235,7 +235,7 @@ class CohereLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

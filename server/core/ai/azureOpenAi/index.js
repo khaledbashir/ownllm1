@@ -1,11 +1,11 @@
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   formatChatHistory,
   handleDefaultStreamResponseV2,
-} = require("../../helpers/chat/responses");
+} = require("../../../utils/helpers/chat/responses");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 
 class AzureOpenAiLLM {
   constructor(embedder = null, modelPreference = null) {
@@ -211,7 +211,7 @@ class AzureOpenAiLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

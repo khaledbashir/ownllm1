@@ -1,16 +1,16 @@
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const { safeJsonParse, toValidNumber } = require("../../http");
+const { safeJsonParse, toValidNumber } = require("../../../utils/http");
 const LEGACY_MODEL_MAP = require("../modelMap/legacy");
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 const {
   writeResponseChunk,
   clientAbortedHandler,
-} = require("../../helpers/chat/responses");
+} = require("../../../utils/helpers/chat/responses");
 const cacheFolder = path.resolve(
   process.env.STORAGE_DIR
     ? path.resolve(process.env.STORAGE_DIR, "models", "giteeai")
@@ -337,7 +337,7 @@ class GiteeAILLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

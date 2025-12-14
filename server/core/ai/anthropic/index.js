@@ -3,12 +3,12 @@ const {
   writeResponseChunk,
   clientAbortedHandler,
   formatChatHistory,
-} = require("../../helpers/chat/responses");
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+} = require("../../../utils/helpers/chat/responses");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const { MODEL_MAP } = require("../modelMap");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 
 class AnthropicLLM {
   constructor(embedder = null, modelPreference = null) {
@@ -303,7 +303,7 @@ class AnthropicLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageStringCompressor } = require("../../helpers/chat");
+    const { messageStringCompressor } = require("../../../utils/helpers/chat");
     const compressedPrompt = await messageStringCompressor(
       this,
       promptArgs,

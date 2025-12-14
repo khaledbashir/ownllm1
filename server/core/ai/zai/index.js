@@ -1,10 +1,10 @@
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 const {
   handleDefaultStreamResponseV2,
-} = require("../../helpers/chat/responses");
+} = require("../../../utils/helpers/chat/responses");
 const { MODEL_MAP } = require("../modelMap");
 
 class ZAiLLM {
@@ -168,7 +168,7 @@ class ZAiLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

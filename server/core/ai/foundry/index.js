@@ -1,11 +1,11 @@
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 const {
   handleDefaultStreamResponseV2,
   formatChatHistory,
-} = require("../../helpers/chat/responses");
+} = require("../../../utils/helpers/chat/responses");
 const { OpenAI: OpenAIApi } = require("openai");
 
 class FoundryLLM {
@@ -260,7 +260,7 @@ class FoundryLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

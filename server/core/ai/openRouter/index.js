@@ -1,16 +1,16 @@
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const { v4: uuidv4 } = require("uuid");
 const {
   writeResponseChunk,
   clientAbortedHandler,
   formatChatHistory,
-} = require("../../helpers/chat/responses");
+} = require("../../../utils/helpers/chat/responses");
 const fs = require("fs");
 const path = require("path");
-const { safeJsonParse } = require("../../http");
+const { safeJsonParse } = require("../../../utils/http");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 const cacheFolder = path.resolve(
   process.env.STORAGE_DIR
     ? path.resolve(process.env.STORAGE_DIR, "models", "openrouter")
@@ -503,7 +503,7 @@ class OpenRouterLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

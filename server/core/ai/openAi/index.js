@@ -1,14 +1,14 @@
 const { v4: uuidv4 } = require("uuid");
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   formatChatHistory,
   writeResponseChunk,
   clientAbortedHandler,
-} = require("../../helpers/chat/responses");
+} = require("../../../utils/helpers/chat/responses");
 const { MODEL_MAP } = require("../modelMap");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 
 class OpenAiLLM {
   constructor(embedder = null, modelPreference = null) {
@@ -285,7 +285,7 @@ class OpenAiLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

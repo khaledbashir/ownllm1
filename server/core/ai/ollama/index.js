@@ -2,11 +2,11 @@ const {
   writeResponseChunk,
   clientAbortedHandler,
   formatChatHistory,
-} = require("../../helpers/chat/responses");
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+} = require("../../../utils/helpers/chat/responses");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 const { Ollama } = require("ollama");
 const { v4: uuidv4 } = require("uuid");
 
@@ -336,7 +336,7 @@ class OllamaAILLM {
   /**
    * Handles streaming responses from Ollama.
    * @param {import("express").Response} response
-   * @param {import("../../helpers/chat/LLMPerformanceMonitor").MonitoredStream} stream
+   * @param {import("../../../utils/helpers/chat/LLMPerformanceMonitor").MonitoredStream} stream
    * @param {import("express").Request} request
    * @returns {Promise<string>}
    */
@@ -470,7 +470,7 @@ class OllamaAILLM {
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
     await this.assertModelContextLimits();
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

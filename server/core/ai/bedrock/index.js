@@ -5,11 +5,11 @@ const {
 const {
   writeResponseChunk,
   clientAbortedHandler,
-} = require("../../helpers/chat/responses");
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+} = require("../../../utils/helpers/chat/responses");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 const { v4: uuidv4 } = require("uuid");
 const {
   DEFAULT_MAX_OUTPUT_TOKENS,
@@ -728,7 +728,7 @@ class AWSBedrockLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }

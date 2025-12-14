@@ -1,11 +1,11 @@
-const { NativeEmbedder } = require("../../EmbeddingEngines/native");
+const { NativeEmbedder } = require("../../../utils/EmbeddingEngines/native");
 const {
   handleDefaultStreamResponseV2,
   formatChatHistory,
-} = require("../../helpers/chat/responses");
+} = require("../../../utils/helpers/chat/responses");
 const {
   LLMPerformanceMonitor,
-} = require("../../helpers/chat/LLMPerformanceMonitor");
+} = require("../../../utils/helpers/chat/LLMPerformanceMonitor");
 
 //  hybrid of openAi LLM chat completion for Dell Pro AI Studio
 class DellProAiStudioLLM {
@@ -200,7 +200,7 @@ class DellProAiStudioLLM {
   }
 
   async compressMessages(promptArgs = {}, rawHistory = []) {
-    const { messageArrayCompressor } = require("../../helpers/chat");
+    const { messageArrayCompressor } = require("../../../utils/helpers/chat");
     const messageArray = this.constructPrompt(promptArgs);
     return await messageArrayCompressor(this, messageArray, rawHistory);
   }
