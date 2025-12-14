@@ -175,7 +175,7 @@ function flowGenerationEndpoints(app) {
 
                 return response.status(200).json({
                     success: true,
-                    message: result,
+                    message: result.textResponse,
                     flow: generatedFlow,
                 });
             } catch (error) {
