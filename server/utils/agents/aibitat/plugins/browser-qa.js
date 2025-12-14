@@ -28,21 +28,21 @@ const browserQA = {
                                 action: "test_flow",
                                 url: "https://app.example.com/login",
                                 steps: [
-                                    { action: "type", selector: "input[name=email]", value: "test@test.com" },
-                                    { action: "type", selector: "input[name=password]", value: "password123" },
-                                    { action: "click", selector: "button[type=submit]" },
+                                    { action: "type", selector: "input[name='email'], input[name='username']", value: "test@test.com" },
+                                    { action: "type", selector: "input[type='password']", value: "password123" },
+                                    { action: "click", selector: "button[type='submit']" },
                                     { action: "wait", selector: ".dashboard" },
                                     { action: "verify", text: "Welcome" }
                                 ]
                             }),
                         },
                         {
-                            prompt: "Check if the Template Builder page loads",
+                            prompt: "Check if a page loads correctly",
                             call: JSON.stringify({
                                 action: "test_flow",
-                                url: "https://app.example.com/settings/template-builder",
+                                url: "https://app.example.com/settings",
                                 steps: [
-                                    { action: "wait", selector: ".template-builder" },
+                                    { action: "wait", selector: ".settings-page, .settings-container" },
                                     { action: "screenshot" }
                                 ]
                             }),
@@ -63,7 +63,7 @@ const browserQA = {
                             },
                             steps: {
                                 type: "array",
-                                description: "Array of steps to execute. Each step has: action (click/type/wait/verify/screenshot), selector (CSS), value (for type), text (for verify)",
+                                description: "Array of steps. IMPORTANT: Use COMMA-SEPARATED selectors for multiple options (e.g., 'input[name=email], input[name=username]'), NOT 'or' syntax. Each step: action (click/type/wait/verify/screenshot), selector (valid CSS), value (for type), text (for verify)",
                                 items: {
                                     type: "object",
                                     properties: {
@@ -100,6 +100,29 @@ const browserQA = {
                                 error: error.message,
                             });
                         }
+                    },
+
+                    /**
+                     * Normalize selector to fix common LLM mistakes
+                     * Converts invalid 'or' syntax to valid comma-separated CSS
+                     */
+                    normalizeSelector: function (selector) {
+                        if (!selector) return selector;
+
+                        // Fix common LLM mistake: "selector1 or selector2" -> "selector1, selector2"
+                        // Also handles :contains() which is jQuery, not CSS
+                        let normalized = selector
+                            .replace(/ or /gi, ', ')  // "a or b" -> "a, b"
+                            .replace(/:contains\([^)]+\)/gi, '');  // Remove :contains()
+
+                        // Clean up any leftover empty parts
+                        normalized = normalized
+                            .split(',')
+                            .map(s => s.trim())
+                            .filter(s => s.length > 0)
+                            .join(', ');
+
+                        return normalized || selector;
                     },
 
                     /**
@@ -231,28 +254,31 @@ const browserQA = {
                             startTime: Date.now()
                         };
 
+                        // Normalize selector to fix LLM mistakes
+                        const selector = this.normalizeSelector(step.selector);
+
                         try {
                             switch (step.action) {
                                 case 'click':
-                                    await page.click(step.selector, { timeout });
-                                    result.selector = step.selector;
+                                    await page.click(selector, { timeout });
+                                    result.selector = selector;
                                     result.success = true;
                                     break;
 
                                 case 'type':
-                                    await page.fill(step.selector, step.value || '', { timeout });
-                                    result.selector = step.selector;
+                                    await page.fill(selector, step.value || '', { timeout });
+                                    result.selector = selector;
                                     result.success = true;
                                     break;
 
                                 case 'wait':
                                     // If no selector, just wait for timeout
-                                    if (!step.selector) {
+                                    if (!selector) {
                                         await page.waitForTimeout(step.timeout || 1000);
                                         result.success = true;
                                     } else {
-                                        await page.waitForSelector(step.selector, { timeout: step.timeout || timeout });
-                                        result.selector = step.selector;
+                                        await page.waitForSelector(selector, { timeout: step.timeout || timeout });
+                                        result.selector = selector;
                                         result.success = true;
                                     }
                                     break;
@@ -280,15 +306,15 @@ const browserQA = {
                                     break;
 
                                 case 'verify_selector':
-                                    const element = await page.$(step.selector);
+                                    const element = await page.$(selector);
                                     if (element) {
                                         result.success = true;
                                         result.found = true;
                                     } else {
                                         result.success = false;
-                                        result.error = `Selector "${step.selector}" not found`;
+                                        result.error = `Selector "${selector}" not found`;
                                     }
-                                    result.selector = step.selector;
+                                    result.selector = selector;
                                     break;
 
                                 case 'screenshot':
@@ -301,34 +327,34 @@ const browserQA = {
                                     break;
 
                                 case 'get_text':
-                                    const text = await page.textContent(step.selector);
+                                    const text = await page.textContent(selector);
                                     result.text = text;
                                     result.success = true;
                                     break;
 
                                 case 'get_value':
-                                    const value = await page.inputValue(step.selector);
+                                    const value = await page.inputValue(selector);
                                     result.value = value;
                                     result.success = true;
                                     break;
 
                                 case 'select':
-                                    await page.selectOption(step.selector, step.value);
+                                    await page.selectOption(selector, step.value);
                                     result.success = true;
                                     break;
 
                                 case 'check':
-                                    await page.check(step.selector);
+                                    await page.check(selector);
                                     result.success = true;
                                     break;
 
                                 case 'uncheck':
-                                    await page.uncheck(step.selector);
+                                    await page.uncheck(selector);
                                     result.success = true;
                                     break;
 
                                 case 'press':
-                                    await page.press(step.selector || 'body', step.key || 'Enter');
+                                    await page.press(selector || 'body', step.key || 'Enter');
                                     result.success = true;
                                     break;
 
