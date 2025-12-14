@@ -7,7 +7,9 @@ import {
     SpinnerGap,
     Trash,
     ArrowsOutSimple,
-    ArrowsInSimple
+    ArrowsInSimple,
+    SpeakerHigh,
+    StopCircle
 } from "@phosphor-icons/react";
 import FlowGenerator from "@/models/flowGenerator";
 import showToast from "@/utils/toast";
@@ -57,6 +59,32 @@ function parseThinking(content) {
 function MessageBubble({ message, onApplyFlow }) {
     const isUser = message.role === "user";
     const { thinking, mainContent } = parseThinking(message.content);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    // TTS speak function
+    const handleSpeak = () => {
+        if (!('speechSynthesis' in window)) return;
+
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+            return;
+        }
+
+        // Extract text from content (remove HTML/markdown)
+        const textContent = (mainContent || message.content)
+            .replace(/<[^>]*>/g, '')
+            .replace(/\*\*/g, '')
+            .replace(/[#*`]/g, '')
+            .trim();
+
+        const utterance = new SpeechSynthesisUtterance(textContent);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        setIsSpeaking(true);
+        window.speechSynthesis.speak(utterance);
+    };
 
     return (
         <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-in fade-in-0 slide-in-from-bottom-2 duration-300`}>
@@ -102,6 +130,26 @@ function MessageBubble({ message, onApplyFlow }) {
                     </div>
                 )}
 
+                {/* TTS Button for assistant messages */}
+                {!isUser && (
+                    <button
+                        onClick={handleSpeak}
+                        className="mt-2 flex items-center gap-1.5 text-xs text-white/60 hover:text-white/90 transition-colors"
+                        title={isSpeaking ? "Stop speaking" : "Read aloud"}
+                    >
+                        {isSpeaking ? (
+                            <>
+                                <StopCircle size={14} weight="fill" className="text-red-400" />
+                                <span>Stop</span>
+                            </>
+                        ) : (
+                            <>
+                                <SpeakerHigh size={14} />
+                                <span>Read aloud</span>
+                            </>
+                        )}
+                    </button>
+                )}
                 {/* Apply Flow Button */}
                 {message.flow && (
                     <button
