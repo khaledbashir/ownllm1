@@ -4,12 +4,12 @@ const {
   IndexType,
   MilvusClient,
 } = require("@zilliz/milvus2-sdk-node");
-const { TextSplitter } = require("../../TextSplitter");
+const { TextSplitter } = require("../../../utils/TextSplitter");
 const { SystemSettings } = require("../../../models/systemSettings");
 const { v4: uuidv4 } = require("uuid");
-const { storeVectorResult, cachedVectorInformation } = require("../../files");
-const { toChunks, getEmbeddingEngineSelection } = require("../../helpers");
-const { sourceIdentifier } = require("../../chats");
+const { storeVectorResult, cachedVectorInformation } = require("../../../utils/files");
+const { toChunks, getEmbeddingEngineSelection } = require("../../../utils/helpers");
+const { sourceIdentifier } = require("../../../utils/chats");
 
 // Zilliz is basically a copy of Milvus DB class with a different constructor
 // to connect to the cloud

@@ -1,10 +1,10 @@
 const { AstraDB: AstraClient } = require("@datastax/astra-db-ts");
-const { TextSplitter } = require("../../TextSplitter");
+const { TextSplitter } = require("../../../utils/TextSplitter");
 const { SystemSettings } = require("../../../models/systemSettings");
-const { storeVectorResult, cachedVectorInformation } = require("../../files");
+const { storeVectorResult, cachedVectorInformation } = require("../../../utils/files");
 const { v4: uuidv4 } = require("uuid");
-const { toChunks, getEmbeddingEngineSelection } = require("../../helpers");
-const { sourceIdentifier } = require("../../chats");
+const { toChunks, getEmbeddingEngineSelection } = require("../../../utils/helpers");
+const { sourceIdentifier } = require("../../../utils/chats");
 
 const sanitizeNamespace = (namespace) => {
   // If namespace already starts with ns_, don't add it again
@@ -427,9 +427,8 @@ const AstraDB = {
     const details = await this.namespace(client, namespace);
     await this.deleteVectorsInNamespace(client, namespace);
     return {
-      message: `Namespace ${namespace} was deleted along with ${
-        details?.vectorCount || "all"
-      } vectors.`,
+      message: `Namespace ${namespace} was deleted along with ${details?.vectorCount || "all"
+        } vectors.`,
     };
   },
   curateSources: function (sources = []) {

@@ -1,6 +1,6 @@
 const { CloudClient } = require("chromadb");
 const { Chroma } = require("../chroma");
-const { toChunks } = require("../../helpers");
+const { toChunks } = require("../../../utils/helpers");
 
 /**
  * ChromaCloud works nearly the same as Chroma so we can just extend the

@@ -1,11 +1,11 @@
 const { ChromaClient } = require("chromadb");
-const { TextSplitter } = require("../../TextSplitter");
+const { TextSplitter } = require("../../../utils/TextSplitter");
 const { SystemSettings } = require("../../../models/systemSettings");
-const { storeVectorResult, cachedVectorInformation } = require("../../files");
+const { storeVectorResult, cachedVectorInformation } = require("../../../utils/files");
 const { v4: uuidv4 } = require("uuid");
-const { toChunks, getEmbeddingEngineSelection } = require("../../helpers");
-const { parseAuthHeader } = require("../../http");
-const { sourceIdentifier } = require("../../chats");
+const { toChunks, getEmbeddingEngineSelection } = require("../../../utils/helpers");
+const { parseAuthHeader } = require("../../../utils/http");
+const { sourceIdentifier } = require("../../../utils/chats");
 const COLLECTION_REGEX = new RegExp(
   /^(?!\d+\.\d+\.\d+\.\d+$)(?!.*\.\.)(?=^[a-zA-Z0-9][a-zA-Z0-9_-]{1,61}[a-zA-Z0-9]$).{3,63}$/
 );
@@ -63,13 +63,13 @@ const Chroma = {
       path: process.env.CHROMA_ENDPOINT, // if not set will fallback to localhost:8000
       ...(!!process.env.CHROMA_API_HEADER && !!process.env.CHROMA_API_KEY
         ? {
-            fetchOptions: {
-              headers: parseAuthHeader(
-                process.env.CHROMA_API_HEADER || "X-Api-Key",
-                process.env.CHROMA_API_KEY
-              ),
-            },
-          }
+          fetchOptions: {
+            headers: parseAuthHeader(
+              process.env.CHROMA_API_HEADER || "X-Api-Key",
+              process.env.CHROMA_API_KEY
+            ),
+          },
+        }
         : {}),
     });
 

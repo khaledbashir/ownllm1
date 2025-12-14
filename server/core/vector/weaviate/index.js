@@ -1,11 +1,11 @@
 const { default: weaviate } = require("weaviate-ts-client");
-const { TextSplitter } = require("../../TextSplitter");
+const { TextSplitter } = require("../../../utils/TextSplitter");
 const { SystemSettings } = require("../../../models/systemSettings");
-const { storeVectorResult, cachedVectorInformation } = require("../../files");
+const { storeVectorResult, cachedVectorInformation } = require("../../../utils/files");
 const { v4: uuidv4 } = require("uuid");
-const { toChunks, getEmbeddingEngineSelection } = require("../../helpers");
-const { camelCase } = require("../../helpers/camelcase");
-const { sourceIdentifier } = require("../../chats");
+const { toChunks, getEmbeddingEngineSelection } = require("../../../utils/helpers");
+const { camelCase } = require("../../../utils/helpers/camelcase");
+const { sourceIdentifier } = require("../../../utils/chats");
 
 const Weaviate = {
   name: "Weaviate",
@@ -415,9 +415,8 @@ const Weaviate = {
     const details = await this.namespace(client, namespace);
     await this.deleteVectorsInNamespace(client, namespace);
     return {
-      message: `Namespace ${camelCase(namespace)} was deleted along with ${
-        details?.vectorCount
-      } vectors.`,
+      message: `Namespace ${camelCase(namespace)} was deleted along with ${details?.vectorCount
+        } vectors.`,
     };
   },
   reset: async function () {

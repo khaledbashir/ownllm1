@@ -1,8 +1,8 @@
 const pgsql = require("pg");
-const { toChunks, getEmbeddingEngineSelection } = require("../../helpers");
-const { TextSplitter } = require("../../TextSplitter");
+const { toChunks, getEmbeddingEngineSelection } = require("../../../utils/helpers");
+const { TextSplitter } = require("../../../utils/TextSplitter");
 const { v4: uuidv4 } = require("uuid");
-const { sourceIdentifier } = require("../../chats");
+const { sourceIdentifier } = require("../../../utils/chats");
 
 /*
  Embedding Table Schema (table name defined by user)
@@ -536,7 +536,7 @@ const PGVector = {
     const {
       storeVectorResult,
       cachedVectorInformation,
-    } = require("../../files");
+    } = require("../../../utils/files");
     let connection = null;
 
     try {

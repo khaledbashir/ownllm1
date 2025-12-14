@@ -1,11 +1,11 @@
 const lancedb = require("@lancedb/lancedb");
-const { toChunks, getEmbeddingEngineSelection } = require("../../helpers");
-const { TextSplitter } = require("../../TextSplitter");
+const { toChunks, getEmbeddingEngineSelection } = require("../../../utils/helpers");
+const { TextSplitter } = require("../../../utils/TextSplitter");
 const { SystemSettings } = require("../../../models/systemSettings");
-const { storeVectorResult, cachedVectorInformation } = require("../../files");
+const { storeVectorResult, cachedVectorInformation } = require("../../../utils/files");
 const { v4: uuidv4 } = require("uuid");
-const { sourceIdentifier } = require("../../chats");
-const { NativeEmbeddingReranker } = require("../../EmbeddingRerankers/native");
+const { sourceIdentifier } = require("../../../utils/chats");
+const { NativeEmbeddingReranker } = require("../../../utils/EmbeddingRerankers/native");
 
 /**
  * LancedDB Client connection object
@@ -13,9 +13,8 @@ const { NativeEmbeddingReranker } = require("../../EmbeddingRerankers/native");
  */
 
 const LanceDb = {
-  uri: `${
-    !!process.env.STORAGE_DIR ? `${process.env.STORAGE_DIR}/` : "./storage/"
-  }lancedb`,
+  uri: `${!!process.env.STORAGE_DIR ? `${process.env.STORAGE_DIR}/` : "./storage/"
+    }lancedb`,
   name: "LanceDb",
 
   /** @returns {Promise<{client: LanceClient}>} */
@@ -401,22 +400,22 @@ const LanceDb = {
     const queryVector = await LLMConnector.embedTextInput(input);
     const result = rerank
       ? await this.rerankedSimilarityResponse({
-          client,
-          namespace,
-          query: input,
-          queryVector,
-          similarityThreshold,
-          topN,
-          filterIdentifiers,
-        })
+        client,
+        namespace,
+        query: input,
+        queryVector,
+        similarityThreshold,
+        topN,
+        filterIdentifiers,
+      })
       : await this.similarityResponse({
-          client,
-          namespace,
-          queryVector,
-          similarityThreshold,
-          topN,
-          filterIdentifiers,
-        });
+        client,
+        namespace,
+        queryVector,
+        similarityThreshold,
+        topN,
+        filterIdentifiers,
+      });
 
     const { contextTexts, sourceDocuments } = result;
     const sources = sourceDocuments.map((metadata, i) => {

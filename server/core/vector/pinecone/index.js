@@ -1,10 +1,10 @@
 const { Pinecone } = require("@pinecone-database/pinecone");
-const { TextSplitter } = require("../../TextSplitter");
+const { TextSplitter } = require("../../../utils/TextSplitter");
 const { SystemSettings } = require("../../../models/systemSettings");
-const { storeVectorResult, cachedVectorInformation } = require("../../files");
+const { storeVectorResult, cachedVectorInformation } = require("../../../utils/files");
 const { v4: uuidv4 } = require("uuid");
-const { toChunks, getEmbeddingEngineSelection } = require("../../helpers");
-const { sourceIdentifier } = require("../../chats");
+const { toChunks, getEmbeddingEngineSelection } = require("../../../utils/helpers");
+const { sourceIdentifier } = require("../../../utils/chats");
 
 const PineconeDB = {
   name: "Pinecone",
