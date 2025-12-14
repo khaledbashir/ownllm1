@@ -76,13 +76,13 @@ const browserQA = {
                             },
                             timeout: {
                                 type: "number",
-                                description: "Timeout in milliseconds (default 30000)",
+                                description: "Timeout in milliseconds (default 90000 - 90 seconds)",
                             },
                         },
                         required: ["action", "url"],
                         additionalProperties: false,
                     },
-                    handler: async function ({ action, url, steps = [], timeout = 30000 }) {
+                    handler: async function ({ action, url, steps = [], timeout = 90000 }) {
                         try {
                             this.super.introspect(
                                 `${this.caller}: Starting browser QA test on ${url}`
@@ -178,7 +178,7 @@ const browserQA = {
                                 `${this.caller}: Navigating to ${url}...`
                             );
                             const navStart = Date.now();
-                            await page.goto(url, { waitUntil: 'networkidle', timeout });
+                            await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
                             results.steps.push({
                                 action: 'navigate',
                                 url,
