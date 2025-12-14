@@ -10,7 +10,7 @@ import "./editor.css";
 // Lazy load BlockSuite editor to isolate any initialization errors
 const BlockEditor = React.lazy(() => import("./BlockSuiteEditor"));
 
-// Error boundary to catch BlockNote crashes
+// Error boundary to catch Editor crashes
 class BlockEditorErrorBoundary extends React.Component {
     constructor(props) {
         super(props);

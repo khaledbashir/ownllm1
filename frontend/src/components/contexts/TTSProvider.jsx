@@ -129,8 +129,6 @@ export function useWatchForAutoPlayAssistantTTSResponse() {
           handleAutoPlayTTSEvent
         );
       };
-    } else {
-      console.log("Assistant TTS auto-play is disabled");
     }
   }, [autoPlayAssistantTtsResponse]);
 }
