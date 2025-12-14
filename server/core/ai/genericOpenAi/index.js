@@ -156,6 +156,14 @@ class GenericOpenAiLLM {
    */
   #parseReasoningFromResponse({ message }) {
     let textResponse = message?.content;
+    if (Array.isArray(textResponse)) {
+      textResponse = textResponse
+        .map((c) => {
+          if (c.type === "text") return c.text;
+          return "";
+        })
+        .join("");
+    }
     if (
       !!message?.reasoning_content &&
       message.reasoning_content.trim().length > 0
