@@ -1,4 +1,4 @@
-const { validApiKey } = require("../../middleware/api");
+const { validApiKey } = require("../middleware/api");
 const { chromium } = require('playwright-core');
 
 function agentTestLabEndpoints(app) {
