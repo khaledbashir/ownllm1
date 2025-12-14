@@ -120,7 +120,7 @@ function flowGenerationEndpoints(app) {
         [validatedRequest, flexUserRoleValid([ROLES.admin])],
         async (request, response) => {
             try {
-                const { messages } = request.body;
+                const { messages, model, attachments = [] } = request.body;
 
                 if (!messages || !Array.isArray(messages)) {
                     return response.status(400).json({
@@ -129,8 +129,20 @@ function flowGenerationEndpoints(app) {
                     });
                 }
 
-                // Get the workspace's LLM provider
-                const LLMConnector = getLLMProvider();
+                // Get the LLM provider - use specified model or default
+                let LLMConnector;
+                if (model) {
+                    // Try to get provider for specific model
+                    try {
+                        LLMConnector = getLLMProvider({ model });
+                    } catch {
+                        // Fall back to default if model not found
+                        LLMConnector = getLLMProvider();
+                    }
+                } else {
+                    LLMConnector = getLLMProvider();
+                }
+
                 if (!LLMConnector) {
                     return response.status(500).json({
                         success: false,
@@ -138,16 +150,28 @@ function flowGenerationEndpoints(app) {
                     });
                 }
 
+                // Build attachment context if any
+                let attachmentContext = "";
+                if (attachments && attachments.length > 0) {
+                    const attachmentDescriptions = attachments.map((att, idx) => {
+                        let desc = `[Attachment ${idx + 1}]: ${att.name} (${att.type}, ${att.size} bytes)`;
+                        if (att.type?.startsWith("image/") && att.content) {
+                            desc += " - Image attached (base64 encoded)";
+                        }
+                        return desc;
+                    }).join("\n");
+                    attachmentContext = `\n\n## User Attachments:\n${attachmentDescriptions}\n`;
+                }
+
                 // Prepare messages for the LLM
                 const chatMessages = [
-                    { role: "system", content: FLOW_BUILDER_SYSTEM_PROMPT },
+                    { role: "system", content: FLOW_BUILDER_SYSTEM_PROMPT + attachmentContext },
                     ...messages.map((m) => ({
                         role: m.role,
                         content: m.content,
                     })),
                 ];
 
-                // Get response from LLM
                 // Get response from LLM
                 const result = await LLMConnector.getChatCompletion(chatMessages, {
                     temperature: 0.7,
@@ -187,6 +211,7 @@ function flowGenerationEndpoints(app) {
             }
         }
     );
+
 
     // Get available block types schema
     app.get(
