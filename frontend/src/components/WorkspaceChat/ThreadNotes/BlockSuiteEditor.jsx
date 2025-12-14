@@ -153,7 +153,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             const lines = markdown.split("\n");
             for (const line of lines) {
                 if (line.trim()) {
-                    doc.addBlock("affine:paragraph", { text: line }, noteBlock.id);
+                    doc.addBlock("affine:paragraph", { text: new Text(line) }, noteBlock.id);
                 }
             }
         },
