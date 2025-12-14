@@ -8,6 +8,8 @@ import {
   Browser,
   ChartBar,
   FileMagnifyingGlass,
+  Lightning,
+  Detective,
 } from "@phosphor-icons/react";
 import RAGImage from "@/media/agents/rag-memory.png";
 import SummarizeImage from "@/media/agents/view-summarize.png";
@@ -73,4 +75,21 @@ export const configurableSkills = {
     component: AgentSQLConnectorSelection,
     skill: "sql-agent",
   },
+  "api-tester": {
+    title: "API Tester",
+    description:
+      "Test API endpoints before using them. Verifies status, response time, and returns sample response data.",
+    component: GenericSkillPanel,
+    skill: "api-tester",
+    icon: Lightning,
+  },
+  "browser-qa": {
+    title: "Browser QA Tester",
+    description:
+      "Controls a real browser via Browserless to perform UI testing. Can click, type, verify content, and take screenshots. Requires BROWSER_WS_URL env var.",
+    component: GenericSkillPanel,
+    skill: "browser-qa",
+    icon: Detective,
+  },
 };
+
