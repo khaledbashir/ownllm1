@@ -157,6 +157,9 @@ export default {
     testLab: () => {
       return "/settings/test-lab";
     },
+    integrationVault: () => {
+      return "/settings/integrations";
+    },
     agentSkills: () => {
       return "/settings/agents";
     },

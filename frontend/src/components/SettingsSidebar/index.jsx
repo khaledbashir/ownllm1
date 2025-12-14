@@ -366,6 +366,12 @@ const SidebarOptions = ({ user = null, t }) => (
               roles: ["admin", "manager"],
             },
             {
+              btnText: "Integrations",
+              href: paths.settings.integrationVault(),
+              flex: true,
+              roles: ["admin", "manager"],
+            },
+            {
               btnText: t("settings.chat"),
               href: paths.settings.chat(),
               flex: true,

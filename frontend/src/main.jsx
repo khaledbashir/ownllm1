@@ -247,6 +247,15 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "/settings/integrations",
+        lazy: async () => {
+          const { default: IntegrationVault } = await import(
+            "@/pages/GeneralSettings/IntegrationVault"
+          );
+          return { element: <ManagerRoute Component={IntegrationVault} /> };
+        },
+      },
+      {
         path: "/settings/default-system-prompt",
         lazy: async () => {
           const { default: DefaultSystemPrompt } = await import(
