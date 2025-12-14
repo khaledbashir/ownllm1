@@ -17,6 +17,7 @@ import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
 import WorkspaceThread from "@/models/workspaceThread";
 import { useEditorContext } from "./EditorContext";
+import { setupAISlashMenu } from "@/utils/aiSlashMenu";
 import "./editor.css";
 
 // Pre-made document templates
@@ -119,6 +120,75 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     const [embedding, setEmbedding] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
 
+    // Handler for AI slash menu actions
+    const handleAIAction = async (actionType, context) => {
+        const { rootElement, model, lang } = context;
+
+        // Get text content from above cursor for context
+        const getContextText = () => {
+            try {
+                const doc = editorRef.current?.doc;
+                if (!doc) return "";
+
+                // Get all text blocks and join them
+                const blocks = [];
+                const traverse = (block) => {
+                    if (block.text?.toString) {
+                        blocks.push(block.text.toString());
+                    }
+                    block.children?.forEach(traverse);
+                };
+
+                const pageBlock = doc.root;
+                if (pageBlock) traverse(pageBlock);
+                return blocks.join("\n");
+            } catch (e) {
+                return "";
+            }
+        };
+
+        switch (actionType) {
+            case "ask":
+                // For now, show a prompt - later this will open an AI input modal
+                const query = window.prompt("Ask AI anything:");
+                if (query) {
+                    toast.info(`🤖 AI processing: "${query}"`);
+                    // TODO: Call AI API and insert response
+                }
+                break;
+
+            case "continue":
+                const contextText = getContextText();
+                toast.info("🤖 AI continuing your writing...");
+                console.log("[AI Action] Continue writing with context:", contextText.slice(-500));
+                // TODO: Call AI with context and stream response
+                break;
+
+            case "summarize":
+                toast.info("🤖 AI summarizing content...");
+                // TODO: Get content above, summarize, insert
+                break;
+
+            case "improve":
+                toast.info("🤖 AI improving writing...");
+                // TODO: Get selected text or paragraph, improve, replace
+                break;
+
+            case "grammar":
+                toast.info("🤖 AI fixing grammar...");
+                // TODO: Get text, fix grammar, replace
+                break;
+
+            case "translate":
+                toast.info(`🤖 AI translating to ${lang}...`);
+                // TODO: Get text, translate, replace
+                break;
+
+            default:
+                toast.error(`Unknown AI action: ${actionType}`);
+        }
+    };
+
     // Helper to save the full document snapshot
     const saveDocSnapshot = useMemo(() => {
         return debounce(async (doc, collection) => {
@@ -201,6 +271,20 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 doc.slots.blockUpdated.on(() => {
                     saveDocSnapshot(doc, collection);
                 });
+
+                // Setup AI slash menu after short delay to ensure widgets are ready
+                setTimeout(() => {
+                    try {
+                        // Access the page root element and its widgets
+                        const pageRoot = editor.querySelector('affine-page-root');
+                        if (pageRoot?.widgetElements?.['affine-slash-menu-widget']) {
+                            const slashMenu = pageRoot.widgetElements['affine-slash-menu-widget'];
+                            setupAISlashMenu(slashMenu, handleAIAction);
+                        }
+                    } catch (err) {
+                        console.warn('[BlockSuiteEditor] Could not setup AI slash menu:', err);
+                    }
+                }, 500);
 
                 setIsReady(true);
             } catch (error) {
