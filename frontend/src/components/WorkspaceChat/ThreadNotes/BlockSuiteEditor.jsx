@@ -281,7 +281,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 return;
             }
 
-            // Find the note block and add content
+            // Find the note block for adding content
             const noteBlock = doc.getBlocksByFlavour("affine:note")[0];
             if (!noteBlock) {
                 console.error("[BlockSuiteEditor] No note block found");
@@ -291,8 +291,52 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             console.log("[BlockSuiteEditor] Found note block:", noteBlock.id);
 
             try {
-                // Try the full parser first
-                parseMarkdownToBlocks(doc, noteBlock.id, markdown);
+                // Extract title from first heading and remaining content
+                const { title, remainingContent } = extractTitleFromMarkdown(markdown);
+
+                // If we found a title, try to set it as the page title
+                if (title) {
+                    try {
+                        // Get the page block - it holds the document title
+                        const pageBlock = doc.getBlocksByFlavour("affine:page")[0];
+                        if (pageBlock) {
+                            // BlockSuite page title is stored in the page block's title property
+                            // We need to update the title text
+                            const titleProp = pageBlock.title;
+                            if (titleProp && typeof titleProp.insert === 'function') {
+                                // Clear existing title and set new one
+                                titleProp.clear();
+                                titleProp.insert(title, 0);
+                                console.log("[BlockSuiteEditor] Set page title to:", title);
+                            } else if (typeof pageBlock.title === 'object' && pageBlock.title?.yText) {
+                                // Alternative: try modifying yText directly
+                                pageBlock.title.yText.delete(0, pageBlock.title.yText.length);
+                                pageBlock.title.yText.insert(0, title);
+                                console.log("[BlockSuiteEditor] Set page title via yText:", title);
+                            } else {
+                                // Fallback: Add title as first H1 block
+                                doc.addBlock("affine:paragraph", {
+                                    type: "h1",
+                                    text: new Text(title)
+                                }, noteBlock.id);
+                                console.log("[BlockSuiteEditor] Added title as H1 block:", title);
+                            }
+                        }
+                    } catch (titleError) {
+                        console.warn("[BlockSuiteEditor] Could not set page title, adding as H1:", titleError);
+                        // Fallback: Add as H1 block
+                        doc.addBlock("affine:paragraph", {
+                            type: "h1",
+                            text: new Text(title)
+                        }, noteBlock.id);
+                    }
+                }
+
+                // Parse and insert the remaining content
+                if (remainingContent.trim()) {
+                    parseMarkdownToBlocks(doc, noteBlock.id, remainingContent);
+                }
+
                 console.log("[BlockSuiteEditor] Successfully parsed and inserted markdown");
             } catch (e) {
                 console.error("[BlockSuiteEditor] parseMarkdownToBlocks failed:", e);
@@ -310,6 +354,56 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         },
         getEditor: () => editorRef.current,
     }));
+
+    /**
+     * Extract the first heading or title line from markdown content
+     * Returns the title and the remaining content
+     */
+    function extractTitleFromMarkdown(markdown) {
+        const lines = markdown.split("\n");
+        let title = null;
+        let titleLineIndex = -1;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            // Check for markdown heading (# Title or ## Title)
+            const headingMatch = line.match(/^#{1,2}\s+(.+)$/);
+            if (headingMatch) {
+                title = headingMatch[1].trim();
+                titleLineIndex = i;
+                break;
+            }
+
+            // Also treat first bold text or first non-empty line as potential title
+            // if it's short and looks like a title (< 100 chars, no punctuation at end except ?)
+            if (!title && line.length < 100 && !/[.!,;:]$/.test(line)) {
+                // Check for **bold** title
+                const boldMatch = line.match(/^\*\*(.+?)\*\*$/);
+                if (boldMatch) {
+                    title = boldMatch[1].trim();
+                    titleLineIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (title && titleLineIndex >= 0) {
+            // Remove the title line from content
+            const remainingLines = lines.filter((_, i) => i !== titleLineIndex);
+            return {
+                title,
+                remainingContent: remainingLines.join("\n")
+            };
+        }
+
+        return {
+            title: null,
+            remainingContent: markdown
+        };
+    }
+
 
     const handleExport = async () => {
         if (!containerRef.current || !workspaceSlug) return;
