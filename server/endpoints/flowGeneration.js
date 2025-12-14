@@ -148,20 +148,23 @@ function flowGenerationEndpoints(app) {
                 ];
 
                 // Get response from LLM
-                const result = await LLMConnector.sendChat(chatMessages, {
+                // Get response from LLM
+                const result = await LLMConnector.getChatCompletion(chatMessages, {
                     temperature: 0.7,
                 });
 
-                if (!result || typeof result !== "string") {
+                if (!result || !result.textResponse) {
                     return response.status(500).json({
                         success: false,
                         error: "Failed to get response from LLM",
                     });
                 }
 
+                const responseText = result.textResponse;
+
                 // Try to extract JSON flow from the response if present
                 let generatedFlow = null;
-                const jsonMatch = result.match(/```json\s*([\s\S]*?)\s*```/);
+                const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
                 if (jsonMatch) {
                     try {
                         generatedFlow = JSON.parse(jsonMatch[1]);
