@@ -28,6 +28,7 @@ const { browserExtensionEndpoints } = require("./endpoints/browserExtension");
 const { communityHubEndpoints } = require("./endpoints/communityHub");
 const { agentFlowEndpoints } = require("./endpoints/agentFlows");
 const { flowGenerationEndpoints } = require("./endpoints/flowGeneration");
+const { templateGenerationEndpoints } = require("./endpoints/templateGeneration");
 const { crmEndpoints } = require("./endpoints/crm");
 const { mcpServersEndpoints } = require("./endpoints/mcpServers");
 const { artifactsEndpoints } = require("./endpoints/artifacts");
@@ -87,6 +88,7 @@ artifactsEndpoints(apiRouter);
 templatesEndpoints(apiRouter);
 smartPluginsEndpoints(apiRouter);
 flowGenerationEndpoints(apiRouter);
+templateGenerationEndpoints(apiRouter);
 crmEndpoints(apiRouter);
 mobileEndpoints(apiRouter);
 

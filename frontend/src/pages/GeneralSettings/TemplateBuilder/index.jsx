@@ -86,72 +86,52 @@ export default function TemplateBuilder() {
         setLoading(true);
 
         try {
-            // Build system prompt with brand context
-            const brandContext = brandSettings
-                ? `\nBrand Settings to use:
-- Primary Color: ${brandSettings.primaryColor}
-- Secondary Color: ${brandSettings.secondaryColor}
-- Font Family: ${brandSettings.fontFamily}
-- Logo URL: ${brandSettings.logoPath || "None provided"}
-- Background Image: ${brandSettings.backgroundImage || "None"}`
-                : "";
+            // Get auth token
+            const AUTH_TOKEN = localStorage.getItem("anythingllm_authToken");
 
-            const systemPrompt = `You are an expert template designer. Generate beautiful, professional HTML templates for business documents like proposals, invoices, contracts, and quotes.
-
-IMPORTANT RULES:
-1. Always output COMPLETE, valid HTML including <!DOCTYPE html>, <html>, <head>, <body> tags
-2. Include all CSS inline in a <style> tag in the head
-3. Use modern CSS: flexbox, grid, gradients, shadows, rounded corners
-4. Make it look premium and professional
-5. Use placeholder variables in {{variable_name}} format for dynamic content
-6. Ensure the template is print-friendly (PDF export compatible)
-${brandContext}
-
-When the user asks for changes, output the COMPLETE updated HTML template.`;
-
-            // For now, use a simple completion approach
-            // In production, this would connect to the LLM
-            const response = await fetch("/api/v1/openai/chat/completions", {
+            // Call our template generation endpoint
+            const response = await fetch("/api/templates/generate", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: AUTH_TOKEN ? `Bearer ${AUTH_TOKEN}` : undefined,
                 },
                 body: JSON.stringify({
                     messages: [
-                        { role: "system", content: systemPrompt },
                         ...messages.map((m) => ({ role: m.role, content: m.content })),
                         { role: "user", content: userMessage },
                     ],
-                    temperature: 0.7,
+                    brandContext: brandSettings,
                 }),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to get AI response");
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || "Failed to get AI response");
             }
 
             const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
 
-            // Extract HTML from response
-            const htmlMatch = aiResponse.match(/```html\n?([\s\S]*?)```/) ||
-                aiResponse.match(/<!DOCTYPE html>[\s\S]*<\/html>/i);
+            if (!data.success) {
+                throw new Error(data.error || "Failed to generate template");
+            }
 
-            if (htmlMatch) {
-                const extractedHtml = htmlMatch[1] || htmlMatch[0];
-                setTemplateHtml(extractedHtml);
+            // Update template if HTML was extracted
+            if (data.templateHtml) {
+                setTemplateHtml(data.templateHtml);
                 setMessages((prev) => [
                     ...prev,
                     { role: "assistant", content: "✨ Template updated! Check the preview on the right." },
                 ]);
             } else {
-                setMessages((prev) => [...prev, { role: "assistant", content: aiResponse }]);
+                // Show AI message if no HTML extracted
+                setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
             }
         } catch (e) {
             console.error("Chat error:", e);
             setMessages((prev) => [
                 ...prev,
-                { role: "assistant", content: `Error: ${e.message}. Make sure your LLM is configured.` },
+                { role: "assistant", content: `Error: ${e.message}. Make sure your LLM is configured in Settings.` },
             ]);
         } finally {
             setLoading(false);
@@ -280,8 +260,8 @@ When the user asks for changes, output the COMPLETE updated HTML template.`;
                                 >
                                     <div
                                         className={`max-w-[80%] px-4 py-3 rounded-2xl ${msg.role === "user"
-                                                ? "bg-blue-600 text-white"
-                                                : "bg-theme-bg-primary text-theme-text-primary"
+                                            ? "bg-blue-600 text-white"
+                                            : "bg-theme-bg-primary text-theme-text-primary"
                                             }`}
                                     >
                                         {msg.content}
