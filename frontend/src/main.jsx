@@ -408,6 +408,16 @@ const router = createBrowserRouter([
           return { element: <ManagerRoute Component={CRMPage} /> };
         },
       },
+      // AI Template Builder
+      {
+        path: "/settings/template-builder",
+        lazy: async () => {
+          const { default: TemplateBuilder } = await import(
+            "@/pages/GeneralSettings/TemplateBuilder"
+          );
+          return { element: <ManagerRoute Component={TemplateBuilder} /> };
+        },
+      },
     ],
   },
 ]);

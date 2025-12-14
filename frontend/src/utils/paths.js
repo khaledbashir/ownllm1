@@ -185,6 +185,9 @@ export default {
     crm: () => {
       return `/settings/crm`;
     },
+    templateBuilder: () => {
+      return `/settings/template-builder`;
+    },
   },
   dashboard: () => {
     return `/dashboard`;

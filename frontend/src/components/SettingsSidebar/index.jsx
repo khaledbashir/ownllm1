@@ -348,6 +348,12 @@ const SidebarOptions = ({ user = null, t }) => (
               roles: ["admin", "manager"],
             },
             {
+              btnText: "Template Builder",
+              href: paths.settings.templateBuilder(),
+              flex: true,
+              roles: ["admin", "manager"],
+            },
+            {
               btnText: "Smart Plugins",
               href: paths.settings.smartPlugins(),
               flex: true,
