@@ -259,12 +259,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 const tableLines = [];
                 while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
                     const tableLine = lines[i].trim();
-                    // Skip separator rows (|---|---|)
-                    if (!/^\|[\s\-:]+\|$/.test(tableLine.replace(/\|/g, "|").replace(/[^|:-]/g, "-"))) {
-                        // Only add non-separator rows
-                        if (!tableLine.match(/^\|[\s-:]+\|$/)) {
-                            tableLines.push(tableLine);
-                        }
+                    // Check if this is a separator row (contains only |, -, :, and spaces)
+                    const isSeparator = /^\|[\s\-:|]+\|$/.test(tableLine) && tableLine.includes("-");
+                    if (!isSeparator) {
+                        tableLines.push(tableLine);
                     }
                     i++;
                 }
