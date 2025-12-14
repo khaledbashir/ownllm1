@@ -24,13 +24,31 @@ const MAX_WIDTH = 700;
 const DEFAULT_WIDTH = 420;
 
 /**
- * Parse thinking content from message
+ * Parse thinking content from message - handles think/thinking/thought tags
  */
 function parseThinking(content) {
-    const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
-    const thinking = thinkMatch ? thinkMatch[1].trim() : null;
-    const mainContent = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
-    return { thinking, mainContent };
+    // Find opening and closing tags (any variant)
+    const openMatch = content.match(/<(think|thinking|thought)\s*>/i);
+    const closeMatch = content.match(/<\/(think|thinking|thought)\s*>/i);
+
+    if (openMatch && closeMatch) {
+        const openIndex = content.indexOf(openMatch[0]);
+        const closeIndex = content.indexOf(closeMatch[0]) + closeMatch[0].length;
+
+        const thinking = content
+            .substring(openIndex, closeIndex)
+            .replace(/<(think|thinking|thought)\s*>/gi, "")
+            .replace(/<\/(think|thinking|thought)\s*>/gi, "")
+            .trim();
+
+        const mainContent = (
+            content.substring(0, openIndex) + content.substring(closeIndex)
+        ).trim();
+
+        return { thinking, mainContent };
+    }
+
+    return { thinking: null, mainContent: content };
 }
 
 /**
