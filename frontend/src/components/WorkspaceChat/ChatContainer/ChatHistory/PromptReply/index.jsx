@@ -19,6 +19,19 @@ const PromptReply = ({
   sources = [],
   closed = true,
 }) => {
+  // DEBUG: Log the reply to catch React Error #31
+  if (reply && typeof reply !== "string") {
+    console.error("[PromptReply] ERROR: reply is not a string!", {
+      type: typeof reply,
+      value: reply,
+      keys: typeof reply === "object" ? Object.keys(reply) : null,
+    });
+    // Auto-fix: extract textResponse if it exists
+    if (reply.textResponse) {
+      reply = reply.textResponse;
+    }
+  }
+
   const assistantBackgroundColor = "bg-theme-bg-chat";
 
   if (!reply && sources.length === 0 && !pending && !error) return null;

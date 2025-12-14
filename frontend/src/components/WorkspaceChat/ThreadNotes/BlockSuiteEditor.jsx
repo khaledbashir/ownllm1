@@ -7,7 +7,7 @@ import React, {
     useState,
 } from "react";
 import { AffineEditorContainer } from "@blocksuite/presets";
-import { Schema, DocCollection, Text } from "@blocksuite/store";
+import { Schema, DocCollection, Text, Job } from "@blocksuite/store";
 import { AffineSchemas } from "@blocksuite/blocks";
 import "@blocksuite/presets/themes/affine.css";
 
@@ -21,9 +21,11 @@ import "./editor.css";
 
 /**
  * BlockSuiteEditor - Notion-like block editor using AffineEditorContainer
- * Uses the correct integration pattern from official examples:
- * 1. Create editor with `new AffineEditorContainer()`
- * 2. Append to DOM via ref
+ * 
+ * Save/Restore Strategy:
+ * - We save the full DocSnapshot JSON from BlockSuite's Job.docToSnapshot()
+ * - On restore, we rebuild blocks from the saved snapshot
+ * - This preserves all content, formatting, and structure
  */
 const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     { content, onSave, workspaceSlug },
@@ -32,6 +34,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     const containerRef = useRef(null);
     const editorRef = useRef(null);
     const collectionRef = useRef(null);
+    const jobRef = useRef(null);
 
     // Get context for global editor access
     const editorContext = useEditorContext();
@@ -40,53 +43,67 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     const [exporting, setExporting] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
 
-    const debouncedSave = useMemo(
-        () =>
-            debounce((content) => {
-                onSave(content);
-            }, 1000),
-        [onSave]
-    );
+    // Helper to save the full document snapshot
+    const saveDocSnapshot = useMemo(() => {
+        return debounce(async (doc, collection) => {
+            try {
+                const job = new Job({ collection });
+                const snapshot = await job.docToSnapshot(doc);
+                const saveData = JSON.stringify({
+                    type: "blocksuite-snapshot",
+                    version: 1,
+                    snapshot: snapshot,
+                });
+                onSave(saveData);
+            } catch (error) {
+                console.error("[BlockSuiteEditor] Failed to save snapshot:", error);
+            }
+        }, 1000);
+    }, [onSave]);
 
     // Initialize BlockSuite editor
     useEffect(() => {
         if (!containerRef.current) return;
 
-        try {
-            // Create schema with Affine blocks
-            const schema = new Schema().register(AffineSchemas);
-            const collection = new DocCollection({ schema });
-            collection.meta.initialize();
+        const initEditor = async () => {
+            try {
+                // Create schema with Affine blocks
+                const schema = new Schema().register(AffineSchemas);
+                const collection = new DocCollection({ schema });
+                collection.meta.initialize();
+                collectionRef.current = collection;
 
-            // Create doc with initial content
-            const doc = collection.createDoc({ id: "thread-notes" });
-            doc.load(() => {
-                const pageBlockId = doc.addBlock("affine:page", {});
-                doc.addBlock("affine:surface", {}, pageBlockId);
-                const noteId = doc.addBlock("affine:note", {}, pageBlockId);
+                // Create job for snapshot operations
+                const job = new Job({ collection });
+                jobRef.current = job;
 
-                // If we have initial content, try to parse and add it
+                let doc;
+
+                // Try to restore from saved snapshot
                 if (content) {
                     try {
                         const parsed = JSON.parse(content);
-                        if (parsed.type === "blocksuite" && parsed.value) {
-                            // TODO: Restore from saved state
-                            doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
-                        } else if (typeof parsed === "string") {
-                            // For now, just add empty paragraph (text model is created automatically)
-                            doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
+
+                        if (parsed.type === "blocksuite-snapshot" && parsed.snapshot) {
+                            // Restore from full snapshot - this is the proper way
+                            doc = await job.snapshotToDoc(parsed.snapshot);
+                        } else if (parsed.type === "blocksuite" && parsed.snapshot) {
+                            // Legacy format with snapshot (in case we saved it before)
+                            doc = await job.snapshotToDoc(parsed.snapshot);
                         } else {
-                            doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
+                            // Unknown format or old data - create fresh doc
+                            doc = createEmptyDoc(collection);
                         }
-                    } catch {
-                        // Plain text content - add empty paragraph
-                        doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
+                    } catch (parseError) {
+                        console.warn("[BlockSuiteEditor] Could not parse saved content, creating fresh doc:", parseError);
+                        doc = createEmptyDoc(collection);
                     }
                 } else {
-                    doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
+                    // No content - create fresh doc
+                    doc = createEmptyDoc(collection);
                 }
 
-                // Create editor AFTER blocks are ready
+                // Create editor and attach document
                 const editor = new AffineEditorContainer();
                 editor.doc = doc;
 
@@ -103,26 +120,35 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 if (editorContext?.registerEditor) {
                     editorContext.registerEditor(editor);
                 }
-                collectionRef.current = collection;
 
-                // Listen for changes and autosave
+                // Listen for changes and autosave with full snapshot
                 doc.slots.blockUpdated.on(() => {
-                    const content = JSON.stringify({
-                        type: "blocksuite",
-                        docId: doc.id,
-                    });
-                    debouncedSave(content);
+                    saveDocSnapshot(doc, collection);
                 });
 
                 setIsReady(true);
+            } catch (error) {
+                console.error("Failed to initialize BlockSuite editor:", error);
+                toast.error("Failed to load editor");
+            }
+        };
+
+        // Helper to create an empty doc with required structure
+        function createEmptyDoc(collection) {
+            const doc = collection.createDoc({ id: "thread-notes" });
+            doc.load(() => {
+                const pageBlockId = doc.addBlock("affine:page", {});
+                doc.addBlock("affine:surface", {}, pageBlockId);
+                const noteId = doc.addBlock("affine:note", {}, pageBlockId);
+                doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
             });
-        } catch (error) {
-            console.error("Failed to initialize BlockSuite editor:", error);
-            toast.error("Failed to load editor");
+            return doc;
         }
 
+        initEditor();
+
         return () => {
-            debouncedSave.cancel();
+            saveDocSnapshot.cancel();
             // Unregister from context
             if (editorContext?.unregisterEditor) {
                 editorContext.unregisterEditor();
@@ -134,6 +160,110 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    /**
+     * Parse markdown and add structured blocks to the document
+     * Supports: headings, bold/italic (inline), code blocks, lists, paragraphs
+     */
+    const parseMarkdownToBlocks = (doc, noteBlockId, markdown) => {
+        const lines = markdown.split("\n");
+        let i = 0;
+
+        while (i < lines.length) {
+            const line = lines[i];
+            const trimmed = line.trim();
+
+            // Skip empty lines
+            if (!trimmed) {
+                i++;
+                continue;
+            }
+
+            // Fenced code block
+            if (trimmed.startsWith("```")) {
+                const lang = trimmed.slice(3).trim() || "plain";
+                const codeLines = [];
+                i++;
+                while (i < lines.length && !lines[i].trim().startsWith("```")) {
+                    codeLines.push(lines[i]);
+                    i++;
+                }
+                i++; // skip closing ```
+                doc.addBlock("affine:code", {
+                    text: new Text(codeLines.join("\n")),
+                    language: lang
+                }, noteBlockId);
+                continue;
+            }
+
+            // Headings
+            const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+            if (headingMatch) {
+                const level = headingMatch[1].length; // 1-6
+                const headingType = level <= 3 ? `h${level}` : "h3";
+                doc.addBlock("affine:paragraph", {
+                    type: headingType,
+                    text: new Text(parseInlineFormatting(headingMatch[2]))
+                }, noteBlockId);
+                i++;
+                continue;
+            }
+
+            // Unordered list item
+            if (/^[-*+]\s+/.test(trimmed)) {
+                const listText = trimmed.replace(/^[-*+]\s+/, "");
+                doc.addBlock("affine:list", {
+                    type: "bulleted",
+                    text: new Text(parseInlineFormatting(listText))
+                }, noteBlockId);
+                i++;
+                continue;
+            }
+
+            // Ordered list item
+            const orderedMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+            if (orderedMatch) {
+                doc.addBlock("affine:list", {
+                    type: "numbered",
+                    text: new Text(parseInlineFormatting(orderedMatch[2]))
+                }, noteBlockId);
+                i++;
+                continue;
+            }
+
+            // Blockquote
+            if (trimmed.startsWith(">")) {
+                const quoteText = trimmed.slice(1).trim();
+                doc.addBlock("affine:paragraph", {
+                    type: "quote",
+                    text: new Text(parseInlineFormatting(quoteText))
+                }, noteBlockId);
+                i++;
+                continue;
+            }
+
+            // Regular paragraph
+            doc.addBlock("affine:paragraph", {
+                text: new Text(parseInlineFormatting(trimmed))
+            }, noteBlockId);
+            i++;
+        }
+    };
+
+    /**
+     * Strip markdown inline formatting for plain text display
+     * BlockSuite Text() doesn't support rich text formatting in this version,
+     * so we strip bold/italic markers for cleaner display
+     */
+    const parseInlineFormatting = (text) => {
+        return text
+            .replace(/\*\*(.+?)\*\*/g, "$1")  // **bold** -> bold
+            .replace(/__(.+?)__/g, "$1")       // __bold__ -> bold
+            .replace(/\*(.+?)\*/g, "$1")       // *italic* -> italic
+            .replace(/_(.+?)_/g, "$1")         // _italic_ -> italic
+            .replace(/`(.+?)`/g, "$1")         // `code` -> code
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1"); // [link](url) -> link
+    };
+
     // Expose insert method to parent
     useImperativeHandle(ref, () => ({
         insertMarkdown: async (markdown) => {
@@ -144,19 +274,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             if (!doc) return;
 
             // Find the note block and add content
-            const pageBlock = doc.getBlocksByFlavour("affine:page")[0];
-            if (!pageBlock) return;
-
             const noteBlock = doc.getBlocksByFlavour("affine:note")[0];
             if (!noteBlock) return;
 
-            // Split markdown by lines and add as paragraphs
-            const lines = markdown.split("\n");
-            for (const line of lines) {
-                if (line.trim()) {
-                    doc.addBlock("affine:paragraph", { text: new Text(line) }, noteBlock.id);
-                }
-            }
+            // Parse markdown and add structured blocks
+            parseMarkdownToBlocks(doc, noteBlock.id, markdown);
         },
         getEditor: () => editorRef.current,
     }));

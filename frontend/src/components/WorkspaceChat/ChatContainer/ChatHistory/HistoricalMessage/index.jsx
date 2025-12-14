@@ -217,6 +217,24 @@ function ChatAttachments({ attachments = [] }) {
 
 const RenderChatContent = memo(
   ({ role, message, expanded = false, workspace }) => {
+    // Safety check: if message is an object (e.g., from thinking models like GLM-4),
+    // extract the actual text response
+    let safeMessage = message;
+    if (message && typeof message !== "string") {
+      console.error("[RenderChatContent] message is not a string:", {
+        type: typeof message,
+        keys: typeof message === "object" ? Object.keys(message) : null,
+        value: message,
+      });
+      // Try to extract textResponse from the object
+      if (message.textResponse) {
+        safeMessage = message.textResponse;
+      } else if (typeof message === "object") {
+        safeMessage = JSON.stringify(message);
+      }
+    }
+    message = safeMessage;
+
     // If the message is not from the assistant, we can render it directly
     // as normal since the user cannot think (lol)
     if (role !== "assistant")

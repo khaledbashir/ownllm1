@@ -6,13 +6,16 @@ const { chromium } = require('playwright-core');
  * @returns {Promise<Buffer>} - The PDF buffer
  */
 async function generatePdf(htmlContent) {
-    const browserWSEndpoint = process.env.PUPPETEER_WSS_URL || process.env.BROWSER_WS_URL || 'ws://browserless:3000';
+    // Browserless.io expects Playwright connections at /playwright/chromium
+    const baseUrl = process.env.PUPPETEER_WSS_URL || process.env.BROWSER_WS_URL || 'ws://browserless:3000';
+    const browserWSEndpoint = baseUrl.includes('/playwright') ? baseUrl : `${baseUrl}/playwright/chromium`;
 
     if (!htmlContent) throw new Error("HTML content is required");
 
     let browser;
     try {
         // Connect to the remote browser
+        console.log('[PDF Export] Connecting to:', browserWSEndpoint);
         browser = await chromium.connect(browserWSEndpoint);
         const context = await browser.newContext();
         const page = await context.newPage();
