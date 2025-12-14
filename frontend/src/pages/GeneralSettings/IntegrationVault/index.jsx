@@ -40,26 +40,28 @@ const VaultAPI = {
     },
 };
 
-// Category icons/colors
+// Category types (automation-focused)
 const CATEGORIES = {
-    ai: { label: "AI / LLM", color: "bg-purple-500/20 text-purple-400" },
-    payments: { label: "Payments", color: "bg-green-500/20 text-green-400" },
-    messaging: { label: "Messaging", color: "bg-blue-500/20 text-blue-400" },
-    storage: { label: "Storage", color: "bg-orange-500/20 text-orange-400" },
-    analytics: { label: "Analytics", color: "bg-pink-500/20 text-pink-400" },
-    other: { label: "Other", color: "bg-gray-500/20 text-gray-400" },
+    api_keys: { label: "API Keys", color: "bg-purple-500/20 text-purple-400" },
+    login_credentials: { label: "Login Credentials", color: "bg-blue-500/20 text-blue-400" },
+    endpoints: { label: "Endpoints / URLs", color: "bg-green-500/20 text-green-400" },
+    oauth_tokens: { label: "OAuth Tokens", color: "bg-orange-500/20 text-orange-400" },
+    webhooks: { label: "Webhooks", color: "bg-pink-500/20 text-pink-400" },
+    database: { label: "Database", color: "bg-cyan-500/20 text-cyan-400" },
+    ssh_server: { label: "SSH / Server", color: "bg-red-500/20 text-red-400" },
+    custom: { label: "Custom", color: "bg-gray-500/20 text-gray-400" },
 };
 
 // Common service presets
 const SERVICE_PRESETS = [
-    { service: "openai", name: "OpenAI", category: "ai", fields: ["api_key"] },
-    { service: "anthropic", name: "Anthropic", category: "ai", fields: ["api_key"] },
-    { service: "groq", name: "Groq", category: "ai", fields: ["api_key"] },
-    { service: "stripe", name: "Stripe", category: "payments", fields: ["api_key", "webhook_secret"] },
-    { service: "twilio", name: "Twilio", category: "messaging", fields: ["account_sid", "auth_token", "phone_number"] },
-    { service: "slack", name: "Slack", category: "messaging", fields: ["webhook_url", "bot_token"] },
-    { service: "github", name: "GitHub", category: "other", fields: ["access_token"] },
-    { service: "custom", name: "Custom", category: "other", fields: [] },
+    { service: "openai", name: "OpenAI", category: "api_keys", fields: ["api_key"] },
+    { service: "anthropic", name: "Anthropic", category: "api_keys", fields: ["api_key"] },
+    { service: "groq", name: "Groq", category: "api_keys", fields: ["api_key"] },
+    { service: "stripe", name: "Stripe", category: "api_keys", fields: ["api_key", "webhook_secret"] },
+    { service: "twilio", name: "Twilio", category: "api_keys", fields: ["account_sid", "auth_token", "phone_number"] },
+    { service: "slack", name: "Slack", category: "webhooks", fields: ["webhook_url", "bot_token"] },
+    { service: "github", name: "GitHub", category: "oauth_tokens", fields: ["access_token"] },
+    { service: "custom", name: "Custom", category: "custom", fields: [] },
 ];
 
 function AddEditModal({ isOpen, onClose, onSave, editingEntry }) {
@@ -174,8 +176,8 @@ function AddEditModal({ isOpen, onClose, onSave, editingEntry }) {
                                         key={preset.service}
                                         onClick={() => handlePresetSelect(preset)}
                                         className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${service === preset.service
-                                                ? "bg-white text-black border-white"
-                                                : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"
+                                            ? "bg-white text-black border-white"
+                                            : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"
                                             }`}
                                     >
                                         {preset.name}
