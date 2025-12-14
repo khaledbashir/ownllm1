@@ -1,18 +1,18 @@
-const { fetchOpenRouterModels } = require("../AiProviders/openRouter");
+const { fetchOpenRouterModels } = require("../../core/ai/openRouter");
 const {
   fetchOpenRouterEmbeddingModels,
 } = require("../EmbeddingEngines/openRouter");
-const { fetchApiPieModels } = require("../AiProviders/apipie");
-const { perplexityModels } = require("../AiProviders/perplexity");
-const { fireworksAiModels } = require("../AiProviders/fireworksAi");
+const { fetchApiPieModels } = require("../../core/ai/apipie");
+const { perplexityModels } = require("../../core/ai/perplexity");
+const { fireworksAiModels } = require("../../core/ai/fireworksAi");
 const { ElevenLabsTTS } = require("../TextToSpeech/elevenLabs");
-const { fetchNovitaModels } = require("../AiProviders/novita");
-const { parseLMStudioBasePath } = require("../AiProviders/lmStudio");
-const { parseNvidiaNimBasePath } = require("../AiProviders/nvidiaNim");
-const { fetchPPIOModels } = require("../AiProviders/ppio");
-const { GeminiLLM } = require("../AiProviders/gemini");
-const { fetchCometApiModels } = require("../AiProviders/cometapi");
-const { parseFoundryBasePath } = require("../AiProviders/foundry");
+const { fetchNovitaModels } = require("../../core/ai/novita");
+const { parseLMStudioBasePath } = require("../../core/ai/lmStudio");
+const { parseNvidiaNimBasePath } = require("../../core/ai/nvidiaNim");
+const { fetchPPIOModels } = require("../../core/ai/ppio");
+const { GeminiLLM } = require("../../core/ai/gemini");
+const { fetchCometApiModels } = require("../../core/ai/cometapi");
+const { parseFoundryBasePath } = require("../../core/ai/foundry");
 
 const SUPPORT_CUSTOM_MODELS = [
   "openai",
@@ -410,7 +410,7 @@ async function getTogetherAiModels(apiKey = null) {
       ? process.env.TOGETHER_AI_API_KEY
       : apiKey || process.env.TOGETHER_AI_API_KEY || null;
   try {
-    const { togetherAiModels } = require("../AiProviders/togetherAi");
+    const { togetherAiModels } = require("../../core/ai/togetherAi");
     const models = await togetherAiModels(_apiKey);
     if (models.length > 0 && !!_apiKey)
       process.env.TOGETHER_AI_API_KEY = _apiKey;
@@ -600,7 +600,7 @@ async function getDeepSeekModels(apiKey = null) {
 }
 
 async function getGiteeAIModels() {
-  const { giteeAiModels } = require("../AiProviders/giteeai");
+  const { giteeAiModels } = require("../../core/ai/giteeai");
   const modelMap = await giteeAiModels();
   if (!Object.keys(modelMap).length === 0) return { models: [], error: null };
   const models = Object.values(modelMap).map((model) => {

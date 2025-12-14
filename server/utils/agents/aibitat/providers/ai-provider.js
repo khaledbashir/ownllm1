@@ -16,8 +16,8 @@ const { ChatAnthropic } = require("@langchain/anthropic");
 const { ChatOllama } = require("@langchain/community/chat_models/ollama");
 const { toValidNumber, safeJsonParse } = require("../../../http");
 const { getLLMProviderClass } = require("../../../helpers");
-const { parseLMStudioBasePath } = require("../../../AiProviders/lmStudio");
-const { parseFoundryBasePath } = require("../../../AiProviders/foundry");
+const { parseLMStudioBasePath } = require("../../../../core/ai/lmStudio");
+const { parseFoundryBasePath } = require("../../../../core/ai/foundry");
 const {
   SystemPromptVariables,
 } = require("../../../../models/systemPromptVariables");

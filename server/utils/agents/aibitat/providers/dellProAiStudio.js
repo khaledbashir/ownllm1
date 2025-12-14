@@ -4,7 +4,7 @@ const InheritMultiple = require("./helpers/classes.js");
 const UnTooled = require("./helpers/untooled.js");
 const {
   DellProAiStudioLLM,
-} = require("../../../AiProviders/dellProAiStudio/index.js");
+} = require("../../../../core/ai/dellProAiStudio/index.js");
 
 /**
  * The agent provider for Dell Pro AI Studio.

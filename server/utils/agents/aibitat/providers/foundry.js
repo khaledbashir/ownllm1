@@ -5,7 +5,7 @@ const UnTooled = require("./helpers/untooled.js");
 const {
   parseFoundryBasePath,
   FoundryLLM,
-} = require("../../../AiProviders/foundry/index.js");
+} = require("../../../../core/ai/foundry/index.js");
 
 /**
  * The agent provider for the Foundry provider.

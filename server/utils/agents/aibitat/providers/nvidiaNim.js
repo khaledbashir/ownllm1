@@ -2,7 +2,7 @@ const OpenAI = require("openai");
 const Provider = require("./ai-provider.js");
 const InheritMultiple = require("./helpers/classes.js");
 const UnTooled = require("./helpers/untooled.js");
-const { parseNvidiaNimBasePath } = require("../../../AiProviders/nvidiaNim");
+const { parseNvidiaNimBasePath } = require("../../../../core/ai/nvidiaNim");
 
 /**
  * The agent provider for the Nvidia NIM provider.

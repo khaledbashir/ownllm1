@@ -693,7 +693,7 @@ const KEY_MAPPING = {
     checks: [isValidURL],
     postUpdate: [
       (_, __, nextValue) => {
-        const { parseNvidiaNimBasePath } = require("../AiProviders/nvidiaNim");
+        const { parseNvidiaNimBasePath } = require("../../core/ai/nvidiaNim");
         process.env.NVIDIA_NIM_LLM_BASE_PATH =
           parseNvidiaNimBasePath(nextValue);
       },
@@ -704,7 +704,7 @@ const KEY_MAPPING = {
     checks: [],
     postUpdate: [
       async (_, __, nextValue) => {
-        const { NvidiaNimLLM } = require("../AiProviders/nvidiaNim");
+        const { NvidiaNimLLM } = require("../../core/ai/nvidiaNim");
         await NvidiaNimLLM.setModelTokenLimit(nextValue);
       },
     ],
@@ -741,7 +741,7 @@ const KEY_MAPPING = {
     postUpdate: [
       // On new model selection, re-cache the context windows
       async (_, prevValue, __) => {
-        const { FoundryLLM } = require("../AiProviders/foundry");
+        const { FoundryLLM } = require("../../core/ai/foundry");
         await FoundryLLM.unloadModelFromEngine(prevValue);
         await FoundryLLM.cacheContextWindows(true);
       },

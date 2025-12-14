@@ -5,7 +5,7 @@ const UnTooled = require("./helpers/untooled.js");
 const {
   LMStudioLLM,
   parseLMStudioBasePath,
-} = require("../../../AiProviders/lmStudio/index.js");
+} = require("../../../../core/ai/lmStudio/index.js");
 
 /**
  * The agent provider for the LMStudio.

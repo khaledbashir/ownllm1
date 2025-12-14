@@ -1,5 +1,5 @@
 const { OpenAI } = require("openai");
-const { AzureOpenAiLLM } = require("../../../AiProviders/azureOpenAi");
+const { AzureOpenAiLLM } = require("../../../../core/ai/azureOpenAi");
 const Provider = require("./ai-provider.js");
 const { RetryError } = require("../error.js");
 

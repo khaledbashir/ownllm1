@@ -1,7 +1,7 @@
 const Provider = require("./ai-provider.js");
 const InheritMultiple = require("./helpers/classes.js");
 const UnTooled = require("./helpers/untooled.js");
-const { OllamaAILLM } = require("../../../AiProviders/ollama");
+const { OllamaAILLM } = require("../../../../core/ai/ollama");
 const { Ollama } = require("ollama");
 const { v4 } = require("uuid");
 const { safeJsonParse } = require("../../../http");

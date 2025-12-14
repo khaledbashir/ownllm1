@@ -133,100 +133,100 @@ function getLLMProvider({ provider = null, model = null } = {}) {
 
   switch (LLMSelection) {
     case "openai":
-      const { OpenAiLLM } = require("../AiProviders/openAi");
+      const { OpenAiLLM } = require("../../core/ai/openAi");
       return new OpenAiLLM(embedder, model);
     case "azure":
-      const { AzureOpenAiLLM } = require("../AiProviders/azureOpenAi");
+      const { AzureOpenAiLLM } = require("../../core/ai/azureOpenAi");
       return new AzureOpenAiLLM(embedder, model);
     case "anthropic":
-      const { AnthropicLLM } = require("../AiProviders/anthropic");
+      const { AnthropicLLM } = require("../../core/ai/anthropic");
       return new AnthropicLLM(embedder, model);
     case "gemini":
-      const { GeminiLLM } = require("../AiProviders/gemini");
+      const { GeminiLLM } = require("../../core/ai/gemini");
       return new GeminiLLM(embedder, model);
     case "lmstudio":
-      const { LMStudioLLM } = require("../AiProviders/lmStudio");
+      const { LMStudioLLM } = require("../../core/ai/lmStudio");
       return new LMStudioLLM(embedder, model);
     case "localai":
-      const { LocalAiLLM } = require("../AiProviders/localAi");
+      const { LocalAiLLM } = require("../../core/ai/localAi");
       return new LocalAiLLM(embedder, model);
     case "ollama":
-      const { OllamaAILLM } = require("../AiProviders/ollama");
+      const { OllamaAILLM } = require("../../core/ai/ollama");
       return new OllamaAILLM(embedder, model);
     case "togetherai":
-      const { TogetherAiLLM } = require("../AiProviders/togetherAi");
+      const { TogetherAiLLM } = require("../../core/ai/togetherAi");
       return new TogetherAiLLM(embedder, model);
     case "fireworksai":
-      const { FireworksAiLLM } = require("../AiProviders/fireworksAi");
+      const { FireworksAiLLM } = require("../../core/ai/fireworksAi");
       return new FireworksAiLLM(embedder, model);
     case "perplexity":
-      const { PerplexityLLM } = require("../AiProviders/perplexity");
+      const { PerplexityLLM } = require("../../core/ai/perplexity");
       return new PerplexityLLM(embedder, model);
     case "openrouter":
-      const { OpenRouterLLM } = require("../AiProviders/openRouter");
+      const { OpenRouterLLM } = require("../../core/ai/openRouter");
       return new OpenRouterLLM(embedder, model);
     case "mistral":
-      const { MistralLLM } = require("../AiProviders/mistral");
+      const { MistralLLM } = require("../../core/ai/mistral");
       return new MistralLLM(embedder, model);
     case "huggingface":
-      const { HuggingFaceLLM } = require("../AiProviders/huggingface");
+      const { HuggingFaceLLM } = require("../../core/ai/huggingface");
       return new HuggingFaceLLM(embedder, model);
     case "groq":
-      const { GroqLLM } = require("../AiProviders/groq");
+      const { GroqLLM } = require("../../core/ai/groq");
       return new GroqLLM(embedder, model);
     case "koboldcpp":
-      const { KoboldCPPLLM } = require("../AiProviders/koboldCPP");
+      const { KoboldCPPLLM } = require("../../core/ai/koboldCPP");
       return new KoboldCPPLLM(embedder, model);
     case "textgenwebui":
-      const { TextGenWebUILLM } = require("../AiProviders/textGenWebUI");
+      const { TextGenWebUILLM } = require("../../core/ai/textGenWebUI");
       return new TextGenWebUILLM(embedder, model);
     case "cohere":
-      const { CohereLLM } = require("../AiProviders/cohere");
+      const { CohereLLM } = require("../../core/ai/cohere");
       return new CohereLLM(embedder, model);
     case "litellm":
-      const { LiteLLM } = require("../AiProviders/liteLLM");
+      const { LiteLLM } = require("../../core/ai/liteLLM");
       return new LiteLLM(embedder, model);
     case "generic-openai":
-      const { GenericOpenAiLLM } = require("../AiProviders/genericOpenAi");
+      const { GenericOpenAiLLM } = require("../../core/ai/genericOpenAi");
       return new GenericOpenAiLLM(embedder, model);
     case "bedrock":
-      const { AWSBedrockLLM } = require("../AiProviders/bedrock");
+      const { AWSBedrockLLM } = require("../../core/ai/bedrock");
       return new AWSBedrockLLM(embedder, model);
     case "deepseek":
-      const { DeepSeekLLM } = require("../AiProviders/deepseek");
+      const { DeepSeekLLM } = require("../../core/ai/deepseek");
       return new DeepSeekLLM(embedder, model);
     case "apipie":
-      const { ApiPieLLM } = require("../AiProviders/apipie");
+      const { ApiPieLLM } = require("../../core/ai/apipie");
       return new ApiPieLLM(embedder, model);
     case "novita":
-      const { NovitaLLM } = require("../AiProviders/novita");
+      const { NovitaLLM } = require("../../core/ai/novita");
       return new NovitaLLM(embedder, model);
     case "xai":
-      const { XAiLLM } = require("../AiProviders/xai");
+      const { XAiLLM } = require("../../core/ai/xai");
       return new XAiLLM(embedder, model);
     case "nvidia-nim":
-      const { NvidiaNimLLM } = require("../AiProviders/nvidiaNim");
+      const { NvidiaNimLLM } = require("../../core/ai/nvidiaNim");
       return new NvidiaNimLLM(embedder, model);
     case "ppio":
-      const { PPIOLLM } = require("../AiProviders/ppio");
+      const { PPIOLLM } = require("../../core/ai/ppio");
       return new PPIOLLM(embedder, model);
     case "moonshotai":
-      const { MoonshotAiLLM } = require("../AiProviders/moonshotAi");
+      const { MoonshotAiLLM } = require("../../core/ai/moonshotAi");
       return new MoonshotAiLLM(embedder, model);
     case "dpais":
-      const { DellProAiStudioLLM } = require("../AiProviders/dellProAiStudio");
+      const { DellProAiStudioLLM } = require("../../core/ai/dellProAiStudio");
       return new DellProAiStudioLLM(embedder, model);
     case "cometapi":
-      const { CometApiLLM } = require("../AiProviders/cometapi");
+      const { CometApiLLM } = require("../../core/ai/cometapi");
       return new CometApiLLM(embedder, model);
     case "foundry":
-      const { FoundryLLM } = require("../AiProviders/foundry");
+      const { FoundryLLM } = require("../../core/ai/foundry");
       return new FoundryLLM(embedder, model);
     case "zai":
-      const { ZAiLLM } = require("../AiProviders/zai");
+      const { ZAiLLM } = require("../../core/ai/zai");
       return new ZAiLLM(embedder, model);
     case "giteeai":
-      const { GiteeAILLM } = require("../AiProviders/giteeai");
+      const { GiteeAILLM } = require("../../core/ai/giteeai");
       return new GiteeAILLM(embedder, model);
     default:
       throw new Error(
