@@ -23,28 +23,21 @@ function templatesEndpoints(app) {
     // Create a new template
     app.post("/templates", [validatedRequest, flexUserRoleValid], async (request, response) => {
         try {
-            console.log("[POST /api/templates] Request received");
             const user = response.locals.user;
-            console.log("[POST /api/templates] User:", user ? `ID: ${user.id}, Role: ${user.role}` : "No user (Single User Mode?)");
-
             const { name, logoPath, headerText, footerText, primaryColor, secondaryColor, fontFamily, isDefault, backgroundImage, cssOverrides } = request.body;
-            console.log("[POST /api/templates] Body:", { name, isDefault, hasLogo: !!logoPath });
 
             if (!name) {
-                console.log("[POST /api/templates] Error: Name missing");
                 return response.status(400).json({ success: false, error: "Template name is required" });
             }
 
             // If this is being set as default, unset other defaults for this user
             if (isDefault && user) {
-                console.log("[POST /api/templates] Unsetting previous defaults for user");
                 await prisma.pdf_templates.updateMany({
                     where: { userId: user.id, isDefault: true },
                     data: { isDefault: false },
                 });
             }
 
-            console.log("[POST /api/templates] Creating database entry...");
             const template = await prisma.pdf_templates.create({
                 data: {
                     name,
@@ -60,12 +53,11 @@ function templatesEndpoints(app) {
                     cssOverrides: cssOverrides || null,
                 },
             });
-            console.log("[POST /api/templates] Success. Template ID:", template.id);
 
             response.status(200).json({ success: true, template });
         } catch (e) {
-            console.error("[POST /api/templates] Exception:", e);
-            response.status(500).json({ success: false, error: "Could not create template" });
+            console.error("[Templates] Create error:", e.message);
+            response.status(500).json({ success: false, error: "Could not create template. " + e.message });
         }
     });
 

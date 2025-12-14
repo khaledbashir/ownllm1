@@ -40,35 +40,35 @@ export default function BrandManager() {
     const handleSave = async () => {
         if (saving) return;
         setSaving(true);
-        let res;
-        try {
-            console.log("[BrandManager] Saving template:", template);
-            console.log("[BrandManager] Template ID:", template.id);
 
+        // Timeout wrapper - don't hang forever
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Request timed out. Please check your connection and try again.")), 8000)
+        );
+
+        try {
+            let apiCall;
             if (template.id) {
-                console.log("[BrandManager] Updating existing template...");
-                res = await PdfTemplates.update(template.id, template);
+                apiCall = PdfTemplates.update(template.id, template);
             } else {
-                console.log("[BrandManager] Creating new template...");
-                res = await PdfTemplates.create(template);
-                console.log("[BrandManager] Create response:", res);
-                if (res.template) {
-                    console.log("[BrandManager] Stored new template with ID:", res.template.id);
-                    setTemplate(res.template);
-                }
+                apiCall = PdfTemplates.create(template);
             }
 
-            console.log("[BrandManager] Final response:", res);
+            // Race between API call and timeout
+            const res = await Promise.race([apiCall, timeoutPromise]);
+
+            if (res?.template && !template.id) {
+                setTemplate(res.template);
+            }
 
             if (res && (res.success || res.template)) {
-                showToast(res.message || "Brand settings saved successfully!", "success");
+                showToast("Brand settings saved!", "success");
             } else {
-                console.error("[BrandManager] Save failed:", res);
-                showToast(res?.error || "Failed to save brand settings.", "error");
+                showToast(res?.error || "Failed to save. Please try again.", "error");
             }
         } catch (e) {
-            console.error("[BrandManager] Exception:", e);
-            showToast(e.message || "An unexpected error occurred.", "error");
+            console.error("[BrandManager] Save error:", e);
+            showToast(e.message || "Save failed. Please try again.", "error");
         } finally {
             setSaving(false);
         }

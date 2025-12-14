@@ -157,24 +157,34 @@ export default function TemplateBuilder() {
         }
 
         setSaving(true);
+
+        // Timeout
+        const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Save timed out. Please try again.")), 8000)
+        );
+
         try {
-            const res = await PdfTemplates.create({
+            const apiCall = PdfTemplates.create({
                 name: templateName,
-                logoPath: brandSettings?.logoPath || "",
+                logoPath: logoUrl || brandSettings?.logoPath || "",
                 primaryColor: brandSettings?.primaryColor || "#3b82f6",
                 secondaryColor: brandSettings?.secondaryColor || "#1e293b",
                 fontFamily: brandSettings?.fontFamily || "Inter",
-                cssOverrides: templateHtml, // Store the full HTML in cssOverrides for now
+                cssOverrides: templateHtml,
                 isDefault: false,
             });
 
-            if (res.success || res.template) {
-                showToast("Template saved successfully!", "success");
+            const res = await Promise.race([apiCall, timeout]);
+
+            // Check for success in any form
+            if (res && (res.success !== false || res.template)) {
+                showToast(`Template "${templateName}" saved!`, "success");
                 setTemplateName("");
             } else {
-                showToast(res.error || "Failed to save template", "error");
+                showToast(res?.error || "Save failed. Check console for details.", "error");
             }
         } catch (e) {
+            console.error("[TemplateBuilder] Save error:", e);
             showToast(e.message || "Error saving template", "error");
         } finally {
             setSaving(false);
@@ -467,13 +477,16 @@ function MessageContent({ content, role }) {
                             className={`transform transition-transform ${isExpanded ? "rotate-180" : ""}`}
                         />
                     </button>
-                    {isExpanded && (
+                    <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+                            }`}
+                    >
                         <div className="px-3 pb-3 text-sm text-theme-text-secondary prose prose-invert prose-sm max-w-none">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                 {strippedThought}
                             </ReactMarkdown>
                         </div>
-                    )}
+                    </div>
                 </div>
             )}
 
