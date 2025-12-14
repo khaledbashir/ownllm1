@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Sidebar from "@/components/SettingsSidebar";
 import { isMobile } from "react-device-detect";
+// Force rebuild v2 - Testing deployment
 import {
     PaperPlaneTilt,
     Robot,
