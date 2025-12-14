@@ -9,10 +9,11 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import DOMPurify from "dompurify";
 
-// Think tag regex patterns
-const THINK_REGEX_OPEN = /<(think|thinking|thought)\s*>/i;
-const THINK_REGEX_CLOSE = /<\/(think|thinking|thought)\s*>/i;
-const THINK_REGEX_COMPLETE = /<(think|thinking|thought)\s*>[\s\S]*?<\/\1\s*>/i;
+// Think tag regex patterns - flexible to handle mismatched tags
+const THINK_REGEX_OPEN = /<(think|thinking|thought)\s*>/gi;
+const THINK_REGEX_CLOSE = /<\/(think|thinking|thought)\s*>/gi;
+// Matches any combo of think/thinking/thought open/close
+const THINK_REGEX_COMPLETE = /<(think|thinking|thought)\s*>([\s\S]*?)<\/(think|thinking|thought)\s*>/gi;
 
 // Default HTML template to start with
 const DEFAULT_TEMPLATE = `<!DOCTYPE html>
@@ -424,27 +425,28 @@ function MessageContent({ content, role }) {
         return <span>{content}</span>;
     }
 
-    // Check for think tags
+    // Extract thinking content - reset regex (global flag issue)
     let thoughtContent = null;
     let mainContent = content;
 
-    // Extract complete think tag
-    const completeMatch = content.match(THINK_REGEX_COMPLETE);
-    if (completeMatch) {
-        thoughtContent = completeMatch[0];
-        mainContent = content.replace(THINK_REGEX_COMPLETE, "").trim();
-    } else if (content.match(THINK_REGEX_OPEN) && content.match(THINK_REGEX_CLOSE)) {
-        // Handle mismatched but present tags
-        const closeMatch = content.match(THINK_REGEX_CLOSE);
-        const splitIndex = content.indexOf(closeMatch[0]) + closeMatch[0].length;
-        thoughtContent = content.substring(0, splitIndex);
-        mainContent = content.substring(splitIndex).trim();
+    // Simple approach: find first opening and last closing tag
+    const openMatch = content.match(/<(think|thinking|thought)\s*>/i);
+    const closeMatch = content.match(/<\/(think|thinking|thought)\s*>/i);
+
+    if (openMatch && closeMatch) {
+        const openIndex = content.indexOf(openMatch[0]);
+        const closeIndex = content.indexOf(closeMatch[0]) + closeMatch[0].length;
+
+        // Extract the thinking block
+        thoughtContent = content.substring(openIndex, closeIndex);
+        // Remove thinking block from main content
+        mainContent = (content.substring(0, openIndex) + content.substring(closeIndex)).trim();
     }
 
     // Strip tags from thought content for display
     const strippedThought = thoughtContent
-        ?.replace(THINK_REGEX_OPEN, "")
-        ?.replace(THINK_REGEX_CLOSE, "")
+        ?.replace(/<(think|thinking|thought)\s*>/gi, "")
+        ?.replace(/<\/(think|thinking|thought)\s*>/gi, "")
         ?.trim();
 
     return (
