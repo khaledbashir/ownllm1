@@ -246,9 +246,15 @@ const browserQA = {
                                     break;
 
                                 case 'wait':
-                                    await page.waitForSelector(step.selector, { timeout });
-                                    result.selector = step.selector;
-                                    result.success = true;
+                                    // If no selector, just wait for timeout
+                                    if (!step.selector) {
+                                        await page.waitForTimeout(step.timeout || 1000);
+                                        result.success = true;
+                                    } else {
+                                        await page.waitForSelector(step.selector, { timeout: step.timeout || timeout });
+                                        result.selector = step.selector;
+                                        result.success = true;
+                                    }
                                     break;
 
                                 case 'wait_text':
