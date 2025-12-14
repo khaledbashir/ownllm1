@@ -133,188 +133,190 @@ function convertToChatHistory(history = []) {
         `[convertToChatHistory] ChatHistory #${record.id} prompt property is not a string - skipping record.`
       );
       continue;
-      // Safe-guard against "React Error #31" where objects or arrays are stored as text.
-      // This can happen if the LLM provider returns an object/array and it wasn't parsed correctly before saving.
-      let content = data.text;
-      if (typeof content !== "string") {
-        if (
-          // Check for { textResponse, metrics } pattern
-          !!content &&
-          typeof content === "object" &&
-          content.hasOwnProperty("textResponse")
-        ) {
-          content = content.textResponse;
-        } else if (Array.isArray(content)) {
-          // Check for Multi-Modal array pattern
-          content = content
-            .map((c) => {
-              if (c.type === "text") return c.text;
-              return "";
-            })
-            .join("");
-        } else {
-          // If we still can't resolve it to a string, skip the record.
-          console.log(
-            `[convertToChatHistory] ChatHistory #${record.id} response.text property is not a string - skipping record.`
-          );
-          continue;
-        }
-      }
-
-      formattedHistory.push([
-        {
-          role: "user",
-          content: prompt,
-          sentAt: moment(createdAt).unix(),
-          attachments: data?.attachments ?? [],
-          chatId: id,
-        },
-        {
-          type: data?.type || "chart",
-          role: "assistant",
-          content: content,
-          sources: data.sources || [],
-          chatId: id,
-          sentAt: moment(createdAt).unix(),
-          feedbackScore,
-          metrics: data?.metrics || {},
-        },
-      ]);
     }
-
-    return formattedHistory.flat();
-  }
-
-  /**
-   * Converts a chat history to a prompt history.
-   * @param {Object[]} history - The chat history to convert
-   * @returns {{role: string, content: string, attachments?: import("..").Attachment}[]}
-   */
-  function convertToPromptHistory(history = []) {
-    const formattedHistory = [];
-    for (const record of history) {
-      const { prompt, response } = record;
-      const data = JSON.parse(response);
-
-      // In the event that a bad response was stored - we should skip its entire record
-      // because it was likely an error and cannot be used in chats and will fail to render on UI.
-      if (typeof prompt !== "string") {
+    // Safe-guard against "React Error #31" where objects or arrays are stored as text.
+    // This can happen if the LLM provider returns an object/array and it wasn't parsed correctly before saving.
+    let content = data.text;
+    if (typeof content !== "string") {
+      if (
+        // Check for { textResponse, metrics } pattern
+        !!content &&
+        typeof content === "object" &&
+        content.hasOwnProperty("textResponse")
+      ) {
+        content = content.textResponse;
+      } else if (Array.isArray(content)) {
+        // Check for Multi-Modal array pattern
+        content = content
+          .map((c) => {
+            if (c.type === "text") return c.text;
+            return "";
+          })
+          .join("");
+      } else {
+        // If we still can't resolve it to a string, skip the record.
         console.log(
-          `[convertToPromptHistory] ChatHistory #${record.id} prompt property is not a string - skipping record.`
+          `[convertToChatHistory] ChatHistory #${record.id} response.text property is not a string - skipping record.`
         );
         continue;
-        // Safe-guard against "React Error #31" where objects or arrays are stored as text.
-        // This can happen if the LLM provider returns an object/array and it wasn't parsed correctly before saving.
-        let content = data.text;
-        if (typeof content !== "string") {
-          if (
-            // Check for { textResponse, metrics } pattern
-            !!content &&
-            typeof content === "object" &&
-            content.hasOwnProperty("textResponse")
-          ) {
-            content = content.textResponse;
-          } else if (Array.isArray(content)) {
-            // Check for Multi-Modal array pattern
-            content = content
-              .map((c) => {
-                if (c.type === "text") return c.text;
-                return "";
-              })
-              .join("");
-          } else {
-            // If we still can't resolve it to a string, skip the record.
-            console.log(
-              `[convertToPromptHistory] ChatHistory #${record.id} response.text property is not a string - skipping record.`
-            );
-            continue;
-          }
-        }
-
-        formattedHistory.push([
-          {
-            role: "user",
-            content: prompt,
-            // if there are attachments, add them as a property to the user message so we can reuse them in chat history later if supported by the llm.
-            ...(data?.attachments?.length > 0
-              ? { attachments: data?.attachments }
-              : {}),
-          },
-          {
-            role: "assistant",
-            content: content,
-          },
-        ]);
       }
-      return formattedHistory.flat();
     }
 
-    /**
-     * Safely stringifies any object containing BigInt values
-     * @param {*} obj - Anything to stringify that might contain BigInt values
-     * @returns {string} JSON string with BigInt values converted to strings
-     */
-    function safeJSONStringify(obj) {
-      return JSON.stringify(obj, (_, value) => {
-        if (typeof value === "bigint") return value.toString();
-        return value;
-      });
+    formattedHistory.push([
+      {
+        role: "user",
+        content: prompt,
+        sentAt: moment(createdAt).unix(),
+        attachments: data?.attachments ?? [],
+        chatId: id,
+      },
+      {
+        type: data?.type || "chart",
+        role: "assistant",
+        content: content,
+        sources: data.sources || [],
+        chatId: id,
+        sentAt: moment(createdAt).unix(),
+        feedbackScore,
+        metrics: data?.metrics || {},
+      },
+    ]);
+  }
+
+  return formattedHistory.flat();
+}
+
+/**
+ * Converts a chat history to a prompt history.
+ * @param {Object[]} history - The chat history to convert
+ * @returns {{role: string, content: string, attachments?: import("..").Attachment}[]}
+ */
+function convertToPromptHistory(history = []) {
+  const formattedHistory = [];
+  for (const record of history) {
+    const { prompt, response } = record;
+    const data = JSON.parse(response);
+
+    // In the event that a bad response was stored - we should skip its entire record
+    // because it was likely an error and cannot be used in chats and will fail to render on UI.
+    if (typeof prompt !== "string") {
+      console.log(
+        `[convertToPromptHistory] ChatHistory #${record.id} prompt property is not a string - skipping record.`
+      );
+      continue;
+    }
+    // Safe-guard against "React Error #31" where objects or arrays are stored as text.
+    // This can happen if the LLM provider returns an object/array and it wasn't parsed correctly before saving.
+    let content = data.text;
+    if (typeof content !== "string") {
+      if (
+        // Check for { textResponse, metrics } pattern
+        !!content &&
+        typeof content === "object" &&
+        content.hasOwnProperty("textResponse")
+      ) {
+        content = content.textResponse;
+      } else if (Array.isArray(content)) {
+        // Check for Multi-Modal array pattern
+        content = content
+          .map((c) => {
+            if (c.type === "text") return c.text;
+            return "";
+          })
+          .join("");
+      } else {
+        // If we still can't resolve it to a string, skip the record.
+        console.log(
+          `[convertToPromptHistory] ChatHistory #${record.id} response.text property is not a string - skipping record.`
+        );
+        continue;
+      }
     }
 
-    function writeResponseChunk(response, data) {
-      response.write(`data: ${safeJSONStringify(data)}\n\n`);
-      return;
+    formattedHistory.push([
+      {
+        role: "user",
+        content: prompt,
+        // if there are attachments, add them as a property to the user message so we can reuse them in chat history later if supported by the llm.
+        ...(data?.attachments?.length > 0
+          ? { attachments: data?.attachments }
+          : {}),
+      },
+      {
+        role: "assistant",
+        content: content,
+      },
+    ]);
+  }
+  return formattedHistory.flat();
+}
+
+/**
+ * Safely stringifies any object containing BigInt values
+ * @param {*} obj - Anything to stringify that might contain BigInt values
+ * @returns {string} JSON string with BigInt values converted to strings
+ */
+function safeJSONStringify(obj) {
+  return JSON.stringify(obj, (_, value) => {
+    if (typeof value === "bigint") return value.toString();
+    return value;
+  });
+}
+
+function writeResponseChunk(response, data) {
+  response.write(`data: ${safeJSONStringify(data)}\n\n`);
+  return;
+}
+
+/**
+ * Formats the chat history to re-use attachments in the chat history
+ * that might have existed in the conversation earlier.
+ * @param {{role:string, content:string, attachments?: Object[]}[]} chatHistory
+ * @param {function} formatterFunction - The function to format the chat history from the llm provider
+ * @param {('asProperty'|'spread')} mode - "asProperty" or "spread". Determines how the content is formatted in the message object.
+ * @returns {object[]}
+ */
+function formatChatHistory(
+  chatHistory = [],
+  formatterFunction,
+  mode = "asProperty"
+) {
+  return chatHistory.map((historicalMessage) => {
+    if (
+      historicalMessage?.role !== "user" || // Only user messages can have attachments
+      !historicalMessage?.attachments || // If there are no attachments, we can skip this
+      !historicalMessage.attachments.length // If there is an array but it is empty, we can skip this
+    )
+      return historicalMessage;
+
+    // Some providers, like Ollama, expect the content to be embedded in the message object.
+    if (mode === "spread") {
+      return {
+        role: historicalMessage.role,
+        ...formatterFunction({
+          userPrompt: historicalMessage.content,
+          attachments: historicalMessage.attachments,
+        }),
+      };
     }
 
-    /**
-     * Formats the chat history to re-use attachments in the chat history
-     * that might have existed in the conversation earlier.
-     * @param {{role:string, content:string, attachments?: Object[]}[]} chatHistory
-     * @param {function} formatterFunction - The function to format the chat history from the llm provider
-     * @param {('asProperty'|'spread')} mode - "asProperty" or "spread". Determines how the content is formatted in the message object.
-     * @returns {object[]}
-     */
-    function formatChatHistory(
-      chatHistory = [],
-      formatterFunction,
-      mode = "asProperty"
-    ) {
-      return chatHistory.map((historicalMessage) => {
-        if (
-          historicalMessage?.role !== "user" || // Only user messages can have attachments
-          !historicalMessage?.attachments || // If there are no attachments, we can skip this
-          !historicalMessage.attachments.length // If there is an array but it is empty, we can skip this
-        )
-          return historicalMessage;
-
-        // Some providers, like Ollama, expect the content to be embedded in the message object.
-        if (mode === "spread") {
-          return {
-            role: historicalMessage.role,
-            ...formatterFunction({
-              userPrompt: historicalMessage.content,
-              attachments: historicalMessage.attachments,
-            }),
-          };
-        }
-
-        // Most providers expect the content to be a property of the message object formatted like OpenAI models.
-        return {
-          role: historicalMessage.role,
-          content: formatterFunction({
-            userPrompt: historicalMessage.content,
-            attachments: historicalMessage.attachments,
-          }),
-        };
-      });
-    }
-
-    module.exports = {
-      handleDefaultStreamResponseV2,
-      convertToChatHistory,
-      convertToPromptHistory,
-      writeResponseChunk,
-      clientAbortedHandler,
-      formatChatHistory,
-      safeJSONStringify,
+    // Most providers expect the content to be a property of the message object formatted like OpenAI models.
+    return {
+      role: historicalMessage.role,
+      content: formatterFunction({
+        userPrompt: historicalMessage.content,
+        attachments: historicalMessage.attachments,
+      }),
     };
+  });
+}
+
+module.exports = {
+  handleDefaultStreamResponseV2,
+  convertToChatHistory,
+  convertToPromptHistory,
+  writeResponseChunk,
+  clientAbortedHandler,
+  formatChatHistory,
+  safeJSONStringify,
+};
