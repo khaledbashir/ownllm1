@@ -154,6 +154,9 @@ export default {
     smartPlugins: () => {
       return "/settings/smart-plugins";
     },
+    testLab: () => {
+      return "/settings/test-lab";
+    },
     agentSkills: () => {
       return "/settings/agents";
     },

@@ -238,6 +238,15 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "/settings/test-lab",
+        lazy: async () => {
+          const { default: TestLab } = await import(
+            "@/pages/GeneralSettings/TestLab"
+          );
+          return { element: <ManagerRoute Component={TestLab} /> };
+        },
+      },
+      {
         path: "/settings/default-system-prompt",
         lazy: async () => {
           const { default: DefaultSystemPrompt } = await import(
