@@ -42,14 +42,6 @@ const app = express();
 const apiRouter = express.Router();
 const FILE_LIMIT = "3GB";
 
-// ... (existing middleware code)
-
-app.use("/api", apiRouter);
-// ... (existing endpoints)
-vaultEndpoints(apiRouter);
-mobileEndpoints(apiRouter);
-agentTestLabEndpoints(apiRouter);
-
 // Only log HTTP requests in development mode and if the ENABLE_HTTP_LOGGER environment variable is set to true
 if (
   process.env.NODE_ENV === "development" &&
@@ -102,6 +94,7 @@ templateGenerationEndpoints(apiRouter);
 crmEndpoints(apiRouter);
 vaultEndpoints(apiRouter);
 mobileEndpoints(apiRouter);
+agentTestLabEndpoints(apiRouter);
 
 // Externally facing embedder endpoints
 embeddedEndpoints(apiRouter);
