@@ -289,22 +289,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                         id: viewsColumns[index].id,
                     }));
 
-                    // Build cells object for each row
-                    const cells = {};
-                    dataRows.forEach(row => {
-                        const rowId = genId();
-                        cells[rowId] = {};
-                        row.slice(1).forEach((cellValue, index) => {
-                            if (viewsColumns[index + 1]) {
-                                cells[rowId][viewsColumns[index + 1].id] = {
-                                    columnId: viewsColumns[index + 1].id,
-                                    value: { "$blocksuite:internal:text$": true, delta: [{ insert: cellValue }] },
-                                };
-                            }
-                        });
-                    });
-
-                    // Create the database block
+                    // Create the database block first (cells will be empty initially)
                     const databaseId = doc.addBlock("affine:database", {
                         views: [{
                             id: genId(),
@@ -315,18 +300,40 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                             header: { titleColumn: viewsColumns[0]?.id, iconColumn: "type" },
                         }],
                         title: new Text(""),
-                        cells,
+                        cells: {},
                         columns,
                     }, noteBlockId);
 
-                    // Add paragraph rows for first column (title column)
-                    dataRows.forEach((row, rowIndex) => {
-                        const rowId = Object.keys(cells)[rowIndex];
-                        doc.addBlock("affine:paragraph", {
+                    // Add paragraph rows for title column - these become the row IDs
+                    const rowBlockIds = dataRows.map((row) => {
+                        return doc.addBlock("affine:paragraph", {
                             text: new Text(row[0] || ""),
                             type: "text",
                         }, databaseId);
                     });
+
+                    // Now build and set the cells using the actual block IDs as row keys
+                    const cells = {};
+                    dataRows.forEach((row, rowIndex) => {
+                        const rowId = rowBlockIds[rowIndex];
+                        cells[rowId] = {};
+                        // Start from column 1 (skip title column which is the paragraph text)
+                        row.slice(1).forEach((cellValue, colIndex) => {
+                            const columnId = viewsColumns[colIndex + 1]?.id;
+                            if (columnId) {
+                                cells[rowId][columnId] = {
+                                    columnId: columnId,
+                                    value: new Text(cellValue),
+                                };
+                            }
+                        });
+                    });
+
+                    // Update the database block with the cells
+                    const databaseBlock = doc.getBlock(databaseId);
+                    if (databaseBlock) {
+                        doc.updateBlock(databaseBlock.model, { cells });
+                    }
                 }
                 continue;
             }
