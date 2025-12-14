@@ -1,7 +1,7 @@
 const { Telemetry } = require("../../models/telemetry");
 const {
   SUPPORTED_CONNECTION_METHODS,
-} = require("../AiProviders/bedrock/utils");
+} = require("../../core/ai/bedrock/utils");
 const { resetAllVectorStores } = require("../vectorStore/resetAllVectorStores");
 
 const KEY_MAPPING = {

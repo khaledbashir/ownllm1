@@ -23,7 +23,7 @@ const {
 } = require("../../../../models/systemPromptVariables");
 const {
   createBedrockChatClient,
-} = require("../../../AiProviders/bedrock/utils");
+} = require("../../../../core/ai/bedrock/utils");
 
 const DEFAULT_WORKSPACE_PROMPT =
   "You are a helpful ai assistant who can assist the user and use tools available to help answer the users prompts and questions.";

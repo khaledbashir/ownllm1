@@ -2,7 +2,7 @@ const {
   createBedrockCredentials,
   getBedrockAuthMethod,
   createBedrockChatClient,
-} = require("../../../AiProviders/bedrock/utils.js");
+} = require("../../../../core/ai/bedrock/utils.js");
 const Provider = require("./ai-provider.js");
 const InheritMultiple = require("./helpers/classes.js");
 const UnTooled = require("./helpers/untooled.js");
