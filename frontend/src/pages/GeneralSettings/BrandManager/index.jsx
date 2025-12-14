@@ -22,6 +22,7 @@ export default function BrandManager() {
     });
     const [prompt, setPrompt] = useState("abstract business pattern, blue and white, minimal");
     const [generating, setGenerating] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         fetchDefaultTemplate();
@@ -37,6 +38,8 @@ export default function BrandManager() {
     };
 
     const handleSave = async () => {
+        if (saving) return;
+        setSaving(true);
         let res;
         try {
             console.log("[BrandManager] Saving template:", template);
@@ -66,6 +69,8 @@ export default function BrandManager() {
         } catch (e) {
             console.error("[BrandManager] Exception:", e);
             showToast(e.message || "An unexpected error occurred.", "error");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -213,9 +218,18 @@ export default function BrandManager() {
 
                         {/* Save Button */}
                         <div className="flex justify-end pt-6">
-                            <CTAButton onClick={handleSave}>
-                                <FloppyDisk size={18} className="mr-2" />
-                                Save Brand Settings
+                            <CTAButton onClick={handleSave} disabled={saving}>
+                                {saving ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FloppyDisk size={18} className="mr-2" />
+                                        Save Brand Settings
+                                    </>
+                                )}
                             </CTAButton>
                         </div>
 
