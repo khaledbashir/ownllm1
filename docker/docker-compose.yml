@@ -25,7 +25,26 @@ services:
       - "3001:3001"
     env_file:
       - .env
+    environment:
+      - BROWSER_WS_URL=ws://browserless:3000?token=${BROWSERLESS_TOKEN:-browserless}
     networks:
       - anything-llm
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      - browserless
+
+  browserless:
+    container_name: browserless
+    image: ghcr.io/browserless/chromium:latest
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      - CONCURRENT=10
+      - TOKEN=${BROWSERLESS_TOKEN:-browserless}
+      - TIMEOUT=60000
+      - QUEUED=10
+    networks:
+      - anything-llm
+
