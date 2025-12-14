@@ -267,18 +267,46 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     // Expose insert method to parent
     useImperativeHandle(ref, () => ({
         insertMarkdown: async (markdown) => {
-            if (!editorRef.current || !markdown) return;
+            console.log("[BlockSuiteEditor] insertMarkdown called with:", markdown?.substring(0, 100));
+
+            if (!editorRef.current || !markdown) {
+                console.error("[BlockSuiteEditor] Missing editor or markdown");
+                return;
+            }
 
             // Get current doc
             const doc = editorRef.current.doc;
-            if (!doc) return;
+            if (!doc) {
+                console.error("[BlockSuiteEditor] No doc found");
+                return;
+            }
 
             // Find the note block and add content
             const noteBlock = doc.getBlocksByFlavour("affine:note")[0];
-            if (!noteBlock) return;
+            if (!noteBlock) {
+                console.error("[BlockSuiteEditor] No note block found");
+                return;
+            }
 
-            // Parse markdown and add structured blocks
-            parseMarkdownToBlocks(doc, noteBlock.id, markdown);
+            console.log("[BlockSuiteEditor] Found note block:", noteBlock.id);
+
+            try {
+                // Try the full parser first
+                parseMarkdownToBlocks(doc, noteBlock.id, markdown);
+                console.log("[BlockSuiteEditor] Successfully parsed and inserted markdown");
+            } catch (e) {
+                console.error("[BlockSuiteEditor] parseMarkdownToBlocks failed:", e);
+                // Fallback: just add simple paragraphs
+                try {
+                    const lines = markdown.split("\n").filter(l => l.trim());
+                    for (const line of lines) {
+                        doc.addBlock("affine:paragraph", { text: new Text(line) }, noteBlock.id);
+                    }
+                    console.log("[BlockSuiteEditor] Fallback: added simple paragraphs");
+                } catch (fallbackError) {
+                    console.error("[BlockSuiteEditor] Fallback also failed:", fallbackError);
+                }
+            }
         },
         getEditor: () => editorRef.current,
     }));

@@ -33,14 +33,25 @@ function sanitizeNotesMarkdown(raw) {
   if (raw == null) return "";
   let text = String(raw);
 
-  // Remove <think>...</think> blocks (multiline)
-  text = text.replace(/<think\b[^>]*>[\s\S]*?<\/think>/gi, "");
-  // Remove any dangling think tags
-  text = text.replace(/<think\b[^>]*>/gi, "").replace(/<\/think>/gi, "");
+  // Remove <think>...</think> blocks (multiline) - various tag names
+  const thinkTagPatterns = [
+    /<think\b[^>]*>[\s\S]*?<\/think>/gi,
+    /<thinking\b[^>]*>[\s\S]*?<\/thinking>/gi,
+    /<thought\b[^>]*>[\s\S]*?<\/thought>/gi,
+    /<reasoning\b[^>]*>[\s\S]*?<\/reasoning>/gi,
+    /<reflection\b[^>]*>[\s\S]*?<\/reflection>/gi,
+  ];
+
+  for (const pattern of thinkTagPatterns) {
+    text = text.replace(pattern, "");
+  }
+
+  // Remove any dangling think-like tags
+  text = text.replace(/<\/?(?:think|thinking|thought|reasoning|reflection)\b[^>]*>/gi, "");
 
   // Also handle escaped tags like &lt;think&gt; ... &lt;/think&gt;
-  text = text.replace(/&lt;think\b[^&]*&gt;[\s\S]*?&lt;\/think&gt;/gi, "");
-  text = text.replace(/&lt;think\b[^&]*&gt;/gi, "").replace(/&lt;\/think&gt;/gi, "");
+  text = text.replace(/&lt;(?:think|thinking|thought|reasoning|reflection)\b[^&]*&gt;[\s\S]*?&lt;\/(?:think|thinking|thought|reasoning|reflection)&gt;/gi, "");
+  text = text.replace(/&lt;\/?(?:think|thinking|thought|reasoning|reflection)\b[^&]*&gt;/gi, "");
 
   // Remove fenced code blocks that are JSON (explicit lang or JSON-parsable body)
   text = text.replace(/```([\w/+.-]+)?\s*\n([\s\S]*?)```/g, (match, lang, body) => {
