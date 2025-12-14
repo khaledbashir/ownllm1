@@ -254,6 +254,35 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 continue;
             }
 
+            // Markdown table detection - collect all table rows
+            if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+                const tableLines = [];
+                while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
+                    const tableLine = lines[i].trim();
+                    // Skip separator rows (|---|---|)
+                    if (!/^\|[\s\-:]+\|$/.test(tableLine.replace(/\|/g, "|").replace(/[^|:-]/g, "-"))) {
+                        // Only add non-separator rows
+                        if (!tableLine.match(/^\|[\s-:]+\|$/)) {
+                            tableLines.push(tableLine);
+                        }
+                    }
+                    i++;
+                }
+                // Render table as formatted code block for clean display
+                if (tableLines.length > 0) {
+                    // Parse table into clean format
+                    const formattedTable = tableLines.map(row => {
+                        return row.split("|").filter(cell => cell.trim()).map(cell => cell.trim()).join(" | ");
+                    }).join("\n");
+
+                    doc.addBlock("affine:code", {
+                        text: new Text(formattedTable),
+                        language: "markdown"
+                    }, noteBlockId);
+                }
+                continue;
+            }
+
             // Fenced code block
             if (trimmed.startsWith("```")) {
                 const lang = trimmed.slice(3).trim() || "plain";
