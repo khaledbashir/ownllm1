@@ -70,19 +70,19 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                         const parsed = JSON.parse(content);
                         if (parsed.type === "blocksuite" && parsed.value) {
                             // TODO: Restore from saved state
-                            doc.addBlock("affine:paragraph", {}, noteId);
+                            doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
                         } else if (typeof parsed === "string") {
                             // For now, just add empty paragraph (text model is created automatically)
-                            doc.addBlock("affine:paragraph", {}, noteId);
+                            doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
                         } else {
-                            doc.addBlock("affine:paragraph", {}, noteId);
+                            doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
                         }
                     } catch {
                         // Plain text content - add empty paragraph
-                        doc.addBlock("affine:paragraph", {}, noteId);
+                        doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
                     }
                 } else {
-                    doc.addBlock("affine:paragraph", {}, noteId);
+                    doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
                 }
 
                 // Create editor AFTER blocks are ready
