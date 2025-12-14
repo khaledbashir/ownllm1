@@ -7,7 +7,7 @@ const { isValidUrl, safeJsonParse } = require("../utils/http");
 const prisma = require("../utils/prisma");
 const { v4 } = require("uuid");
 const { MetaGenerator } = require("../utils/boot/MetaGenerator");
-const { PGVector } = require("../utils/vectorDbProviders/pgvector");
+const { PGVector } = require("../core/vector/pgvector");
 const { NativeEmbedder } = require("../utils/EmbeddingEngines/native");
 const { getBaseLLMProviderModel } = require("../utils/helpers");
 
@@ -702,7 +702,7 @@ const SystemSettings = {
       try {
         let url = new URL(process.env.SIMPLE_SSO_NO_LOGIN_REDIRECT);
         return url.toString();
-      } catch {}
+      } catch { }
 
       // if the no login redirect is not a valid URL or is not set, return null
       return null;

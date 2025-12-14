@@ -6,7 +6,7 @@ const {
   ROLES,
 } = require("../utils/middleware/multiUserProtected");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
 
 function documentEndpoints(app) {
@@ -21,15 +21,18 @@ function documentEndpoints(app) {
         if (!isWithin(path.resolve(documentsPath), path.resolve(storagePath)))
           throw new Error("Invalid folder name.");
 
-        if (fs.existsSync(storagePath)) {
+        try {
+          await fs.access(storagePath);
           response.status(500).json({
             success: false,
             message: "Folder by that name already exists",
           });
           return;
+        } catch {
+          // Folder doesn't exist, proceed
         }
 
-        fs.mkdirSync(storagePath, { recursive: true });
+        await fs.mkdir(storagePath, { recursive: true });
         response.status(200).json({ success: true, message: null });
       } catch (e) {
         console.error(e);
@@ -55,26 +58,17 @@ function documentEndpoints(app) {
           ({ from }) => !embeddedFiles.includes(from)
         );
 
-        const movePromises = moveableFiles.map(({ from, to }) => {
+        const movePromises = moveableFiles.map(async ({ from, to }) => {
           const sourcePath = path.join(documentsPath, normalizePath(from));
           const destinationPath = path.join(documentsPath, normalizePath(to));
 
-          return new Promise((resolve, reject) => {
-            if (
-              !isWithin(documentsPath, sourcePath) ||
-              !isWithin(documentsPath, destinationPath)
-            )
-              return reject("Invalid file location");
+          if (
+            !isWithin(documentsPath, sourcePath) ||
+            !isWithin(documentsPath, destinationPath)
+          )
+            throw new Error("Invalid file location");
 
-            fs.rename(sourcePath, destinationPath, (err) => {
-              if (err) {
-                console.error(`Error moving file ${from} to ${to}:`, err);
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          });
+          await fs.rename(sourcePath, destinationPath);
         });
 
         Promise.all(movePromises)

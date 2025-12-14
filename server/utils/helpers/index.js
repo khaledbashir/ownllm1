@@ -82,37 +82,37 @@
  * @returns { BaseVectorDatabaseProvider}
  */
 function getVectorDbClass(getExactly = null) {
-  const { LanceDb } = require("../vectorDbProviders/lance");
+  const { LanceDb } = require("../../core/vector/lance");
   const vectorSelection = getExactly ?? process.env.VECTOR_DB ?? "lancedb";
   switch (vectorSelection) {
     case "pinecone":
-      const { Pinecone } = require("../vectorDbProviders/pinecone");
+      const { Pinecone } = require("../../core/vector/pinecone");
       return Pinecone;
     case "chroma":
-      const { Chroma } = require("../vectorDbProviders/chroma");
+      const { Chroma } = require("../../core/vector/chroma");
       return Chroma;
     case "chromacloud":
-      const { ChromaCloud } = require("../vectorDbProviders/chromacloud");
+      const { ChromaCloud } = require("../../core/vector/chromacloud");
       return ChromaCloud;
     case "lancedb":
       return LanceDb;
     case "weaviate":
-      const { Weaviate } = require("../vectorDbProviders/weaviate");
+      const { Weaviate } = require("../../core/vector/weaviate");
       return Weaviate;
     case "qdrant":
-      const { QDrant } = require("../vectorDbProviders/qdrant");
+      const { QDrant } = require("../../core/vector/qdrant");
       return QDrant;
     case "milvus":
-      const { Milvus } = require("../vectorDbProviders/milvus");
+      const { Milvus } = require("../../core/vector/milvus");
       return Milvus;
     case "zilliz":
-      const { Zilliz } = require("../vectorDbProviders/zilliz");
+      const { Zilliz } = require("../../core/vector/zilliz");
       return Zilliz;
     case "astra":
-      const { AstraDB } = require("../vectorDbProviders/astra");
+      const { AstraDB } = require("../../core/vector/astra");
       return AstraDB;
     case "pgvector":
-      const { PGVector } = require("../vectorDbProviders/pgvector");
+      const { PGVector } = require("../../core/vector/pgvector");
       return PGVector;
     default:
       console.error(
@@ -298,100 +298,100 @@ function getEmbeddingEngineSelection() {
 function getLLMProviderClass({ provider = null } = {}) {
   switch (provider) {
     case "openai":
-      const { OpenAiLLM } = require("../AiProviders/openAi");
+      const { OpenAiLLM } = require("../../core/ai/openAi");
       return OpenAiLLM;
     case "azure":
-      const { AzureOpenAiLLM } = require("../AiProviders/azureOpenAi");
+      const { AzureOpenAiLLM } = require("../../core/ai/azureOpenAi");
       return AzureOpenAiLLM;
     case "anthropic":
-      const { AnthropicLLM } = require("../AiProviders/anthropic");
+      const { AnthropicLLM } = require("../../core/ai/anthropic");
       return AnthropicLLM;
     case "gemini":
-      const { GeminiLLM } = require("../AiProviders/gemini");
+      const { GeminiLLM } = require("../../core/ai/gemini");
       return GeminiLLM;
     case "lmstudio":
-      const { LMStudioLLM } = require("../AiProviders/lmStudio");
+      const { LMStudioLLM } = require("../../core/ai/lmStudio");
       return LMStudioLLM;
     case "localai":
-      const { LocalAiLLM } = require("../AiProviders/localAi");
+      const { LocalAiLLM } = require("../../core/ai/localAi");
       return LocalAiLLM;
     case "ollama":
-      const { OllamaAILLM } = require("../AiProviders/ollama");
+      const { OllamaAILLM } = require("../../core/ai/ollama");
       return OllamaAILLM;
     case "togetherai":
-      const { TogetherAiLLM } = require("../AiProviders/togetherAi");
+      const { TogetherAiLLM } = require("../../core/ai/togetherAi");
       return TogetherAiLLM;
     case "fireworksai":
-      const { FireworksAiLLM } = require("../AiProviders/fireworksAi");
+      const { FireworksAiLLM } = require("../../core/ai/fireworksAi");
       return FireworksAiLLM;
     case "perplexity":
-      const { PerplexityLLM } = require("../AiProviders/perplexity");
+      const { PerplexityLLM } = require("../../core/ai/perplexity");
       return PerplexityLLM;
     case "openrouter":
-      const { OpenRouterLLM } = require("../AiProviders/openRouter");
+      const { OpenRouterLLM } = require("../../core/ai/openRouter");
       return OpenRouterLLM;
     case "mistral":
-      const { MistralLLM } = require("../AiProviders/mistral");
+      const { MistralLLM } = require("../../core/ai/mistral");
       return MistralLLM;
     case "huggingface":
-      const { HuggingFaceLLM } = require("../AiProviders/huggingface");
+      const { HuggingFaceLLM } = require("../../core/ai/huggingface");
       return HuggingFaceLLM;
     case "groq":
-      const { GroqLLM } = require("../AiProviders/groq");
+      const { GroqLLM } = require("../../core/ai/groq");
       return GroqLLM;
     case "koboldcpp":
-      const { KoboldCPPLLM } = require("../AiProviders/koboldCPP");
+      const { KoboldCPPLLM } = require("../../core/ai/koboldCPP");
       return KoboldCPPLLM;
     case "textgenwebui":
-      const { TextGenWebUILLM } = require("../AiProviders/textGenWebUI");
+      const { TextGenWebUILLM } = require("../../core/ai/textGenWebUI");
       return TextGenWebUILLM;
     case "cohere":
-      const { CohereLLM } = require("../AiProviders/cohere");
+      const { CohereLLM } = require("../../core/ai/cohere");
       return CohereLLM;
     case "litellm":
-      const { LiteLLM } = require("../AiProviders/liteLLM");
+      const { LiteLLM } = require("../../core/ai/liteLLM");
       return LiteLLM;
     case "generic-openai":
-      const { GenericOpenAiLLM } = require("../AiProviders/genericOpenAi");
+      const { GenericOpenAiLLM } = require("../../core/ai/genericOpenAi");
       return GenericOpenAiLLM;
     case "bedrock":
-      const { AWSBedrockLLM } = require("../AiProviders/bedrock");
+      const { AWSBedrockLLM } = require("../../core/ai/bedrock");
       return AWSBedrockLLM;
     case "deepseek":
-      const { DeepSeekLLM } = require("../AiProviders/deepseek");
+      const { DeepSeekLLM } = require("../../core/ai/deepseek");
       return DeepSeekLLM;
     case "apipie":
-      const { ApiPieLLM } = require("../AiProviders/apipie");
+      const { ApiPieLLM } = require("../../core/ai/apipie");
       return ApiPieLLM;
     case "novita":
-      const { NovitaLLM } = require("../AiProviders/novita");
+      const { NovitaLLM } = require("../../core/ai/novita");
       return NovitaLLM;
     case "xai":
-      const { XAiLLM } = require("../AiProviders/xai");
+      const { XAiLLM } = require("../../core/ai/xai");
       return XAiLLM;
     case "nvidia-nim":
-      const { NvidiaNimLLM } = require("../AiProviders/nvidiaNim");
+      const { NvidiaNimLLM } = require("../../core/ai/nvidiaNim");
       return NvidiaNimLLM;
     case "ppio":
-      const { PPIOLLM } = require("../AiProviders/ppio");
+      const { PPIOLLM } = require("../../core/ai/ppio");
       return PPIOLLM;
     case "dpais":
-      const { DellProAiStudioLLM } = require("../AiProviders/dellProAiStudio");
+      const { DellProAiStudioLLM } = require("../../core/ai/dellProAiStudio");
       return DellProAiStudioLLM;
     case "moonshotai":
-      const { MoonshotAiLLM } = require("../AiProviders/moonshotAi");
+      const { MoonshotAiLLM } = require("../../core/ai/moonshotAi");
       return MoonshotAiLLM;
     case "cometapi":
-      const { CometApiLLM } = require("../AiProviders/cometapi");
+      const { CometApiLLM } = require("../../core/ai/cometapi");
       return CometApiLLM;
     case "foundry":
-      const { FoundryLLM } = require("../AiProviders/foundry");
+      const { FoundryLLM } = require("../../core/ai/foundry");
       return FoundryLLM;
     case "zai":
-      const { ZAiLLM } = require("../AiProviders/zai");
+      const { ZAiLLM } = require("../../core/ai/zai");
       return ZAiLLM;
     case "giteeai":
-      const { GiteeAILLM } = require("../AiProviders/giteeai");
+      const { GiteeAILLM } = require("../../core/ai/giteeai");
       return GiteeAILLM;
     default:
       return null;

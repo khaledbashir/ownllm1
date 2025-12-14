@@ -17,7 +17,7 @@ const { v4 } = require("uuid");
 const { SystemSettings } = require("../models/systemSettings");
 const { User } = require("../models/user");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
 const {
   getDefaultFilename,
@@ -746,7 +746,12 @@ function systemEndpoints(app) {
           );
           if (!isWithin(path.resolve(storagePath), path.resolve(oldPfpPath)))
             throw new Error("Invalid path name");
-          if (fs.existsSync(oldPfpPath)) fs.unlinkSync(oldPfpPath);
+          try {
+            await fs.access(oldPfpPath);
+            await fs.unlink(oldPfpPath);
+          } catch {
+            // ignore
+          }
         }
 
         const { success, error } = await User.update(user.id, {
@@ -833,7 +838,12 @@ function systemEndpoints(app) {
           );
           if (!isWithin(path.resolve(storagePath), path.resolve(oldPfpPath)))
             throw new Error("Invalid path name");
-          if (fs.existsSync(oldPfpPath)) fs.unlinkSync(oldPfpPath);
+          try {
+            await fs.access(oldPfpPath);
+            await fs.unlink(oldPfpPath);
+          } catch {
+            // ignore
+          }
         }
 
         const { success, error } = await User.update(user.id, {

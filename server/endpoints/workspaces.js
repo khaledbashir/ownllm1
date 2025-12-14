@@ -1,5 +1,5 @@
 const path = require("path");
-const fs = require("fs");
+const fs = require("fs").promises;
 const {
   reqBody,
   multiUserMode,
@@ -725,7 +725,13 @@ function workspaceEndpoints(app) {
           );
           if (!isWithin(path.resolve(storagePath), path.resolve(oldPfpPath)))
             throw new Error("Invalid path name");
-          if (fs.existsSync(oldPfpPath)) fs.unlinkSync(oldPfpPath);
+
+          try {
+            await fs.access(oldPfpPath);
+            await fs.unlink(oldPfpPath);
+          } catch (e) {
+            // ignore if file doesn't exist
+          }
         }
 
         const { workspace, message } = await Workspace._update(
@@ -766,7 +772,13 @@ function workspaceEndpoints(app) {
           );
           if (!isWithin(path.resolve(storagePath), path.resolve(oldPfpPath)))
             throw new Error("Invalid path name");
-          if (fs.existsSync(oldPfpPath)) fs.unlinkSync(oldPfpPath);
+
+          try {
+            await fs.access(oldPfpPath);
+            await fs.unlink(oldPfpPath);
+          } catch (e) {
+            // ignore if file doesn't exist
+          }
         }
 
         const { workspace, message } = await Workspace._update(

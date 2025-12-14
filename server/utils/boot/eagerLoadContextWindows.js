@@ -15,17 +15,17 @@ async function eagerLoadContextWindows() {
 
   switch (currentProvider) {
     case "lmstudio":
-      const { LMStudioLLM } = require("../AiProviders/lmStudio");
+      const { LMStudioLLM } = require("../../core/ai/lmStudio");
       await LMStudioLLM.cacheContextWindows(true);
       log("LMStudio");
       break;
     case "ollama":
-      const { OllamaAILLM } = require("../AiProviders/ollama");
+      const { OllamaAILLM } = require("../../core/ai/ollama");
       await OllamaAILLM.cacheContextWindows(true);
       log("Ollama");
       break;
     case "foundry":
-      const { FoundryLLM } = require("../AiProviders/foundry");
+      const { FoundryLLM } = require("../../core/ai/foundry");
       await FoundryLLM.cacheContextWindows(true);
       log("Foundry");
       break;

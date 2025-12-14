@@ -1,4 +1,4 @@
-const { PGVector } = require("../../../../utils/vectorDbProviders/pgvector");
+const { PGVector } = require("../../../../core/vector/pgvector");
 
 describe("PGVector.sanitizeForJsonb", () => {
   it("returns null/undefined as-is", () => {
