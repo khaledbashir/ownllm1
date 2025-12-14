@@ -20,14 +20,14 @@ export default function ThinkingAccordion({ content, isStreaming = false }) {
         <div className="mb-3 w-full">
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center gap-x-2 text-white/60 hover:text-white/80 transition-colors group"
+                className="w-full flex items-center gap-x-2 text-theme-text-secondary hover:text-theme-text-primary transition-colors group"
             >
                 <div className="flex items-center gap-x-2 flex-1 min-w-0">
-                    <div className={`p-1 rounded-md ${isStreaming ? "bg-purple-500/20 animate-pulse" : "bg-white/10"}`}>
+                    <div className={`p-1 rounded-md ${isStreaming ? "bg-purple-500/20 animate-pulse" : "bg-theme-action-menu-item-hover"}`}>
                         <Brain
                             size={14}
                             weight="fill"
-                            className={isStreaming ? "text-purple-400" : "text-white/60"}
+                            className={isStreaming ? "text-purple-400" : "text-theme-text-secondary"}
                         />
                     </div>
                     <span className="text-xs font-medium">
@@ -45,8 +45,8 @@ export default function ThinkingAccordion({ content, isStreaming = false }) {
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? "max-h-[400px] opacity-100 mt-2" : "max-h-0 opacity-0"
                     }`}
             >
-                <div className="bg-white/5 rounded-lg p-3 border-l-2 border-purple-500/50">
-                    <pre className="text-xs text-white/70 font-mono whitespace-pre-wrap break-words overflow-y-auto max-h-[350px]">
+                <div className="bg-theme-bg-primary rounded-lg p-3 border-l-2 border-purple-500/50">
+                    <pre className="text-xs text-theme-text-secondary font-mono whitespace-pre-wrap break-words overflow-y-auto max-h-[350px]">
                         {cleanContent}
                     </pre>
                 </div>

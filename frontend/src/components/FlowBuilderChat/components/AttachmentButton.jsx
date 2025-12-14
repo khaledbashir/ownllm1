@@ -13,7 +13,7 @@ function getFileIcon(file) {
     if (type.includes("pdf") || type.includes("document")) {
         return { Icon: FileText, color: "text-red-400" };
     }
-    return { Icon: File, color: "text-blue-400" };
+    return { Icon: File, color: "text-primary-button" };
 }
 
 /**
@@ -94,7 +94,7 @@ export default function AttachmentButton({ attachments = [], onAttach, onRemove 
 
     return (
         <div
-            className={`relative ${isDragOver ? "ring-2 ring-blue-500 ring-opacity-50 rounded-lg" : ""}`}
+            className={`relative ${isDragOver ? "ring-2 ring-primary-button ring-opacity-50 rounded-lg" : ""}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -116,7 +116,7 @@ export default function AttachmentButton({ attachments = [], onAttach, onRemove 
                         return (
                             <div
                                 key={attachment.id}
-                                className="flex items-center gap-1.5 px-2 py-1 bg-white/10 rounded-md text-xs text-white/80 group"
+                                className="flex items-center gap-1.5 px-2 py-1 bg-theme-attachment-bg rounded-md text-xs text-theme-text-primary group border border-theme-modal-border"
                             >
                                 {attachment.preview ? (
                                     <img
@@ -128,12 +128,12 @@ export default function AttachmentButton({ attachments = [], onAttach, onRemove 
                                     <Icon size={14} className={color} weight="fill" />
                                 )}
                                 <span className="max-w-[100px] truncate">{attachment.name}</span>
-                                <span className="text-white/40">{formatSize(attachment.size)}</span>
+                                <span className="text-theme-text-secondary">{formatSize(attachment.size)}</span>
                                 <button
                                     onClick={() => onRemove?.(attachment.id)}
-                                    className="p-0.5 hover:bg-white/10 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                    className="p-0.5 hover:bg-theme-action-menu-item-hover rounded transition-colors opacity-0 group-hover:opacity-100"
                                 >
-                                    <X size={12} className="text-white/60 hover:text-red-400" />
+                                    <X size={12} className="text-theme-text-secondary hover:text-red-400" />
                                 </button>
                             </div>
                         );
@@ -147,7 +147,7 @@ export default function AttachmentButton({ attachments = [], onAttach, onRemove 
                 onClick={handleClick}
                 data-tooltip-id="attach-file-tooltip"
                 data-tooltip-content="Attach files (images, documents)"
-                className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-white/80 transition-colors"
+                className="p-2 rounded-lg hover:bg-theme-action-menu-item-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors"
             >
                 <Paperclip size={20} />
             </button>

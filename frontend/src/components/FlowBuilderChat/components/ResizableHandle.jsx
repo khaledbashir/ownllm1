@@ -69,8 +69,8 @@ export default function ResizableHandle({
             {/* Visual indicator */}
             <div
                 className={`h-12 w-1 rounded-full transition-all duration-200 ${isDragging
-                        ? "bg-blue-500 shadow-lg shadow-blue-500/50"
-                        : "bg-white/20 group-hover:bg-white/40"
+                    ? "bg-primary-button shadow-lg"
+                    : "bg-theme-text-secondary/20 group-hover:bg-theme-text-secondary/40"
                     }`}
             />
         </div>

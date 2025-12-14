@@ -58,7 +58,7 @@ export default function ModelSelector({ onModelChange, selectedModel }) {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 disabled={loading}
-                className="flex items-center gap-x-1.5 px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs transition-all"
+                className="flex items-center gap-x-1.5 px-2 py-1 rounded-md bg-theme-action-menu-bg hover:bg-theme-action-menu-item-hover text-theme-text-secondary hover:text-theme-text-primary text-xs transition-all"
             >
                 <GearSix size={12} weight="fill" />
                 <span className="max-w-[100px] truncate">
@@ -76,15 +76,15 @@ export default function ModelSelector({ onModelChange, selectedModel }) {
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute right-0 top-full mt-1 w-56 bg-theme-bg-primary border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
-                        <div className="px-3 py-2 border-b border-white/10">
-                            <p className="text-xs text-white/50 uppercase tracking-wider">
+                    <div className="absolute right-0 top-full mt-1 w-56 bg-theme-bg-primary border border-theme-modal-border rounded-lg shadow-xl z-50 overflow-hidden">
+                        <div className="px-3 py-2 border-b border-theme-modal-border">
+                            <p className="text-xs text-theme-text-secondary uppercase tracking-wider">
                                 {provider} Models
                             </p>
                         </div>
                         <div className="max-h-60 overflow-y-auto">
                             {models.length === 0 ? (
-                                <div className="px-3 py-4 text-center text-white/40 text-xs">
+                                <div className="px-3 py-4 text-center text-theme-text-secondary text-xs">
                                     No models available
                                 </div>
                             ) : (
@@ -93,13 +93,13 @@ export default function ModelSelector({ onModelChange, selectedModel }) {
                                         key={model.id}
                                         onClick={() => handleSelect(model.id)}
                                         className={`w-full flex items-center px-3 py-2 text-left text-sm transition-colors ${selectedModel === model.id
-                                                ? "bg-blue-500/20 text-blue-400"
-                                                : "text-white/80 hover:bg-white/5"
+                                            ? "bg-primary-button/20 text-primary-button"
+                                            : "text-theme-text-primary hover:bg-theme-action-menu-item-hover"
                                             }`}
                                     >
                                         <span className="truncate">{model.name || model.id}</span>
                                         {selectedModel === model.id && (
-                                            <span className="ml-auto text-xs text-blue-400">✓</span>
+                                            <span className="ml-auto text-xs text-primary-button">✓</span>
                                         )}
                                     </button>
                                 ))
