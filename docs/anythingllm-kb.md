@@ -148,4 +148,25 @@ Upload → Collector (parse/OCR) → Chunking → Embedding → Vector DB → Wo
 | `server` | Core backend (Vector DB, LLM) |
 | `collector` | Document processing |
 
+---
+
+## 🏗️ OwnLLM Custom Schema
+
+Your fork adds these to `workspaces` table:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `products` | JSON | Services/packages with pricing |
+| `rateCard` | JSON | Roles with hourly rates |
+
+**Access in Agent Skills:**
+```javascript
+const Database = require('better-sqlite3');
+const dbPath = path.join(process.env.STORAGE_DIR, 'anythingllm.db');
+const db = new Database(dbPath, { readonly: true });
+
+const row = db.prepare('SELECT products, rateCard FROM workspaces WHERE id = ?')
+  .get(params._workspaceId);
+```
+
 **Auth:** Bearer token in `Authorization` header
