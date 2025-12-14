@@ -37,6 +37,7 @@ const { vaultEndpoints } = require("./endpoints/vault");
 const { smartPluginsEndpoints } = require("./endpoints/smartPlugins");
 const { mobileEndpoints } = require("./endpoints/mobile");
 const { agentTestLabEndpoints } = require("./endpoints/agentTestLab");
+const { inlineAIEndpoints } = require("./endpoints/inlineAI");
 const { httpLogger } = require("./middleware/httpLogger");
 const app = express();
 const apiRouter = express.Router();
@@ -95,6 +96,7 @@ crmEndpoints(apiRouter);
 vaultEndpoints(apiRouter);
 mobileEndpoints(apiRouter);
 agentTestLabEndpoints(apiRouter);
+inlineAIEndpoints(apiRouter);
 
 // Externally facing embedder endpoints
 embeddedEndpoints(apiRouter);

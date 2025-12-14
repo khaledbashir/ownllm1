@@ -20,6 +20,7 @@ import { useEditorContext } from "./EditorContext";
 import { setupAISlashMenu } from "@/utils/aiSlashMenu";
 import { setupAIFormatBar } from "@/utils/aiFormatBar";
 import AIInputModal from "@/components/AIInputModal";
+import InlineAI from "@/models/inlineAI";
 import "./editor.css";
 
 // Pre-made document templates
@@ -955,15 +956,51 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 onSubmit={async (query) => {
                     setAiLoading(true);
                     try {
-                        toast.info(`🤖 AI processing: "${query.slice(0, 50)}..."`);
-                        // TODO: Call AI API and insert response into editor
-                        setTimeout(() => {
-                            toast.success("AI response ready! (Integration coming soon)");
+                        toast.info(`🤖 Generating response...`);
+
+                        // Get context from document
+                        const context = (() => {
+                            try {
+                                const doc = editorRef.current?.doc;
+                                if (!doc) return "";
+                                const blocks = [];
+                                const traverse = (block) => {
+                                    if (block.text?.toString) blocks.push(block.text.toString());
+                                    block.children?.forEach(traverse);
+                                };
+                                if (doc.root) traverse(doc.root);
+                                return blocks.join("\n").slice(-2000); // Last 2000 chars
+                            } catch { return ""; }
+                        })();
+
+                        // Call AI API
+                        const result = await InlineAI.generate("ask", {
+                            query,
+                            context,
+                        });
+
+                        if (result.success && result.content) {
+                            // Insert AI response into editor at cursor
+                            const doc = editorRef.current?.doc;
+                            if (doc) {
+                                const noteBlocks = doc.getBlocksByFlavour("affine:note");
+                                if (noteBlocks.length > 0) {
+                                    const noteId = noteBlocks[0].id;
+                                    // Add AI response as a new paragraph
+                                    doc.addBlock("affine:paragraph", {
+                                        text: new Text(result.content),
+                                    }, noteId);
+                                    toast.success("✨ AI response inserted!");
+                                }
+                            }
                             setShowAIModal(false);
-                            setAiLoading(false);
-                        }, 1500);
+                        } else {
+                            toast.error(result.error || "AI generation failed");
+                        }
                     } catch (error) {
+                        console.error("[AI] Error:", error);
                         toast.error("AI generation failed");
+                    } finally {
                         setAiLoading(false);
                     }
                 }}
