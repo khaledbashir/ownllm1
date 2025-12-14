@@ -79,10 +79,56 @@ function sanitizeNotesMarkdown(raw) {
     return match;
   });
 
+  // NEW: Remove raw JSON objects that span multiple lines (Flow builder configs, transcripts, etc.)
+  // This matches { ... } that contain JSON-like content at the start of message or on their own line
+  const jsonObjectPattern = /^\s*\{[\s\S]*?"[\w]+"[\s\S]*?\}\s*$/gm;
+  text = text.replace(jsonObjectPattern, (match) => {
+    try {
+      JSON.parse(match.trim());
+      return ""; // It's valid JSON - remove it
+    } catch {
+      return match; // Not valid JSON - keep it
+    }
+  });
+
+  // Remove inline JSON objects like {"name":"flow_xxx",...}
+  // Be more aggressive - if it looks like {"key":"value", start JSON and has colon/quotes
+  text = text.replace(/\{"[^"]+"\s*:\s*[\"\{\[]/g, (match, offset) => {
+    // Try to find the matching closing brace
+    let depth = 1;
+    let i = offset + match.length;
+    while (i < text.length && depth > 0) {
+      if (text[i] === '{') depth++;
+      if (text[i] === '}') depth--;
+      i++;
+    }
+    const jsonCandidate = text.substring(offset, i);
+    try {
+      JSON.parse(jsonCandidate);
+      // Return empty to remove - we'll do a full pass after
+      return "";
+    } catch {
+      return match;
+    }
+  });
+
+  // Final pass: Try to detect and remove standalone JSON that looks like a flow config or transcript
+  // Match patterns like: {"name":"...", "blocks":...} or {"transcript":"..."}
+  const flowJsonPattern = /\{[^{}]*"(?:name|blocks|config|transcript|arguments|steps|flow)"[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g;
+  text = text.replace(flowJsonPattern, (match) => {
+    try {
+      JSON.parse(match);
+      return "";
+    } catch {
+      return match;
+    }
+  });
+
   // Normalize excessive whitespace after stripping blocks
   text = text.replace(/\n{3,}/g, "\n\n").trim();
   return text;
 }
+
 
 export default function ChatContainer({ workspace, knownHistory = [] }) {
   const { threadSlug = null } = useParams();
