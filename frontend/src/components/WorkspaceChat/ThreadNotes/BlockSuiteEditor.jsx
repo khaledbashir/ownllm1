@@ -19,6 +19,81 @@ import WorkspaceThread from "@/models/workspaceThread";
 import { useEditorContext } from "./EditorContext";
 import "./editor.css";
 
+// Pre-made document templates
+export const DOC_TEMPLATES = {
+    meeting_notes: {
+        name: "Meeting Notes",
+        icon: "📋",
+        blocks: [
+            { type: "h1", text: "Meeting Notes" },
+            { type: "h2", text: "📅 Date & Attendees" },
+            { type: "paragraph", text: "Date: " },
+            { type: "paragraph", text: "Attendees: " },
+            { type: "h2", text: "📌 Agenda" },
+            { type: "list", items: ["Item 1", "Item 2", "Item 3"] },
+            { type: "h2", text: "💬 Discussion" },
+            { type: "paragraph", text: "" },
+            { type: "h2", text: "✅ Action Items" },
+            { type: "list", items: ["[ ] Task 1 - Owner", "[ ] Task 2 - Owner"] },
+            { type: "h2", text: "📎 Next Steps" },
+            { type: "paragraph", text: "" },
+        ],
+    },
+    proposal: {
+        name: "Proposal",
+        icon: "💼",
+        blocks: [
+            { type: "h1", text: "Project Proposal" },
+            { type: "h2", text: "Executive Summary" },
+            { type: "paragraph", text: "Brief overview of the proposed project..." },
+            { type: "h2", text: "Scope of Work" },
+            { type: "list", items: ["Deliverable 1", "Deliverable 2", "Deliverable 3"] },
+            { type: "h2", text: "Timeline" },
+            { type: "paragraph", text: "Estimated duration: X weeks" },
+            { type: "h2", text: "Investment" },
+            { type: "paragraph", text: "Total: $X,XXX" },
+            { type: "h2", text: "Terms & Conditions" },
+            { type: "paragraph", text: "" },
+        ],
+    },
+    invoice: {
+        name: "Invoice",
+        icon: "🧾",
+        blocks: [
+            { type: "h1", text: "INVOICE" },
+            { type: "paragraph", text: "Invoice #: INV-XXXX" },
+            { type: "paragraph", text: "Date: " },
+            { type: "h2", text: "Bill To" },
+            { type: "paragraph", text: "Client Name" },
+            { type: "paragraph", text: "Company" },
+            { type: "paragraph", text: "Address" },
+            { type: "h2", text: "Services" },
+            { type: "list", items: ["Service 1 - $XXX", "Service 2 - $XXX"] },
+            { type: "h2", text: "Total: $X,XXX" },
+            { type: "paragraph", text: "Payment due within 30 days." },
+        ],
+    },
+    project_brief: {
+        name: "Project Brief",
+        icon: "📑",
+        blocks: [
+            { type: "h1", text: "Project Brief" },
+            { type: "h2", text: "Background" },
+            { type: "paragraph", text: "Context and reason for the project..." },
+            { type: "h2", text: "Objectives" },
+            { type: "list", items: ["Objective 1", "Objective 2", "Objective 3"] },
+            { type: "h2", text: "Target Audience" },
+            { type: "paragraph", text: "" },
+            { type: "h2", text: "Key Deliverables" },
+            { type: "list", items: ["Deliverable 1", "Deliverable 2"] },
+            { type: "h2", text: "Success Metrics" },
+            { type: "paragraph", text: "" },
+            { type: "h2", text: "Budget & Timeline" },
+            { type: "paragraph", text: "" },
+        ],
+    },
+};
+
 /**
  * BlockSuiteEditor - Notion-like block editor using AffineEditorContainer
  * 
@@ -353,6 +428,70 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 }
             }
         },
+
+        // Load a pre-made document template
+        loadTemplate: (templateKey) => {
+            const template = DOC_TEMPLATES[templateKey];
+            if (!template) {
+                toast.error("Template not found");
+                return;
+            }
+
+            const editor = editorRef.current;
+            if (!editor || !editor.doc) {
+                toast.error("Editor not ready");
+                return;
+            }
+
+            const doc = editor.doc;
+            const collection = collectionRef.current;
+
+            try {
+                // Find the note block to add content to
+                const pageBlock = doc.root;
+                if (!pageBlock) return;
+
+                const noteBlock = pageBlock.children?.find(b => b.flavour === "affine:note");
+                if (!noteBlock) return;
+
+                // Clear existing content (except the first empty paragraph)
+                const children = [...(noteBlock.children || [])];
+                children.forEach(child => {
+                    try {
+                        doc.deleteBlock(child);
+                    } catch (e) {
+                        // Ignore
+                    }
+                });
+
+                // Add template blocks
+                template.blocks.forEach(block => {
+                    if (block.type === "h1" || block.type === "h2" || block.type === "h3") {
+                        doc.addBlock("affine:paragraph", {
+                            type: block.type,
+                            text: new Text(block.text),
+                        }, noteBlock.id);
+                    } else if (block.type === "paragraph") {
+                        doc.addBlock("affine:paragraph", {
+                            text: new Text(block.text),
+                        }, noteBlock.id);
+                    } else if (block.type === "list") {
+                        block.items.forEach(item => {
+                            doc.addBlock("affine:list", {
+                                type: "bulleted",
+                                text: new Text(item),
+                            }, noteBlock.id);
+                        });
+                    }
+                });
+
+                toast.success(`Loaded "${template.name}" template`);
+            } catch (error) {
+                console.error("[BlockSuiteEditor] Failed to load template:", error);
+                toast.error("Failed to load template");
+            }
+        },
+
         getEditor: () => editorRef.current,
     }));
 

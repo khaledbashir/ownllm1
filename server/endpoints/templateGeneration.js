@@ -128,6 +128,42 @@ Apply these brand settings to the template design.`;
             }
         }
     );
+
+    // Export HTML to PDF
+    app.post(
+        "/templates/export-pdf",
+        [validatedRequest, flexUserRoleValid([ROLES.all])],
+        async (request, response) => {
+            try {
+                const { html, filename } = request.body;
+
+                if (!html) {
+                    return response.status(400).json({
+                        success: false,
+                        error: "HTML content is required",
+                    });
+                }
+
+                const { generatePdf } = require("../utils/pdfExport");
+                const pdfBuffer = await generatePdf(html);
+
+                response.setHeader("Content-Type", "application/pdf");
+                response.setHeader(
+                    "Content-Disposition",
+                    `attachment; filename="${filename || "template"}.pdf"`
+                );
+                response.send(pdfBuffer);
+
+            } catch (error) {
+                console.error("[TemplateExport] Error:", error);
+                return response.status(500).json({
+                    success: false,
+                    error: error.message || "Failed to export PDF",
+                });
+            }
+        }
+    );
 }
 
 module.exports = { templateGenerationEndpoints };
+

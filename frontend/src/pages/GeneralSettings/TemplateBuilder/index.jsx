@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Sidebar from "@/components/SettingsSidebar";
 import { isMobile } from "react-device-detect";
 import { SandpackProvider, SandpackLayout, SandpackPreview } from "@codesandbox/sandpack-react";
-import { PaperPlaneTilt, Sparkle, FloppyDisk, Spinner, ArrowClockwise, Image as ImageIcon, CaretDown } from "@phosphor-icons/react";
+import { PaperPlaneTilt, Sparkle, FloppyDisk, Spinner, ArrowClockwise, Image as ImageIcon, CaretDown, FilePdf } from "@phosphor-icons/react";
 import showToast from "@/utils/toast";
 import PdfTemplates from "@/models/pdfTemplates";
 import ReactMarkdown from "react-markdown";
@@ -53,6 +53,7 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
 export default function TemplateBuilder() {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [exporting, setExporting] = useState(false);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [templateHtml, setTemplateHtml] = useState(DEFAULT_TEMPLATE);
@@ -179,6 +180,48 @@ export default function TemplateBuilder() {
         }
     };
 
+    const handleExportPdf = async () => {
+        if (exporting || templateHtml === DEFAULT_TEMPLATE) return;
+        setExporting(true);
+
+        try {
+            const AUTH_TOKEN = localStorage.getItem("anythingllm_authToken");
+            const response = await fetch("/api/templates/export-pdf", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: AUTH_TOKEN ? `Bearer ${AUTH_TOKEN}` : undefined,
+                },
+                body: JSON.stringify({
+                    html: templateHtml,
+                    filename: templateName || "template",
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.error || "Failed to export PDF");
+            }
+
+            // Download the PDF
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${templateName || "template"}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            showToast("PDF exported successfully!", "success");
+        } catch (e) {
+            showToast(e.message || "Error exporting PDF", "error");
+        } finally {
+            setExporting(false);
+        }
+    };
+
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -232,7 +275,19 @@ export default function TemplateBuilder() {
                             ) : (
                                 <FloppyDisk size={18} />
                             )}
-                            Save Template
+                            Save
+                        </button>
+                        <button
+                            onClick={handleExportPdf}
+                            disabled={exporting || templateHtml === DEFAULT_TEMPLATE}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {exporting ? (
+                                <Spinner className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <FilePdf size={18} />
+                            )}
+                            PDF
                         </button>
                     </div>
                 </div>
