@@ -317,6 +317,16 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 continue;
             }
 
+            // Image (placeholder for now)
+            if (trimmed.startsWith("![")) {
+                doc.addBlock("affine:paragraph", {
+                    type: "quote",
+                    text: new Text("📸 [Screenshot Captured]")
+                }, noteBlockId);
+                i++;
+                continue;
+            }
+
             // Regular paragraph
             doc.addBlock("affine:paragraph", {
                 text: new Text(parseInlineFormatting(trimmed))
@@ -416,16 +426,31 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 console.log("[BlockSuiteEditor] Successfully parsed and inserted markdown");
             } catch (e) {
                 console.error("[BlockSuiteEditor] parseMarkdownToBlocks failed:", e);
-                // Fallback: just add simple paragraphs
+                // Fallback
                 try {
                     const lines = markdown.split("\n").filter(l => l.trim());
                     for (const line of lines) {
                         doc.addBlock("affine:paragraph", { text: new Text(line) }, noteBlock.id);
                     }
-                    console.log("[BlockSuiteEditor] Fallback: added simple paragraphs");
                 } catch (fallbackError) {
-                    console.error("[BlockSuiteEditor] Fallback also failed:", fallbackError);
+                    console.error("[BlockSuiteEditor] Fallback failed:", fallbackError);
                 }
+            }
+        },
+
+        // Simply append markdown content to the end of the doc
+        appendMarkdown: async (markdown) => {
+            if (!editorRef.current || !markdown) return;
+            const doc = editorRef.current.doc;
+            if (!doc) return;
+
+            const noteBlock = doc.getBlocksByFlavour("affine:note")[0];
+            if (!noteBlock) return;
+
+            try {
+                parseMarkdownToBlocks(doc, noteBlock.id, markdown);
+            } catch (e) {
+                console.error("[BlockSuiteEditor] appendMarkdown failed:", e);
             }
         },
 
