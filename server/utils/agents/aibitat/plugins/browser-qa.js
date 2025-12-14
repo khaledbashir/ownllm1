@@ -109,9 +109,19 @@ const browserQA = {
                         const baseUrl = process.env.PUPPETEER_WSS_URL ||
                             process.env.BROWSER_WS_URL ||
                             'ws://browserless:3000';
-                        return baseUrl.includes('/playwright')
-                            ? baseUrl
-                            : `${baseUrl}/playwright/chromium`;
+
+                        // If URL already has /playwright in it, use as-is
+                        if (baseUrl.includes('/playwright')) {
+                            return baseUrl;
+                        }
+
+                        // Parse URL to preserve query params (like token)
+                        const urlObj = new URL(baseUrl);
+                        const queryString = urlObj.search; // e.g. ?token=xxx
+                        const baseWithoutQuery = `${urlObj.protocol}//${urlObj.host}`;
+
+                        // Add playwright path and preserve query params
+                        return `${baseWithoutQuery}/chromium/playwright${queryString}`;
                     },
 
                     /**

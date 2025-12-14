@@ -6,9 +6,20 @@ const { chromium } = require('playwright-core');
  * @returns {Promise<Buffer>} - The PDF buffer
  */
 async function generatePdf(htmlContent) {
-    // Browserless.io expects Playwright connections at /playwright/chromium
+    // Get base URL from env
     const baseUrl = process.env.PUPPETEER_WSS_URL || process.env.BROWSER_WS_URL || 'ws://browserless:3000';
-    const browserWSEndpoint = baseUrl.includes('/playwright') ? baseUrl : `${baseUrl}/playwright/chromium`;
+
+    let browserWSEndpoint;
+    if (baseUrl.includes('/playwright')) {
+        // Already has playwright path, use as-is
+        browserWSEndpoint = baseUrl;
+    } else {
+        // Parse URL to preserve query params (like token)
+        const urlObj = new URL(baseUrl);
+        const queryString = urlObj.search; // e.g. ?token=xxx
+        const baseWithoutQuery = `${urlObj.protocol}//${urlObj.host}`;
+        browserWSEndpoint = `${baseWithoutQuery}/playwright/chromium${queryString}`;
+    }
 
     if (!htmlContent) throw new Error("HTML content is required");
 
