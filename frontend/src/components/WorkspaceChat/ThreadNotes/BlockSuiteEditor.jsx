@@ -718,11 +718,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             <div className="flex flex-col h-full relative">
                 {/* Header with buttons */}
                 <div className="sticky top-0 z-20 flex justify-end gap-x-2 px-4 py-2 bg-theme-bg-secondary border-b border-theme-sidebar-border">
-                    {/* Embed to Workspace button */}
+                    {/* Action buttons styled like mode pills but differentiated */}
                     <button
                         onClick={handleEmbed}
                         disabled={embedding || !isReady || !threadSlug}
-                        className="flex items-center gap-x-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-x-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-sm font-medium rounded-full border border-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                         title="Embed this doc into workspace for AI retrieval"
                     >
                         {embedding ? (
@@ -730,13 +730,13 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                         ) : (
                             <Database className="w-4 h-4" />
                         )}
-                        {embedding ? "Embedding..." : "Embed to Workspace"}
+                        {embedding ? "Embedding..." : "Embed"}
                     </button>
                     {/* Export PDF button */}
                     <button
                         onClick={() => setShowExportModal(true)}
                         disabled={exporting || !isReady}
-                        className="flex items-center gap-x-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-x-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-sm font-medium rounded-full border border-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     >
                         {exporting ? (
                             <CircleNotch className="w-4 h-4 animate-spin" />
