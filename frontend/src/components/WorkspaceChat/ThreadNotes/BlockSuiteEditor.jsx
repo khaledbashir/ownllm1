@@ -18,6 +18,7 @@ import ExportPdfModal from "./ExportPdfModal";
 import WorkspaceThread from "@/models/workspaceThread";
 import { useEditorContext } from "./EditorContext";
 import { setupAISlashMenu } from "@/utils/aiSlashMenu";
+import { setupAIFormatBar } from "@/utils/aiFormatBar";
 import AIInputModal from "@/components/AIInputModal";
 import "./editor.css";
 
@@ -183,6 +184,15 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 // TODO: Get text, translate, replace
                 break;
 
+            case "selection":
+                // AI action from format bar (text selection)
+                const { selectedText } = context;
+                if (selectedText) {
+                    toast.info(`🤖 AI processing selected text: "${selectedText.slice(0, 30)}..."`);
+                    setShowAIModal(true);
+                }
+                break;
+
             default:
                 toast.error(`Unknown AI action: ${actionType}`);
         }
@@ -276,12 +286,20 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     try {
                         // Access the page root element and its widgets
                         const pageRoot = editor.querySelector('affine-page-root');
+
+                        // Setup AI Slash Menu
                         if (pageRoot?.widgetElements?.['affine-slash-menu-widget']) {
                             const slashMenu = pageRoot.widgetElements['affine-slash-menu-widget'];
                             setupAISlashMenu(slashMenu, handleAIAction);
                         }
+
+                        // Setup AI Format Bar (selection toolbar)
+                        if (pageRoot?.widgetElements?.['affine-format-bar-widget']) {
+                            const formatBar = pageRoot.widgetElements['affine-format-bar-widget'];
+                            setupAIFormatBar(formatBar, handleAIAction);
+                        }
                     } catch (err) {
-                        console.warn('[BlockSuiteEditor] Could not setup AI slash menu:', err);
+                        console.warn('[BlockSuiteEditor] Could not setup AI widgets:', err);
                     }
                 }, 500);
 
