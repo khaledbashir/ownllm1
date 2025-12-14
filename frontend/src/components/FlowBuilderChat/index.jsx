@@ -63,7 +63,7 @@ function MessageBubble({ message, onApplyFlow }) {
             <div
                 className={`max-w-[90%] rounded-2xl px-4 py-3 ${isUser
                     ? "bg-primary-button text-white rounded-br-md shadow-lg"
-                    : "bg-theme-bg-chat-input text-theme-text-primary rounded-bl-md border border-theme-modal-border"
+                    : "bg-zinc-800/90 text-white rounded-bl-md border border-zinc-700 shadow-md"
                     }`}
             >
                 {/* Thinking accordion for assistant messages */}
@@ -257,6 +257,12 @@ export default function FlowBuilderChat({ onFlowGenerated }) {
             showToast("Error communicating with AI", "error");
         } finally {
             setLoading(false);
+            // Auto-focus textarea after AI responds
+            setTimeout(() => {
+                if (textareaRef.current) {
+                    textareaRef.current.focus();
+                }
+            }, 100);
         }
     };
 
@@ -287,8 +293,8 @@ export default function FlowBuilderChat({ onFlowGenerated }) {
         setAttachments(prev => prev.filter(a => a.id !== id));
     };
 
-    // Dynamic sizing
-    const panelHeight = isExpanded ? "85vh" : "550px";
+    // Dynamic sizing - max 70vh to avoid covering top buttons
+    const panelHeight = isExpanded ? "70vh" : "500px";
     const actualWidth = isExpanded ? Math.min(panelWidth * 1.3, MAX_WIDTH) : panelWidth;
 
     return (

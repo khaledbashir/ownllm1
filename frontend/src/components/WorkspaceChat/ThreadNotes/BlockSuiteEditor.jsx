@@ -18,6 +18,7 @@ import ExportPdfModal from "./ExportPdfModal";
 import WorkspaceThread from "@/models/workspaceThread";
 import { useEditorContext } from "./EditorContext";
 import { setupAISlashMenu } from "@/utils/aiSlashMenu";
+import AIInputModal from "@/components/AIInputModal";
 import "./editor.css";
 
 // Pre-made document templates
@@ -119,6 +120,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     const [exporting, setExporting] = useState(false);
     const [embedding, setEmbedding] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
+    const [showAIModal, setShowAIModal] = useState(false);
+    const [aiLoading, setAiLoading] = useState(false);
 
     // Handler for AI slash menu actions
     const handleAIAction = async (actionType, context) => {
@@ -149,12 +152,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         switch (actionType) {
             case "ask":
-                // For now, show a prompt - later this will open an AI input modal
-                const query = window.prompt("Ask AI anything:");
-                if (query) {
-                    toast.info(`🤖 AI processing: "${query}"`);
-                    // TODO: Call AI API and insert response
-                }
+                // Open custom AI input modal
+                setShowAIModal(true);
                 break;
 
             case "continue":
@@ -929,6 +928,27 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 onClose={() => setShowExportModal(false)}
                 onExport={handleExport}
                 exporting={exporting}
+            />
+
+            <AIInputModal
+                isOpen={showAIModal}
+                onClose={() => setShowAIModal(false)}
+                loading={aiLoading}
+                onSubmit={async (query) => {
+                    setAiLoading(true);
+                    try {
+                        toast.info(`🤖 AI processing: "${query.slice(0, 50)}..."`);
+                        // TODO: Call AI API and insert response into editor
+                        setTimeout(() => {
+                            toast.success("AI response ready! (Integration coming soon)");
+                            setShowAIModal(false);
+                            setAiLoading(false);
+                        }, 1500);
+                    } catch (error) {
+                        toast.error("AI generation failed");
+                        setAiLoading(false);
+                    }
+                }}
             />
         </>
     );
