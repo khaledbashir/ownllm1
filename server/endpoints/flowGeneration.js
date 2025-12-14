@@ -4,6 +4,8 @@ const {
     flexUserRoleValid,
     ROLES,
 } = require("../utils/middleware/multiUserProtected");
+const { IntegrationVault } = require("../models/integrationVault");
+const { PublicApiRegistry } = require("../models/publicApiRegistry");
 
 // Schema for all available block types
 const FLOW_BLOCKS_SCHEMA = {
@@ -52,38 +54,62 @@ const FLOW_BLOCKS_SCHEMA = {
     },
 };
 
-const FLOW_BUILDER_SYSTEM_PROMPT = `You are a Flow Builder AI assistant. Your job is to HELP users build automation flows by understanding their needs and gathering requirements BEFORE generating.
+const FLOW_BUILDER_SYSTEM_PROMPT = `You are a Flow Builder AI assistant. Your job is to build automation flows with MINIMAL user questions.
 
 ## AVAILABLE BLOCK TYPES:
 ${JSON.stringify(FLOW_BLOCKS_SCHEMA, null, 2)}
 
-## CRITICAL RULES:
-1. NEVER generate a flow until you have ALL required information from the user
-2. ALWAYS ask clarifying questions first
-3. List what inputs you need from the user before proceeding
-4. REFUSE to generate until user provides all required values (URLs, API keys, webhooks, etc.)
-5. Only output the final flow JSON when the user provides everything
+## 🔑 SMART AUTOCOMPLETE SYSTEM:
+Before asking the user for ANY endpoint, API key, or configuration:
 
-## YOUR CONVERSATION FLOW:
-1. User describes what they want
-2. You acknowledge and explain what you understood
-3. You list the REQUIRED inputs needed (actual URLs, API keys, specific values)
-4. You wait for user to provide these with ☐ checkboxes
-5. Once complete, generate the flow JSON in a code block
+### 1. CHECK USER'S VAULT FIRST
+The following services are pre-configured in the user's vault (if available):
+[VAULT_ENTRIES]
 
-## RESPONSE FORMAT FOR GATHERING REQUIREMENTS:
-"Got it! To build this flow, I need the following from you:
+If the user mentions a service that's in their vault, USE IT DIRECTLY without asking.
+Example: User says "send Slack notification" and Slack is in vault → Use the saved webhook, don't ask.
 
-☐ [First required input - describe what you need]
-☐ [Second required input - describe what you need]
-☐ [etc...]
+### 2. USE PUBLIC API REGISTRY FOR GENERIC NEEDS
+For common requests like jokes, quotes, weather, facts, images - we have verified free APIs:
+[PUBLIC_APIS]
 
-Please provide these values and I'll create your flow!"
+If user asks for something generic, USE these pre-verified endpoints directly.
+Example: User says "get a random joke" → Use JokeAPI (https://v2.jokeapi.dev/joke/Any), don't ask.
 
-## RESPONSE FORMAT FOR FINAL FLOW (only when all info provided):
+### 3. ONLY ASK WHEN BOTH FAIL
+Only ask the user for input when:
+- Service is NOT in their vault
+- AND no suitable public API exists
+- AND you cannot proceed without the info
+
+## RESPONSE PRIORITY:
+1. ✅ VAULT HAS IT → Use directly, inform user what you used
+2. ✅ PUBLIC API EXISTS → Use it, inform user what you chose
+3. ⚠️ NEITHER → Then ask, listing what's needed
+
+## EXAMPLE RESPONSES:
+
+**When vault has Slack:**
+User: "Send Slack message when deal closes"
+You: "Great! I found your Slack webhook in the vault. Building your flow..."
+[Generate flow with saved webhook]
+
+**When using public API:**
+User: "I want a random joke generator"
+You: "I'll use JokeAPI - it's free and reliable. Here's your flow:"
+[Generate flow with https://v2.jokeapi.dev/joke/Any]
+
+**Only when needed:**
+User: "Post to my custom internal system"
+You: "I need one thing:
+☐ Your internal API endpoint URL
+
+Once you provide this, I'll build your flow!"
+
+## FLOW JSON FORMAT:
 \`\`\`json
 {
-  "name": "Flow name here",
+  "name": "Flow name",
   "description": "What this flow does",
   "blocks": [
     {
@@ -98,18 +124,30 @@ Please provide these values and I'll create your flow!"
 }
 \`\`\`
 
-## EXAMPLE CONVERSATION:
-User: "I want to monitor my website and get a Slack notification if it goes down"
+Remember: The goal is MINIMAL QUESTIONS. Use vault and public APIs aggressively.`;
 
-You: "Got it! To build this website monitoring flow, I need:
+// Build dynamic prompt with actual vault/api data
+function buildFlowBuilderPrompt(vaultEntries = [], publicApis = []) {
+    let prompt = FLOW_BUILDER_SYSTEM_PROMPT;
 
-☐ Your website URL to monitor (e.g., https://example.com)
-☐ Your Slack webhook URL (looks like https://hooks.slack.com/services/...)
-☐ How often to check (every 5 min? hourly?)
+    // Inject vault entries
+    if (vaultEntries.length > 0) {
+        const vaultList = vaultEntries.map(e => `- ${e.service}: "${e.name}" (${e.category})`).join("\n");
+        prompt = prompt.replace("[VAULT_ENTRIES]", vaultList);
+    } else {
+        prompt = prompt.replace("[VAULT_ENTRIES]", "(No saved integrations yet)");
+    }
 
-Please provide these and I'll build your flow!"
+    // Inject public APIs
+    if (publicApis.length > 0) {
+        const apiList = publicApis.map(a => `- ${a.category}: ${a.name} → ${a.endpoint} (${a.authType})`).join("\n");
+        prompt = prompt.replace("[PUBLIC_APIS]", apiList);
+    } else {
+        prompt = prompt.replace("[PUBLIC_APIS]", "(No cached public APIs)");
+    }
 
-Remember: NEVER guess or make up URLs, API keys, or specific values. Always ask the user for real values.`;
+    return prompt;
+}
 
 function flowGenerationEndpoints(app) {
     if (!app) return;
@@ -163,9 +201,17 @@ function flowGenerationEndpoints(app) {
                     attachmentContext = `\n\n## User Attachments:\n${attachmentDescriptions}\n`;
                 }
 
+                // Fetch user's vault entries and public APIs for smart autocomplete
+                const user = response.locals.user;
+                const vaultEntries = await IntegrationVault.getAll(user?.id);
+                const publicApis = await PublicApiRegistry.search(""); // Get all cached APIs
+
+                // Build dynamic prompt with injected data
+                const systemPrompt = buildFlowBuilderPrompt(vaultEntries, publicApis);
+
                 // Prepare messages for the LLM
                 const chatMessages = [
-                    { role: "system", content: FLOW_BUILDER_SYSTEM_PROMPT + attachmentContext },
+                    { role: "system", content: systemPrompt + attachmentContext },
                     ...messages.map((m) => ({
                         role: m.role,
                         content: m.content,

@@ -89,6 +89,7 @@ model users {
   smart_plugins               smart_plugins[]
   crm_pipelines               crm_pipelines[]
   crm_cards                   crm_cards[]
+  integration_vault           integration_vault[]
 }
 
 model recovery_codes {
@@ -516,4 +517,45 @@ model crm_cards {
   @@index([pipelineId])
   @@index([stage])
   @@index([userId])
+}
+
+// Vault for storing user's integration configs (API keys, webhooks, endpoints)
+// Flow Builder checks this FIRST before asking user questions
+model integration_vault {
+  id          Int      @id @default(autoincrement())
+  service     String   // slack, hubspot, stripe, crm, custom, etc.
+  name        String   // Display name: "My Slack Workspace"
+  configJson  String   // Encrypted: { webhook, apiKey, endpoint, headers, etc. }
+  category    String   @default("integration") // integration, api, webhook, internal
+  userId      Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, service, name])
+  @@index([userId])
+  @@index([service])
+}
+
+// Public API registry - cached free APIs for common use cases
+model public_api_registry {
+  id           Int      @id @default(autoincrement())
+  category     String   // jokes, weather, translation, stocks, etc.
+  name         String   // JokeAPI, OpenWeatherMap, etc.
+  endpoint     String   // https://v2.jokeapi.dev/joke/Any
+  method       String   @default("GET")
+  authType     String   @default("none") // none, apiKey, bearer, basic
+  headers      String?  // JSON: { "X-Api-Key": "required" }
+  bodySchema   String?  // JSON schema for request body
+  responseExample String? // Example response
+  docsUrl      String?
+  isVerified   Boolean  @default(false)
+  lastTestedAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([category, name])
+  @@index([category])
 }
