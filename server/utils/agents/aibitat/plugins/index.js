@@ -8,6 +8,7 @@ const { memory } = require("./memory.js");
 const { rechart } = require("./rechart.js");
 const { sqlAgent } = require("./sql-agent/index.js");
 const { productExtraction } = require("./product-extraction.js");
+const { apiTester } = require("./api-tester.js");
 
 module.exports = {
   webScraping,
@@ -20,6 +21,7 @@ module.exports = {
   rechart,
   sqlAgent,
   productExtraction,
+  apiTester,
 
   // Plugin name aliases so they can be pulled by slug as well.
   [webScraping.name]: webScraping,
@@ -32,4 +34,6 @@ module.exports = {
   [rechart.name]: rechart,
   [sqlAgent.name]: sqlAgent,
   [productExtraction.name]: productExtraction,
+  [apiTester.name]: apiTester,
 };
+
