@@ -164,6 +164,24 @@ app.all("*", function (_, response) {
   response.sendStatus(404);
 });
 
+// Auto-seed public API registry on boot
+async function seedPublicApis() {
+  try {
+    const { PublicApiRegistry } = require("./models/publicApiRegistry");
+    const result = await PublicApiRegistry.seed();
+    console.log(`[PublicApiRegistry] Seeded ${result.count} APIs`);
+  } catch (e) {
+    // Ignore if table doesn't exist yet (migration not run)
+    console.log("[PublicApiRegistry] Seed skipped (migration may be pending)");
+  }
+}
+
 // In non-https mode we need to boot at the end since the server has not yet
 // started and is `.listen`ing.
-if (!process.env.ENABLE_HTTPS) bootHTTP(app, process.env.SERVER_PORT || 3001);
+if (!process.env.ENABLE_HTTPS) {
+  // Seed APIs then start server
+  seedPublicApis().then(() => {
+    bootHTTP(app, process.env.SERVER_PORT || 3001);
+  });
+}
+
