@@ -254,7 +254,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 continue;
             }
 
-            // Markdown table detection - collect all table rows
+            // Markdown table detection - create proper affine:database block
             if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
                 const tableLines = [];
                 while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
@@ -266,17 +266,67 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     }
                     i++;
                 }
-                // Render table as formatted code block for clean display
-                if (tableLines.length > 0) {
-                    // Parse table into clean format
-                    const formattedTable = tableLines.map(row => {
-                        return row.split("|").filter(cell => cell.trim()).map(cell => cell.trim()).join(" | ");
-                    }).join("\n");
 
-                    doc.addBlock("affine:code", {
-                        text: new Text(formattedTable),
-                        language: "markdown"
+                if (tableLines.length > 0) {
+                    // Parse header row (first line) and data rows
+                    const parseRow = (row) => row.split("|").filter(cell => cell.trim()).map(cell => cell.trim());
+                    const headerCells = parseRow(tableLines[0]);
+                    const dataRows = tableLines.slice(1).map(parseRow);
+
+                    // Generate unique IDs for columns
+                    const genId = () => Math.random().toString(36).substring(2, 10);
+                    const viewsColumns = headerCells.map(() => ({
+                        id: genId(),
+                        hide: false,
+                        width: 180,
+                    }));
+
+                    // Build columns definition
+                    const columns = headerCells.map((header, index) => ({
+                        type: index === 0 ? "title" : "rich-text",
+                        name: header,
+                        data: {},
+                        id: viewsColumns[index].id,
+                    }));
+
+                    // Build cells object for each row
+                    const cells = {};
+                    dataRows.forEach(row => {
+                        const rowId = genId();
+                        cells[rowId] = {};
+                        row.slice(1).forEach((cellValue, index) => {
+                            if (viewsColumns[index + 1]) {
+                                cells[rowId][viewsColumns[index + 1].id] = {
+                                    columnId: viewsColumns[index + 1].id,
+                                    value: { "$blocksuite:internal:text$": true, delta: [{ insert: cellValue }] },
+                                };
+                            }
+                        });
+                    });
+
+                    // Create the database block
+                    const databaseId = doc.addBlock("affine:database", {
+                        views: [{
+                            id: genId(),
+                            name: "Table View",
+                            mode: "table",
+                            columns: [],
+                            filter: { type: "group", op: "and", conditions: [] },
+                            header: { titleColumn: viewsColumns[0]?.id, iconColumn: "type" },
+                        }],
+                        title: new Text(""),
+                        cells,
+                        columns,
                     }, noteBlockId);
+
+                    // Add paragraph rows for first column (title column)
+                    dataRows.forEach((row, rowIndex) => {
+                        const rowId = Object.keys(cells)[rowIndex];
+                        doc.addBlock("affine:paragraph", {
+                            text: new Text(row[0] || ""),
+                            type: "text",
+                        }, databaseId);
+                    });
                 }
                 continue;
             }
