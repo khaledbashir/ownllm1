@@ -2,11 +2,17 @@ import React, { useState, useRef, useEffect } from "react";
 import Sidebar from "@/components/SettingsSidebar";
 import { isMobile } from "react-device-detect";
 import { SandpackProvider, SandpackLayout, SandpackPreview } from "@codesandbox/sandpack-react";
-import { PaperPlaneTilt, Sparkle, FloppyDisk, FilePdf, Spinner, ArrowClockwise } from "@phosphor-icons/react";
+import { PaperPlaneTilt, Sparkle, FloppyDisk, Spinner, ArrowClockwise, Image as ImageIcon, CaretDown } from "@phosphor-icons/react";
 import showToast from "@/utils/toast";
 import PdfTemplates from "@/models/pdfTemplates";
-import { streamChat } from "@/models/workspace";
-import System from "@/models/system";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import DOMPurify from "dompurify";
+
+// Think tag regex patterns
+const THINK_REGEX_OPEN = /<(think|thinking|thought)\s*>/i;
+const THINK_REGEX_CLOSE = /<\/(think|thinking|thought)\s*>/i;
+const THINK_REGEX_COMPLETE = /<(think|thinking|thought)\s*>[\s\S]*?<\/\1\s*>/i;
 
 // Default HTML template to start with
 const DEFAULT_TEMPLATE = `<!DOCTYPE html>
@@ -52,6 +58,7 @@ export default function TemplateBuilder() {
     const [templateHtml, setTemplateHtml] = useState(DEFAULT_TEMPLATE);
     const [templateName, setTemplateName] = useState("");
     const [brandSettings, setBrandSettings] = useState(null);
+    const [logoUrl, setLogoUrl] = useState("");
     const chatEndRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -101,7 +108,10 @@ export default function TemplateBuilder() {
                         ...messages.map((m) => ({ role: m.role, content: m.content })),
                         { role: "user", content: userMessage },
                     ],
-                    brandContext: brandSettings,
+                    brandContext: {
+                        ...brandSettings,
+                        logoPath: logoUrl || brandSettings?.logoPath || null,
+                    },
                 }),
             });
 
@@ -200,8 +210,18 @@ export default function TemplateBuilder() {
                             placeholder="Template name..."
                             value={templateName}
                             onChange={(e) => setTemplateName(e.target.value)}
-                            className="bg-theme-bg-primary border border-theme-border-primary rounded-lg px-3 py-2 text-sm text-white w-48"
+                            className="bg-theme-bg-primary border border-theme-border-primary rounded-lg px-3 py-2 text-sm text-white w-36"
                         />
+                        <div className="flex items-center gap-1 bg-theme-bg-primary border border-theme-border-primary rounded-lg px-2 py-2">
+                            <ImageIcon size={16} className="text-theme-text-secondary" />
+                            <input
+                                type="text"
+                                placeholder="Logo URL..."
+                                value={logoUrl}
+                                onChange={(e) => setLogoUrl(e.target.value)}
+                                className="bg-transparent text-sm text-white w-32 focus:outline-none"
+                            />
+                        </div>
                         <button
                             onClick={handleSaveTemplate}
                             disabled={saving || !templateName.trim()}
@@ -259,12 +279,12 @@ export default function TemplateBuilder() {
                                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                                 >
                                     <div
-                                        className={`max-w-[80%] px-4 py-3 rounded-2xl ${msg.role === "user"
+                                        className={`max-w-[85%] px-4 py-3 rounded-2xl ${msg.role === "user"
                                             ? "bg-blue-600 text-white"
                                             : "bg-theme-bg-primary text-theme-text-primary"
                                             }`}
                                     >
-                                        {msg.content}
+                                        <MessageContent content={msg.content} role={msg.role} />
                                     </div>
                                 </div>
                             ))}
@@ -334,6 +354,98 @@ export default function TemplateBuilder() {
                     </div>
                 </div>
             </div>
+        </div>
+    );
+}
+
+// Message content component with think tag accordion and markdown
+function MessageContent({ content, role }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    if (!content) return null;
+
+    // User messages render as plain text
+    if (role === "user") {
+        return <span>{content}</span>;
+    }
+
+    // Check for think tags
+    let thoughtContent = null;
+    let mainContent = content;
+
+    // Extract complete think tag
+    const completeMatch = content.match(THINK_REGEX_COMPLETE);
+    if (completeMatch) {
+        thoughtContent = completeMatch[0];
+        mainContent = content.replace(THINK_REGEX_COMPLETE, "").trim();
+    } else if (content.match(THINK_REGEX_OPEN) && content.match(THINK_REGEX_CLOSE)) {
+        // Handle mismatched but present tags
+        const closeMatch = content.match(THINK_REGEX_CLOSE);
+        const splitIndex = content.indexOf(closeMatch[0]) + closeMatch[0].length;
+        thoughtContent = content.substring(0, splitIndex);
+        mainContent = content.substring(splitIndex).trim();
+    }
+
+    // Strip tags from thought content for display
+    const strippedThought = thoughtContent
+        ?.replace(THINK_REGEX_OPEN, "")
+        ?.replace(THINK_REGEX_CLOSE, "")
+        ?.trim();
+
+    return (
+        <div className="space-y-2">
+            {/* Think Accordion */}
+            {strippedThought && (
+                <div className="bg-theme-bg-secondary rounded-lg overflow-hidden">
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-sm text-theme-text-secondary hover:bg-theme-bg-container transition-colors"
+                    >
+                        <span className="flex items-center gap-2">
+                            <span className="text-yellow-400">💭</span>
+                            <span className="font-medium">AI Thinking</span>
+                        </span>
+                        <CaretDown
+                            size={16}
+                            className={`transform transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                        />
+                    </button>
+                    {isExpanded && (
+                        <div className="px-3 pb-3 text-sm text-theme-text-secondary prose prose-invert prose-sm max-w-none">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {strippedThought}
+                            </ReactMarkdown>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Main Content with Markdown */}
+            {mainContent && (
+                <div className="prose prose-invert prose-sm max-w-none">
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                            table: ({ node, ...props }) => (
+                                <table className="min-w-full border border-theme-sidebar-border" {...props} />
+                            ),
+                            th: ({ node, ...props }) => (
+                                <th className="border border-theme-sidebar-border px-2 py-1 bg-theme-bg-secondary" {...props} />
+                            ),
+                            td: ({ node, ...props }) => (
+                                <td className="border border-theme-sidebar-border px-2 py-1" {...props} />
+                            ),
+                            code: ({ node, inline, ...props }) => (
+                                inline
+                                    ? <code className="bg-theme-bg-secondary px-1 rounded" {...props} />
+                                    : <code className="block bg-theme-bg-secondary p-2 rounded overflow-x-auto" {...props} />
+                            ),
+                        }}
+                    >
+                        {mainContent}
+                    </ReactMarkdown>
+                </div>
+            )}
         </div>
     );
 }
