@@ -43,7 +43,7 @@ export default function BrandManager() {
 
         // Timeout wrapper - don't hang forever
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Request timed out. Please check your connection and try again.")), 8000)
+            setTimeout(() => reject(new Error("Request timed out. Please check your connection and try again.")), 120000)
         );
 
         try {
@@ -78,9 +78,21 @@ export default function BrandManager() {
         if (!prompt) return;
         setGenerating(true);
         const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`;
-        // We set the URL directly. Pollinations is real-time.
-        setTemplate((prev) => ({ ...prev, backgroundImage: url }));
-        setGenerating(false);
+
+        // Validate image load before setting
+        try {
+            await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = url;
+            });
+            setTemplate((prev) => ({ ...prev, backgroundImage: url }));
+        } catch (e) {
+            showToast("Failed to generate background. Service may be busy.", "error");
+        } finally {
+            setGenerating(false);
+        }
     };
 
     return (
