@@ -43,6 +43,7 @@ const SUPPORT_CUSTOM_MODELS = [
   "cohere",
   "zai",
   "giteeai",
+  "generic-openai",
   // Embedding Engines
   "native-embedder",
   "cohere-embedder",
@@ -116,6 +117,8 @@ async function getCustomModels(provider = "", apiKey = null, basePath = null) {
       return await getOpenRouterEmbeddingModels();
     case "giteeai":
       return await getGiteeAIModels(apiKey);
+    case "generic-openai":
+      return await getGenericOpenAiModels(apiKey, basePath);
     default:
       return { models: [], error: "Invalid provider for custom models" };
   }
@@ -799,6 +802,30 @@ async function getFoundryModels(basePath = null) {
  * @param {'chat' | 'embed'} type - The type of model to get
  * @returns {Promise<{models: Array<{id: string, organization: string, name: string}>, error: string | null}>}
  */
+async function getGenericOpenAiModels(apiKey = null, basePath = null) {
+  const { OpenAI: OpenAIApi } = require("openai");
+  const openai = new OpenAIApi({
+    baseURL: basePath || process.env.GENERIC_OPEN_AI_BASE_PATH,
+    apiKey: apiKey || process.env.GENERIC_OPEN_AI_API_KEY,
+  });
+
+  const models = await openai.models
+    .list()
+    .then((results) => results.data)
+    .catch((e) => {
+      console.error(`GenericOpenAi:listModels`, e.message);
+      return [];
+    });
+
+  const formattedModels = models.map((model) => ({
+    id: model.id,
+    name: model.id,
+    organization: model.owned_by,
+  }));
+
+  return { models: formattedModels, error: null };
+}
+
 async function getCohereModels(_apiKey = null, type = "chat") {
   const apiKey =
     _apiKey === true
