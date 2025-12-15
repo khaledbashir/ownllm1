@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import DocumentTemplates from "@/pages/GeneralSettings/DocumentTemplates";
 import App from "@/App.jsx";
 import PrivateRoute, {
   AdminRoute,
@@ -228,12 +229,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/settings/document-templates",
-        lazy: async () => {
-          const { default: DocumentTemplates } = await import(
-            "@/pages/GeneralSettings/DocumentTemplates"
-          );
-          return { element: <ManagerRoute Component={DocumentTemplates} /> };
-        },
+        element: <ManagerRoute Component={DocumentTemplates} />,
       },
 
       {
