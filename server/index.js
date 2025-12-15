@@ -34,6 +34,7 @@ const { artifactsEndpoints } = require("./endpoints/artifacts");
 
 const { vaultEndpoints } = require("./endpoints/vault");
 const { smartPluginsEndpoints } = require("./endpoints/smartPlugins");
+const { flowGenerationEndpoints } = require("./endpoints/flowGeneration");
 const { mobileEndpoints } = require("./endpoints/mobile");
 const { agentTestLabEndpoints } = require("./endpoints/agentTestLab");
 const { inlineAIEndpoints } = require("./endpoints/inlineAI");

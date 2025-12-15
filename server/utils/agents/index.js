@@ -9,7 +9,6 @@ const { safeJsonParse } = require("../http");
 const { USER_AGENT, WORKSPACE_AGENT } = require("./defaults");
 const ImportedPlugin = require("./imported");
 const { AgentFlows } = require("../agentFlows");
-const { AgentFlows } = require("../agentFlows");
 const MCPCompatibilityLayer = require("../MCP");
 const { getVectorDbClass, getLLMProvider } = require("../helpers");
 const { DocumentManager } = require("../DocumentManager");
@@ -601,8 +600,6 @@ class AgentHandler {
       ? await User.get({ id: Number(this.invocation.user_id) })
       : null;
     const userAgentDef = await USER_AGENT.getDefinition();
-    user
-    );
     const workspaceAgentDef = await WORKSPACE_AGENT.getDefinition(
       this.provider,
       this.invocation.workspace,
