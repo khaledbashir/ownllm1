@@ -38,6 +38,7 @@ const { flowGenerationEndpoints } = require("./endpoints/flowGeneration");
 const { mobileEndpoints } = require("./endpoints/mobile");
 const { agentTestLabEndpoints } = require("./endpoints/agentTestLab");
 const { inlineAIEndpoints } = require("./endpoints/inlineAI");
+const { templatesEndpoints } = require("./endpoints/templates");
 const { httpLogger } = require("./middleware/httpLogger");
 const app = express();
 const apiRouter = express.Router();
@@ -97,6 +98,7 @@ vaultEndpoints(apiRouter);
 mobileEndpoints(apiRouter);
 agentTestLabEndpoints(apiRouter);
 inlineAIEndpoints(apiRouter);
+templatesEndpoints(apiRouter);
 
 // Externally facing embedder endpoints
 embeddedEndpoints(apiRouter);
