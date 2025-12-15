@@ -22,6 +22,13 @@ const router = createBrowserRouter([
       {
         path: "/",
         lazy: async () => {
+          const { default: MarketingHome } = await import("@/pages/MarketingHome");
+          return { element: <MarketingHome /> };
+        },
+      },
+      {
+        path: "/app",
+        lazy: async () => {
           const { default: Main } = await import("@/pages/Main");
           return { element: <PrivateRoute Component={Main} /> };
         },

@@ -13,6 +13,9 @@ function applyOptions(path, options = {}) {
 
 export default {
   home: () => {
+    return "/app";
+  },
+  marketing: () => {
     return "/";
   },
   login: (noTry = false) => {
