@@ -80,6 +80,24 @@ const FLOW_TYPES = {
       },
     },
   },
+  EXECUTE_AGENT: {
+    type: "executeAgent",
+    description: "Execute a workspace agent with a prompt",
+    parameters: {
+      prompt: {
+        type: "string",
+        description: "The prompt to send to the agent",
+      },
+      workspaceId: {
+        type: "string",
+        description: "Optional: ID of the workspace to use (defaults to current)",
+      },
+      resultVariable: {
+        type: "string",
+        description: "Variable to store the agent's text response",
+      },
+    },
+  },
 };
 
 module.exports.FLOW_TYPES = FLOW_TYPES;

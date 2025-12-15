@@ -16,7 +16,6 @@ export default class PdfTemplates {
     }
 
     static async create(data) {
-        console.log("[PdfTemplates] Creating template with data:", data);
         try {
             const response = await fetch(`${API_BASE}/templates`, {
                 method: "POST",
@@ -26,8 +25,6 @@ export default class PdfTemplates {
                 },
                 body: JSON.stringify(data),
             });
-            console.log("[PdfTemplates] Response status:", response.status);
-            console.log("[PdfTemplates] Response ok:", response.ok);
 
             const payload = await response.json().catch((e) => {
                 console.error("[PdfTemplates] JSON parse error:", e);

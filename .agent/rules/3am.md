@@ -22,7 +22,7 @@ Brutal Honesty: If my request is stupid, incomplete, or dangerous, tell me. If i
 
 Anti-MVP: We are building for real. No "placeholder" logic. No basic HTML inputs.
 
-Vibe: High-end, Dark Mode, Enterprise. Think "Cyberpunk SaaS," not "Bootstrap default."
+Vibe: High-end, Dark Mode, Enterprise. Think "Cyberpunk SaaS," not "Bootstrap default." never purple chilidish shiny shit either
 
 2. THE TECH STACK (LOCKED)
 Do not suggest new tools unless necessary. Work with what we have:

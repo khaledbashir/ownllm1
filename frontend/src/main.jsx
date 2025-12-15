@@ -227,14 +227,15 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "/settings/brand-manager",
+        path: "/settings/document-templates",
         lazy: async () => {
-          const { default: BrandManager } = await import(
-            "@/pages/GeneralSettings/BrandManager"
+          const { default: DocumentTemplates } = await import(
+            "@/pages/GeneralSettings/DocumentTemplates"
           );
-          return { element: <ManagerRoute Component={BrandManager} /> };
+          return { element: <ManagerRoute Component={DocumentTemplates} /> };
         },
       },
+
       {
         path: "/settings/smart-plugins",
         lazy: async () => {

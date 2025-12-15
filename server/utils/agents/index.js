@@ -9,7 +9,14 @@ const { safeJsonParse } = require("../http");
 const { USER_AGENT, WORKSPACE_AGENT } = require("./defaults");
 const ImportedPlugin = require("./imported");
 const { AgentFlows } = require("../agentFlows");
+const { AgentFlows } = require("../agentFlows");
 const MCPCompatibilityLayer = require("../MCP");
+const { getVectorDbClass, getLLMProvider } = require("../helpers");
+const { DocumentManager } = require("../DocumentManager");
+const { WorkspaceParsedFiles } = require("../../models/workspaceParsedFiles");
+const {
+  sourceIdentifier,
+} = require("../chats");
 
 class AgentHandler {
   #invocationUUID;
@@ -362,6 +369,64 @@ class AgentHandler {
     return this.providerDefault();
   }
 
+  async #searchContext() {
+    try {
+      if (!this.invocation.workspace) return [];
+      const workspace = this.invocation.workspace;
+      const message = this.invocation.prompt;
+
+      const VectorDb = getVectorDbClass();
+      const hasVectorizedSpace = await VectorDb.hasNamespace(workspace.slug);
+      const embeddingsCount = await VectorDb.namespaceCount(workspace.slug);
+
+      // If no embeddings, skip vector search but still check pinned docs
+      const contextTexts = [];
+
+      const LLMConnector = getLLMProvider({
+        provider: workspace?.chatProvider,
+        model: workspace?.chatModel,
+      });
+
+      // Pinned Docs
+      await new DocumentManager({
+        workspace,
+        maxTokens: LLMConnector.promptWindowLimit(),
+      })
+        .pinnedDocs()
+        .then((pinnedDocs) => {
+          pinnedDocs.forEach((doc) => {
+            const { pageContent, ...metadata } = doc;
+            contextTexts.push({
+              text: pageContent,
+              ...metadata,
+            });
+          });
+        });
+
+      // Vector Search
+      if (hasVectorizedSpace && embeddingsCount > 0) {
+        const vectorSearchResults = await VectorDb.performSimilaritySearch({
+          namespace: workspace.slug,
+          input: message,
+          LLMConnector,
+          similarityThreshold: workspace.similarityThreshold,
+          topN: workspace.topN,
+          filterString: null // Agents don't support filters yet
+        });
+
+        vectorSearchResults.forEach((result) => {
+          contextTexts.push(result);
+        });
+      }
+
+      return contextTexts;
+
+    } catch (e) {
+      this.log("Error fetching RAG context for agent", e.message);
+      return [];
+    }
+  }
+
   #providerSetupAndCheck() {
     this.provider = this.invocation.workspace.agentProvider ?? null; // set provider to workspace agent provider if it exists
     this.model = this.#fetchModel();
@@ -536,10 +601,13 @@ class AgentHandler {
       ? await User.get({ id: Number(this.invocation.user_id) })
       : null;
     const userAgentDef = await USER_AGENT.getDefinition();
+    user
+    );
     const workspaceAgentDef = await WORKSPACE_AGENT.getDefinition(
       this.provider,
       this.invocation.workspace,
-      user
+      user,
+      await this.#searchContext()
     );
 
     this.aibitat.agent(USER_AGENT.name, userAgentDef);

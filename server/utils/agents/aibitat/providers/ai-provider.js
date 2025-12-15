@@ -345,14 +345,25 @@ class Provider {
     provider = null,
     workspace = null,
     user = null,
+    context = [], // Array of strings or object with text property
   }) {
-    if (!workspace?.openAiPrompt)
-      return Provider.defaultSystemPromptForProvider(provider);
-    return await SystemPromptVariables.expandSystemPromptVariables(
-      workspace.openAiPrompt,
-      user?.id || null,
-      workspace.id
-    );
+    let prompt = Provider.defaultSystemPromptForProvider(provider);
+    if (workspace?.openAiPrompt) {
+      prompt = await SystemPromptVariables.expandSystemPromptVariables(
+        workspace.openAiPrompt,
+        user?.id || null,
+        workspace.id
+      );
+    }
+
+    if (context.length > 0) {
+      const contextString = context
+        .map((c) => (typeof c === "string" ? c : c.text))
+        .join("\n");
+      prompt += `\n\n## Relevant Context\nThe following information was retrieved from the workspace knowledge base and may be useful in answering the user's request.\n\n${contextString}`;
+    }
+
+    return prompt;
   }
 
   /**

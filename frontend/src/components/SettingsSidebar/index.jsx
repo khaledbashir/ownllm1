@@ -342,8 +342,8 @@ const SidebarOptions = ({ user = null, t }) => (
               roles: ["admin", "manager"],
             },
             {
-              btnText: "Brand Manager",
-              href: paths.settings.brandManager(),
+              btnText: "Document Templates",
+              href: paths.settings.documentTemplates(),
               flex: true,
               roles: ["admin", "manager"],
             },

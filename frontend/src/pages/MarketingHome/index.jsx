@@ -127,11 +127,11 @@ export default function MarketingHome() {
                     <p className="text-sm font-medium text-gray-500 mb-8 uppercase tracking-wider">Trusted by innovative teams worldwide</p>
                     <div className="flex justify-center flex-wrap gap-12 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
                         {/* Simple text logos for now */}
-                        <span className="text-xl font-bold">ACME Corp</span>
-                        <span className="text-xl font-bold">TechFlow</span>
-                        <span className="text-xl font-bold">DevScale</span>
-                        <span className="text-xl font-bold">FutureAI</span>
-                        <span className="text-xl font-bold">AgencyX</span>
+                        <span className="text-xl font-bold opacity-50">CLIENT 1</span>
+                        <span className="text-xl font-bold opacity-50">CLIENT 2</span>
+                        <span className="text-xl font-bold opacity-50">CLIENT 3</span>
+                        <span className="text-xl font-bold opacity-50">CLIENT 4</span>
+                        <span className="text-xl font-bold opacity-50">CLIENT 5</span>
                     </div>
                 </div>
             </section>
@@ -150,8 +150,8 @@ export default function MarketingHome() {
                                 key={persona}
                                 onClick={() => setActivePersona(persona)}
                                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activePersona === persona
-                                        ? 'bg-white text-black shadow-lg'
-                                        : 'text-gray-400 hover:text-white'
+                                    ? 'bg-white text-black shadow-lg'
+                                    : 'text-gray-400 hover:text-white'
                                     }`}
                             >
                                 {persona.charAt(0).toUpperCase() + persona.slice(1)}
@@ -241,7 +241,7 @@ export default function MarketingHome() {
 
                     <div className="bg-gradient-to-br from-white/10 to-transparent p-1 rounded-2xl border border-white/10">
                         <div className="bg-[#1b1b1e] rounded-xl p-8 h-full min-h-[400px] flex items-center justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20 transform rotate-12 scale-150"></div>
                             {/* Abstract Visual Representation */}
                             {activePersona === 'entrepreneur' && <RocketLaunch size={120} weight="thin" className="text-blue-500/50" />}
                             {activePersona === 'agency' && <Users size={120} weight="thin" className="text-purple-500/50" />}

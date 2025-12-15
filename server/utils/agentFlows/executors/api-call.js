@@ -48,9 +48,11 @@ async function executeApiCall(config, context) {
     introspect(`API call completed`);
     return await response
       .text()
-      .then((text) =>
-        safeJsonParse(text, "Failed to parse output from API call block")
-      );
+      .then((text) => {
+        const parsed = safeJsonParse(text, null);
+        if (parsed === null) throw new Error("Failed to parse output from API call block");
+        return parsed;
+      });
   } catch (error) {
     console.error(error);
     throw new Error(`API Call failed: ${error.message}`);

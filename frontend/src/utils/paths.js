@@ -151,8 +151,8 @@ export default {
     branding: () => {
       return "/settings/branding";
     },
-    brandManager: () => {
-      return "/settings/brand-manager";
+    documentTemplates: () => {
+      return "/settings/document-templates";
     },
     smartPlugins: () => {
       return "/settings/smart-plugins";

@@ -33,9 +33,14 @@ const WORKSPACE_AGENT = {
    * @param {import("@prisma/client").users | null} user
    * @returns {Promise<{ role: string, functions: object[] }>}
    */
-  getDefinition: async (provider = null, workspace = null, user = null) => {
+  getDefinition: async (
+    provider = null,
+    workspace = null,
+    user = null,
+    context = []
+  ) => {
     return {
-      role: await Provider.systemPrompt({ provider, workspace, user }),
+      role: await Provider.systemPrompt({ provider, workspace, user, context }),
       functions: [
         ...(await agentSkillsFromSystemSettings()),
         ...ImportedPlugin.activeImportedPlugins(),
