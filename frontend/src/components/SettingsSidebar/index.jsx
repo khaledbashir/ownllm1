@@ -507,7 +507,7 @@ function AppVersion() {
       rel="noreferrer"
       className="text-theme-text-secondary light:opacity-80 opacity-50 text-xs mx-3"
     >
-      v{version}
+      v{version}-POST-FIX
     </Link>
   );
 }
