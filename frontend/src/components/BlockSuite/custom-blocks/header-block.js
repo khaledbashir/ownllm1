@@ -1,9 +1,9 @@
-import { BlockView } from '@blocksuite/store';
+import { ShadowlessElement } from '@blocksuite/block-std';
 import { html } from 'lit';
 
-export class HeaderBlock extends BlockView {
-    render() {
-        return html`
+export class HeaderBlock extends ShadowlessElement {
+  render() {
+    return html`
       <div style="
         padding: 24px 0;
         border-bottom: 2px solid #e5e7eb;
@@ -39,20 +39,20 @@ export class HeaderBlock extends BlockView {
         </div>
       </div>
     `;
-    }
+  }
 }
 
 if (!window.customElements.get('header-block')) {
-    window.customElements.define('header-block', HeaderBlock);
+  window.customElements.define('header-block', HeaderBlock);
 }
 
 export const HeaderBlockSchema = {
-    flavour: 'custom:header',
-    metadata: {
-        version: 1,
-        role: 'content',
-    },
-    view: {
-        component: 'header-block'
-    }
+  flavour: 'custom:header',
+  metadata: {
+    version: 1,
+    role: 'content',
+  },
+  view: {
+    component: 'header-block'
+  }
 };

@@ -1,7 +1,7 @@
-import { BlockView } from '@blocksuite/store';
+import { ShadowlessElement } from '@blocksuite/block-std';
 import { html } from 'lit';
 
-export class FooterBlock extends BlockView {
+export class FooterBlock extends ShadowlessElement {
   render() {
     return html`
       <div style="
