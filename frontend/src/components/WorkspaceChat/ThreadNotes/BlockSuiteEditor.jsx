@@ -11,11 +11,12 @@ import { Schema, DocCollection, Text, Job } from "@blocksuite/store";
 import { AffineSchemas } from "@blocksuite/blocks";
 import "@blocksuite/presets/themes/affine.css";
 
-import { FilePdf, CircleNotch, Database } from "@phosphor-icons/react";
+import { FilePdf, CircleNotch, Database, FileDoc, CaretDown } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
 import WorkspaceThread from "@/models/workspaceThread";
+import PdfTemplates from "@/models/pdfTemplates";
 import { useEditorContext } from "./EditorContext";
 import { setupAISlashMenu } from "@/utils/aiSlashMenu";
 import { setupAIFormatBar } from "@/utils/aiFormatBar";
@@ -124,6 +125,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     const [showExportModal, setShowExportModal] = useState(false);
     const [showAIModal, setShowAIModal] = useState(false);
     const [aiLoading, setAiLoading] = useState(false);
+
+    // Brand template state
+    const [brandTemplates, setBrandTemplates] = useState([]);
+    const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
+    const [loadingTemplates, setLoadingTemplates] = useState(false);
 
     // Handler for AI slash menu actions
     const handleAIAction = async (actionType, context) => {
@@ -899,11 +905,135 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         }
     };
 
+    // Fetch brand templates from database
+    const fetchBrandTemplates = async () => {
+        setLoadingTemplates(true);
+        try {
+            const templates = await PdfTemplates.list();
+            setBrandTemplates(templates || []);
+        } catch (error) {
+            console.error("Failed to fetch brand templates:", error);
+            toast.error("Failed to load templates");
+        } finally {
+            setLoadingTemplates(false);
+        }
+    };
+
+    // Apply a brand template (header + footer) to current document
+    const applyBrandTemplate = (template) => {
+        const editor = editorRef.current;
+        if (!editor || !editor.doc) {
+            toast.error("Editor not ready");
+            return;
+        }
+
+        const doc = editor.doc;
+
+        try {
+            // Find the note block to insert content
+            const noteBlocks = doc.getBlocksByFlavour("affine:note");
+            if (noteBlocks.length === 0) {
+                toast.error("No editable area found");
+                return;
+            }
+            const noteBlock = noteBlocks[0];
+
+            // Create header paragraph with template styling
+            const headerText = `${template.headerText || template.name}`;
+            doc.addBlock("affine:paragraph", {
+                type: "h1",
+                text: new Text(headerText),
+            }, noteBlock.id);
+
+            // Add separator
+            doc.addBlock("affine:divider", {}, noteBlock.id);
+
+            // Add placeholder for content
+            doc.addBlock("affine:paragraph", {
+                text: new Text(""),
+            }, noteBlock.id);
+
+            // Add footer
+            if (template.footerText) {
+                doc.addBlock("affine:divider", {}, noteBlock.id);
+                doc.addBlock("affine:paragraph", {
+                    text: new Text(template.footerText),
+                }, noteBlock.id);
+            }
+
+            toast.success(`Applied "${template.name}" template`);
+            setShowTemplateDropdown(false);
+        } catch (error) {
+            console.error("Failed to apply brand template:", error);
+            toast.error("Failed to apply template");
+        }
+    };
+
     return (
         <>
             <div className="flex flex-col h-full relative">
                 {/* Header with buttons */}
                 <div className="sticky top-0 z-20 flex justify-end gap-x-2 px-4 py-2 bg-theme-bg-secondary border-b border-theme-sidebar-border">
+                    {/* Brand Template Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => {
+                                if (!showTemplateDropdown && brandTemplates.length === 0) {
+                                    fetchBrandTemplates();
+                                }
+                                setShowTemplateDropdown(!showTemplateDropdown);
+                            }}
+                            disabled={!isReady}
+                            className="flex items-center gap-x-2 px-4 py-1.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-white/80 hover:text-white text-sm font-medium rounded-full border border-blue-400/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            title="Apply a saved brand template"
+                        >
+                            <FileDoc className="w-4 h-4" />
+                            Brand
+                            <CaretDown className="w-3 h-3" />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {showTemplateDropdown && (
+                            <div className="absolute top-full right-0 mt-1 w-56 bg-theme-bg-secondary border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                                {loadingTemplates ? (
+                                    <div className="px-4 py-3 text-center text-white/50 text-sm">
+                                        <CircleNotch className="w-4 h-4 animate-spin inline mr-2" />
+                                        Loading...
+                                    </div>
+                                ) : brandTemplates.length === 0 ? (
+                                    <div className="px-4 py-3 text-center text-white/50 text-sm">
+                                        No templates saved yet.
+                                        <br />
+                                        <span className="text-xs">Create one in Settings → Document Templates</span>
+                                    </div>
+                                ) : (
+                                    brandTemplates.map((template) => (
+                                        <button
+                                            key={template.id}
+                                            onClick={() => applyBrandTemplate(template)}
+                                            className="w-full px-4 py-2 text-left text-white/80 hover:bg-white/10 flex items-center gap-3 transition-colors"
+                                        >
+                                            <div
+                                                className="w-6 h-6 rounded flex items-center justify-center text-white text-xs font-bold shrink-0"
+                                                style={{ backgroundColor: template.primaryColor || "#3b82f6" }}
+                                            >
+                                                {template.logoPath ? (
+                                                    <img src={template.logoPath} alt="" className="w-full h-full object-contain rounded" />
+                                                ) : (
+                                                    template.name?.charAt(0) || "T"
+                                                )}
+                                            </div>
+                                            <div className="overflow-hidden">
+                                                <div className="font-medium text-sm truncate">{template.name}</div>
+                                                <div className="text-xs text-white/40 truncate">{template.headerText || "No header"}</div>
+                                            </div>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Action buttons styled like mode pills but differentiated */}
                     <button
                         onClick={handleEmbed}
