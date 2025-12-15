@@ -173,6 +173,8 @@ async function seedPublicApis() {
     const { PublicApiRegistry } = require("./models/publicApiRegistry");
     const result = await PublicApiRegistry.seed();
     console.log(`[PublicApiRegistry] Seeded ${result.count} APIs`);
+    console.log("!!! SERVER STARTUP CHECK - POST-FIX !!!");
+    console.log("!!! IF YOU SEE THIS, SERVER CODE IS UPDATED !!!");
   } catch (e) {
     // Ignore if table doesn't exist yet (migration not run)
     console.log("[PublicApiRegistry] Seed skipped (migration may be pending)");
