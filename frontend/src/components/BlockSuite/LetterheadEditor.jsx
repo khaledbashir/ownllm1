@@ -27,27 +27,27 @@ export default function LetterheadEditor() {
                 // Create a new document
                 const doc = collection.createDoc({ id: "letterhead-template" });
 
-                // Initialize Document Structure: Root -> Header -> Note -> Footer
-                doc.load(() => {
-                    // Root: Page Block
-                    const pageId = doc.addBlock("affine:page", {});
+                // CRITICAL: Call load() with no arguments first
+                doc.load();
 
-                    // Surface (Canvas layer, usually required by Affine Editor)
-                    doc.addBlock("affine:surface", {}, pageId);
+                // Now add the block structure AFTER load()
+                // Root: Page Block
+                const pageId = doc.addBlock("affine:page", {});
 
-                    // 1. Header Block (Locked/Static view)
-                    doc.addBlock("custom:header", {}, pageId);
+                // Surface (Canvas layer, usually required by Affine Editor)
+                doc.addBlock("affine:surface", {}, pageId);
 
-                    // 2. Note Block (Editable Content Area)
-                    // The note block acts as the container for standard paragraphs/lists
-                    const noteId = doc.addBlock("affine:note", {}, pageId);
-                    doc.addBlock("affine:paragraph", {
-                        text: new Text("Type your letter content here...")
-                    }, noteId);
+                // 1. Header Block (Locked/Static view)
+                doc.addBlock("custom:header", {}, pageId);
 
-                    // 3. Footer Block (Locked/Static view)
-                    doc.addBlock("custom:footer", {}, pageId);
-                });
+                // 2. Note Block (Editable Content Area)
+                const noteId = doc.addBlock("affine:note", {}, pageId);
+                doc.addBlock("affine:paragraph", {
+                    text: new Text("Type your letter content here...")
+                }, noteId);
+
+                // 3. Footer Block (Locked/Static view)
+                doc.addBlock("custom:footer", {}, pageId);
 
                 // Mount Editor
                 const editor = new AffineEditorContainer();
@@ -59,9 +59,6 @@ export default function LetterheadEditor() {
 
                 editorRef.current = editor;
                 setIsReady(true);
-
-                // Auto-save logic (Snapshot) could go here
-                // ...
 
             } catch (error) {
                 console.error("Failed to initialize Letterhead Editor:", error);
