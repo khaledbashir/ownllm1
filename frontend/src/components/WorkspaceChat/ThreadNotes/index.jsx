@@ -188,7 +188,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
     return (
         <EditorProvider>
             <div className="flex-1 overflow-hidden relative flex flex-col">
-                <div className="sticky top-0 z-10 bg-theme-bg-secondary border-b border-theme-sidebar-border flex items-center justify-between gap-x-2 px-3 py-2">
+                <div className="sticky top-0 z-30 bg-theme-bg-secondary border-b border-theme-sidebar-border flex items-center justify-between gap-x-2 px-3 py-2">
                     <div className="flex items-center gap-x-3">
                         <div className="text-sm font-semibold text-white">
                             Actions
@@ -219,32 +219,6 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                                 </div>
                             )}
                         </div>
-                    </div>
-                    <div className="flex items-center gap-x-2">
-                        <button
-                            type="button"
-                            disabled={!!smartActionLoading}
-                            onClick={() => runSmartAction("meeting_notes")}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {smartActionLoading === "meeting_notes" ? "Working..." : "AI Notes"}
-                        </button>
-                        <button
-                            type="button"
-                            disabled={!!smartActionLoading}
-                            onClick={() => runSmartAction("draft_proposal")}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {smartActionLoading === "draft_proposal" ? "Working..." : "AI Proposal"}
-                        </button>
-                        <button
-                            type="button"
-                            disabled={!!smartActionLoading}
-                            onClick={() => runSmartAction("quick_quote")}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {smartActionLoading === "quick_quote" ? "Working..." : "AI Quote"}
-                        </button>
                     </div>
                 </div>
                 <BlockEditorErrorBoundary>
