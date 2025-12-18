@@ -170,7 +170,7 @@ export default function TemplateBuilder() {
                 primaryColor: brandSettings?.primaryColor || "#3b82f6",
                 secondaryColor: brandSettings?.secondaryColor || "#1e293b",
                 fontFamily: brandSettings?.fontFamily || "Inter",
-                cssOverrides: templateHtml,
+                cssOverrides: templateHtml, // Using cssOverrides to store full HTML template
                 isDefault: false,
             });
 
