@@ -773,6 +773,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
             // 1. Serialize Doc to Standard HTML
             const bodyHtml = await serializeDocToHtml(doc);
+            if (!bodyHtml || bodyHtml.includes("No content found")) {
+                throw new Error("Serialized document is empty. Please verify content exists.");
+            }
 
             // 2. Build the Full HTML Wrapper with Styles and Google Fonts
             const editorHtml = `<!DOCTYPE html>
@@ -819,7 +822,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         h3 { font-size: 1.4em; font-weight: 600; margin-top: 1.3em; margin-bottom: 0.5em; color: var(--heading-color); }
         h4, h5, h6 { font-size: 1.1em; font-weight: 600; margin-top: 1.2em; margin-bottom: 0.5em; }
         
-        p { margin-bottom: 1em; text-align: justify; }
+        p { margin-bottom: 1em; }
         
         /* Lists */
         ul, ol { margin-bottom: 1em; padding-left: 1.5em; }
@@ -1319,135 +1322,134 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
 // Helper to recursively serialize BlockSuite doc to HTML
 const serializeDocToHtml = async (doc) => {
-    let html = "";
-    const noteBlock = doc.getBlocksByFlavour("affine:note")[0];
-    if (!noteBlock) return "<p>No content</p>";
+    if (!doc.root) return "<p>No content found (Empty Root)</p>";
 
-    // Helper to get text content from a block
     const getText = (block) => {
-        if (block.text) return block.text.toString();
-        // Fallback for some block types
+        // Try various text access patterns
+        if (block.text?.toString) return block.text.toString();
+        if (block.model?.text?.toString) return block.model.text.toString();
         return "";
     };
 
-    // Helper to process children
     const processBlock = async (block) => {
-        const type = block.flavour;
+        if (!block) return "";
+        const flavour = block.flavour;
+        const model = block.model || {};
         const text = getText(block);
-        const model = block.model;
 
-        // SKIP: certain internal blocks
-        if (type === "affine:surface" || type === "affine:page") return "";
+        let html = "";
+        let childHtml = "";
 
-        let content = "";
+        // Recursively process children first
+        if (block.children) {
+            for (const child of block.children) {
+                childHtml += await processBlock(child);
+            }
+        }
 
-        // HEADINGS & PARAGRAPHS
-        if (type === "affine:paragraph") {
-            const blockType = model.type || "text"; // h1, h2, h3, quote, text
-            if (blockType === "h1") content = `<h1>${text}</h1>`;
-            else if (blockType === "h2") content = `<h2>${text}</h2>`;
-            else if (blockType === "h3") content = `<h3>${text}</h3>`;
-            else if (blockType === "quote") content = `<blockquote>${text}</blockquote>`;
-            else content = `<p>${text}</p>`;
-        }
-        // LISTS
-        else if (type === "affine:list") {
-            const listType = model.type === "numbered" ? "ol" : "ul";
-            // Note: In BlockSuite, lists are often individual blocks. 
-            // A robust serializer would group them. simpler approach for now:
-            content = `<${listType}><li>${text}</li></${listType}>`;
-        }
-        // CODE BLOCKS
-        else if (type === "affine:code") {
-            const lang = model.language || "text";
-            content = `<pre><code class="language-${lang}">${text}</code></pre>`;
-        }
-        // DIVIDER
-        else if (type === "affine:divider") {
-            content = `<hr />`;
-        }
-        // IMAGE (placeholder support - try to find img tag in DOM if model doesn't have blob)
-        else if (type === "affine:image") {
-            // Try to get Blob ID or URL from model
-            // If strictly local blob, we might struggle. 
-            // Fallback: This serializer runs in browser. We can try to find an <img> 
-            // in the real DOM for this block ID.
-            const domEl = document.querySelector(`[data-block-id="${block.id}"] img`);
-            if (domEl) {
-                const src = domEl.getAttribute("src");
-                if (src && !src.startsWith('data:')) {
-                    try {
-                        const response = await fetch(src);
-                        const blob = await response.blob();
-                        const reader = new FileReader();
-                        const dataUrl = await new Promise(resolve => {
-                            reader.onloadend = () => resolve(reader.result);
-                            reader.readAsDataURL(blob);
-                        });
-                        content = `<img src="${dataUrl}" />`;
-                    } catch (e) {
-                        // warning
-                        content = `<p>[Image Error]</p>`;
+        // Render Block
+        switch (flavour) {
+            case "affine:page":
+            case "affine:note":
+            case "affine:surface":
+                // Containers: just return children
+                html = childHtml;
+                break;
+
+            case "affine:paragraph":
+                const type = model.type || "text";
+                if (type === "h1") html = `<h1>${text}</h1>`;
+                else if (type === "h2") html = `<h2>${text}</h2>`;
+                else if (type === "h3") html = `<h3>${text}</h3>`;
+                else if (type === "h4") html = `<h4>${text}</h4>`;
+                else if (type === "h5") html = `<h5>${text}</h5>`;
+                else if (type === "h6") html = `<h6>${text}</h6>`;
+                else if (type === "quote") html = `<blockquote>${text}</blockquote>`;
+                else html = `<p>${text}</p>`;
+                // Note: Paragraphs usually don't have children in this model, but if they did, we'd append them? 
+                // In BlockSuite, affine:paragraph is a leaf usually. Assumed leaf for text content.
+                break;
+
+            case "affine:list":
+                const listType = model.type === "numbered" ? "ol" : "ul";
+                // Lists in BlockSuite are flat blocks. 
+                // We wrap each item in its own list tag to keep it robust (CSS borders will merge)
+                html = `<${listType}><li>${text}</li> ${childHtml}</${listType}>`;
+                break;
+
+            case "affine:code":
+                const lang = model.language || "text";
+                html = `<pre><code class="language-${lang}">${text}</code></pre>`;
+                break;
+
+            case "affine:divider":
+                html = `<hr />`;
+                break;
+
+            case "affine:image":
+                // Image handling
+                const domEl = document.querySelector(`[data-block-id="${block.id}"] img`);
+                if (domEl) {
+                    const src = domEl.getAttribute("src");
+                    if (src && !src.startsWith('data:')) {
+                        try {
+                            const response = await fetch(src);
+                            const blob = await response.blob();
+                            const reader = new FileReader();
+                            const dataUrl = await new Promise(resolve => {
+                                reader.onloadend = () => resolve(reader.result);
+                                reader.readAsDataURL(blob);
+                            });
+                            html = `<img src="${dataUrl}" />`;
+                        } catch (e) {
+                            html = `<p>[Image Error]</p>`;
+                        }
+                    } else {
+                        html = `<img src="${src}" />`;
                     }
                 } else {
-                    content = `<img src="${src}" />`;
+                    // Fallback if not in DOM?
+                    html = `<p>[Image Placeholder]</p>`;
                 }
-            } else {
-                content = `<p>[Image]</p>`;
-            }
-        }
-        // DATABASE / TABLE
-        else if (type === "affine:database") {
-            // Complex! Render simple HTML table from cell data
-            const columns = model.columns || [];
-            const cells = model.cells || {};
-            // Row IDs are usually kept in a separate property or derived structure
-            // Simplified: just render what we can find.
-            // Actually, cells is a map often keyed by rowId -> columnId -> cellData
+                break;
 
-            // Get header names
-            const headers = columns.map(c => c.name);
-            if (headers.length > 0) {
-                let tableHtml = "<table><thead><tr>";
-                headers.forEach(h => tableHtml += `<th>${h}</th>`);
-                tableHtml += "</tr></thead><tbody>";
-
-                // Iterate available rows in 'cells'
-                Object.keys(cells).forEach(rowId => {
-                    const rowData = cells[rowId];
-                    tableHtml += "<tr>";
-                    columns.forEach(col => {
-                        const cell = rowData[col.id];
-                        const cellVal = cell ? (cell.value?.toString() || "") : "";
-                        tableHtml += `<td>${cellVal}</td>`;
+            case "affine:database":
+                // Table logic
+                const columns = model.columns || [];
+                const cells = model.cells || {};
+                const headers = columns.map(c => c.name);
+                if (headers.length > 0) {
+                    let tableHtml = "<table><thead><tr>";
+                    headers.forEach(h => tableHtml += `<th>${h}</th>`);
+                    tableHtml += "</tr></thead><tbody>";
+                    Object.keys(cells).forEach(rowId => {
+                        const rowData = cells[rowId];
+                        tableHtml += "<tr>";
+                        columns.forEach(col => {
+                            const cell = rowData[col.id];
+                            const cellVal = cell ? (cell.value?.toString() || "") : "";
+                            tableHtml += `<td>${cellVal}</td>`;
+                        });
+                        tableHtml += "</tr>";
                     });
-                    tableHtml += "</tr>";
-                });
-                tableHtml += "</tbody></table>";
-                content = tableHtml;
-            }
+                    tableHtml += "</tbody></table>";
+                    html = tableHtml;
+                }
+                break;
+
+            default:
+                // Unknown block? Just render children to be safe
+                // Or maybe render text if it has it
+                if (text) html = `<p>${text}</p>`;
+                html += childHtml;
+                break;
         }
 
-        // RECURSION
-        if (block.children && block.children.length > 0) {
-            // For lists or other nested structures, just append children
-            for (const child of block.children) {
-                content += await processBlock(child);
-            }
-        }
-
-        return content;
+        return html;
     };
 
-
-    // Start processing from children of note block
-    if (noteBlock.children) {
-        for (const child of noteBlock.children) {
-            html += await processBlock(child);
-        }
-    }
-
-    return html;
+    return await processBlock(doc.root);
 };
 
 export default BlockSuiteEditor;
+
