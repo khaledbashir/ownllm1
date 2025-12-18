@@ -122,4 +122,25 @@ function initInvoiceDoc(doc: Doc) {
 
 1. **Fixed Header/Footer** → Render as HTML outside `<editor-host>`, not as blocks
 2. **Template = doc.load()** → No file templates, programmatic initialization
-3. **Widgets control editability** → Remove widgets for read-only sections
+---
+
+## 🏛️ Architecture & FAQ
+
+### 1. Headless / Server-Side Rendering (SSR)
+*   **Question**: Can we render HTML natively in Node.js (no browser)?
+*   **Answer**: **No.** BlockSuite relies on Web Components and needs a DOM.
+*   **Workaround**: Use `Adapter API` to convert JSON Snapshot -> HTML (fast, structural) or stick to Puppeteer for "perfect" visual rendering (slower, accurate).
+
+### 2. Custom React Blocks
+*   **Status**: BlockSuite uses `Lit` (Web Components) by default.
+*   **React Integration**: Requires `EditorHost` middleware (WIP).
+*   **Current Best Practice**: Use **Embed Blocks** for isolated React components (like Pricing Tables) that manage their own state, or standard `BlockService` data models.
+
+### 3. Persistence Strategy
+*   **Recommendation**: Save **Binary CRDT Data** (Y.js blobl), NOT just the JSON snapshot.
+*   **Why**: Enables collaboration, streaming, and efficient conflict resolution.
+*   **Pattern**: Connect `doc` to a custom Provider that syncs binary data with Postgres.
+
+### 4. Event Hooks (Global Listeners)
+*   **Global Events**: Use `this.std.event` (UIEventDispatcher).
+*   **Block State Changes**: Use `BlockService` + `CommandManager`. Everything is a command; intercept commands to trigger side effects (e.g., "User checked box" -> "Update DB").
