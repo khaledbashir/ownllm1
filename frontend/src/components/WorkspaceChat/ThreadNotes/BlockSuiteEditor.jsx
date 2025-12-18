@@ -783,6 +783,30 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 clone.querySelectorAll(selector).forEach(el => el.remove());
             });
 
+            // --- IMAGE FIX: Convert URLs to Base64 ---
+            // Playwright can't access client-side blobs or relative URLs
+            // We must convert them to inline Base64 Data URIs
+            const imagePromises = Array.from(clone.querySelectorAll('img')).map(async (img) => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('data:')) {
+                    try {
+                        const response = await fetch(src);
+                        const blob = await response.blob();
+                        return new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                img.setAttribute('src', reader.result);
+                                resolve();
+                            };
+                            reader.readAsDataURL(blob);
+                        });
+                    } catch (e) {
+                        console.warn('Failed to convert image to base64 for PDF export:', src);
+                    }
+                }
+            });
+            await Promise.all(imagePromises);
+
             // Get cleaned HTML
             const editorContent = clone.innerHTML;
 
@@ -793,6 +817,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Export</title>
+    <!-- Inject Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #ffffff;
@@ -810,8 +838,15 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             box-sizing: border-box;
         }
 
+        @media print {
+            body { 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important; 
+            }
+        }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
             color: var(--text-color);
             background-color: var(--bg-color);
             line-height: 1.6;
@@ -829,18 +864,19 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             margin-bottom: 0.5em;
             font-weight: 700;
             line-height: 1.2;
+            page-break-after: avoid;
         }
 
-        h1 { font-size: 2.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
-        h2 { font-size: 2rem; }
-        h3 { font-size: 1.75rem; }
+        h1 { font-size: 2.2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
+        h2 { font-size: 1.8rem; }
+        h3 { font-size: 1.5rem; }
         
-        p { margin-bottom: 1em; }
+        p { margin-bottom: 1em; text-align: justify; }
         
         a { color: var(--accent-color); text-decoration: none; }
 
         /* Lists */
-        ul, ol { margin-left: 2rem; margin-bottom: 1em; }
+        ul, ol { margin-left: 1.5rem; margin-bottom: 1em; }
         li { margin-bottom: 0.25em; }
 
         /* Code Blocks */
@@ -848,25 +884,27 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             background-color: var(--code-bg);
             padding: 0.2em 0.4em;
             border-radius: 4px;
-            font-family: 'SF Mono', Consolas, Monaco, monospace;
+            font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
             font-size: 0.9em;
-            color: #ef4444; /* Red-ish for inline code like GitHub */
+            color: #ef4444; 
         }
 
         pre {
-            background-color: #1e1e1e; /* Keep code blocks dark for contrast? Or light? Let's go Dark for code blocks as it's standard dev aesthetic */
+            background-color: #1e1e1e !important;
+            color: #e5e7eb !important;
             padding: 1rem;
             border-radius: 8px;
             overflow-x: auto;
             margin-bottom: 1em;
             border: 1px solid var(--border-color);
+            page-break-inside: avoid;
         }
 
         pre code {
-            background-color: transparent;
+            background-color: transparent !important;
+            color: inherit !important;
             padding: 0;
-            font-size: 0.9rem;
-            color: #e5e7eb; /* Light text in dark code block */
+            font-size: 0.85rem;
         }
 
         /* Blockquotes */
@@ -879,19 +917,22 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             background: #f9fafb;
             padding: 1rem;
             border-radius: 0 4px 4px 0;
+            page-break-inside: avoid;
         }
 
         /* Tables - Enterprise Style */
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: collapse !important;
             margin: 2rem 0;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            page-break-inside: avoid;
+            border: 1px solid #e5e7eb;
         }
 
         th {
-            background-color: #f3f4f6; /* Light gray header */
-            color: #111827;
+            background-color: #f3f4f6 !important;
+            color: #111827 !important;
             font-weight: 600;
             text-align: left;
             padding: 12px 16px;
@@ -902,6 +943,20 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             padding: 12px 16px;
             border-bottom: 1px solid var(--border-color);
             color: #374151;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        /* Images */
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            display: block;
+            margin: 1rem 0;
         }
 
         /* BlockSuite Specific Fixes */
