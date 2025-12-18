@@ -46,7 +46,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 # Install WeasyPrint and Python dependencies
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
-    python3-pip python3-cairo python3-pango && \
+    python3-pip python3-cairo && \
     pip3 install weasyprint --break-system-packages && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -125,7 +125,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 # Install WeasyPrint and Python dependencies
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
-    python3-pip python3-cairo python3-pango && \
+    python3-pip python3-cairo && \
     pip3 install weasyprint --break-system-packages && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
