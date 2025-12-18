@@ -761,63 +761,26 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
 
     const handleExport = async () => {
-        if (!containerRef.current || !workspaceSlug) return;
+        if (!editorRef.current || !workspaceSlug) return;
         setExporting(true);
+
         try {
-            // Clone the editor content to manipulate it without affecting the live view
-            const clone = containerRef.current.cloneNode(true);
+            // STRATEGY CHANGE: Do not clone DOM. Serialize DOC to HTML manually.
+            // This bypasses Shadow DOM issues and gives us 100% control over the output.
 
-            // CLEANUP: Remove editor UI artifacts
-            const artifacts = [
-                '.affine-block-handle',
-                '.affine-format-bar-widget',
-                '.affine-slash-menu-widget',
-                '.keyboard-toolbar',
-                '.widget-container',
-                '[contenteditable="false"]', // Often UI elements
-                'affine-block-selection',
-                '.drag-handle'
-            ];
+            const doc = editorRef.current.doc;
+            if (!doc) throw new Error("Document not found");
 
-            artifacts.forEach(selector => {
-                clone.querySelectorAll(selector).forEach(el => el.remove());
-            });
+            // 1. Serialize Doc to Standard HTML
+            const bodyHtml = await serializeDocToHtml(doc);
 
-            // --- IMAGE FIX: Convert URLs to Base64 ---
-            // Playwright can't access client-side blobs or relative URLs
-            // We must convert them to inline Base64 Data URIs
-            const imagePromises = Array.from(clone.querySelectorAll('img')).map(async (img) => {
-                const src = img.getAttribute('src');
-                if (src && !src.startsWith('data:')) {
-                    try {
-                        const response = await fetch(src);
-                        const blob = await response.blob();
-                        return new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                                img.setAttribute('src', reader.result);
-                                resolve();
-                            };
-                            reader.readAsDataURL(blob);
-                        });
-                    } catch (e) {
-                        console.warn('Failed to convert image to base64 for PDF export:', src);
-                    }
-                }
-            });
-            await Promise.all(imagePromises);
-
-            // Get cleaned HTML
-            const editorContent = clone.innerHTML;
-
-            // Build a complete HTML document with Cyberpunk / Dark Mode styling
+            // 2. Build the Full HTML Wrapper with Styles and Google Fonts
             const editorHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Export</title>
-    <!-- Inject Fonts -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
@@ -827,15 +790,20 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             --text-color: #1a1a1a;
             --heading-color: #111827;
             --border-color: #e5e7eb;
-            --accent-color: #2563eb; /* Blue 600 */
-            --code-bg: #f3f4f6; /* Gray 100 */
+            --accent-color: #2563eb;
+            --code-bg: #f3f4f6;
             --quote-border: #3b82f6;
         }
+        
+        * { box-sizing: border-box; }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         @media print {
@@ -845,134 +813,71 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             }
         }
 
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-            color: var(--text-color);
-            background-color: var(--bg-color);
-            line-height: 1.6;
-            padding: 40px;
-            max-width: 800px;
-            margin: 0 auto;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        
         /* Typography */
-        h1, h2, h3, h4, h5, h6 {
-            color: var(--heading-color);
-            margin-top: 1.5em;
-            margin-bottom: 0.5em;
-            font-weight: 700;
-            line-height: 1.2;
-            page-break-after: avoid;
-        }
-
-        h1 { font-size: 2.2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
-        h2 { font-size: 1.8rem; }
-        h3 { font-size: 1.5rem; }
+        h1 { font-size: 2.2em; font-weight: 700; border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; color: var(--heading-color); }
+        h2 { font-size: 1.8em; font-weight: 600; margin-top: 1.4em; margin-bottom: 0.5em; color: var(--heading-color); }
+        h3 { font-size: 1.4em; font-weight: 600; margin-top: 1.3em; margin-bottom: 0.5em; color: var(--heading-color); }
+        h4, h5, h6 { font-size: 1.1em; font-weight: 600; margin-top: 1.2em; margin-bottom: 0.5em; }
         
         p { margin-bottom: 1em; text-align: justify; }
         
-        a { color: var(--accent-color); text-decoration: none; }
-
         /* Lists */
-        ul, ol { margin-left: 1.5rem; margin-bottom: 1em; }
-        li { margin-bottom: 0.25em; }
-
-        /* Code Blocks */
-        code {
-            background-color: var(--code-bg);
-            padding: 0.2em 0.4em;
-            border-radius: 4px;
-            font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
-            font-size: 0.9em;
-            color: #ef4444; 
-        }
-
+        ul, ol { margin-bottom: 1em; padding-left: 1.5em; }
+        li { margin-bottom: 0.3em; }
+        
+        /* Code */
         pre {
-            background-color: #1e1e1e !important;
-            color: #e5e7eb !important;
-            padding: 1rem;
-            border-radius: 8px;
+            background: #1e1e1e;
+            color: #e5e7eb;
+            padding: 1em;
+            border-radius: 6px;
             overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
             margin-bottom: 1em;
-            border: 1px solid var(--border-color);
-            page-break-inside: avoid;
+            line-height: 1.4;
         }
-
-        pre code {
-            background-color: transparent !important;
-            color: inherit !important;
-            padding: 0;
-            font-size: 0.85rem;
+        code {
+            background: var(--code-bg);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-family: 'JetBrains Mono', monospace;
+            color: #ef4444;
         }
+        pre code { background: transparent; color: inherit; padding: 0; }
 
-        /* Blockquotes */
+        /* Quotes */
         blockquote {
             border-left: 4px solid var(--quote-border);
-            padding-left: 1rem;
-            margin: 1.5rem 0;
+            padding-left: 1em;
+            margin: 1.5em 0;
             color: #4b5563;
             font-style: italic;
             background: #f9fafb;
-            padding: 1rem;
-            border-radius: 0 4px 4px 0;
-            page-break-inside: avoid;
+            padding: 0.8em;
         }
 
-        /* Tables - Enterprise Style */
+        /* Tables */
         table {
             width: 100%;
-            border-collapse: collapse !important;
-            margin: 2rem 0;
-            font-size: 0.9rem;
-            page-break-inside: avoid;
-            border: 1px solid #e5e7eb;
+            border-collapse: collapse;
+            margin: 2em 0;
+            font-size: 0.9em;
         }
-
-        th {
-            background-color: #f3f4f6 !important;
-            color: #111827 !important;
-            font-weight: 600;
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
             text-align: left;
-            padding: 12px 16px;
-            border-bottom: 2px solid #d1d5db;
-        }
-
-        td {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
-            color: #374151;
             vertical-align: top;
         }
-
-        tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-
-        /* Images */
-        img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-            display: block;
-            margin: 1rem 0;
-        }
-
-        /* BlockSuite Specific Fixes */
-        affine-paragraph { display: block; margin-bottom: 0.5em; }
-        affine-list { display: list-item; }
+        th { background: #f3f4f6; font-weight: 600; color: #111827; }
         
-        /* Utility */
-        hr {
-            border: 0;
-            border-top: 1px solid var(--border-color);
-            margin: 2rem 0;
-        }
+        /* Images */
+        img { max-width: 100%; height: auto; display: block; margin: 1em 0; border-radius: 4px; }
     </style>
 </head>
 <body>
-    ${editorContent}
+    ${bodyHtml}
 </body>
 </html>`;
 
@@ -1055,28 +960,26 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 throw new Error(result.error);
             }
 
-            // Check if result is a valid blob
-            if (result instanceof Blob && result.size > 0) {
-                const url = window.URL.createObjectURL(result);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `doc-${new Date().toISOString().slice(0, 10)}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                toast.success("PDF exported successfully");
-            } else {
-                throw new Error("PDF generation returned empty or invalid content. Ensure BROWSER_WS_URL is configured on the server.");
-            }
+            // Create blob and download
+            const blob = new Blob([result], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Document-${new Date().toISOString().slice(0, 10)}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            toast.success("Document exported successfully");
         } catch (error) {
             console.error("Export failed:", error);
-            toast.error(`Export failed: ${error.message || "Unknown error"}`);
+            toast.error("Failed to export PDF");
         } finally {
             setExporting(false);
-            setShowExportModal(false);
         }
     };
+
 
     /**
      * Extract plain text content from the BlockSuite document
@@ -1413,5 +1316,138 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         </>
     );
 });
+
+// Helper to recursively serialize BlockSuite doc to HTML
+const serializeDocToHtml = async (doc) => {
+    let html = "";
+    const noteBlock = doc.getBlocksByFlavour("affine:note")[0];
+    if (!noteBlock) return "<p>No content</p>";
+
+    // Helper to get text content from a block
+    const getText = (block) => {
+        if (block.text) return block.text.toString();
+        // Fallback for some block types
+        return "";
+    };
+
+    // Helper to process children
+    const processBlock = async (block) => {
+        const type = block.flavour;
+        const text = getText(block);
+        const model = block.model;
+
+        // SKIP: certain internal blocks
+        if (type === "affine:surface" || type === "affine:page") return "";
+
+        let content = "";
+
+        // HEADINGS & PARAGRAPHS
+        if (type === "affine:paragraph") {
+            const blockType = model.type || "text"; // h1, h2, h3, quote, text
+            if (blockType === "h1") content = `<h1>${text}</h1>`;
+            else if (blockType === "h2") content = `<h2>${text}</h2>`;
+            else if (blockType === "h3") content = `<h3>${text}</h3>`;
+            else if (blockType === "quote") content = `<blockquote>${text}</blockquote>`;
+            else content = `<p>${text}</p>`;
+        }
+        // LISTS
+        else if (type === "affine:list") {
+            const listType = model.type === "numbered" ? "ol" : "ul";
+            // Note: In BlockSuite, lists are often individual blocks. 
+            // A robust serializer would group them. simpler approach for now:
+            content = `<${listType}><li>${text}</li></${listType}>`;
+        }
+        // CODE BLOCKS
+        else if (type === "affine:code") {
+            const lang = model.language || "text";
+            content = `<pre><code class="language-${lang}">${text}</code></pre>`;
+        }
+        // DIVIDER
+        else if (type === "affine:divider") {
+            content = `<hr />`;
+        }
+        // IMAGE (placeholder support - try to find img tag in DOM if model doesn't have blob)
+        else if (type === "affine:image") {
+            // Try to get Blob ID or URL from model
+            // If strictly local blob, we might struggle. 
+            // Fallback: This serializer runs in browser. We can try to find an <img> 
+            // in the real DOM for this block ID.
+            const domEl = document.querySelector(`[data-block-id="${block.id}"] img`);
+            if (domEl) {
+                const src = domEl.getAttribute("src");
+                if (src && !src.startsWith('data:')) {
+                    try {
+                        const response = await fetch(src);
+                        const blob = await response.blob();
+                        const reader = new FileReader();
+                        const dataUrl = await new Promise(resolve => {
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.readAsDataURL(blob);
+                        });
+                        content = `<img src="${dataUrl}" />`;
+                    } catch (e) {
+                        // warning
+                        content = `<p>[Image Error]</p>`;
+                    }
+                } else {
+                    content = `<img src="${src}" />`;
+                }
+            } else {
+                content = `<p>[Image]</p>`;
+            }
+        }
+        // DATABASE / TABLE
+        else if (type === "affine:database") {
+            // Complex! Render simple HTML table from cell data
+            const columns = model.columns || [];
+            const cells = model.cells || {};
+            // Row IDs are usually kept in a separate property or derived structure
+            // Simplified: just render what we can find.
+            // Actually, cells is a map often keyed by rowId -> columnId -> cellData
+
+            // Get header names
+            const headers = columns.map(c => c.name);
+            if (headers.length > 0) {
+                let tableHtml = "<table><thead><tr>";
+                headers.forEach(h => tableHtml += `<th>${h}</th>`);
+                tableHtml += "</tr></thead><tbody>";
+
+                // Iterate available rows in 'cells'
+                Object.keys(cells).forEach(rowId => {
+                    const rowData = cells[rowId];
+                    tableHtml += "<tr>";
+                    columns.forEach(col => {
+                        const cell = rowData[col.id];
+                        const cellVal = cell ? (cell.value?.toString() || "") : "";
+                        tableHtml += `<td>${cellVal}</td>`;
+                    });
+                    tableHtml += "</tr>";
+                });
+                tableHtml += "</tbody></table>";
+                content = tableHtml;
+            }
+        }
+
+        // RECURSION
+        if (block.children && block.children.length > 0) {
+            // For lists or other nested structures, just append children
+            for (const child of block.children) {
+                content += await processBlock(child);
+            }
+        }
+
+        return content;
+    };
+
+
+    // Start processing from children of note block
+    if (noteBlock.children) {
+        for (const child of noteBlock.children) {
+            html += await processBlock(child);
+        }
+    }
+
+    return html;
+};
 
 export default BlockSuiteEditor;
