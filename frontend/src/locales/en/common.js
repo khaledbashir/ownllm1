@@ -554,6 +554,11 @@ const TRANSLATIONS = {
         description:
           "Render HTML responses in assistant responses.\nThis can result in a much higher fidelity of response quality, but can also lead to potential security risks.",
       },
+      "render-sandpack": {
+        title: "Render Code Sandboxes",
+        description:
+          "Enable interactive code previews for React and HTML code blocks.\nThis allows you to see live code output directly in chat responses.",
+      },
     },
   },
 

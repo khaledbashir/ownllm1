@@ -6,6 +6,7 @@ import AutoSpeak from "../components/AutoSpeak";
 import SpellCheck from "../components/SpellCheck";
 import ShowScrollbar from "../components/ShowScrollbar";
 import ChatRenderHTML from "../components/ChatRenderHTML";
+import ChatRenderSandpack from "../components/ChatRenderSandpack";
 
 export default function ChatSettings() {
   const { t } = useTranslation();
@@ -33,6 +34,7 @@ export default function ChatSettings() {
           <SpellCheck />
           <ShowScrollbar />
           <ChatRenderHTML />
+          <ChatRenderSandpack />
         </div>
       </div>
     </div>

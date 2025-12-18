@@ -24,6 +24,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import SandpackRenderer from "../../../../Artifacts/SandpackRenderer";
+import Appearance from "@/models/appearance";
 
 const HistoricalMessage = ({
   uuid = v4(),
@@ -292,7 +293,10 @@ const RenderChatContent = memo(
               const isReact = ['react', 'jsx', 'tsx', 'js', 'javascript'].includes(lang);
               const isHTML = ['html', 'xml'].includes(lang);
 
-              if (!inline && (isReact || isHTML)) {
+              // Check if Sandpack rendering is enabled
+              const renderSandpack = Appearance.get('renderSandpack') ?? true;
+
+              if (!inline && (isReact || isHTML) && renderSandpack) {
                 return (
                   <SandpackRenderer
                     code={String(children).replace(/\n$/, '')}

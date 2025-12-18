@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { SandpackProvider, SandpackLayout, SandpackCodeEditor, SandpackPreview } from '@codesandbox/sandpack-react';
-import { FloppyDisk, Code, Eye, ArrowsOut, X, Check, Warning } from "@phosphor-icons/react";
+import { FloppyDisk, Code, Eye, ArrowsOut, X, Check, Warning, FileArrowUp } from "@phosphor-icons/react";
 import Artifacts from '../../models/artifacts';
 import showToast from "@/utils/toast";
+import { useEditorContext } from "@/components/WorkspaceChat/ThreadNotes/EditorContext";
 
 export default function SandpackRenderer({ code, language, workspace }) {
     const isReact = language === 'react';
@@ -14,6 +15,9 @@ export default function SandpackRenderer({ code, language, workspace }) {
     const [loading, setLoading] = useState(false);
     const [showCode, setShowCode] = useState(true);
     const [isFullscreen, setIsFullscreen] = useState(false);
+
+    // Get editor context for inserting into Doc editor
+    const editorContext = useEditorContext();
 
     const handleSave = async () => {
         if (!artifactName) {
@@ -43,6 +47,26 @@ export default function SandpackRenderer({ code, language, workspace }) {
             showToast("Artifact saved to library!", "success");
         } else {
             showToast("Failed to save: " + (response.error || "Unknown error"), "error");
+        }
+    };
+
+    const handleInsertToEditor = () => {
+        if (!editorContext || !editorContext.isReady()) {
+            showToast("Doc editor is not active. Please open the Doc tab first.", "warning");
+            return;
+        }
+
+        try {
+            // Determine the language for the code block
+            const codeLanguage = isReact ? "javascript" : "html";
+
+            // Insert the code as a code block
+            editorContext.injectCode(code, codeLanguage);
+
+            showToast("Code inserted into Doc editor!", "success");
+        } catch (error) {
+            console.error("Failed to insert code:", error);
+            showToast("Failed to insert code: " + error.message, "error");
         }
     };
 
@@ -93,6 +117,16 @@ export default function SandpackRenderer({ code, language, workspace }) {
                     title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                 >
                     {isFullscreen ? <X size={14} /> : <ArrowsOut size={14} />}
+                </button>
+
+                {/* Insert to Editor Button */}
+                <button
+                    onClick={handleInsertToEditor}
+                    className="flex items-center gap-1 bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs shadow-sm transition-all"
+                    title="Insert code into Doc editor"
+                >
+                    <FileArrowUp size={14} />
+                    Insert
                 </button>
 
                 {/* Save Button */}
