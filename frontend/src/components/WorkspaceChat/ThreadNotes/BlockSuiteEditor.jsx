@@ -767,18 +767,92 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         setExporting(true);
         try {
             // Get HTML content from the editor container
-            // We clone it to remove any interactive elements if needed, but for now just raw HTML
-            // Note: We might want to wrap it in a basic styling wrapper
-            const editorHtml = `
-                <style>
-                    body { font-family: sans-serif; color: black; }
-                    /* Add any critical blocksuite styles here if they are missing in the export */
-                </style>
-                <div>
-                    <h1>Doc Export</h1>
-                    ${containerRef.current.innerHTML}
-                </div>
-            `;
+            // Wrap it in a proper HTML document structure for Playwright PDF generation
+            const editorContent = containerRef.current.innerHTML;
+
+            // Build a complete HTML document for proper PDF rendering
+            const editorHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Export</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: #1a1a1a;
+            background: white;
+            line-height: 1.6;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 28px; margin-bottom: 16px; font-weight: 700; }
+        h2 { font-size: 22px; margin-top: 24px; margin-bottom: 12px; font-weight: 600; }
+        h3 { font-size: 18px; margin-top: 20px; margin-bottom: 10px; font-weight: 600; }
+        p { margin-bottom: 12px; }
+        ul, ol { margin-left: 24px; margin-bottom: 12px; }
+        li { margin-bottom: 6px; }
+        code {
+            background: #f4f4f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 14px;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+        blockquote {
+            border-left: 4px solid #3b82f6;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #4b5563;
+            font-style: italic;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 24px 0;
+        }
+        /* BlockSuite specific overrides */
+        [data-block-id] { margin-bottom: 8px; }
+        .affine-paragraph-block-container { margin-bottom: 8px; }
+        .affine-list-block-container { margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    ${editorContent}
+</body>
+</html>`;
 
             const blob = await WorkspaceThread.exportPdf(workspaceSlug, editorHtml);
             if (blob) {
