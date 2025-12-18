@@ -268,22 +268,36 @@ const WorkspaceThread = {
     return data;
   },
   exportPdf: async function (workspaceSlug, html) {
-    return await fetch(
-      `${API_BASE}/workspace/${workspaceSlug}/export-pdf`,
-      {
-        method: "POST",
-        body: JSON.stringify({ html }),
-        headers: baseHeaders(),
+    try {
+      const res = await fetch(
+        `${API_BASE}/workspace/${workspaceSlug}/export-pdf`,
+        {
+          method: "POST",
+          body: JSON.stringify({ html }),
+          headers: baseHeaders(),
+        }
+      );
+
+      if (!res.ok) {
+        // Try to get error message from response
+        const errorData = await res.json().catch(() => ({}));
+        const errorMsg = errorData.error || `HTTP ${res.status}`;
+        throw new Error(errorMsg);
       }
-    )
-      .then((res) => {
-        if (res.ok) return res.blob();
-        throw new Error("Failed to export PDF");
-      })
-      .catch((e) => {
-        console.error(e);
-        return null;
-      });
+
+      const blob = await res.blob();
+
+      // Validate the blob is actually a PDF (should start with %PDF)
+      if (blob.size < 100) {
+        throw new Error("PDF generation returned empty or invalid content");
+      }
+
+      return blob;
+    } catch (e) {
+      console.error("PDF Export error:", e);
+      // Return error object instead of null so we can show meaningful error
+      return { error: e.message || "Failed to export PDF" };
+    }
   },
 
   /**

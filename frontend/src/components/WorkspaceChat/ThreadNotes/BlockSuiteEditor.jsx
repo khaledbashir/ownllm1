@@ -854,9 +854,16 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 </body>
 </html>`;
 
-            const blob = await WorkspaceThread.exportPdf(workspaceSlug, editorHtml);
-            if (blob) {
-                const url = window.URL.createObjectURL(blob);
+            const result = await WorkspaceThread.exportPdf(workspaceSlug, editorHtml);
+
+            // Check if result is an error object
+            if (result?.error) {
+                throw new Error(result.error);
+            }
+
+            // Check if result is a valid blob
+            if (result instanceof Blob && result.size > 0) {
+                const url = window.URL.createObjectURL(result);
                 const a = document.createElement("a");
                 a.href = url;
                 a.download = `doc-${new Date().toISOString().slice(0, 10)}.pdf`;
@@ -866,11 +873,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 document.body.removeChild(a);
                 toast.success("PDF exported successfully");
             } else {
-                throw new Error("Failed to generate PDF");
+                throw new Error("PDF generation returned empty or invalid content. Ensure BROWSER_WS_URL is configured on the server.");
             }
         } catch (error) {
             console.error("Export failed:", error);
-            toast.error("Export failed");
+            toast.error(`Export failed: ${error.message || "Unknown error"}`);
         } finally {
             setExporting(false);
             setShowExportModal(false);
