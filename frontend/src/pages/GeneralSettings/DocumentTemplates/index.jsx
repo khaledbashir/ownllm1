@@ -2,311 +2,266 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/SettingsSidebar";
 import { isMobile } from "react-device-detect";
 import PdfTemplates from "@/models/pdfTemplates";
-import { Plus, Trash, FloppyDisk, PencilSimple, X } from "@phosphor-icons/react";
+import { Plus, Trash, FloppyDisk, PencilSimple, X, ArrowLeft, Eye } from "@phosphor-icons/react";
 import showToast from "@/utils/toast";
 
-// Template Form Component
-function TemplateForm({ template, onSave, onCancel }) {
-    const [form, setForm] = useState({
-        name: template?.name || "",
-        logoPath: template?.logoPath || "",
-        headerText: template?.headerText || "",
-        footerText: template?.footerText || "",
-        primaryColor: template?.primaryColor || "#3b82f6",
-        secondaryColor: template?.secondaryColor || "#1e293b",
-        fontFamily: template?.fontFamily || "Inter",
+// --- LIVE PREVIEW COMPONENT ---
+// This mimics the structure of the exported PDF to give a 1:1 preview
+function TemplatePreview({ template }) {
+    const {
+        primaryColor = "#3b82f6",
+        logoPath,
+        headerText = "Company Name",
+        footerText = "Footer Text",
+        fontFamily = "Inter"
+    } = template;
+
+    // Simulate the PDF header HTML structure
+    const logoHtml = logoPath ? <img src={logoPath} className="h-10 mr-2.5 object-contain" alt="Logo" /> : null;
+
+    return (
+        <div className="w-full h-full bg-gray-500/10 rounded-xl overflow-hidden flex flex-col items-center justify-center p-8">
+            <div className="bg-white text-gray-900 w-full max-w-[500px] aspect-[1/1.414] shadow-2xl rounded-sm flex flex-col relative overflow-hidden transition-all duration-300 transform hover:scale-[1.02]">
+                {/* PDF Header Simulation */}
+                <div className="w-full h-[60px] flex items-center justify-between px-5 border-b border-gray-200" style={{ fontFamily }}>
+                    <div className="flex items-center">
+                        {logoPath ? (
+                            <img src={logoPath} alt="Logo" className="h-10 mr-2.5 object-contain" />
+                        ) : (
+                            <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center text-xs font-bold mr-2.5" style={{ color: primaryColor }}>LOGO</div>
+                        )}
+                        <span className="text-sm font-semibold">{template.name || 'Your Company'}</span>
+                    </div>
+                    <div className="text-gray-500 text-xs">{headerText}</div>
+                </div>
+
+                {/* Mock Content */}
+                <div className="flex-1 p-10" style={{ fontFamily }}>
+                    <h1 className="text-2xl font-bold mb-4 pb-2 border-b-2" style={{ color: '#111827', borderColor: '#e5e7eb' }}>
+                        Proposal: Q1 Strategy
+                    </h1>
+                    <p className="text-sm text-gray-800 mb-4 leading-relaxed">
+                        This is a preview of how your document body will look. The layout is optimized for A4 paper.
+                    </p>
+
+                    <div className="my-6 border border-gray-200 rounded overflow-hidden">
+                        <table className="w-full text-sm">
+                            <thead className="bg-gray-100 text-gray-900 font-semibold">
+                                <tr>
+                                    <td className="p-3 border-b border-gray-200">Item</td>
+                                    <td className="p-3 border-b border-gray-200 text-right">Cost</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td className="p-3 border-b border-gray-200">Consulting Services</td>
+                                    <td className="p-3 border-b border-gray-200 text-right">$5,000</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3 border-b border-gray-200 text-blue-600">Total</td>
+                                    <td className="p-3 border-b border-gray-200 text-right font-bold">$5,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p className="text-sm text-gray-800 leading-relaxed">
+                        The content here is automatically styled using your selected fonts and spacing.
+                    </p>
+                </div>
+
+                {/* PDF Footer Simulation */}
+                <div className="w-full h-[40px] flex items-center justify-between px-5 text-gray-400 text-[10px]" style={{ fontFamily }}>
+                    <span>{footerText}</span>
+                    <span>Page 1 of 5</span>
+                </div>
+            </div>
+            <div className="mt-4 text-white/40 text-xs flex items-center gap-2">
+                <Eye size={14} />
+                Live PDF Preview (A4)
+            </div>
+        </div>
+    );
+}
+
+
+// --- EDITOR FORM ---
+function TemplateEditor({ template: initialTemplate, onSave, onCancel }) {
+    const [template, setTemplate] = useState(initialTemplate || {
+        name: "",
+        logoPath: "",
+        headerText: "",
+        footerText: "",
+        primaryColor: "#3b82f6",
+        secondaryColor: "#1e293b",
+        fontFamily: "Inter"
     });
     const [saving, setSaving] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.name.trim()) {
-            showToast("Template name is required", "error");
-            return;
-        }
+        if (!template.name.trim()) return showToast("Template name is required", "error");
+
         setSaving(true);
-        try {
-            const result = await onSave(form);
-            if (result?.success) {
-                showToast("Template saved successfully", "success");
-            } else {
-                showToast(result?.error || "Failed to save template", "error");
-            }
-        } finally {
-            setSaving(false);
-        }
+        await onSave(template);
+        setSaving(false);
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-theme-bg-secondary rounded-xl border border-white/10">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
-                    {template?.id ? "Edit Template" : "New Template"}
-                </h3>
-                <button type="button" onClick={onCancel} className="text-white/50 hover:text-white">
-                    <X size={20} />
+        <div className="flex flex-col h-full">
+            {/* Toolbar */}
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                    <button onClick={onCancel} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                        <ArrowLeft size={20} className="text-white" />
+                    </button>
+                    <h2 className="text-lg font-bold text-white">
+                        {initialTemplate?.id ? "Edit Template" : "New Template"}
+                    </h2>
+                </div>
+                <button
+                    onClick={handleSubmit}
+                    disabled={saving}
+                    className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium shadow-lg shadow-blue-500/20 flex items-center gap-2 disabled:opacity-50 transition-all"
+                >
+                    {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <FloppyDisk size={18} />}
+                    Save Changes
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Template Name */}
-                <div className="col-span-2 md:col-span-1">
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                        Template Name *
-                    </label>
-                    <input
-                        type="text"
-                        value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        placeholder="e.g., Formal Letterhead, Invoice"
-                        className="w-full px-4 py-2 bg-theme-bg-primary border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-
-                {/* Primary Color */}
-                <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                        Brand Color
-                    </label>
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="color"
-                            value={form.primaryColor}
-                            onChange={(e) => setForm({ ...form, primaryColor: e.target.value })}
-                            className="w-12 h-10 rounded cursor-pointer border-0"
-                        />
-                        <input
-                            type="text"
-                            value={form.primaryColor}
-                            onChange={(e) => setForm({ ...form, primaryColor: e.target.value })}
-                            className="flex-1 px-4 py-2 bg-theme-bg-primary border border-white/10 rounded-lg text-white font-mono text-sm"
-                        />
-                    </div>
-                </div>
-
-                {/* Logo URL */}
-                <div className="col-span-2">
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                        Logo URL
-                    </label>
-                    <input
-                        type="text"
-                        value={form.logoPath}
-                        onChange={(e) => setForm({ ...form, logoPath: e.target.value })}
-                        placeholder="https://example.com/logo.png"
-                        className="w-full px-4 py-2 bg-theme-bg-primary border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-
-                {/* Header Text (Company Name / Title) */}
-                <div className="col-span-2">
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                        Header Text
-                    </label>
-                    <input
-                        type="text"
-                        value={form.headerText}
-                        onChange={(e) => setForm({ ...form, headerText: e.target.value })}
-                        placeholder="Your Company Inc. | 123 Business Rd, City"
-                        className="w-full px-4 py-2 bg-theme-bg-primary border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-
-
-                {/* Secondary Color */}
-                <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                        Secondary Color
-                    </label>
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="color"
-                            value={form.secondaryColor}
-                            onChange={(e) => setForm({ ...form, secondaryColor: e.target.value })}
-                            className="w-12 h-10 rounded cursor-pointer border-0"
-                        />
-                        <input
-                            type="text"
-                            value={form.secondaryColor}
-                            onChange={(e) => setForm({ ...form, secondaryColor: e.target.value })}
-                            className="flex-1 px-4 py-2 bg-theme-bg-primary border border-white/10 rounded-lg text-white font-mono text-sm"
-                        />
-                    </div>
-                </div>
-
-                {/* Font Family */}
-                <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                        Font Family
-                    </label>
-                    <select
-                        value={form.fontFamily}
-                        onChange={(e) => setForm({ ...form, fontFamily: e.target.value })}
-                        className="w-full px-4 py-2 bg-theme-bg-primary border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="Inter">Inter (Modern)</option>
-                        <option value="Roboto">Roboto (Tech)</option>
-                        <option value="Open Sans">Open Sans (Neutral)</option>
-                        <option value="Lato">Lato (Friendly)</option>
-                        <option value="Montserrat">Montserrat (Bold)</option>
-                        <option value="Georgia">Georgia (Serif)</option>
-                        <option value="Times New Roman">Times New Roman (Classic)</option>
-                    </select>
-                </div>
-
-                {/* Footer Text */}
-                <div className="col-span-2">
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                        Footer Text
-                    </label>
-                    <textarea
-                        value={form.footerText}
-                        onChange={(e) => setForm({ ...form, footerText: e.target.value })}
-                        placeholder="© 2025 Company Name. All rights reserved. Confidentiality notice..."
-                        rows={3}
-                        className="w-full px-4 py-2 bg-theme-bg-primary border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    />
-                </div>
-            </div>
-
-            {/* Preview */}
-            <div className="border border-white/10 rounded-lg p-4 bg-white">
-                <div className="flex items-center justify-between border-b-2 pb-4 mb-4" style={{ borderColor: form.primaryColor }}>
-                    <div className="flex items-center gap-3">
-                        {form.logoPath ? (
-                            <img src={form.logoPath} alt="Logo" className="w-12 h-12 object-contain rounded" />
-                        ) : (
-                            <div className="w-12 h-12 rounded flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: form.primaryColor }}>
-                                LOGO
-                            </div>
-                        )}
+            <div className="flex flex-1 gap-6 overflow-hidden">
+                {/* LEFT: Inputs */}
+                <div className="w-1/3 overflow-y-auto pr-2 space-y-6">
+                    <div className="space-y-4">
                         <div>
-                            <div className="font-bold text-gray-900" style={{ fontFamily: form.fontFamily }}>
-                                {form.headerText || "Company Name | Address"}
+                            <label className="text-xs font-bold text-white/60 uppercase tracking-wide">Template Name</label>
+                            <input
+                                type="text"
+                                value={template.name}
+                                onChange={e => setTemplate({ ...template, name: e.target.value })}
+                                placeholder="e.g. Official Proposal"
+                                className="w-full mt-2 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs font-bold text-white/60 uppercase tracking-wide">Brand Color</label>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <input
+                                        type="color"
+                                        value={template.primaryColor}
+                                        onChange={e => setTemplate({ ...template, primaryColor: e.target.value })}
+                                        className="h-10 w-10 rounded cursor-pointer border-0 bg-transparent"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={template.primaryColor}
+                                        onChange={e => setTemplate({ ...template, primaryColor: e.target.value })}
+                                        className="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white font-mono text-sm"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-white/60 uppercase tracking-wide">Font</label>
+                                <select
+                                    value={template.fontFamily}
+                                    onChange={e => setTemplate({ ...template, fontFamily: e.target.value })}
+                                    className="w-full mt-2 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white h-[42px]"
+                                >
+                                    <option value="Inter">Inter</option>
+                                    <option value="Roboto">Roboto</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Arial">Arial</option>
+                                </select>
                             </div>
                         </div>
+
+                        <div>
+                            <label className="text-xs font-bold text-white/60 uppercase tracking-wide">Logo URL</label>
+                            <input
+                                type="text"
+                                value={template.logoPath}
+                                onChange={e => setTemplate({ ...template, logoPath: e.target.value })}
+                                placeholder="https://..."
+                                className="w-full mt-2 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm"
+                            />
+                            <p className="text-[10px] text-white/40 mt-1">Direct link to PNG/JPG image</p>
+                        </div>
                     </div>
-                    <div className="text-xs text-gray-500 text-right">
-                        <div>{new Date().toLocaleDateString()}</div>
-                        <div>Ref: DOC-001</div>
-                    </div>
-                </div>
-                <div className="text-gray-300 text-sm italic mb-4" style={{ fontFamily: form.fontFamily }}>[Document content goes here]</div>
-                <div className="border-t-2 pt-4 text-center text-xs text-gray-400" style={{ borderColor: form.primaryColor }}>
-                    {form.footerText || "Footer text"}
-                </div>
-            </div>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-3">
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="px-4 py-2 text-white/70 hover:text-white transition-colors"
-                >
-                    Cancel
-                </button>
-                <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 disabled:opacity-50"
-                >
-                    <FloppyDisk size={18} />
-                    {saving ? "Saving..." : "Save Template"}
-                </button>
-            </div>
-        </form>
-    );
-}
-
-// Template Card Component
-function TemplateCard({ template, onEdit, onDelete }) {
-    const [deleting, setDeleting] = useState(false);
-
-    const handleDelete = async () => {
-        if (!confirm(`Delete template "${template.name}"?`)) return;
-        setDeleting(true);
-        await onDelete(template.id);
-        setDeleting(false);
-    };
-
-    return (
-        <div className="p-4 bg-theme-bg-secondary rounded-xl border border-white/10 hover:border-white/20 transition-colors">
-            <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                    <div
-                        className="w-10 h-10 rounded flex items-center justify-center text-white text-xs font-bold"
-                        style={{ backgroundColor: template.primaryColor || "#3b82f6" }}
-                    >
-                        {template.logoPath ? (
-                            <img src={template.logoPath} alt="" className="w-full h-full object-contain rounded" />
-                        ) : (
-                            "L"
-                        )}
-                    </div>
-                    <div>
-                        <div className="font-medium text-white">{template.name}</div>
-                        <div className="text-xs text-white/50">{template.headerText || "No header set"}</div>
+                    <div className="border-t border-white/10 pt-6 space-y-4">
+                        <div>
+                            <label className="text-xs font-bold text-white/60 uppercase tracking-wide">Header Text</label>
+                            <input
+                                type="text"
+                                value={template.headerText}
+                                onChange={e => setTemplate({ ...template, headerText: e.target.value })}
+                                placeholder="Company Name | Address"
+                                className="w-full mt-2 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-white/60 uppercase tracking-wide">Footer Text</label>
+                            <textarea
+                                value={template.footerText}
+                                onChange={e => setTemplate({ ...template, footerText: e.target.value })}
+                                placeholder="Copyright 2024..."
+                                rows={3}
+                                className="w-full mt-2 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white resize-none"
+                            />
+                        </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => onEdit(template)}
-                        className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                        <PencilSimple size={16} />
-                    </button>
-                    <button
-                        onClick={handleDelete}
-                        disabled={deleting}
-                        className="p-2 text-red-400/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
-                    >
-                        <Trash size={16} />
-                    </button>
+
+                {/* RIGHT: Preview */}
+                <div className="flex-1 bg-black/30 rounded-2xl border border-white/5 p-4 flex items-center justify-center relative">
+                    <div className="absolute top-4 right-4 bg-blue-500/20 text-blue-300 text-xs px-2 py-1 rounded border border-blue-500/30">
+                        Live Preview
+                    </div>
+                    <TemplatePreview template={template} />
                 </div>
             </div>
         </div>
     );
 }
 
-// Main Page Component
+// --- MAIN PAGE ---
 export default function DocumentTemplates() {
     const [templates, setTemplates] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [editing, setEditing] = useState(null); // null = list view, {} = new, {id:...} = edit
+    const [editing, setEditing] = useState(null); // null = list, {} = new, {id} = edit
 
-    useEffect(() => {
-        loadTemplates();
-    }, []);
+    useEffect(() => { loadTemplates(); }, []);
 
     const loadTemplates = async () => {
         setLoading(true);
         const list = await PdfTemplates.list();
-        setTemplates(list);
+        setTemplates(list || []);
         setLoading(false);
     };
 
-    const handleSave = async (formData) => {
+    const handleSave = async (data) => {
         let result;
-        if (editing?.id) {
-            result = await PdfTemplates.update(editing.id, formData);
-        } else {
-            result = await PdfTemplates.create(formData);
-        }
+        if (data.id) result = await PdfTemplates.update(data.id, data);
+        else result = await PdfTemplates.create(data);
+
         if (result?.success) {
+            showToast("Template saved!", "success");
             await loadTemplates();
             setEditing(null);
+        } else {
+            showToast(result?.error || "Save failed", "error");
         }
-        return result;
     };
 
     const handleDelete = async (id) => {
+        if (!confirm("Delete this template?")) return;
         const result = await PdfTemplates.delete(id);
         if (result?.success) {
             showToast("Template deleted", "success");
-            await loadTemplates();
-        } else {
-            showToast(result?.error || "Failed to delete", "error");
+            loadTemplates();
         }
     };
 
@@ -315,64 +270,65 @@ export default function DocumentTemplates() {
             <Sidebar />
             <div
                 style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
-                className="relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[16px] bg-theme-bg-secondary w-full h-full overflow-y-scroll p-4 md:p-0"
+                className="relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[16px] bg-theme-bg-secondary w-full h-full overflow-hidden p-4 md:p-6"
             >
-                <div className="flex flex-col w-full px-1 md:pl-6 md:pr-[50px] md:py-6 py-16 h-full">
-                    {/* Header */}
-                    <div className="w-full flex flex-col gap-y-1 pb-6 border-white/10 border-b mb-6">
-                        <div className="flex items-center justify-between">
+                {editing ? (
+                    <TemplateEditor
+                        template={editing.id ? editing : null}
+                        onSave={handleSave}
+                        onCancel={() => setEditing(null)}
+                    />
+                ) : (
+                    <div className="h-full flex flex-col">
+                        <div className="flex justify-between items-end mb-6 pb-6 border-b border-white/10">
                             <div>
-                                <p className="text-lg leading-6 font-bold text-white">
-                                    Document Templates
-                                </p>
-                                <p className="text-xs leading-[18px] font-base text-white/60 mt-2">
-                                    Create branded templates for your documents. Apply them in the note editor.
-                                </p>
+                                <h1 className="text-2xl font-bold text-white tracking-tight">Document Templates</h1>
+                                <p className="text-white/60 text-sm mt-1">Manage branding for your PDF exports.</p>
                             </div>
-                            {!editing && (
-                                <button
-                                    onClick={() => setEditing({})}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
-                                >
-                                    <Plus size={18} />
-                                    New Template
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Content */}
-                    {editing !== null ? (
-                        <TemplateForm
-                            template={editing}
-                            onSave={handleSave}
-                            onCancel={() => setEditing(null)}
-                        />
-                    ) : loading ? (
-                        <div className="text-white/50 text-center py-12">Loading templates...</div>
-                    ) : templates.length === 0 ? (
-                        <div className="text-center py-12">
-                            <p className="text-white/50 mb-4">No templates yet</p>
                             <button
                                 onClick={() => setEditing({})}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
                             >
-                                Create Your First Template
+                                <Plus size={18} weight="bold" />
+                                Create Template
                             </button>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {templates.map((t) => (
-                                <TemplateCard
-                                    key={t.id}
-                                    template={t}
-                                    onEdit={setEditing}
-                                    onDelete={handleDelete}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
+
+                        {loading ? (
+                            <div className="flex-1 flex items-center justify-center text-white/40">Loading...</div>
+                        ) : templates.length === 0 ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-white/40">
+                                <FilePdf size={64} className="mb-4 opacity-20" />
+                                <p>No templates found.</p>
+                                <button onClick={() => setEditing({})} className="mt-4 text-blue-400 hover:text-blue-300">Create one now</button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto pb-10">
+                                {templates.map(t => (
+                                    <div key={t.id} className="group bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-xl p-4 transition-all hover:-translate-y-1">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-inner" style={{ backgroundColor: t.primaryColor || '#3b82f6' }}>
+                                                {t.logoPath ? <img src={t.logoPath} className="h-full w-full object-contain rounded-lg" /> : t.name.charAt(0)}
+                                            </div>
+                                            <div className="opacity-0 group-hover:opacity-100 flex gap-2 transition-opacity">
+                                                <button onClick={() => setEditing(t)} className="p-1.5 hover:bg-white/20 rounded text-white/70 hover:text-white"><PencilSimple size={14} /></button>
+                                                <button onClick={() => handleDelete(t.id)} className="p-1.5 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300"><Trash size={14} /></button>
+                                            </div>
+                                        </div>
+                                        <h3 className="font-bold text-white truncate">{t.name}</h3>
+                                        <p className="text-xs text-white/50 truncate mt-1">{t.headerText || 'No header'}</p>
+
+                                        <div className="mt-4 pt-3 border-t border-white/5 flex gap-2">
+                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-white/40 border border-white/5 font-mono">
+                                                {t.fontFamily}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
