@@ -195,6 +195,5 @@ module.exports = {
   handleFileUpload,
   handleAPIFileUpload,
   handleAssetUpload,
-  handlePfpUpload,
   handleGenericImageUpload,
 };
