@@ -39,10 +39,31 @@ const { getModelTag } = require("./utils");
 const { searchWorkspaceAndThreads } = require("../utils/helpers/search");
 const { workspaceParsedFilesEndpoints } = require("./workspacesParsedFiles");
 const { importProductsFromUrl } = require("../utils/productImport");
+const { generatePdf } = require("../utils/pdfExport");
 
 function workspaceEndpoints(app) {
   if (!app) return;
   const responseCache = new Map();
+
+  app.post(
+    "/workspace/:slug/export-pdf",
+    [validatedRequest, flexUserRoleValid([ROLES.all])],
+    async (request, response) => {
+      try {
+        const { html } = reqBody(request);
+        if (!html) return response.status(400).json({ error: "HTML content required" });
+
+        const pdfBuffer = await generatePdf(html);
+
+        response.setHeader('Content-Type', 'application/pdf');
+        response.setHeader('Content-Disposition', 'attachment; filename="export.pdf"');
+        response.send(pdfBuffer);
+      } catch (e) {
+        console.error(e.message, e);
+        response.status(500).json({ error: e.message });
+      }
+    }
+  );
 
   app.post(
     "/workspace/new",
