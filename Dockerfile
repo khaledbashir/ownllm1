@@ -157,7 +157,7 @@ WORKDIR /app
 FROM build AS backend-build
 COPY --chown=anythingllm:anythingllm ./server /app/server/
 WORKDIR /app/server
-RUN yarn install --production --network-timeout 100000 && yarn cache clean
+RUN yarn install --production --network-timeout 100000 && yarn cache clean && npx playwright install chromium
 WORKDIR /app
 
 # Install collector dependencies
