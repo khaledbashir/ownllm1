@@ -1,4 +1,5 @@
-const { AgentHandler } = require("../../agents");
+// NOTE: AgentHandler is lazy-loaded inside executeAgent() to avoid circular dependency:
+// agentFlows/index.js → executor.js → execute-agent.js → agents/index.js → defaults.js → agentFlows/index.js
 const { HeadlessSocket } = require("../../agents/headless");
 const { v4: uuidv4 } = require("uuid");
 const { WorkspaceAgentInvocation } = require("../../../models/workspaceAgentInvocation");
@@ -47,6 +48,9 @@ async function executeAgent(config, context) {
 
         // Create the Headless Socket Mock
         const headlessSocket = new HeadlessSocket();
+
+        // Lazy-load AgentHandler to avoid circular dependency
+        const { AgentHandler } = require("../../agents");
 
         // Instantiate AgentHandler
         // We create a new handler instance for this specific execution to avoid polluting
