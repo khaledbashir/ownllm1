@@ -1,71 +1,63 @@
-const { chromium } = require('playwright-core');
+const { exec } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { v4: uuidv4 } = require('uuid');
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 /**
- * Generates a PDF from HTML content using a local Playwright/Chromium instance.
+ * Generates a PDF from HTML content using WeasyPrint (via CLI).
  * 
- * Uses the local Puppeteer executable (if set) or the one installed by Playwright.
+ * Requires WeasyPrint to be installed in the environment (e.g. Dockerfile).
  * 
  * @param {string} htmlContent - The full HTML string to render
+ * @param {object} options - Options (currently unused as styling is handled via CSS)
  * @returns {Promise<Buffer>} - The PDF buffer
  */
 async function generatePdf(htmlContent, options = {}) {
     if (!htmlContent) throw new Error("HTML content is required");
 
-    let browser;
+    const jobId = uuidv4();
+    const tempDir = os.tmpdir();
+    const inputPath = path.join(tempDir, `input_${jobId}.html`);
+    const outputPath = path.join(tempDir, `output_${jobId}.pdf`);
+
     try {
-        // Use local chromium dispatch
-        const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
-        console.log('[PDF Export] Launching local browser. Executable:', executablePath || 'bundled');
+        console.log(`[PDF Export] Starting WeasyPrint job ${jobId}`);
 
-        browser = await chromium.launch({
-            executablePath,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-            headless: true
-        });
+        // Write HTML to temp file
+        await fs.promises.writeFile(inputPath, htmlContent, 'utf8');
 
-        const context = await browser.newContext();
-        const page = await context.newPage();
+        // Execute WeasyPrint
+        // --presentational-hints enables support for HTML presentational attributes
+        const command = `weasyprint "${inputPath}" "${outputPath}" --presentational-hints --encoding utf-8`;
 
-        await page.setContent(htmlContent, { waitUntil: 'networkidle', timeout: 30000 });
+        console.log(`[PDF Export] Executing: ${command}`);
+        const { stdout, stderr } = await execPromise(command);
 
-        const pdfOptions = {
-            format: 'A4',
-            printBackground: true,
-            margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
-        };
+        if (stdout) console.log('[WeasyPrint stdout]:', stdout);
+        if (stderr) console.error('[WeasyPrint stderr]:', stderr);
 
-        // Add native header/footer if templates provided
-        if (options.headerTemplate || options.footerTemplate) {
-            pdfOptions.displayHeaderFooter = true;
-            // Playwright requires explicit margins if header/footer are used, otherwise they might be overwritten
-            // We increase top/bottom margins to make room
-            pdfOptions.margin = { top: '80px', bottom: '80px', left: '20px', right: '20px' };
-
-            if (options.headerTemplate) pdfOptions.headerTemplate = options.headerTemplate;
-            if (options.footerTemplate) pdfOptions.footerTemplate = options.footerTemplate;
+        // Read the generated PDF
+        if (!fs.existsSync(outputPath)) {
+            throw new Error("WeasyPrint failed to generate output file");
         }
 
-        const pdfBuffer = await page.pdf(pdfOptions);
-
-        await page.close();
-        await context.close();
-        await browser.close();
-
+        const pdfBuffer = await fs.promises.readFile(outputPath);
         return pdfBuffer;
+
     } catch (error) {
-        console.error('PDF Generation Error:', error);
-        if (browser) {
-            try { await browser.close(); } catch (e) { }
-        }
-
-        // Provide helpful error messages
-        if (error.message.includes('executablePath')) {
-            throw new Error(
-                `Failed to launch browser. Ensure Chromium is installed or PUPPETEER_EXECUTABLE_PATH is set. Error: ${error.message}`
-            );
-        }
-
+        console.error('[PDF Export] WeasyPrint Error:', error);
         throw new Error(`PDF generation failed: ${error.message}`);
+    } finally {
+        // Cleanup temp files
+        try {
+            if (fs.existsSync(inputPath)) await fs.promises.unlink(inputPath);
+            if (fs.existsSync(outputPath)) await fs.promises.unlink(outputPath);
+        } catch (cleanupError) {
+            console.warn('[PDF Export] Cleanup warning:', cleanupError);
+        }
     }
 }
 

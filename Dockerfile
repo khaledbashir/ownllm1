@@ -40,6 +40,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
         mv /root/.local/bin/uvx /usr/local/bin/uvx && \
         echo "Installed uvx! $(uv --version)" && \
     apt-get clean && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install WeasyPrint and Python dependencies
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
+    python3-pip python3-cairo python3-pango && \
+    pip3 install weasyprint --break-system-packages && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Create a group and user with specific UID and GID
@@ -109,6 +118,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
         mv /root/.local/bin/uv /usr/local/bin/uv && \
         mv /root/.local/bin/uvx /usr/local/bin/uvx && \
         echo "Installed uvx! $(uv --version)" && \
+    apt-get clean && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install WeasyPrint and Python dependencies
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
+    python3-pip python3-cairo python3-pango && \
+    pip3 install weasyprint --break-system-packages && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
