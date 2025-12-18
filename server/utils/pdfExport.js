@@ -1,34 +1,29 @@
 const { chromium } = require('playwright-core');
 
 /**
- * Generates a PDF from HTML content.
- * First tries to use a remote browser (browserless), falls back to local puppeteer.
+ * Generates a PDF from HTML content using a remote browser (browserless).
+ * 
+ * SETUP REQUIRED:
+ * 1. Add a browserless service on Easypanel (image: browserless/chrome)
+ * 2. Set BROWSER_WS_URL env var, e.g.: ws://browserless:3000?token=your-token
+ * 
  * @param {string} htmlContent - The full HTML string to render
  * @returns {Promise<Buffer>} - The PDF buffer
  */
 async function generatePdf(htmlContent) {
     if (!htmlContent) throw new Error("HTML content is required");
 
-    // Check if remote browser is configured
-    const remoteUrl = process.env.PUPPETEER_WSS_URL || process.env.BROWSER_WS_URL;
+    // Get browser WebSocket URL from environment
+    const baseUrl = process.env.PUPPETEER_WSS_URL || process.env.BROWSER_WS_URL;
 
-    if (remoteUrl && remoteUrl !== 'ws://browserless:3000') {
-        // Try remote browser first (for prod with browserless service)
-        try {
-            return await generatePdfRemote(htmlContent, remoteUrl);
-        } catch (error) {
-            console.warn('[PDF Export] Remote browser failed, trying local puppeteer:', error.message);
-        }
+    if (!baseUrl) {
+        throw new Error(
+            "PDF export requires BROWSER_WS_URL environment variable. " +
+            "Please add a browserless service on Easypanel and set BROWSER_WS_URL=ws://browserless:3000?token=your-token"
+        );
     }
 
-    // Fall back to local puppeteer
-    return await generatePdfLocal(htmlContent);
-}
-
-/**
- * Generate PDF using remote browser (Playwright + Browserless)
- */
-async function generatePdfRemote(htmlContent, baseUrl) {
+    // Build the WebSocket endpoint
     let browserWSEndpoint;
     if (baseUrl.includes('/playwright')) {
         browserWSEndpoint = baseUrl;
@@ -41,12 +36,12 @@ async function generatePdfRemote(htmlContent, baseUrl) {
 
     let browser;
     try {
-        console.log('[PDF Export] Connecting to remote browser:', browserWSEndpoint);
-        browser = await chromium.connect(browserWSEndpoint, { timeout: 10000 });
+        console.log('[PDF Export] Connecting to:', browserWSEndpoint);
+        browser = await chromium.connect(browserWSEndpoint, { timeout: 15000 });
         const context = await browser.newContext();
         const page = await context.newPage();
 
-        await page.setContent(htmlContent, { waitUntil: 'networkidle' });
+        await page.setContent(htmlContent, { waitUntil: 'networkidle', timeout: 30000 });
 
         const pdfBuffer = await page.pdf({
             format: 'A4',
@@ -60,57 +55,20 @@ async function generatePdfRemote(htmlContent, baseUrl) {
 
         return pdfBuffer;
     } catch (error) {
+        console.error('PDF Generation Error:', error);
         if (browser) {
             try { await browser.close(); } catch (e) { }
         }
-        throw error;
-    }
-}
 
-/**
- * Generate PDF using local puppeteer with bundled chromium
- */
-async function generatePdfLocal(htmlContent) {
-    let puppeteer;
-    try {
-        puppeteer = require('puppeteer');
-    } catch (e) {
-        throw new Error('PDF export requires either BROWSER_WS_URL env var or puppeteer package installed');
-    }
-
-    let browser;
-    try {
-        console.log('[PDF Export] Using local puppeteer');
-        browser = await puppeteer.launch({
-            headless: 'new',
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--single-process',
-            ]
-        });
-
-        const page = await browser.newPage();
-        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-
-        const pdfBuffer = await page.pdf({
-            format: 'A4',
-            printBackground: true,
-            margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
-        });
-
-        await page.close();
-        await browser.close();
-
-        return Buffer.from(pdfBuffer);
-    } catch (error) {
-        console.error('Local PDF Generation Error:', error);
-        if (browser) {
-            try { await browser.close(); } catch (e) { }
+        // Provide helpful error messages
+        if (error.message.includes('ECONNREFUSED') || error.message.includes('WebSocket')) {
+            throw new Error(
+                `Cannot connect to browser service at ${browserWSEndpoint}. ` +
+                `Ensure browserless service is running and BROWSER_WS_URL is correct.`
+            );
         }
-        throw new Error(`Failed to generate PDF: ${error.message}`);
+
+        throw new Error(`PDF generation failed: ${error.message}`);
     }
 }
 
