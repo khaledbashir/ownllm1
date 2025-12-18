@@ -764,11 +764,29 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         if (!containerRef.current || !workspaceSlug) return;
         setExporting(true);
         try {
-            // Get HTML content from the editor container
-            // Wrap it in a proper HTML document structure for Playwright PDF generation
-            const editorContent = containerRef.current.innerHTML;
+            // Clone the editor content to manipulate it without affecting the live view
+            const clone = containerRef.current.cloneNode(true);
 
-            // Build a complete HTML document for proper PDF rendering
+            // CLEANUP: Remove editor UI artifacts
+            const artifacts = [
+                '.affine-block-handle',
+                '.affine-format-bar-widget',
+                '.affine-slash-menu-widget',
+                '.keyboard-toolbar',
+                '.widget-container',
+                '[contenteditable="false"]', // Often UI elements
+                'affine-block-selection',
+                '.drag-handle'
+            ];
+
+            artifacts.forEach(selector => {
+                clone.querySelectorAll(selector).forEach(el => el.remove());
+            });
+
+            // Get cleaned HTML
+            const editorContent = clone.innerHTML;
+
+            // Build a complete HTML document with Cyberpunk / Dark Mode styling
             const editorHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -776,75 +794,125 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Export</title>
     <style>
+        :root {
+            --bg-color: #111827; /* Gray 900 */
+            --text-color: #f3f4f6; /* Gray 100 */
+            --heading-color: #ffffff;
+            --border-color: #374151; /* Gray 700 */
+            --accent-color: #3b82f6; /* Blue 500 */
+            --code-bg: #1f2937; /* Gray 800 */
+            --quote-border: #3b82f6;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            color: #1a1a1a;
-            background: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-color);
             line-height: 1.6;
             padding: 40px;
             max-width: 800px;
             margin: 0 auto;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
-        h1 { font-size: 28px; margin-bottom: 16px; font-weight: 700; }
-        h2 { font-size: 22px; margin-top: 24px; margin-bottom: 12px; font-weight: 600; }
-        h3 { font-size: 18px; margin-top: 20px; margin-bottom: 10px; font-weight: 600; }
-        p { margin-bottom: 12px; }
-        ul, ol { margin-left: 24px; margin-bottom: 12px; }
-        li { margin-bottom: 6px; }
+
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--heading-color);
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        h1 { font-size: 2.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
+        h2 { font-size: 2rem; }
+        h3 { font-size: 1.75rem; }
+        
+        p { margin-bottom: 1em; }
+        
+        a { color: var(--accent-color); text-decoration: none; }
+
+        /* Lists */
+        ul, ol { margin-left: 2rem; margin-bottom: 1em; }
+        li { margin-bottom: 0.25em; }
+
+        /* Code Blocks */
         code {
-            background: #f4f4f5;
-            padding: 2px 6px;
+            background-color: var(--code-bg);
+            padding: 0.2em 0.4em;
             border-radius: 4px;
-            font-family: 'SF Mono', Consolas, monospace;
-            font-size: 14px;
+            font-family: 'SF Mono', Consolas, Monaco, monospace;
+            font-size: 0.9em;
         }
+
         pre {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 16px;
+            background-color: var(--code-bg);
+            padding: 1rem;
             border-radius: 8px;
             overflow-x: auto;
-            margin-bottom: 16px;
+            margin-bottom: 1em;
+            border: 1px solid var(--border-color);
         }
+
         pre code {
-            background: transparent;
+            background-color: transparent;
             padding: 0;
+            font-size: 0.9rem;
+            color: #e5e7eb;
         }
+
+        /* Blockquotes */
         blockquote {
-            border-left: 4px solid #3b82f6;
-            padding-left: 16px;
-            margin: 16px 0;
-            color: #4b5563;
+            border-left: 4px solid var(--quote-border);
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+            color: #9ca3af;
             font-style: italic;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 1rem;
+            border-radius: 0 4px 4px 0;
         }
+
+        /* Tables - Enterprise Style */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 16px;
+            margin: 2rem 0;
+            font-size: 0.95rem;
         }
-        th, td {
-            border: 1px solid #e5e7eb;
-            padding: 10px 14px;
-            text-align: left;
-        }
+
         th {
-            background: #f9fafb;
+            background-color: #1f2937;
+            color: #fff;
             font-weight: 600;
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border-color);
         }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: #d1d5db;
+        }
+
+        /* BlockSuite Specific Fixes */
+        affine-paragraph { display: block; margin-bottom: 0.5em; }
+        affine-list { display: list-item; }
+        
+        /* Utility */
         hr {
-            border: none;
-            border-top: 1px solid #e5e7eb;
-            margin: 24px 0;
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 2rem 0;
         }
-        /* BlockSuite specific overrides */
-        [data-block-id] { margin-bottom: 8px; }
-        .affine-paragraph-block-container { margin-bottom: 8px; }
-        .affine-list-block-container { margin-bottom: 4px; }
     </style>
 </head>
 <body>
