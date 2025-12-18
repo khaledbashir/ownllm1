@@ -921,7 +921,55 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 </body>
 </html>`;
 
-            const result = await WorkspaceThread.exportPdf(workspaceSlug, editorHtml);
+            // Fetch templates if we don't have them yet
+            let templates = brandTemplates;
+            if (templates.length === 0) {
+                try {
+                    templates = await PdfTemplates.list();
+                    setBrandTemplates(templates || []);
+                } catch (e) {
+                    console.warn("Could not fetch brand templates for PDF export");
+                }
+            }
+
+            // Use the first available template or a default one
+            // Ideally, the user would select this, but for "Plan D" auto-fix we pick the first valid one
+            const activeTemplate = templates && templates.length > 0 ? templates[0] : null;
+
+            // Construct Header/Footer Templates
+            // Playwright requires explicit font-size in the template inline style
+            let headerTemplate = undefined;
+            let footerTemplate = undefined;
+
+            if (activeTemplate) {
+                const logoHtml = activeTemplate.logoPath ? `<img src="${activeTemplate.logoPath}" style="height: 40px; margin-right: 10px;" />` : '';
+                headerTemplate = `
+                <div style="font-size: 10px; width: 100%; height: 60px; display: flex; align-items: center; justify-content: space-between; margin: 0 20px; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: center;">
+                        ${logoHtml}
+                        <span style="font-size: 14px; font-weight: 600; font-family: sans-serif;">${activeTemplate.name || 'Company Name'}</span>
+                    </div>
+                    <div style="color: #6b7280; font-family: sans-serif;">${activeTemplate.headerText || ''}</div>
+                </div>`;
+
+                footerTemplate = `
+                <div style="font-size: 10px; width: 100%; display: flex; justify-content: space-between; margin: 0 20px; color: #9ca3af; font-family: sans-serif;">
+                    <span>${activeTemplate.footerText || ''}</span>
+                    <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+                </div>`;
+            } else {
+                // Default minimalist footer with page numbers even if no template
+                footerTemplate = `
+                <div style="font-size: 10px; width: 100%; display: flex; justify-content: flex-end; margin: 0 20px; color: #9ca3af; font-family: sans-serif;">
+                    <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+                </div>`;
+            }
+
+
+            const result = await WorkspaceThread.exportPdf(workspaceSlug, editorHtml, {
+                headerTemplate,
+                footerTemplate
+            });
 
             // Check if result is an error object
             if (result?.error) {

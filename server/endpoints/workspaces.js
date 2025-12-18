@@ -50,10 +50,13 @@ function workspaceEndpoints(app) {
     [validatedRequest, flexUserRoleValid([ROLES.all])],
     async (request, response) => {
       try {
-        const { html } = reqBody(request);
+        const { html, headerTemplate, footerTemplate } = reqBody(request);
         if (!html) return response.status(400).json({ error: "HTML content required" });
 
-        const pdfBuffer = await generatePdf(html);
+        const pdfBuffer = await generatePdf(html, {
+          headerTemplate,
+          footerTemplate
+        });
 
         response.setHeader('Content-Type', 'application/pdf');
         response.setHeader('Content-Disposition', 'attachment; filename="export.pdf"');

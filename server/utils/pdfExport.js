@@ -8,7 +8,7 @@ const { chromium } = require('playwright-core');
  * @param {string} htmlContent - The full HTML string to render
  * @returns {Promise<Buffer>} - The PDF buffer
  */
-async function generatePdf(htmlContent) {
+async function generatePdf(htmlContent, options = {}) {
     if (!htmlContent) throw new Error("HTML content is required");
 
     let browser;
@@ -28,11 +28,24 @@ async function generatePdf(htmlContent) {
 
         await page.setContent(htmlContent, { waitUntil: 'networkidle', timeout: 30000 });
 
-        const pdfBuffer = await page.pdf({
+        const pdfOptions = {
             format: 'A4',
             printBackground: true,
             margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
-        });
+        };
+
+        // Add native header/footer if templates provided
+        if (options.headerTemplate || options.footerTemplate) {
+            pdfOptions.displayHeaderFooter = true;
+            // Playwright requires explicit margins if header/footer are used, otherwise they might be overwritten
+            // We increase top/bottom margins to make room
+            pdfOptions.margin = { top: '80px', bottom: '80px', left: '20px', right: '20px' };
+
+            if (options.headerTemplate) pdfOptions.headerTemplate = options.headerTemplate;
+            if (options.footerTemplate) pdfOptions.footerTemplate = options.footerTemplate;
+        }
+
+        const pdfBuffer = await page.pdf(pdfOptions);
 
         await page.close();
         await context.close();

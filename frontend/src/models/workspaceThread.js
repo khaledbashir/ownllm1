@@ -267,13 +267,13 @@ const WorkspaceThread = {
       .catch(() => ({ success: false, error: "Invalid server response" }));
     return data;
   },
-  exportPdf: async function (workspaceSlug, html) {
+  exportPdf: async function (workspaceSlug, html, options = {}) {
     try {
       const res = await fetch(
         `${API_BASE}/workspace/${workspaceSlug}/export-pdf`,
         {
           method: "POST",
-          body: JSON.stringify({ html }),
+          body: JSON.stringify({ html, ...options }),
           headers: baseHeaders(),
         }
       );
