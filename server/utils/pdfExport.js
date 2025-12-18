@@ -13,31 +13,18 @@ const { chromium } = require('playwright-core');
 async function generatePdf(htmlContent) {
     if (!htmlContent) throw new Error("HTML content is required");
 
-    // Get browser WebSocket URL from environment
-    const baseUrl = process.env.PUPPETEER_WSS_URL || process.env.BROWSER_WS_URL;
-
-    if (!baseUrl) {
-        throw new Error(
-            "PDF export requires BROWSER_WS_URL environment variable. " +
-            "Please add a browserless service on Easypanel and set BROWSER_WS_URL=ws://browserless:3000?token=your-token"
-        );
-    }
-
-    // Build the WebSocket endpoint
-    let browserWSEndpoint;
-    if (baseUrl.includes('/playwright')) {
-        browserWSEndpoint = baseUrl;
-    } else {
-        const urlObj = new URL(baseUrl);
-        const queryString = urlObj.search;
-        const baseWithoutQuery = `${urlObj.protocol}//${urlObj.host}`;
-        browserWSEndpoint = `${baseWithoutQuery}/playwright/chromium${queryString}`;
-    }
-
     let browser;
     try {
-        console.log('[PDF Export] Connecting to:', browserWSEndpoint);
-        browser = await chromium.connect(browserWSEndpoint, { timeout: 15000 });
+        // Use local chromium dispatch
+        const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+        console.log('[PDF Export] Launching local browser. Executable:', executablePath || 'bundled');
+
+        browser = await chromium.launch({
+            executablePath,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+            headless: true
+        });
+
         const context = await browser.newContext();
         const page = await context.newPage();
 
@@ -61,10 +48,9 @@ async function generatePdf(htmlContent) {
         }
 
         // Provide helpful error messages
-        if (error.message.includes('ECONNREFUSED') || error.message.includes('WebSocket')) {
+        if (error.message.includes('executablePath')) {
             throw new Error(
-                `Cannot connect to browser service at ${browserWSEndpoint}. ` +
-                `Ensure browserless service is running and BROWSER_WS_URL is correct.`
+                `Failed to launch browser. Ensure Chromium is installed or PUPPETEER_EXECUTABLE_PATH is set. Error: ${error.message}`
             );
         }
 

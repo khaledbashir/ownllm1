@@ -74,6 +74,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV CHROME_PATH=/app/chrome-linux/chrome
 ENV PUPPETEER_EXECUTABLE_PATH=/app/chrome-linux/chrome
 
+
 RUN echo "Done running arm64 specific installation steps"
 
 #############################################
