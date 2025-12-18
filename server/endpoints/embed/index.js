@@ -3,6 +3,7 @@ const { reqBody, multiUserMode } = require("../../utils/http");
 const { Telemetry } = require("../../models/telemetry");
 const { streamChatWithForEmbed } = require("../../utils/chats/embed");
 const { EmbedChats } = require("../../models/embedChats");
+const prisma = require("../../utils/prisma");
 const {
   validEmbedConfig,
   canRespond,
@@ -12,6 +13,59 @@ const {
   convertToChatHistory,
   writeResponseChunk,
 } = require("../../utils/helpers/chat/responses");
+
+/**
+ * Auto-create a CRM card for a new embed chat session (if pipeline exists for this embed).
+ * This allows tracking leads from embedded chat widgets.
+ */
+async function maybeCreateCrmCardForSession(embed, sessionId, firstMessage) {
+  try {
+    // Check if a card already exists for this session
+    const existingCard = await prisma.crm_cards.findFirst({
+      where: { embedSessionId: sessionId },
+    });
+
+    if (existingCard) return; // Already tracked
+
+    // Find a pipeline linked to this embed's workspace (or the first available pipeline)
+    const pipeline = await prisma.crm_pipelines.findFirst({
+      where: { workspaceId: embed.workspace_id },
+      orderBy: { createdAt: "asc" },
+    });
+
+    // If no workspace-specific pipeline, try finding any pipeline
+    const targetPipeline = pipeline || await prisma.crm_pipelines.findFirst({
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (!targetPipeline) return; // No pipelines configured yet
+
+    const stages = JSON.parse(targetPipeline.stages || "[]");
+    const firstStage = stages[0] || "New";
+
+    // Create the CRM card
+    await prisma.crm_cards.create({
+      data: {
+        pipelineId: targetPipeline.id,
+        stage: firstStage,
+        position: 1,
+        title: `Embed Lead - ${new Date().toLocaleString()}`,
+        notes: `First message: ${(firstMessage || "").slice(0, 200)}${firstMessage?.length > 200 ? "..." : ""}`,
+        embedSessionId: sessionId,
+        metadata: JSON.stringify({
+          embedId: embed.id,
+          embedUuid: embed.uuid,
+          workspaceId: embed.workspace_id,
+          source: "embed-chat",
+          createdAt: new Date().toISOString(),
+        }),
+      },
+    });
+  } catch (err) {
+    // Don't fail the chat if CRM creation fails - just log it
+    console.error("[CRM] Failed to create card for embed session:", err.message);
+  }
+}
 
 function embeddedEndpoints(app) {
   if (!app) return;
@@ -37,6 +91,9 @@ function embeddedEndpoints(app) {
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Connection", "keep-alive");
         response.flushHeaders();
+
+        // Auto-create CRM card for new embed sessions (fire-and-forget)
+        maybeCreateCrmCardForSession(embed, sessionId, message);
 
         await streamChatWithForEmbed(response, embed, message, sessionId, {
           promptOverride: prompt,
