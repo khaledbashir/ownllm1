@@ -2,7 +2,7 @@ const { Telemetry } = require("../../models/telemetry");
 const {
   SUPPORTED_CONNECTION_METHODS,
 } = require("../../core/ai/bedrock/utils");
-const { resetAllVectorStores } = require("../vectorStore/resetAllVectorStores");
+// resetAllVectorStores is lazy-loaded in handleVectorStoreReset to avoid circular imports.
 
 const KEY_MAPPING = {
   LLMProvider: {
@@ -1024,6 +1024,7 @@ async function handleVectorStoreReset(key, prevValue, nextValue) {
     console.log(
       `Vector configuration changed from ${prevValue} to ${nextValue} - resetting ${prevValue} namespaces`
     );
+    const { resetAllVectorStores } = require("../vectorStore/resetAllVectorStores");
     return await resetAllVectorStores({ vectorDbKey: prevValue });
   }
 
@@ -1031,6 +1032,7 @@ async function handleVectorStoreReset(key, prevValue, nextValue) {
     console.log(
       `${key} changed from ${prevValue} to ${nextValue} - resetting ${process.env.VECTOR_DB} namespaces`
     );
+    const { resetAllVectorStores } = require("../vectorStore/resetAllVectorStores");
     return await resetAllVectorStores({ vectorDbKey: process.env.VECTOR_DB });
   }
   return false;

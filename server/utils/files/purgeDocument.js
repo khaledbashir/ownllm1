@@ -7,14 +7,15 @@ const {
   isWithin,
   documentsPath,
 } = require(".");
-const { Document } = require("../../models/documents");
-const { Workspace } = require("../../models/workspace");
+
 
 async function purgeDocument(filename = null) {
   if (!filename || !normalizePath(filename)) return;
 
   await purgeVectorCache(filename);
   await purgeSourceDocument(filename);
+  const { Workspace } = require("../../models/workspace");
+  const { Document } = require("../../models/documents");
   const workspaces = await Workspace.where();
   for (const workspace of workspaces) {
     await Document.removeDocuments(workspace, [filename]);
@@ -58,6 +59,9 @@ async function purgeFolder(folderName = null) {
     .map((file) =>
       path.join(subFolderPath, file).replace(documentsPath + "/", "")
     );
+
+  const { Workspace } = require("../../models/workspace");
+  const { Document } = require("../../models/documents");
   const workspaces = await Workspace.where();
 
   const purgePromises = [];
