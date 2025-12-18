@@ -1013,13 +1013,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     <span>${activeTemplate.footerText || ''}</span>
                     <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
                 </div>`;
-            } else {
-                // Default minimalist footer with page numbers even if no template
-                footerTemplate = `
-                <div style="font-size: 10px; width: 100%; display: flex; justify-content: flex-end; margin: 0 20px; color: #9ca3af; font-family: sans-serif;">
-                    <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
-                </div>`;
             }
+            // When activeTemplate is null, headerTemplate and footerTemplate stay undefined
+            // This ensures displayHeaderFooter stays false in Playwright (no header/footer at all)
 
 
             const result = await WorkspaceThread.exportPdf(workspaceSlug, editorHtml, {
