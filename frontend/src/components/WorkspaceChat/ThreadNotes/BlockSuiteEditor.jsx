@@ -1346,7 +1346,8 @@ const serializeDocToHtml = async (doc) => {
         if (result.assetsIds && result.assetsIds.length > 0) {
             console.log(`[PDF Export] Found ${result.assetsIds.length} assets to inline.`);
             for (const assetId of result.assetsIds) {
-                const asset = await job.assetsManager.get(assetId);
+                // job.assets is a Map<string, Blob>
+                const asset = job.assets.get(assetId);
                 if (asset) {
                     const reader = new FileReader();
                     const base64Data = await new Promise((resolve) => {
