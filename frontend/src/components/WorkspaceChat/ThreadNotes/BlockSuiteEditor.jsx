@@ -1608,7 +1608,8 @@ const serializeDocToHtml = async (doc) => {
                 const headers = columns.map(c => c.name || "");
                 const childBlocks = block.children || [];
 
-                if (headers.length > 0 && childBlocks.length > 0) {
+                if (headers.length > 0) {
+                    console.log(`[PDF Export] Database found. Headers: ${headers.length}, Rows (Children): ${childBlocks.length}`);
                     let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                         <thead style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
@@ -1618,46 +1619,47 @@ const serializeDocToHtml = async (doc) => {
 
                     // Each child is a ROW - the first column is the child's text, other columns are in cells
                     const cells = model.cells || {};
-                    for (const childBlock of childBlocks) {
-                        const rowId = childBlock.id;
-                        const rowModel = childBlock.model || {};
-                        const firstColText = getText(childBlock); // Title column from paragraph text
 
-                        tableHtml += `<tr style="border-bottom: 1px solid #e5e7eb;">`;
+                    if (childBlocks.length > 0) {
+                        for (const childBlock of childBlocks) {
+                            const rowId = childBlock.id;
+                            const firstColText = getText(childBlock); // Title column from paragraph text
 
-                        // First column is the child block's text content
-                        tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151;">${firstColText}</td>`;
+                            tableHtml += `<tr style="border-bottom: 1px solid #e5e7eb;">`;
 
-                        // Remaining columns from cells object
-                        const rowCells = cells[rowId] || {};
-                        columns.slice(1).forEach(col => {
-                            const cell = rowCells[col.id];
-                            let cellVal = "";
-                            if (cell) {
-                                // Cell value can be Text object, string, or other
-                                if (cell.value?.toString) {
-                                    cellVal = cell.value.toString();
-                                } else if (typeof cell.value === "string") {
-                                    cellVal = cell.value;
-                                } else if (cell.value?.text) {
-                                    cellVal = cell.value.text;
+                            // First column is the child block's text content
+                            tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151;">${firstColText}</td>`;
+
+                            // Remaining columns from cells object
+                            const rowCells = cells[rowId] || {};
+                            columns.slice(1).forEach(col => {
+                                const cell = rowCells[col.id];
+                                let cellVal = "";
+                                if (cell) {
+                                    // Cell value can be Text object, string, or other
+                                    if (cell.value?.toString) {
+                                        cellVal = cell.value.toString();
+                                    } else if (typeof cell.value === "string") {
+                                        cellVal = cell.value;
+                                    } else if (cell.value?.text) {
+                                        cellVal = cell.value.text;
+                                    }
                                 }
-                            }
-                            tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280;">${cellVal}</td>`;
-                        });
-                        tableHtml += "</tr>";
+                                tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280;">${cellVal}</td>`;
+                            });
+                            tableHtml += "</tr>";
+                        }
+                    } else {
+                        // Fallback: If no children, check if rows are stored in model? (Rare case)
+                        tableHtml += `<tr><td colspan="${headers.length}" style="padding: 1rem; text-align: center; color: #9ca3af;">No Data Rows Found (Debug: ${childBlocks.length} children)</td></tr>`;
                     }
+
                     tableHtml += "</tbody></table></div>";
                     html = tableHtml;
-                } else if (headers.length > 0) {
-                    // Empty table with just headers
-                    let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                        <thead style="background: #f3f4f6;"><tr>`;
-                    headers.forEach(h => tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600;">${h}</th>`);
-                    tableHtml += `</tr></thead><tbody><tr><td colspan="${headers.length}" style="padding: 1rem; text-align: center; color: #9ca3af;">No data</td></tr></tbody></table></div>`;
-                    html = tableHtml;
+                } else {
+                    console.warn("[PDF Export] Database skipped: No headers found");
                 }
+
                 break;
 
             default:
