@@ -795,12 +795,12 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     <title>Document Export</title>
     <style>
         :root {
-            --bg-color: #111827; /* Gray 900 */
-            --text-color: #f3f4f6; /* Gray 100 */
-            --heading-color: #ffffff;
-            --border-color: #374151; /* Gray 700 */
-            --accent-color: #3b82f6; /* Blue 500 */
-            --code-bg: #1f2937; /* Gray 800 */
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --heading-color: #111827;
+            --border-color: #e5e7eb;
+            --accent-color: #2563eb; /* Blue 600 */
+            --code-bg: #f3f4f6; /* Gray 100 */
             --quote-border: #3b82f6;
         }
 
@@ -821,7 +821,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-
+        
         /* Typography */
         h1, h2, h3, h4, h5, h6 {
             color: var(--heading-color);
@@ -850,10 +850,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             border-radius: 4px;
             font-family: 'SF Mono', Consolas, Monaco, monospace;
             font-size: 0.9em;
+            color: #ef4444; /* Red-ish for inline code like GitHub */
         }
 
         pre {
-            background-color: var(--code-bg);
+            background-color: #1e1e1e; /* Keep code blocks dark for contrast? Or light? Let's go Dark for code blocks as it's standard dev aesthetic */
             padding: 1rem;
             border-radius: 8px;
             overflow-x: auto;
@@ -865,7 +866,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             background-color: transparent;
             padding: 0;
             font-size: 0.9rem;
-            color: #e5e7eb;
+            color: #e5e7eb; /* Light text in dark code block */
         }
 
         /* Blockquotes */
@@ -873,9 +874,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             border-left: 4px solid var(--quote-border);
             padding-left: 1rem;
             margin: 1.5rem 0;
-            color: #9ca3af;
+            color: #4b5563;
             font-style: italic;
-            background: rgba(59, 130, 246, 0.1);
+            background: #f9fafb;
             padding: 1rem;
             border-radius: 0 4px 4px 0;
         }
@@ -889,18 +890,18 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         }
 
         th {
-            background-color: #1f2937;
-            color: #fff;
+            background-color: #f3f4f6; /* Light gray header */
+            color: #111827;
             font-weight: 600;
             text-align: left;
             padding: 12px 16px;
-            border-bottom: 2px solid var(--border-color);
+            border-bottom: 2px solid #d1d5db;
         }
 
         td {
             padding: 12px 16px;
             border-bottom: 1px solid var(--border-color);
-            color: #d1d5db;
+            color: #374151;
         }
 
         /* BlockSuite Specific Fixes */
