@@ -1323,52 +1323,195 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 });
 
 // Helper to recursively serialize BlockSuite doc to HTML
+// Helper to recursively serialize BlockSuite doc to HTML
 const serializeDocToHtml = async (doc) => {
     if (!doc.root) {
         console.error("[PDF Export] Doc has no root!");
         return "<p>No content found (Empty Root)</p>";
     }
 
-    console.log("[PDF Export] Starting serialization with HtmlAdapter for doc:", doc.id);
+    console.log("[PDF Export] Starting manual serialization for doc:", doc.id);
 
-    try {
-        const job = new Job({ collection: doc.collection });
-        const snapshot = await job.docToSnapshot(doc);
+    // Create job to access assets
+    const job = new Job({ collection: doc.collection });
+    // We need to wait for the job to be ready or just use assets directly?
+    // Usually job.docToSnapshot loads assets.
+    await job.docToSnapshot(doc);
+    const assets = job.assets; // Map<string, Blob>
 
-        const adapter = new HtmlAdapter(job);
-        const result = await adapter.fromDocSnapshot({
-            snapshot,
-            assets: job.assetsManager,
-        });
+    const getText = (block) => {
+        // Try various text access patterns
+        if (block.text?.toString) return block.text.toString();
+        if (block.model?.text?.toString) return block.model.text.toString();
+        // Check for yText
+        if (block.yText?.toString) return block.yText.toString();
+        // Check for model.yText
+        if (block.model?.yText?.toString) return block.model.yText.toString();
+        return "";
+    };
 
-        let htmlContent = result.file;
+    const processBlock = async (blockOrId) => {
+        let block = blockOrId;
+        // Resolve ID to block if needed
+        if (typeof blockOrId === 'string') {
+            block = doc.getBlock(blockOrId);
+        }
 
-        if (result.assetsIds && result.assetsIds.length > 0) {
-            console.log(`[PDF Export] Found ${result.assetsIds.length} assets to inline.`);
-            for (const assetId of result.assetsIds) {
-                // job.assets is a Map<string, Blob>
-                const asset = job.assets.get(assetId);
-                if (asset) {
-                    const reader = new FileReader();
-                    const base64Data = await new Promise((resolve) => {
-                        reader.onloadend = () => resolve(reader.result);
-                        reader.readAsDataURL(asset);
-                    });
+        if (!block) {
+            // console.warn("[PDF Export] Block not found for:", blockOrId);
+            return "";
+        }
 
-                    // Replace usages in HTML
-                    // We'll replace all occurrences of the asset ID in src attributes.
-                    // e.g. src="assets://<id>" or src="<id>"
-                    const regex = new RegExp(`src=["'](?:assets:\/\/)?${assetId}["']`, 'g');
-                    htmlContent = htmlContent.replace(regex, `src="${base64Data}"`);
-                }
+        const flavour = block.flavour;
+        const model = block.model || {};
+        const text = getText(block);
+
+        let html = "";
+        let childHtml = "";
+
+        // Recursively process children first
+        if (block.children && block.children.length > 0) {
+            for (const child of block.children) {
+                childHtml += await processBlock(child);
             }
         }
 
-        console.log("[PDF Export] HtmlAdapter success. Length:", htmlContent.length);
-        return htmlContent;
+        // Render Block
+        switch (flavour) {
+            case "affine:page":
+                html = `<div class="affine-page" style="font-family: var(--font-main); color: var(--text-primary);">${childHtml}</div>`;
+                break;
+            case "affine:note":
+            case "affine:surface":
+                html = childHtml;
+                break;
 
+            case "affine:paragraph":
+                const type = model.type || "text";
+                const style = "margin-bottom: 0.5rem; line-height: 1.6;";
+                if (type === "h1") html = `<h1 style="font-size: 2rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 1rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">${text}</h1>`;
+                else if (type === "h2") html = `<h2 style="font-size: 1.5rem; font-weight: bold; margin-top: 1.25rem; margin-bottom: 0.75rem; color: var(--text-primary);">${text}</h2>`;
+                else if (type === "h3") html = `<h3 style="font-size: 1.25rem; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--text-primary);">${text}</h3>`;
+                else if (type === "h4") html = `<h4 style="font-size: 1.1rem; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem;">${text}</h4>`;
+                else if (type === "h5") html = `<h5 style="font-weight: bold; margin-top: 0.75rem;">${text}</h5>`;
+                else if (type === "h6") html = `<h6 style="font-weight: bold; margin-top: 0.75rem; color: var(--text-secondary);">${text}</h6>`;
+                else if (type === "quote") html = `<blockquote style="border-left: 4px solid var(--primary-color); padding-left: 1rem; font-style: italic; color: var(--text-secondary); margin: 1rem 0;">${text}</blockquote>`;
+                else html = `<p style="${style}">${text || "&nbsp;"}</p>`;
+                break;
+
+            case "affine:list":
+                const listType = model.type === "numbered" ? "ol" : "ul";
+                html = `<${listType} style="padding-left: 1.5rem; margin-bottom: 0.5rem;"><li style="margin-bottom: 0.25rem;">${text}</li></${listType}>`;
+                if (childHtml) {
+                    html = html.replace(`</li>`, ` ${childHtml}</li>`);
+                }
+                break;
+
+            case "affine:code":
+                const lang = model.language || "text";
+                html = `<pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0;"><code class="language-${lang}">${text}</code></pre>`;
+                break;
+
+            case "affine:divider":
+                html = `<hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;" />`;
+                break;
+
+            case "affine:image":
+                let imgSrc = "";
+                // Try from DOM first
+                const domEl = document.querySelector(`[data-block-id="${block.id}"] img`);
+                if (domEl) imgSrc = domEl.getAttribute("src");
+
+                // If DOM fails or is blob, check assets
+                const sourceId = model.sourceId;
+                if (sourceId && assets.has(sourceId)) {
+                    // Convert asset blob to base64
+                    const blob = assets.get(sourceId);
+                    if (blob) {
+                        const reader = new FileReader();
+                        const base64 = await new Promise(r => {
+                            reader.onload = () => r(reader.result);
+                            reader.readAsDataURL(blob);
+                        });
+                        imgSrc = base64;
+                        console.log(`[PDF Export] Inlined image asset ${sourceId}`);
+                    }
+                } else if (imgSrc && imgSrc.startsWith("blob:")) {
+                    // Try to fetch blob url if we still have it
+                    try {
+                        const res = await fetch(imgSrc);
+                        const b = await res.blob();
+                        const reader = new FileReader();
+                        const base64 = await new Promise(r => {
+                            reader.onload = () => r(reader.result);
+                            reader.readAsDataURL(b);
+                        });
+                        imgSrc = base64;
+                    } catch (e) { console.error("Failed to fetch blob url", e); }
+                }
+
+                if (imgSrc) {
+                    html = `<div style="margin: 1rem 0; text-align: center;"><img src="${imgSrc}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" /></div>`;
+                } else {
+                    html = `<p style="color: red;">[Image Missing]</p>`;
+                }
+                break;
+
+            case "affine:database":
+                // Table Rendering
+                const columns = model.columns || [];
+                const cells = model.cells || {};
+                const headers = columns.map(c => c.name);
+
+                if (headers.length > 0) {
+                    let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead style="background: rgba(255,255,255,0.05); border-bottom: 2px solid var(--border-color);">
+                            <tr>`;
+                    headers.forEach(h => tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text-primary);">${h}</th>`);
+                    tableHtml += `</tr></thead><tbody>`;
+
+                    Object.keys(cells).forEach(rowId => {
+                        const rowData = cells[rowId];
+                        tableHtml += `<tr style="border-bottom: 1px solid var(--border-color);">`;
+                        columns.forEach(col => {
+                            const cell = rowData[col.id];
+                            const cellVal = cell ? (cell.value?.toString() || "") : "";
+                            tableHtml += `<td style="padding: 0.75rem 1rem; color: var(--text-secondary);">${cellVal}</td>`;
+                        });
+                        tableHtml += "</tr>";
+                    });
+                    tableHtml += "</tbody></table></div>";
+                    html = tableHtml;
+                }
+                break;
+
+            default:
+                if (text) html = `<p>${text}</p>`;
+                html += childHtml;
+                break;
+        }
+        return html;
+    };
+
+    try {
+        let bodyHtml = await processBlock(doc.root);
+        // Inject styles
+        const styles = `
+            <style>
+                :root {
+                    --primary-color: #3b82f6;
+                    --text-primary: #111827;
+                    --text-secondary: #4b5563;
+                    --border-color: #e5e7eb;
+                    --font-main: 'Inter', sans-serif;
+                }
+                /* Dark Mode overrides if needed, usually handled by PDF printer */
+            </style>
+        `;
+        return styles + bodyHtml;
     } catch (e) {
-        console.error("[PDF Export] HtmlAdapter failed:", e);
+        console.error("[PDF Export] Error serializing doc:", e);
         return `<p>Error exporting document: ${e.message}</p>`;
     }
 };
