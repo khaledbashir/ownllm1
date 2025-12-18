@@ -255,15 +255,55 @@ function TemplateEditor({ template: initialTemplate, onSave, onCancel }) {
                         </div>
 
                         <div>
-                            <label className="text-xs font-bold text-white/60 uppercase tracking-wide">Logo URL</label>
+                            <label className="text-xs font-bold text-white/60 uppercase tracking-wide">Logo Image</label>
+
+                            {/* Hidden file input */}
                             <input
-                                type="text"
-                                value={template.logoPath}
-                                onChange={e => setTemplate({ ...template, logoPath: e.target.value })}
-                                placeholder="https://..."
-                                className="w-full mt-2 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white text-sm"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                id="logo-upload"
+                                onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                        if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                                            alert("File too large. Please use an image under 2MB.");
+                                            return;
+                                        }
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            setTemplate({ ...template, logoPath: reader.result });
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
                             />
-                            <p className="text-[10px] text-white/40 mt-1">Direct link to PNG/JPG image</p>
+
+                            <div className="mt-2 flex items-center gap-3">
+                                {template.logoPath ? (
+                                    <div className="relative group">
+                                        <div className="h-10 w-10 bg-white rounded border border-white/20 flex items-center justify-center p-1">
+                                            <img src={template.logoPath} className="max-h-full max-w-full object-contain" />
+                                        </div>
+                                        <button
+                                            onClick={() => setTemplate({ ...template, logoPath: "" })}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                                            title="Remove Logo"
+                                        >
+                                            <X size={10} weight="bold" />
+                                        </button>
+                                    </div>
+                                ) : null}
+
+                                <label
+                                    htmlFor="logo-upload"
+                                    className="cursor-pointer px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-white/80 transition-all flex items-center gap-2"
+                                >
+                                    <Plus size={14} />
+                                    {template.logoPath ? "Change Logo" : "Upload Logo"}
+                                </label>
+                            </div>
+                            <p className="text-[10px] text-white/40 mt-2">Max 2MB. Stored directly in template.</p>
                         </div>
 
                         {/* Logo Customization */}
