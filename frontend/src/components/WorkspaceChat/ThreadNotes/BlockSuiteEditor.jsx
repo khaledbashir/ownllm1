@@ -285,6 +285,83 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     editorContext.registerEditor(editor);
                 }
 
+                // Custom Image Upload Handler
+                const handleImageUpload = async (file) => {
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    try {
+                        toast.info("Uploading image...");
+                        const response = await fetch("/api/utils/upload-image", {
+                            method: "POST",
+                            headers: {
+                                "Authorization": `Bearer ${localStorage.getItem("anythingllm_auth_token")}`
+                            },
+                            body: formData
+                        });
+
+                        if (!response.ok) throw new Error("Upload failed");
+                        const data = await response.json();
+
+                        // Insert image block with persistent URL
+                        if (data.url) {
+                            // Determine insertion point (simple append for now, or use selection if available)
+                            // Ideally use editor.std.selection or host.selection
+                            // For simplicity in this "Custom" implementation, we rely on standard APIs if accessible
+                            // Or fallback to appending to current note.
+
+                            // Trying to insert at selection
+                            const std = editor.std;
+                            if (std) {
+                                // insertBlock is available on std.spec or similar?
+                                // Let's try appending for stability or using doc.addBlock if we can find where to put it.
+                                // Actually, standard collection has addBlock.
+
+                                // Cleanest way: Append to last note or current focus?
+                                // Let's try access selection via editor.host if possible
+                                // If not, just append to the first note found.
+
+                                // For now, we manually create the block data
+                                const noteBlock = doc.getBlocks().find(b => b.flavour === 'affine:note');
+                                if (noteBlock) {
+                                    doc.addBlock("affine:image", {
+                                        sourceId: data.url
+                                    }, noteBlock.id);
+                                    toast.success("Image uploaded!");
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Image upload error:", e);
+                        toast.error("Failed to upload image");
+                    }
+                };
+
+                // Attach Event Listeners
+                editor.addEventListener("paste", (e) => {
+                    const items = e.clipboardData?.items;
+                    if (items) {
+                        for (const item of items) {
+                            if (item.type.indexOf("image") !== -1) {
+                                e.preventDefault();
+                                const file = item.getAsFile();
+                                handleImageUpload(file);
+                            }
+                        }
+                    }
+                });
+
+                editor.addEventListener("drop", (e) => {
+                    const files = e.dataTransfer?.files;
+                    if (files && files.length > 0) {
+                        const file = files[0];
+                        if (file.type.startsWith("image/")) {
+                            e.preventDefault();
+                            handleImageUpload(file);
+                        }
+                    }
+                });
+
                 // Listen for changes and autosave with full snapshot
                 doc.slots.blockUpdated.on(() => {
                     saveDocSnapshot(doc, collection);
@@ -1418,36 +1495,71 @@ const serializeDocToHtml = async (doc) => {
 
             case "affine:image":
                 let imgSrc = "";
-                // Try from DOM first
-                const domEl = document.querySelector(`[data-block-id="${block.id}"] img`);
-                if (domEl) imgSrc = domEl.getAttribute("src");
-
-                // If DOM fails or is blob, check assets
                 const sourceId = model.sourceId;
-                if (sourceId && assets.has(sourceId)) {
-                    // Convert asset blob to base64
-                    const blob = assets.get(sourceId);
-                    if (blob) {
-                        const reader = new FileReader();
-                        const base64 = await new Promise(r => {
-                            reader.onload = () => r(reader.result);
-                            reader.readAsDataURL(blob);
-                        });
-                        imgSrc = base64;
-                        console.log(`[PDF Export] Inlined image asset ${sourceId}`);
+
+                // If sourceId is present, try to resolve it
+                if (sourceId) {
+                    if (assets.has(sourceId)) {
+                        // Blob in memory (old behavior)
+                        const blob = assets.get(sourceId);
+                        if (blob) {
+                            const reader = new FileReader();
+                            const base64 = await new Promise(r => {
+                                reader.onload = () => r(reader.result);
+                                reader.readAsDataURL(blob);
+                            });
+                            imgSrc = base64;
+                        }
+                    } else if (typeof sourceId === 'string' && (sourceId.startsWith('http') || sourceId.startsWith('/'))) {
+                        // Persistent URL (new behavior)
+                        try {
+                            // Resolve relative URLs to absolute for fetching
+                            const fetchUrl = sourceId.startsWith('/')
+                                ? `${window.location.origin}${sourceId}`
+                                : sourceId;
+
+                            const res = await fetch(fetchUrl);
+                            if (res.ok) {
+                                const b = await res.blob();
+                                const reader = new FileReader();
+                                const base64 = await new Promise(r => {
+                                    reader.onload = () => r(reader.result);
+                                    reader.readAsDataURL(b);
+                                });
+                                imgSrc = base64;
+                                console.log(`[PDF Export] Inlined persistent image ${sourceId}`);
+                            } else {
+                                console.warn(`[PDF Export] Failed to fetch image ${fetchUrl}`);
+                            }
+                        } catch (e) {
+                            console.error("[PDF Export] Error fetching image url:", e);
+                        }
                     }
-                } else if (imgSrc && imgSrc.startsWith("blob:")) {
-                    // Try to fetch blob url if we still have it
-                    try {
-                        const res = await fetch(imgSrc);
-                        const b = await res.blob();
-                        const reader = new FileReader();
-                        const base64 = await new Promise(r => {
-                            reader.onload = () => r(reader.result);
-                            reader.readAsDataURL(b);
-                        });
-                        imgSrc = base64;
-                    } catch (e) { console.error("Failed to fetch blob url", e); }
+                }
+
+                // Fallback to DOM if still no image (e.g. some other adapter logic?)
+                if (!imgSrc) {
+                    const domEl = document.querySelector(`[data-block-id="${block.id}"] img`);
+                    if (domEl) {
+                        const domSrc = domEl.getAttribute("src");
+                        if (domSrc && (domSrc.startsWith("data:") || domSrc.startsWith("blob:"))) {
+                            // If it's a blob URL that we missed, try to fetch it
+                            if (domSrc.startsWith("blob:")) {
+                                try {
+                                    const res = await fetch(domSrc);
+                                    const b = await res.blob();
+                                    const reader = new FileReader();
+                                    const base64 = await new Promise(r => {
+                                        reader.onload = () => r(reader.result);
+                                        reader.readAsDataURL(b);
+                                    });
+                                    imgSrc = base64;
+                                } catch (e) { }
+                            } else {
+                                imgSrc = domSrc;
+                            }
+                        }
+                    }
                 }
 
                 if (imgSrc) {

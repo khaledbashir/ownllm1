@@ -70,6 +70,15 @@ if (!!process.env.ENABLE_HTTPS) {
 }
 
 app.use("/api", apiRouter);
+
+// Serve uploads statically
+if (process.env.STORAGE_DIR) {
+  apiRouter.use("/assets", express.static(path.resolve(process.env.STORAGE_DIR, "assets")));
+} else {
+  // Fallback for dev
+  apiRouter.use("/assets", express.static(path.resolve(__dirname, "storage/assets")));
+}
+
 systemEndpoints(apiRouter);
 extensionEndpoints(apiRouter);
 workspaceEndpoints(apiRouter);

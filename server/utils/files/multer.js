@@ -151,10 +151,31 @@ function handleAssetUpload(request, response, next) {
 }
 
 /**
- * Handle PFP file upload as logos
+ * Handle Generic Image uploads for persistent storage (e.g. BlockSuite images)
  */
-function handlePfpUpload(request, response, next) {
-  const upload = multer({ storage: pfpUploadStorage }).single("file");
+const genericImageUploadStorage = multer.diskStorage({
+  destination: function (_, __, cb) {
+    const uploadOutput =
+      process.env.NODE_ENV === "development"
+        ? path.resolve(__dirname, `../../storage/assets`)
+        : path.resolve(process.env.STORAGE_DIR, "assets");
+    fs.mkdirSync(uploadOutput, { recursive: true });
+    return cb(null, uploadOutput);
+  },
+  filename: function (req, file, cb) {
+    const randomFileName = `${v4()}${path.extname(
+      normalizePath(file.originalname)
+    )}`;
+    req.randomFileName = randomFileName;
+    cb(null, randomFileName);
+  },
+});
+
+/**
+ * Handle Generic Image upload
+ */
+function handleGenericImageUpload(request, response, next) {
+  const upload = multer({ storage: genericImageUploadStorage }).single("file");
   upload(request, response, function (err) {
     if (err) {
       response
@@ -175,4 +196,5 @@ module.exports = {
   handleAPIFileUpload,
   handleAssetUpload,
   handlePfpUpload,
+  handleGenericImageUpload,
 };
