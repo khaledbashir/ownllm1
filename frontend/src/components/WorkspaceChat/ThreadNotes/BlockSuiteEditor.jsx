@@ -10,6 +10,8 @@ import { AffineEditorContainer } from "@blocksuite/presets";
 import { Schema, DocCollection, Text, Job } from "@blocksuite/store";
 import { AffineSchemas } from "@blocksuite/blocks";
 import "@blocksuite/presets/themes/affine.css";
+// Deep import for HtmlAdapter as it is not exposed in main entry
+import { HtmlAdapter } from "@blocksuite/blocks/dist/_common/adapters/html.js";
 
 import { FilePdf, CircleNotch, Database, FileDoc, CaretDown } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
@@ -1327,185 +1329,50 @@ const serializeDocToHtml = async (doc) => {
         return "<p>No content found (Empty Root)</p>";
     }
 
-    console.log("[PDF Export] Starting serialization for doc:", doc.id);
+    console.log("[PDF Export] Starting serialization with HtmlAdapter for doc:", doc.id);
 
-    const getText = (block) => {
-        // Try various text access patterns
-        if (block.text?.toString) return block.text.toString();
-        if (block.model?.text?.toString) return block.model.text.toString();
-        // Check for yText
-        if (block.yText?.toString) return block.yText.toString();
-        // Check for model.yText
-        if (block.model?.yText?.toString) return block.model.yText.toString();
-        return "";
-    };
+    try {
+        const job = new Job({ collection: doc.collection });
+        const snapshot = await job.docToSnapshot(doc);
 
-    const processBlock = async (blockOrId) => {
-        let block = blockOrId;
-        // Resolve ID to block if needed
-        if (typeof blockOrId === 'string') {
-            block = doc.getBlock(blockOrId);
-        }
+        const adapter = new HtmlAdapter(job);
+        const result = await adapter.fromDocSnapshot({
+            snapshot,
+            assets: job.assetsManager,
+        });
 
-        if (!block) {
-            console.warn("[PDF Export] Block not found for:", blockOrId);
-            return "";
-        }
+        let htmlContent = result.file;
 
-        const flavour = block.flavour;
-        const model = block.model || {};
-        const text = getText(block);
+        if (result.assetsIds && result.assetsIds.length > 0) {
+            console.log(`[PDF Export] Found ${result.assetsIds.length} assets to inline.`);
+            for (const assetId of result.assetsIds) {
+                const asset = await job.assetsManager.get(assetId);
+                if (asset) {
+                    const reader = new FileReader();
+                    const base64Data = await new Promise((resolve) => {
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(asset);
+                    });
 
-        // console.log(`[PDF Export] Processing ${flavour} (ID: ${block.id}) - Text: ${text.slice(0, 20)}...`);
-
-        let html = "";
-        let childHtml = "";
-
-        // Recursively process children first
-        // BlockSuite blocks have a 'children' property which is an array of Blocks
-        if (block.children && block.children.length > 0) {
-            for (const child of block.children) {
-                childHtml += await processBlock(child);
+                    // Replace usages in HTML
+                    // We'll replace all occurrences of the asset ID in src attributes.
+                    // e.g. src="assets://<id>" or src="<id>"
+                    const regex = new RegExp(`src=["'](?:assets:\/\/)?${assetId}["']`, 'g');
+                    htmlContent = htmlContent.replace(regex, `src="${base64Data}"`);
+                }
             }
         }
 
-        // Render Block
-        switch (flavour) {
-            case "affine:page":
-                html = `<div class="affine-page">${childHtml}</div>`;
-                break;
-            case "affine:note":
-            case "affine:surface":
-                // Containers: just return children
-                html = childHtml;
-                break;
+        console.log("[PDF Export] HtmlAdapter success. Length:", htmlContent.length);
+        return htmlContent;
 
-            case "affine:paragraph":
-                const type = model.type || "text";
-                // Only render if there is text or children (though paragraphs usually don't have children acting as blocks in this way)
-                // But sometimes empty paragraphs are spacers.
-                if (type === "h1") html = `<h1>${text}</h1>`;
-                else if (type === "h2") html = `<h2>${text}</h2>`;
-                else if (type === "h3") html = `<h3>${text}</h3>`;
-                else if (type === "h4") html = `<h4>${text}</h4>`;
-                else if (type === "h5") html = `<h5>${text}</h5>`;
-                else if (type === "h6") html = `<h6>${text}</h6>`;
-                else if (type === "quote") html = `<blockquote>${text}</blockquote>`;
-                else html = `<p>${text || "&nbsp;"}</p>`;
-                break;
-
-            case "affine:list":
-                const listType = model.type === "numbered" ? "ol" : "ul";
-                // Lists in BlockSuite might be discrete items. 
-                // We wrap each item in its own list tag to keep it robust
-                html = `<${listType}><li>${text}</li></${listType}>`;
-                // Note: Real nested lists might need 'childHtml' inside 'li', but BlockSuite structure usually implies
-                // flat list items or strictly nested children. We append next sibling logic elsewhere? 
-                // Actually, if 'childHtml' exists (indentation level), we append it.
-                if (childHtml) {
-                    html = html.replace(`</li>`, ` ${childHtml}</li>`);
-                }
-                break;
-
-            case "affine:code":
-                const lang = model.language || "text";
-                html = `<pre><code class="language-${lang}">${text}</code></pre>`;
-                break;
-
-            case "affine:divider":
-                html = `<hr />`;
-                break;
-
-            case "affine:image":
-                // Image handling
-                // We need to try to get the image from the DOM if possible, because blob URLs are internal
-                // But PDF export via Puppeteer/Playwright needs accessible URLs.
-                // If it's a blob URL, we might need to convert to base64.
-
-                // Strategy: Try to find the image in the live DOM to get its src
-                const domEl = document.querySelector(`[data-block-id="${block.id}"] img`);
-                let imgSrc = "";
-
-                if (domEl) {
-                    imgSrc = domEl.getAttribute("src");
-                } else if (model.sourceId) {
-                    // If we cannot find DOM, we can't easily get the blob. 
-                    // TODO: access blob storage if possible.
-                }
-
-                if (imgSrc) {
-                    if (imgSrc.startsWith('blob:')) {
-                        try {
-                            const response = await fetch(imgSrc);
-                            const blob = await response.blob();
-                            const reader = new FileReader();
-                            const dataUrl = await new Promise(resolve => {
-                                reader.onloadend = () => resolve(reader.result);
-                                reader.readAsDataURL(blob);
-                            });
-                            html = `<img src="${dataUrl}" style="max-width:100%;" />`;
-                        } catch (e) {
-                            console.error("[PDF Export] Failed to convert blob to base64", e);
-                            html = `<p><em>[Image processing failed]</em></p>`;
-                        }
-                    } else {
-                        html = `<img src="${imgSrc}" style="max-width:100%;" />`;
-                    }
-                } else {
-                    html = `<p><em>[Image]</em></p>`;
-                }
-                break;
-
-            case "affine:database":
-                // database block serialization (basic table)
-                // We need to resolve column definitions and cell values
-                const columns = model.columns || [];
-                const cells = model.cells || {};
-                const headers = columns.map(c => c.name);
-
-                if (headers.length > 0) {
-                    let tableHtml = "<table><thead><tr>";
-                    headers.forEach(h => tableHtml += `<th>${h}</th>`);
-                    tableHtml += "</tr></thead><tbody>";
-
-                    // The rows are keys in 'cells'. 
-                    // However, we rely on the order? 'cells' is a map. 
-                    // Usually there are row blocks associated?
-                    // For now, iterate known keys
-                    Object.keys(cells).forEach(rowId => {
-                        const rowData = cells[rowId];
-                        tableHtml += "<tr>";
-                        columns.forEach(col => {
-                            const cell = rowData[col.id];
-                            const cellVal = cell ? (cell.value?.toString() || "") : "";
-                            tableHtml += `<td>${cellVal}</td>`;
-                        });
-                        tableHtml += "</tr>";
-                    });
-                    tableHtml += "</tbody></table>";
-                    html = tableHtml;
-                }
-                break;
-
-            default:
-                // Unknown block? Just render children to be safe
-                if (text) html = `<p>${text}</p>`;
-                html += childHtml;
-                break;
-        }
-
-        return html;
-    };
-
-    try {
-        const result = await processBlock(doc.root);
-        console.log("[PDF Export] HTML length:", result.length);
-        return result;
     } catch (e) {
-        console.error("[PDF Export] Error serializing doc:", e);
-        return "<p>Error exporting document.</p>";
+        console.error("[PDF Export] HtmlAdapter failed:", e);
+        return `<p>Error exporting document: ${e.message}</p>`;
     }
 };
+
+
 
 export default BlockSuiteEditor;
 
