@@ -285,7 +285,7 @@ const SidebarOptions = ({ user = null, t }) => (
               roles: ["admin", "manager"],
             },
             {
-              btnText: "Default System Prompt",
+              btnText: t("settings.default-system-prompt"),
               href: paths.settings.defaultSystemPrompt(),
               flex: true,
               roles: ["admin"],
@@ -301,23 +301,23 @@ const SidebarOptions = ({ user = null, t }) => (
           roles={["admin"]}
         />
         <Option
-          btnText="Community Hub"
+          btnText={t("settings.community-hub")}
           icon={<Globe className="h-5 w-5 flex-shrink-0" />}
           childOptions={[
             {
-              btnText: "Explore Trending",
+              btnText: t("settings.community-trending"),
               href: paths.communityHub.trending(),
               flex: true,
               roles: ["admin"],
             },
             {
-              btnText: "Your Account",
+              btnText: t("settings.community-account"),
               href: paths.communityHub.authentication(),
               flex: true,
               roles: ["admin"],
             },
             {
-              btnText: "Import Item",
+              btnText: t("settings.community-import"),
               href: paths.communityHub.importItem(),
               flex: true,
               roles: ["admin"],
@@ -342,31 +342,31 @@ const SidebarOptions = ({ user = null, t }) => (
               roles: ["admin", "manager"],
             },
             {
-              btnText: "Document Templates",
+              btnText: t("settings.document-templates"),
               href: paths.settings.documentTemplates(),
               flex: true,
               roles: ["admin", "manager"],
             },
             {
-              btnText: "Template Builder",
+              btnText: t("settings.template-builder"),
               href: paths.settings.templateBuilder(),
               flex: true,
               roles: ["admin", "manager"],
             },
             {
-              btnText: "Smart Plugins",
+              btnText: t("settings.smart-plugins"),
               href: paths.settings.smartPlugins(),
               flex: true,
               roles: ["admin", "manager"],
             },
             {
-              btnText: "The Lab",
+              btnText: t("settings.agent-test-lab"),
               href: paths.settings.testLab(),
               flex: true,
               roles: ["admin", "manager"],
             },
             {
-              btnText: "Integrations",
+              btnText: t("settings.integrations"),
               href: paths.settings.integrationVault(),
               flex: true,
               roles: ["admin", "manager"],
@@ -416,7 +416,7 @@ const SidebarOptions = ({ user = null, t }) => (
               roles: ["admin", "manager"],
             },
             {
-              btnText: "CRM Pipeline",
+              btnText: t("settings.crm-pipeline"),
               href: paths.settings.crm(),
               icon: <UserCircleGear className="h-5 w-5 flex-shrink-0" />,
               flex: true,

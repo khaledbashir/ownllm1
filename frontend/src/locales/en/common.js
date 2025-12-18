@@ -112,6 +112,18 @@ const TRANSLATIONS = {
     "experimental-features": "Experimental Features",
     contact: "Contact Support",
     "browser-extension": "Browser Extension",
+    // New menu items
+    "document-templates": "Document Templates",
+    "template-builder": "AI Template Builder",
+    "smart-plugins": "Smart Plugins",
+    "agent-test-lab": "Agent Test Lab",
+    "integrations": "Integrations",
+    "crm-pipeline": "CRM Pipeline",
+    "community-hub": "Community Hub",
+    "community-trending": "Explore Trending",
+    "community-account": "Your Account",
+    "community-import": "Import Item",
+    "default-system-prompt": "Default System Prompt",
   },
 
   // Page Definitions
