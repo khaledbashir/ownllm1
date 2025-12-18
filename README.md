@@ -293,3 +293,4 @@ This project is [MIT](./LICENSE) licensed.
 [elestio-deploy]: https://elest.io/open-source/anythingllm
 [northflank-btn]: https://assets.northflank.com/deploy_to_northflank_smm_36700fb050.svg
 [northflank-deploy]: https://northflank.com/stacks/deploy-anythingllm
+ 
