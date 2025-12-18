@@ -942,9 +942,33 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             let footerTemplate = undefined;
 
             if (activeTemplate) {
-                const logoHtml = activeTemplate.logoPath ? `<img src="${activeTemplate.logoPath}" style="height: 40px; margin-right: 10px;" />` : '';
+                // Parse CSS Overrides for Logo Customization
+                const overrides = activeTemplate.cssOverrides ? JSON.parse(activeTemplate.cssOverrides) : {};
+                const logoHeight = overrides.logoHeight || 40;
+                const logoAlignment = overrides.logoAlignment || 'flex-start';
+                const isRightAligned = logoAlignment === 'flex-end';
+
+                // We use flex-direction to handle "Reversed" layout (Logo on right)
+                // and standard margins for spacing.
+                const logoHtml = activeTemplate.logoPath ?
+                    `<img src="${activeTemplate.logoPath}" style="height: ${logoHeight}px; margin-right: ${isRightAligned ? '0' : '10px'}; margin-left: ${isRightAligned ? '10px' : '0'};" />` :
+                    '';
+
+                // Flex container style
+                const containerStyle = `
+                    font-size: 10px; 
+                    width: 100%; 
+                    height: ${Math.max(60, logoHeight + 20)}px; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: space-between; 
+                    margin: 0 20px; 
+                    border-bottom: 1px solid #e5e7eb;
+                    flex-direction: ${isRightAligned ? 'row-reverse' : 'row'};
+                `.replace(/\s+/g, ' '); // Minify slightly for cleanliness
+
                 headerTemplate = `
-                <div style="font-size: 10px; width: 100%; height: 60px; display: flex; align-items: center; justify-content: space-between; margin: 0 20px; border-bottom: 1px solid #e5e7eb;">
+                <div style="${containerStyle}">
                     <div style="display: flex; align-items: center;">
                         ${logoHtml}
                         <span style="font-size: 14px; font-weight: 600; font-family: sans-serif;">${activeTemplate.name || 'Company Name'}</span>
