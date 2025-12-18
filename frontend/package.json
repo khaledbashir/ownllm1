@@ -12,8 +12,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@blocksuite/blocks": "0.15.0-canary-202406291027-8aed732",
     "@blocksuite/block-std": "0.15.0-canary-202406291027-8aed732",
+    "@blocksuite/blocks": "0.15.0-canary-202406291027-8aed732",
     "@blocksuite/presets": "0.15.0-canary-202406291027-8aed732",
     "@blocksuite/store": "0.15.0-canary-202406291027-8aed732",
     "@codesandbox/sandpack-react": "^2.20.0",
@@ -71,6 +71,7 @@
     "truncate": "^3.0.0",
     "tunnel-rat": "^0.1.2",
     "uuid": "^9.0.0",
+    "xlsx": "^0.18.5",
     "yjs": "^13.6.27"
   },
   "devDependencies": {
