@@ -25,14 +25,22 @@ class HeadlessSocket extends EventEmitter {
     emit(event, data) {
         if (event === "message") {
             this.#handleMessage(data);
+            return true;
         } else if (event === "stopGeneration") {
             if (!this.isDone) {
                 this.isDone = true;
-                this.emit("done", this.accumulatedText);
+                // Use super.emit to ensure listeners (waitForCompletion) receive the event
+                super.emit("done", this.accumulatedText);
             }
+            return true;
+        } else if (event === "done") {
+            // Internal signal, pass to super
+            return super.emit(event, data);
         } else {
-            // Capture other events for debugging/logging if needed
+            // Capture other events for debugging/logging
             this.streamEvents.push({ event, data });
+            // Also pass them through so any listeners work
+            return super.emit(event, data);
         }
     }
 

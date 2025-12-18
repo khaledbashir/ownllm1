@@ -276,41 +276,42 @@ const RenderChatContent = memo(
         {thoughtChain && (
           <ThoughtChainComponent content={thoughtChain} expanded={expanded} />
         )}
-        <ReactMarkdown
-          rehypePlugins={[rehypeRaw]}
-          remarkPlugins={[remarkGfm]}
-          className="flex flex-col gap-y-1"
-          components={{
-            // Preserve styling for standard elements
-            p: ({ node, ...props }) => <p className="mb-2 text-white" {...props} />,
-            a: ({ node, ...props }) => <a className="text-blue-400 hover:underline" target="_blank" {...props} />,
-            // The Sandpack Trigger
-            code({ node, inline, className, children, ...props }) {
-              const match = /language-(\w+)/.exec(className || '');
-              const lang = match ? match[1].toLowerCase() : '';
+        <div className="flex flex-col gap-y-1">
+          <ReactMarkdown
+            rehypePlugins={[rehypeRaw]}
+            remarkPlugins={[remarkGfm]}
+            components={{
+              // Preserve styling for standard elements
+              p: ({ node, ...props }) => <p className="mb-2 text-white" {...props} />,
+              a: ({ node, ...props }) => <a className="text-blue-400 hover:underline" target="_blank" {...props} />,
+              // The Sandpack Trigger
+              code({ node, inline, className, children, ...props }) {
+                const match = /language-(\w+)/.exec(className || '');
+                const lang = match ? match[1].toLowerCase() : '';
 
-              // Add robustness for React/HTML
-              const isReact = ['react', 'jsx', 'tsx', 'js', 'javascript'].includes(lang);
-              const isHTML = ['html', 'xml'].includes(lang);
+                // Add robustness for React/HTML
+                const isReact = ['react', 'jsx', 'tsx', 'js', 'javascript'].includes(lang);
+                const isHTML = ['html', 'xml'].includes(lang);
 
-              // Check if Sandpack rendering is enabled
-              const renderSandpack = Appearance.get('renderSandpack') ?? true;
+                // Check if Sandpack rendering is enabled
+                const renderSandpack = Appearance.get('renderSandpack') ?? true;
 
-              if (!inline && (isReact || isHTML) && renderSandpack) {
-                return (
-                  <SandpackRenderer
-                    code={String(children).replace(/\n$/, '')}
-                    language={isReact ? 'react' : 'html'}
-                    workspace={workspace}
-                  />
-                );
+                if (!inline && (isReact || isHTML) && renderSandpack) {
+                  return (
+                    <SandpackRenderer
+                      code={String(children).replace(/\n$/, '')}
+                      language={isReact ? 'react' : 'html'}
+                      workspace={workspace}
+                    />
+                  );
+                }
+                return <code className={`bg-gray-800 rounded p-1 ${className || ''}`} {...props}>{children}</code>;
               }
-              return <code className={`bg-gray-800 rounded p-1 ${className || ''}`} {...props}>{children}</code>;
-            }
-          }}
-        >
-          {msgToRender}
-        </ReactMarkdown>
+            }}
+          >
+            {msgToRender}
+          </ReactMarkdown>
+        </div>
       </>
     );
   },

@@ -447,6 +447,26 @@ function apiWorkspaceEndpoints(app) {
     }
   );
 
+  app.post(
+    "/workspace/:slug/export-pdf",
+    [validApiKey],
+    async (request, response) => {
+      try {
+        const { html } = reqBody(request);
+        if (!html) return response.status(400).json({ error: "HTML content required" });
+
+        const pdfBuffer = await generatePdf(html);
+
+        response.setHeader('Content-Type', 'application/pdf');
+        response.setHeader('Content-Disposition', 'attachment; filename="export.pdf"');
+        response.send(pdfBuffer);
+      } catch (e) {
+        console.error(e.message, e);
+        response.status(500).json({ error: e.message });
+      }
+    }
+  );
+
   app.get(
     "/v1/workspace/:slug/chats",
     [validApiKey],

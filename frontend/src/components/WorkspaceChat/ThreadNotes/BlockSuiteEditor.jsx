@@ -317,15 +317,13 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             }
         };
 
-        // Helper to create an empty doc with required structure
         function createEmptyDoc(collection) {
             const doc = collection.createDoc({ id: "thread-notes" });
-            doc.load(() => {
-                const pageBlockId = doc.addBlock("affine:page", {});
-                doc.addBlock("affine:surface", {}, pageBlockId);
-                const noteId = doc.addBlock("affine:note", {}, pageBlockId);
-                doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
-            });
+            // Initialize directly without doc.load wrapper to avoid Yjs "before reading data" error
+            const pageBlockId = doc.addBlock("affine:page", {});
+            doc.addBlock("affine:surface", {}, pageBlockId);
+            const noteId = doc.addBlock("affine:note", {}, pageBlockId);
+            doc.addBlock("affine:paragraph", { text: new Text() }, noteId);
             return doc;
         }
 
