@@ -101,6 +101,13 @@
   box-shadow: var(--affine-menu-shadow) !important;
 }
 
+/* Force all content inside toolbars to be visible */
+.affine-format-bar-widget *,
+.affine-toolbar * {
+  color: var(--affine-text-primary-color, #eaeaea) !important;
+  fill: currentColor;
+}
+
 /* Menu items */
 .affine-slash-menu-item,
 .affine-menu-button,

@@ -839,7 +839,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     }
 
 
-    const handleExport = async () => {
+
+    const handleExport = async (selectedTemplate) => {
         if (!editorRef.current || !workspaceSlug) return;
         setExporting(true);
 
@@ -963,20 +964,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 </body>
 </html>`;
 
-            // Fetch templates if we don't have them yet
-            let templates = brandTemplates;
-            if (templates.length === 0) {
-                try {
-                    templates = await PdfTemplates.list();
-                    setBrandTemplates(templates || []);
-                } catch (e) {
-                    console.warn("Could not fetch brand templates for PDF export");
-                }
-            }
-
-            // Use the first available template or a default one
-            // Ideally, the user would select this, but for "Plan D" auto-fix we pick the first valid one
-            const activeTemplate = templates && templates.length > 0 ? templates[0] : null;
+            // Use the selected template passed from modal
+            // If null/undefined, activeTemplate will be null, disabling headers/footers
+            const activeTemplate = selectedTemplate;
 
             // Construct Header/Footer Templates
             // Playwright requires explicit font-size in the template inline style
@@ -1477,8 +1467,21 @@ const serializeDocToHtml = async (doc) => {
                 break;
 
             case "affine:list":
-                const listType = model.type === "numbered" ? "ol" : "ul";
-                html = `<${listType} style="padding-left: 1.5rem; margin-bottom: 0.5rem;"><li style="margin-bottom: 0.25rem;">${text}</li></${listType}>`;
+                const listType = model.type;
+                if (listType === "todo") {
+                    // Todo/Checkbox list
+                    const checked = model.checked ? "checked" : "";
+                    const strikeStyle = model.checked ? "text-decoration: line-through; color: #9ca3af;" : "";
+                    html = `<div style="display: flex; align-items: flex-start; margin-bottom: 0.25rem;">
+                        <input type="checkbox" ${checked} disabled style="margin-right: 0.5rem; margin-top: 0.25rem;" />
+                        <span style="${strikeStyle}">${text}</span>
+                    </div>`;
+                } else if (listType === "numbered") {
+                    html = `<ol style="padding-left: 1.5rem; margin-bottom: 0.5rem;"><li style="margin-bottom: 0.25rem;">${text}</li></ol>`;
+                } else {
+                    // Bulleted or default
+                    html = `<ul style="padding-left: 1.5rem; margin-bottom: 0.5rem;"><li style="margin-bottom: 0.25rem;">${text}</li></ul>`;
+                }
                 if (childHtml) {
                     html = html.replace(`</li>`, ` ${childHtml}</li>`);
                 }
@@ -1486,14 +1489,40 @@ const serializeDocToHtml = async (doc) => {
 
             case "affine:code":
                 const lang = model.language || "text";
-                html = `<pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0;"><code class="language-${lang}">${text}</code></pre>`;
+                // Escape HTML in code content
+                const escapedCode = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                html = `<pre style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 0.9rem; line-height: 1.5;"><code class="language-${lang}">${escapedCode}</code></pre>`;
                 break;
 
             case "affine:divider":
-                html = `<hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;" />`;
+                html = `<hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 2rem 0;" />`;
+                break;
+
+            case "affine:bookmark":
+                // Bookmark/Link card
+                const bookmarkUrl = model.url || "";
+                const bookmarkTitle = model.title || model.url || "Link";
+                const bookmarkDesc = model.description || "";
+                html = `<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin: 1rem 0; background: #fafafa;">
+                    <a href="${bookmarkUrl}" style="color: #2563eb; font-weight: 600; text-decoration: none;">${bookmarkTitle}</a>
+                    ${bookmarkDesc ? `<p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">${bookmarkDesc}</p>` : ""}
+                    <p style="color: #9ca3af; font-size: 0.75rem; margin-top: 0.5rem;">${bookmarkUrl}</p>
+                </div>`;
+                break;
+
+            case "affine:attachment":
+                // Attachment file
+                const attachmentName = model.name || "Attachment";
+                const attachmentSize = model.size ? `(${Math.round(model.size / 1024)} KB)` : "";
+                html = `<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem 1rem; margin: 0.5rem 0; background: #fafafa; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.25rem;">📎</span>
+                    <span style="color: #374151; font-weight: 500;">${attachmentName}</span>
+                    <span style="color: #9ca3af; font-size: 0.875rem;">${attachmentSize}</span>
+                </div>`;
                 break;
 
             case "affine:image":
+                console.log("[PDF Export] Image Model:", model);
                 let imgSrc = "";
                 const sourceId = model.sourceId;
 
@@ -1563,37 +1592,74 @@ const serializeDocToHtml = async (doc) => {
                 }
 
                 if (imgSrc) {
-                    html = `<div style="margin: 1rem 0; text-align: center;"><img src="${imgSrc}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" /></div>`;
+                    // Dynamic Alignment based on model property
+                    // Default to center if not specified, or respect 'align'/'alignment' prop
+                    const align = model.align || model.alignment || "center";
+                    let justify = "center";
+                    if (align === "left" || align === "start") justify = "flex-start";
+                    else if (align === "right" || align === "end") justify = "flex-end";
+
+                    html = `<div style="display: flex; justify-content: ${justify}; margin: 1rem 0;"><img src="${imgSrc}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" /></div>`;
                 } else {
                     html = `<p style="color: red;">[Image Missing]</p>`;
                 }
                 break;
 
             case "affine:database":
-                // Table Rendering
+                // Database/Table Rendering
+                // Key insight: Each ROW is a child paragraph/list block, not a cells object entry
                 const columns = model.columns || [];
-                const cells = model.cells || {};
-                const headers = columns.map(c => c.name);
+                const headers = columns.map(c => c.name || "");
+                const childBlocks = block.children || [];
 
-                if (headers.length > 0) {
-                    let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--border-color); border-radius: 8px;">
+                if (headers.length > 0 && childBlocks.length > 0) {
+                    let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                        <thead style="background: rgba(255,255,255,0.05); border-bottom: 2px solid var(--border-color);">
+                        <thead style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
                             <tr>`;
-                    headers.forEach(h => tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text-primary);">${h}</th>`);
+                    headers.forEach(h => tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">${h}</th>`);
                     tableHtml += `</tr></thead><tbody>`;
 
-                    Object.keys(cells).forEach(rowId => {
-                        const rowData = cells[rowId];
-                        tableHtml += `<tr style="border-bottom: 1px solid var(--border-color);">`;
-                        columns.forEach(col => {
-                            const cell = rowData[col.id];
-                            const cellVal = cell ? (cell.value?.toString() || "") : "";
-                            tableHtml += `<td style="padding: 0.75rem 1rem; color: var(--text-secondary);">${cellVal}</td>`;
+                    // Each child is a ROW - the first column is the child's text, other columns are in cells
+                    const cells = model.cells || {};
+                    for (const childBlock of childBlocks) {
+                        const rowId = childBlock.id;
+                        const rowModel = childBlock.model || {};
+                        const firstColText = getText(childBlock); // Title column from paragraph text
+
+                        tableHtml += `<tr style="border-bottom: 1px solid #e5e7eb;">`;
+
+                        // First column is the child block's text content
+                        tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151;">${firstColText}</td>`;
+
+                        // Remaining columns from cells object
+                        const rowCells = cells[rowId] || {};
+                        columns.slice(1).forEach(col => {
+                            const cell = rowCells[col.id];
+                            let cellVal = "";
+                            if (cell) {
+                                // Cell value can be Text object, string, or other
+                                if (cell.value?.toString) {
+                                    cellVal = cell.value.toString();
+                                } else if (typeof cell.value === "string") {
+                                    cellVal = cell.value;
+                                } else if (cell.value?.text) {
+                                    cellVal = cell.value.text;
+                                }
+                            }
+                            tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280;">${cellVal}</td>`;
                         });
                         tableHtml += "</tr>";
-                    });
+                    }
                     tableHtml += "</tbody></table></div>";
+                    html = tableHtml;
+                } else if (headers.length > 0) {
+                    // Empty table with just headers
+                    let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead style="background: #f3f4f6;"><tr>`;
+                    headers.forEach(h => tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600;">${h}</th>`);
+                    tableHtml += `</tr></thead><tbody><tr><td colspan="${headers.length}" style="padding: 1rem; text-align: center; color: #9ca3af;">No data</td></tr></tbody></table></div>`;
                     html = tableHtml;
                 }
                 break;

@@ -75,11 +75,64 @@ No "locked" property per block. Instead:
 | `affine:page` | Root block with title |
 | `affine:surface` | Canvas/graphics layer (Edgeless mode) |
 | `affine:note` | Container for content blocks (Page mode) |
-| `affine:paragraph` | Text, headings (`type: 'h1'`) |
-| `affine:list` | Bullet/numbered lists |
-| `affine:code` | Code blocks |
-| `affine:image` | Images |
-| `affine:table` | Tables |
+| `affine:paragraph` | Text, headings (`type: 'h1'`, `'h2'`, `'quote'`) |
+| `affine:list` | Bullet/numbered/todo lists (`type: 'bulleted'`, `'numbered'`, `'todo'`) |
+| `affine:code` | Code blocks with `language` property |
+| `affine:image` | Images with `sourceId` (asset reference) |
+| `affine:database` | Data grid/table with Kanban support |
+| `affine:divider` | Horizontal rule |
+| `affine:bookmark` | Link cards with `url`, `title`, `description` |
+| `affine:attachment` | File attachments with `name`, `size` |
+
+---
+
+## 🗄️ affine:database Data Structure (CRITICAL FOR EXPORT)
+
+The `affine:database` block stores content using **Block Tree hierarchy**, not a simple cells object.
+
+### Key Architecture
+
+| Component | Storage Location | Description |
+|-----------|------------------|-------------|
+| **Column Definitions** | `model.columns[]` | Array of `{id, name, type}` |
+| **Rows** | Child blocks | Each row is an `affine:paragraph` or `affine:list` block |
+| **First Column (Title)** | Child block's `text` | The paragraph/list text IS the first column |
+| **Other Columns** | `model.cells[rowId][columnId]` | Non-title columns stored in cells object |
+
+### Export Pattern
+
+```javascript
+// Correct way to export affine:database
+const columns = model.columns || [];
+const childBlocks = block.children || []; // ROWS are child blocks!
+const cells = model.cells || {};
+
+for (const childBlock of childBlocks) {
+    const rowId = childBlock.id;
+    const firstColText = getText(childBlock); // Title column
+    
+    // Other columns from cells object
+    const rowCells = cells[rowId] || {};
+    columns.slice(1).forEach(col => {
+        const cellValue = rowCells[col.id]?.value?.toString() || "";
+    });
+}
+```
+
+### Common Mistake ❌
+```javascript
+// WRONG: This will produce empty cells
+Object.keys(model.cells).forEach(rowId => { ... });
+```
+
+### Correct Approach ✅
+```javascript
+// RIGHT: Iterate child blocks as rows
+for (const childBlock of block.children) {
+    const firstCol = getText(childBlock);
+    const otherCols = model.cells[childBlock.id] || {};
+}
+```
 
 ---
 
