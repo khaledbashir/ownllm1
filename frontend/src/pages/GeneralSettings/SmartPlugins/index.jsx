@@ -6,7 +6,8 @@ import showToast from "@/utils/toast";
 import Workspace from "@/models/workspace";
 import SmartPlugins from "@/models/smartPlugins";
 import UniversalTable from "@/components/SmartPlugins/UniversalTable";
-import { Plus, FloppyDisk, Trash } from "@phosphor-icons/react";
+import InteractiveTable from "@/components/SmartPlugins/InteractiveTable";
+import { Plus, FloppyDisk, Trash, Calculator } from "@phosphor-icons/react";
 
 const STORAGE_KEY = "anythingllm-smart-plugins-workspace";
 
@@ -24,6 +25,20 @@ function defaultSchema() {
     fields: [
       { key: "name", label: "Name", type: "string" },
       { key: "value", label: "Value", type: "string" },
+    ],
+  };
+}
+
+// Rate card example with formulas for live calculation
+function rateCardSchema() {
+  return {
+    version: 1,
+    fields: [
+      { key: "role", label: "Role", type: "string" },
+      { key: "rate", label: "Hourly Rate", type: "currency" },
+      { key: "hours", label: "Hours", type: "number" },
+      { key: "discount", label: "Discount", type: "percentage" },
+      { key: "total", label: "Total", type: "calculated", formula: "rate * hours * (1 - discount)" },
     ],
   };
 }
@@ -261,11 +276,10 @@ export default function SmartPluginsSettings() {
                       <button
                         key={p.id}
                         onClick={() => setSelectedId(p.id)}
-                        className={`text-left rounded-lg px-3 py-2 border ${
-                          selectedId === p.id
-                            ? "border-theme-sidebar-border bg-theme-bg-secondary"
-                            : "border-transparent hover:bg-theme-bg-secondary"
-                        }`}
+                        className={`text-left rounded-lg px-3 py-2 border ${selectedId === p.id
+                          ? "border-theme-sidebar-border bg-theme-bg-secondary"
+                          : "border-transparent hover:bg-theme-bg-secondary"
+                          }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="text-sm text-theme-text-primary truncate">{p.name}</div>
@@ -358,12 +372,21 @@ export default function SmartPluginsSettings() {
                     <div className="mt-4">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-semibold text-theme-text-primary">Schema (JSON)</div>
-                        <button
-                          onClick={() => setDraft((d) => ({ ...d, schemaText: JSON.stringify(defaultSchema(), null, 2) }))}
-                          className="text-xs text-theme-text-secondary hover:text-white"
-                        >
-                          Reset sample
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setDraft((d) => ({ ...d, schemaText: JSON.stringify(rateCardSchema(), null, 2) }))}
+                            className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                          >
+                            <Calculator size={12} />
+                            Rate Card Template
+                          </button>
+                          <button
+                            onClick={() => setDraft((d) => ({ ...d, schemaText: JSON.stringify(defaultSchema(), null, 2) }))}
+                            className="text-xs text-theme-text-secondary hover:text-white"
+                          >
+                            Reset sample
+                          </button>
+                        </div>
                       </div>
                       <textarea
                         value={draft.schemaText}
@@ -379,8 +402,26 @@ export default function SmartPluginsSettings() {
                     </div>
 
                     <div className="mt-6">
-                      <div className="text-sm font-semibold text-theme-text-primary mb-2">Preview</div>
-                      <UniversalTable schema={previewSchema} rows={[]} />
+                      <div className="text-sm font-semibold text-theme-text-primary mb-2">
+                        Preview {previewSchema?.fields?.some(f => f.type === "calculated") && (
+                          <span className="text-xs text-blue-400 font-normal ml-2">
+                            (Interactive - try editing!)
+                          </span>
+                        )}
+                      </div>
+                      {previewSchema?.fields?.some(f => f.type === "calculated") ? (
+                        <InteractiveTable
+                          schema={previewSchema}
+                          rows={[{
+                            role: "Senior Developer",
+                            rate: 150,
+                            hours: 40,
+                            discount: 0.1,
+                          }]}
+                        />
+                      ) : (
+                        <UniversalTable schema={previewSchema} rows={[]} />
+                      )}
                     </div>
                   </>
                 )}
