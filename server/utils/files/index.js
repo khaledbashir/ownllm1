@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const { v5: uuidv5 } = require("uuid");
-const { Document } = require("../../models/documents");
 const { DocumentSyncQueue } = require("../../models/documentSyncQueue");
 const documentsPath =
   process.env.NODE_ENV === "development"
@@ -302,6 +301,7 @@ function hasVectorCachedFiles() {
  * @returns {Promise<Record<string, string[]>>} - a record of filenames and their corresponding workspaceIds
  */
 async function getPinnedWorkspacesByDocument(filenames = []) {
+  const { Document } = require("../../models/documents");
   return (
     await Document.where(
       {
@@ -334,6 +334,7 @@ async function getPinnedWorkspacesByDocument(filenames = []) {
  * @returns {Promise<Record<string, string[]>>} - a record of filenames and their corresponding workspaceIds
  */
 async function getWatchedDocumentFilenames(filenames = []) {
+  const { Document } = require("../../models/documents");
   return (
     await Document.where(
       {

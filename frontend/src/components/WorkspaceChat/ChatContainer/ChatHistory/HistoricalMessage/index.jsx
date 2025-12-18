@@ -23,7 +23,7 @@ import { chatQueryRefusalResponse } from "@/utils/chat";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
-import SandpackRenderer from "../../../../Artifacts/SandpackRenderer";
+import SandpackRenderer from "../../../../Artifacts/SandpackRenderer.jsx";
 import Appearance from "@/models/appearance";
 
 const HistoricalMessage = ({
