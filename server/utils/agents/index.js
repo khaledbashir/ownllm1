@@ -8,7 +8,7 @@ const { WorkspaceChats } = require("../../models/workspaceChats");
 const { safeJsonParse } = require("../http");
 const { USER_AGENT, WORKSPACE_AGENT } = require("./defaults");
 const ImportedPlugin = require("./imported");
-const { AgentFlows } = require("../agentFlows");
+// AgentFlows is lazy-loaded in #attachPlugins to avoid circular dependency
 const MCPCompatibilityLayer = require("../MCP");
 const { getVectorDbClass, getLLMProvider } = require("../helpers");
 const { DocumentManager } = require("../DocumentManager");
@@ -501,6 +501,8 @@ class AgentHandler {
 
       // Load flow plugin. This is marked by `@@flow_` in the array of functions to load.
       if (name.startsWith("@@flow_")) {
+        // Lazy-load AgentFlows to avoid circular dependency
+        const { AgentFlows } = require("../agentFlows");
         const uuid = name.replace("@@flow_", "");
         const plugin = AgentFlows.loadFlowPlugin(uuid, this.aibitat);
         if (!plugin) {

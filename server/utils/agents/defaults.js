@@ -3,7 +3,6 @@ const { SystemSettings } = require("../../models/systemSettings");
 const { safeJsonParse } = require("../http");
 const Provider = require("./aibitat/providers/ai-provider");
 const ImportedPlugin = require("./imported");
-const { AgentFlows } = require("../agentFlows");
 const MCPCompatibilityLayer = require("../MCP");
 const { SystemPromptVariables } = require("../../models/systemPromptVariables");
 
@@ -39,12 +38,15 @@ const WORKSPACE_AGENT = {
     user = null,
     context = []
   ) => {
+    // Lazy-load AgentFlows to avoid circular dependency
+    // (agentFlows -> executor -> execute-agent -> agents -> agentFlows)
+    const { AgentFlows } = require("../agentFlows");
     return {
       role: await Provider.systemPrompt({ provider, workspace, user, context }),
       functions: [
         ...(await agentSkillsFromSystemSettings()),
         ...ImportedPlugin.activeImportedPlugins(),
-        ...AgentFlows.activeFlowPlugins(),
+        ...(AgentFlows?.activeFlowPlugins?.() || []),
         ...(await new MCPCompatibilityLayer().activeMCPServers()),
       ],
     };

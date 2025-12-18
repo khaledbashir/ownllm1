@@ -2,7 +2,7 @@ const AIbitat = require("./aibitat");
 const AgentPlugins = require("./aibitat/plugins");
 const ImportedPlugin = require("./imported");
 const MCPCompatibilityLayer = require("../MCP");
-const { AgentFlows } = require("../agentFlows");
+// AgentFlows is lazy-loaded where needed to avoid circular dependency
 const { httpSocket } = require("./aibitat/plugins/http-socket.js");
 const { User } = require("../../models/user");
 const { WorkspaceChats } = require("../../models/workspaceChats");
@@ -228,6 +228,8 @@ class EphemeralAgentHandler extends AgentHandler {
 
       // Load flow plugin. This is marked by `@@flow_` in the array of functions to load.
       if (name.startsWith("@@flow_")) {
+        // Lazy-load AgentFlows to avoid circular dependency
+        const { AgentFlows } = require("../agentFlows");
         const uuid = name.replace("@@flow_", "");
         const plugin = AgentFlows.loadFlowPlugin(uuid, this.aibitat);
         if (!plugin) {
@@ -336,7 +338,8 @@ class EphemeralAgentHandler extends AgentHandler {
     this.#funcsToLoad = [
       ...(await agentSkillsFromSystemSettings()),
       ...ImportedPlugin.activeImportedPlugins(),
-      ...AgentFlows.activeFlowPlugins(),
+      // Lazy-load AgentFlows to avoid circular dependency
+      ...((() => { const { AgentFlows } = require("../agentFlows"); return AgentFlows?.activeFlowPlugins?.() || []; })()),
       ...(await new MCPCompatibilityLayer().activeMCPServers()),
     ];
   }
