@@ -12,7 +12,7 @@ const {
   multiUserMode,
   queryParams,
 } = require("../utils/http");
-const { handleAssetUpload, handlePfpUpload } = require("../utils/files/multer");
+const { handleAssetUpload, handleGenericImageUpload } = require("../utils/files/multer");
 const { v4 } = require("uuid");
 const { SystemSettings } = require("../models/systemSettings");
 const { User } = require("../models/user");
@@ -727,7 +727,7 @@ function systemEndpoints(app) {
 
   app.post(
     "/system/upload-pfp",
-    [validatedRequest, flexUserRoleValid([ROLES.all]), handlePfpUpload],
+    [validatedRequest, flexUserRoleValid([ROLES.all]), handleGenericImageUpload],
     async function (request, response) {
       try {
         const user = await userFromSession(request, response);

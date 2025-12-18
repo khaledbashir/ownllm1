@@ -12,7 +12,7 @@ const { Document } = require("../models/documents");
 const { DocumentVectors } = require("../models/vectors");
 const { WorkspaceChats } = require("../models/workspaceChats");
 const { getVectorDbClass } = require("../utils/helpers");
-const { handleFileUpload, handlePfpUpload } = require("../utils/files/multer");
+const { handleFileUpload, handleGenericImageUpload } = require("../utils/files/multer");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
 const { Telemetry } = require("../models/telemetry");
 const {
@@ -726,7 +726,7 @@ function workspaceEndpoints(app) {
     [
       validatedRequest,
       flexUserRoleValid([ROLES.admin, ROLES.manager]),
-      handlePfpUpload,
+      handleGenericImageUpload,
     ],
     async function (request, response) {
       try {
