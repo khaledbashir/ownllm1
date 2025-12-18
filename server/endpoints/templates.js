@@ -1,6 +1,6 @@
 const prisma = require("../utils/prisma");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
-const { Telemetry } = require("../utils/telemetry");
+const { Telemetry } = require("../models/telemetry");
 
 function templatesEndpoints(app) {
     if (!app) return;
@@ -14,7 +14,7 @@ function templatesEndpoints(app) {
             res.status(200).json({ templates });
         } catch (error) {
             console.error("[Templates] List error:", error);
-            res.status(500).json({ error: "Failed to list templates" });
+            res.status(500).json({ error: "Failed to list templates", details: error.message });
         }
     });
 
