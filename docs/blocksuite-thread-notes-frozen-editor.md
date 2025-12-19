@@ -2,6 +2,11 @@
 
 This document explains how to diagnose and fix a case where the **Thread Notes BlockSuite editor renders but is non-interactive** (can’t click to place a cursor, can’t type).
 
+## Quick Checklist
+- Is the editor visible but you can't type or click? → Check if `doc.load()` is called before mounting.
+- Browser console shows BlockSuite/Affine warnings? → See diagnosis section.
+- After fix, test: click editor, type, reload page, insert from chat.
+
 ## Symptom
 In the Workspace Chat UI (Thread Notes panel):
 - The editor UI appears, but behaves as if it’s “read-only” or frozen.
