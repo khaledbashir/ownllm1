@@ -200,6 +200,115 @@ function initInvoiceDoc(doc: Doc) {
 
 ---
 
+## 🧵 Workspace Thread Notes (AnythingLLM)
+
+This repo uses BlockSuite to power **Workspace Chat → Thread Notes**. Notes are stored per thread in the DB as a single `TEXT` field containing JSON.
+
+### Storage Format
+
+- DB column: `workspace_threads.notes` (`TEXT`)
+- API endpoints:
+  - `GET /api/workspace/:slug/thread/:threadSlug/notes` → returns `{ notes: string }`
+  - `PUT /api/workspace/:slug/thread/:threadSlug/notes` with `{ notes: string }`
+- Snapshot payload format (what we store in `notes`):
+
+```json
+{
+  "type": "blocksuite-snapshot",
+  "version": 1,
+  "snapshot": { /* Job.docToSnapshot(doc) */ }
+}
+```
+
+Frontend implementation:
+- Editor + snapshot save/restore: `frontend/src/components/WorkspaceChat/ThreadNotes/BlockSuiteEditor.jsx`
+- Fetch + update notes: `frontend/src/models/workspaceThread.js`
+
+### Save/Restore Notes (Important)
+
+- Restore: `Job.snapshotToDoc(parsed.snapshot)`
+- Save: `Job.docToSnapshot(doc)` then JSON.stringify
+- Autosave should listen to **more than only** `doc.slots.blockUpdated`.
+  - Some operations (especially `doc.addBlock`) may not fire `blockUpdated` reliably.
+  - Prefer listening to `blockUpdated` + `blockAdded` + `blockDeleted` when available.
+
+Debugging tip:
+- Set `localStorage.debug_blocksuite = "1"` to log pricing/database block counts on doc restore.
+
+---
+
+## 💰 Pricing Tables (Custom Embed Block)
+
+We implement pricing tables as a custom embed block to avoid `affine:database` UI leakage ("Table View", "+ New Record", etc.) and to keep totals deterministic.
+
+- Block flavour: `affine:embed-pricing-table`
+- Block schema/spec: `frontend/src/components/BlockSuite/pricing-table-block.jsx`
+- Inserted during markdown parsing and also via explicit API from Thread Notes actions.
+
+### Props Contract
+
+`affine:embed-pricing-table` stores data in block props:
+
+- `title: Text`
+- `currency: string` (default `AUD`)
+- `discountPercent: number`
+- `gstPercent: number`
+- `rows: Array<{ id, role, description, hours, baseRate }>`
+
+### Export Contract (PDF)
+
+PDF export uses a custom serializer that has a dedicated case for `affine:embed-pricing-table`.
+
+- Serializer location: `frontend/src/components/WorkspaceChat/ThreadNotes/BlockSuiteEditor.jsx`
+- If `rows` is empty you may see `"No rows"` in PDF output.
+  - That indicates the block exists but data binding/persistence failed.
+
+---
+
+## 🪪 Rate Card + Smart Actions (SOW pipeline)
+
+SOW generation is implemented as **smart actions** that return markdown + structured pricing payloads.
+
+Backend smart actions:
+- `server/utils/chats/smartActions.js`
+- Key actions:
+  - `draft_sow`
+  - `multi_scope_sow`
+
+Business rules enforced:
+- Uses workspace **HOURLY RATE CARD** (AUD ex GST)
+- Mandatory roles and ordering are enforced server-side
+
+Integration pattern:
+- Smart action result → Thread Notes action handler → BlockSuite insertion:
+  - Markdown sections inserted as `affine:paragraph`/`affine:list` etc.
+  - Pricing payload inserted as `affine:embed-pricing-table`
+
+---
+
+## 🔌 Adding a New Block / Extension (Practical Checklist)
+
+1. Create block schema + view
+- Prefer embed blocks for self-contained UI.
+- Add schema/spec near `frontend/src/components/BlockSuite/`.
+
+2. Register the block
+- Schema registration (data shape): register with `Schema().register([...AffineSchemas, MyBlockSchema])`.
+- Spec registration (view/widgets): `editor.pageSpecs = [...PageEditorBlockSpecs, MyBlockSpec]`.
+
+3. Persist via snapshots
+- Ensure changes trigger save. If you programmatically add blocks, explicitly save a snapshot after insertion.
+
+4. Export handling
+- Decide export requirement:
+  - If must appear in PDF, add a serializer case (snapshot→HTML) for the new block flavour.
+  - Avoid leaking interactive UI elements into export.
+
+5. Debug quickly
+- Add a temporary `localStorage` feature flag to log block counts/props on restore.
+
+---
+
 ## 🛠️ Detailed Technical Q&A: Custom Blocks & Adapters
 
 ### 1. How do we define a custom `BlockSpec`?

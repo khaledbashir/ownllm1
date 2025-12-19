@@ -213,7 +213,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
     // Helper to save the full document snapshot
     const saveDocSnapshot = useMemo(() => {
-        return debounce(async (doc, collection) => {
+        return debounce(async (doc) => {
+            const collection = collectionRef.current;
+            if (!collection) return;
             try {
                 const job = new Job({ collection });
                 const snapshot = await job.docToSnapshot(doc);
@@ -286,10 +288,25 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     doc = createEmptyDoc(collection);
                 }
 
-                // Important: doc must be loaded or editor may appear "frozen"
-                await ensureDocLoaded(doc);
+                 // Important: doc must be loaded or editor may appear "frozen"
+                 await ensureDocLoaded(doc);
 
-                // Create editor and attach document
+                 if (typeof window !== "undefined" && window?.localStorage?.getItem("debug_blocksuite") === "1") {
+                     try {
+                         const pricingBlocks = doc.getBlocksByFlavour?.("affine:embed-pricing-table") || [];
+                         const databaseBlocks = doc.getBlocksByFlavour?.("affine:database") || [];
+                         console.log("[BlockSuiteEditor][debug] pricing blocks:", pricingBlocks.map((b) => ({
+                             id: b.id,
+                             rows: Array.isArray(b.model?.rows) ? b.model.rows.length : 0,
+                             title: b.model?.title?.toString?.(),
+                         })));
+                         console.log("[BlockSuiteEditor][debug] database blocks:", databaseBlocks.length);
+                     } catch (e) {
+                         console.warn("[BlockSuiteEditor][debug] failed to inspect blocks:", e);
+                     }
+                 }
+ 
+                 // Create editor and attach document
                 const editor = new AffineEditorContainer();
                 editor.pageSpecs = [...PageEditorBlockSpecs, PricingTableBlockSpec];
                 editor.doc = doc;
@@ -385,10 +402,19 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     }
                 });
 
-                // Listen for changes and autosave with full snapshot
-                doc.slots.blockUpdated.on(() => {
-                    saveDocSnapshot(doc, collection);
-                });
+                // Listen for changes and autosave with full snapshot.
+                // Some operations (notably `doc.addBlock`) may not emit `blockUpdated`,
+                // so we defensively subscribe to any available slots.
+                const attachAutoSave = () => {
+                    const triggers = ["blockUpdated", "blockAdded", "blockDeleted"];
+                    triggers.forEach((slotName) => {
+                        const slot = doc?.slots?.[slotName];
+                        if (slot && typeof slot.on === "function") {
+                            slot.on(() => saveDocSnapshot(doc));
+                        }
+                    });
+                };
+                attachAutoSave();
 
                 // Setup AI slash menu after short delay to ensure widgets are ready
                 setTimeout(() => {
@@ -607,6 +633,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                                 gstPercent: parsedPricing.gstPercent,
                                 rows: parsedPricing.rows,
                             }, noteBlockId);
+                            // Ensure snapshot persists even if slots didn't fire.
+                            saveDocSnapshot(doc);
                             continue;
                         } catch (e) {
                             console.error("[BlockSuiteEditor] Failed to insert pricing table embed; falling back to database:", e);
@@ -917,6 +945,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     parseMarkdownToBlocks(doc, noteBlock.id, remainingContent);
                 }
 
+                // Ensure snapshot persists even if slots didn't fire.
+                saveDocSnapshot(doc);
+
                 console.log("[BlockSuiteEditor] Successfully parsed and inserted markdown");
                 return true;
             } catch (e) {
@@ -1058,6 +1089,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     gstPercent,
                     rows,
                 }, noteBlock.id);
+                // Ensure snapshot persists even if slots didn't fire.
+                saveDocSnapshot(doc);
                 return true;
             } catch (e) {
                 console.error("[BlockSuiteEditor] Failed to insert prefilled pricing table:", e);
@@ -1076,6 +1109,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
             try {
                 parseMarkdownToBlocks(doc, noteBlock.id, markdown);
+                // Ensure snapshot persists even if slots didn't fire.
+                saveDocSnapshot(doc);
             } catch (e) {
                 console.error("[BlockSuiteEditor] appendMarkdown failed:", e);
             }
@@ -1549,6 +1584,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         try {
             doc.addBlock("affine:embed-pricing-table", {}, noteBlock.id);
+            // Ensure snapshot persists even if slots didn't fire.
+            saveDocSnapshot(doc);
             toast.success("Pricing table added");
         } catch (e) {
             console.error("[BlockSuiteEditor] Failed to insert pricing table:", e);
