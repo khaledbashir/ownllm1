@@ -288,25 +288,25 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     doc = createEmptyDoc(collection);
                 }
 
-                 // Important: doc must be loaded or editor may appear "frozen"
-                 await ensureDocLoaded(doc);
+                // Important: doc must be loaded or editor may appear "frozen"
+                await ensureDocLoaded(doc);
 
-                 if (typeof window !== "undefined" && window?.localStorage?.getItem("debug_blocksuite") === "1") {
-                     try {
-                         const pricingBlocks = doc.getBlocksByFlavour?.("affine:embed-pricing-table") || [];
-                         const databaseBlocks = doc.getBlocksByFlavour?.("affine:database") || [];
-                         console.log("[BlockSuiteEditor][debug] pricing blocks:", pricingBlocks.map((b) => ({
-                             id: b.id,
-                             rows: Array.isArray(b.model?.rows) ? b.model.rows.length : 0,
-                             title: b.model?.title?.toString?.(),
-                         })));
-                         console.log("[BlockSuiteEditor][debug] database blocks:", databaseBlocks.length);
-                     } catch (e) {
-                         console.warn("[BlockSuiteEditor][debug] failed to inspect blocks:", e);
-                     }
-                 }
- 
-                 // Create editor and attach document
+                if (typeof window !== "undefined" && window?.localStorage?.getItem("debug_blocksuite") === "1") {
+                    try {
+                        const pricingBlocks = doc.getBlocksByFlavour?.("affine:embed-pricing-table") || [];
+                        const databaseBlocks = doc.getBlocksByFlavour?.("affine:database") || [];
+                        console.log("[BlockSuiteEditor][debug] pricing blocks:", pricingBlocks.map((b) => ({
+                            id: b.id,
+                            rows: Array.isArray(b.model?.rows) ? b.model.rows.length : 0,
+                            title: b.model?.title?.toString?.(),
+                        })));
+                        console.log("[BlockSuiteEditor][debug] database blocks:", databaseBlocks.length);
+                    } catch (e) {
+                        console.warn("[BlockSuiteEditor][debug] failed to inspect blocks:", e);
+                    }
+                }
+
+                // Create editor and attach document
                 const editor = new AffineEditorContainer();
                 editor.pageSpecs = [...PageEditorBlockSpecs, PricingTableBlockSpec];
                 editor.doc = doc;
@@ -480,10 +480,22 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         let lastHeadingText = null;
 
         const parseMarkdownTableRow = (row) => {
-            const parts = String(row || "").split("|");
+            const line = String(row || "").trim();
+            // Split by pipe but ignore escaped pipes (\|)
+            // 1. We replace escaped pipes with a placeholder 
+            // 2. Split by pipe
+            // 3. Restore placeholder to pipe
+            const PLACEHOLDER = "___PIPE_PLACEHOLDER___";
+            const parts = line
+                .replace(/\\\|/g, PLACEHOLDER)
+                .split("|")
+                .map(part => part.replace(new RegExp(PLACEHOLDER, "g"), "|").trim());
+
+            // Markdown tables often start and end with empty strings if they have outer pipes
             if (parts.length >= 2 && parts[0] === "") parts.shift();
             if (parts.length >= 2 && parts[parts.length - 1] === "") parts.pop();
-            return parts.map((cell) => String(cell || "").trim());
+
+            return parts;
         };
 
         const parseNumber = (value) => {
@@ -549,12 +561,21 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             if (!Array.isArray(headerCells) || headerCells.length < 2) return null;
 
             const headers = headerCells.map(normalizeHeader);
-            const idxRole = headers.findIndex((h) => h === "role" || h.includes("role") || h.includes("resource") || h.includes("service"));
-            const idxHours = headers.findIndex((h) => h.includes("hour"));
-            const idxRate = headers.findIndex((h) => h.includes("rate") || h.includes("hourly") || h.includes("/hr") || h.includes("hr"));
-            const idxDesc = headers.findIndex((h) => h.includes("description") || h.includes("details") || h.includes("notes"));
 
-            if (idxRole === -1 || idxHours === -1 || idxRate === -1) return null;
+            // Helper to find column index with looser matching
+            const findCol = (keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
+
+            const idxRole = findCol(["role", "resource", "service", "item", "deliverable"]);
+            const idxHours = findCol(["hour", "qty", "quantity", "days", "units"]);
+            const idxRate = findCol(["rate", "price", "cost", "fee", "amount"]);
+            const idxDesc = findCol(["description", "detail", "note", "scope"]);
+
+            // Require at least Role and Rate to be considered a pricing table
+            // Hours is optional (can default to 1 or 0) but highly recommended
+            if (idxRole === -1 || idxRate === -1) {
+                // Not a pricing table
+                return null;
+            }
 
             const currency = detectCurrency([...headerCells, ...(contextLines || [])]);
             const discountPercent = parsePercentFromContext(contextLines || [], "discount") ?? 0;
@@ -564,9 +585,12 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             const rows = (Array.isArray(dataRows) ? dataRows : [])
                 .map((cells, idx) => {
                     const role = cells[idxRole] || "";
-                    const hours = parseNumber(cells[idxHours]) ?? 0;
+                    const hours = idxHours !== -1 ? (parseNumber(cells[idxHours]) ?? 0) : 0;
                     const baseRate = parseNumber(cells[idxRate]) ?? 0;
                     const description = idxDesc !== -1 ? (cells[idxDesc] || "") : "";
+
+                    if (!role) return null;
+
                     return {
                         id: `${Date.now()}-${idx}`,
                         role,
@@ -575,7 +599,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                         baseRate,
                     };
                 })
-                .filter((r) => r.role);
+                .filter(Boolean);
 
             if (!rows.length) return null;
 

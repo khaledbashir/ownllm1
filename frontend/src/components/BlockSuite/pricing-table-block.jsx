@@ -7,6 +7,7 @@ import { html } from "lit";
 import { literal } from "lit/static-html.js";
 
 import Workspace from "@/models/workspace";
+import ReactMarkdown from "react-markdown";
 
 const defineOnce = (tag, ctor) => {
   if (!customElements.get(tag)) customElements.define(tag, ctor);
@@ -113,49 +114,89 @@ const onNumberInput = (value, fallback = 0) => {
 const PricingTableWidget = ({ model }) => {
   const [localTick, setLocalTick] = useState(0);
   const [availableRoles, setAvailableRoles] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    let mounted = true;
     const fetchRoles = async () => {
-      const matches = window.location.pathname.match(/\/workspace\/([^\/]+)/);
-      if (!matches) return;
-      const slug = matches[1];
+      try {
+        const matches = window.location.pathname.match(/\/workspace\/([^\/]+)/);
+        if (!matches) return;
+        const slug = matches[1];
 
-      const workspace = await Workspace.bySlug(slug);
-      if (workspace?.rateCard) {
-        try {
+        const workspace = await Workspace.bySlug(slug);
+        if (mounted && workspace?.rateCard) {
           const rates = JSON.parse(workspace.rateCard);
           setAvailableRoles(rates);
-        } catch (e) {
-          console.error("Failed to parse rate card", e);
         }
+      } catch (e) {
+        console.error("[PricingTable] Failed to load roles", e);
       }
     };
     fetchRoles();
+    return () => { mounted = false; };
   }, []);
 
+  // Safe accessor for model props
+  const getProp = (key, fallback) => {
+    try {
+      return model[key] ?? fallback;
+    } catch (e) {
+      return fallback;
+    }
+  };
+
   const title = model.title?.toString?.() ?? "Project Pricing";
-  const currency = model.currency || "AUD";
-  const discountPercent = onNumberInput(model.discountPercent, 0);
-  const gstPercent = onNumberInput(model.gstPercent, 0);
-  const rows = Array.isArray(model.rows) ? model.rows : [];
+  const currency = getProp("currency", "AUD");
+  const discountPercent = onNumberInput(getProp("discountPercent", 0));
+  const gstPercent = onNumberInput(getProp("gstPercent", 10));
+  const rawRows = getProp("rows", []);
+  const rows = Array.isArray(rawRows) ? rawRows : [];
+
+  // Detect Readonly / Export mode (approximation)
+  const isReadonly = model.doc?.readonly || false;
 
   const totals = useMemo(
     () => calcTotals({ rows, discountPercent, gstPercent }),
-    // model.rows is a proxy; localTick forces recalculation after edits
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [localTick, discountPercent, gstPercent]
+    [localTick, discountPercent, gstPercent, rows]
   );
 
   const updateModel = (partial) => {
-    // Use BlockSuite's doc.updateBlock so changes persist.
-    model.doc.updateBlock(model, partial);
-    setLocalTick((t) => t + 1);
+    if (isReadonly) return;
+    try {
+      model.doc.updateBlock(model, partial);
+      setLocalTick((t) => t + 1);
+    } catch (e) {
+      console.error("Failed to update pricing table model", e);
+    }
   };
 
   const updateRow = (rowIndex, patch) => {
+    if (isReadonly) return;
     const nextRows = rows.map((r, idx) => (idx === rowIndex ? { ...r, ...patch } : r));
     updateModel({ rows: nextRows });
   };
+
+  const addRow = () => {
+    const newRow = {
+      id: `new-${Date.now()}`,
+      role: "",
+      description: "",
+      hours: 0,
+      baseRate: 0
+    };
+    updateModel({ rows: [...rows, newRow] });
+  };
+
+  const removeRow = (rowIndex) => {
+    const nextRows = rows.filter((_, idx) => idx !== rowIndex);
+    updateModel({ rows: nextRows });
+  };
+
+  if (error) {
+    return <div className="p-4 text-red-400 bg-red-900/20 rounded">Error loading pricing table</div>;
+  }
 
   return (
     <div
@@ -182,39 +223,41 @@ const PricingTableWidget = ({ model }) => {
         <div className="text-xs text-white/50">{currency}</div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-white/50">Discount %</span>
-          <input
-            className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-            type="number"
-            min={0}
-            max={100}
-            value={discountPercent}
-            onChange={(e) => updateModel({ discountPercent: clampNumber(e.target.value, { max: 100 }) })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-white/50">GST %</span>
-          <input
-            className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-            type="number"
-            min={0}
-            max={100}
-            value={gstPercent}
-            onChange={(e) => updateModel({ gstPercent: clampNumber(e.target.value, { max: 100 }) })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-white/50">Title</span>
-          <input
-            className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-            type="text"
-            value={title}
-            onChange={(e) => updateModel({ title: new Text(e.target.value || "") })}
-          />
-        </label>
-      </div>
+      {!isReadonly && (
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-white/50">Discount %</span>
+            <input
+              className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+              type="number"
+              min={0}
+              max={100}
+              value={discountPercent}
+              onChange={(e) => updateModel({ discountPercent: clampNumber(e.target.value, { max: 100 }) })}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-white/50">GST %</span>
+            <input
+              className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+              type="number"
+              min={0}
+              max={100}
+              value={gstPercent}
+              onChange={(e) => updateModel({ gstPercent: clampNumber(e.target.value, { max: 100 }) })}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-white/50">Title</span>
+            <input
+              className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+              type="text"
+              value={title}
+              onChange={(e) => updateModel({ title: new Text(e.target.value || "") })}
+            />
+          </label>
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm text-white/80">
@@ -225,69 +268,102 @@ const PricingTableWidget = ({ model }) => {
               <th className="py-2 pr-3">Hours</th>
               <th className="py-2 pr-3">Rate</th>
               <th className="py-2">Total</th>
+              {!isReadonly && <th className="py-2 w-8"></th>}
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, idx) => {
+            {(rows.length === 0 ? [] : rows).map((row, idx) => {
               const hours = clampNumber(row.hours);
               const rate = clampNumber(row.baseRate);
               const lineTotal = hours * rate;
 
               return (
-                <tr key={row.id || idx} className="border-b border-white/5 align-top">
+                <tr key={row.id || idx} className="border-b border-white/5 align-top group">
                   <td className="py-2 pr-3 w-56">
-                    <input
-                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                      type="text"
-                      list="available-roles"
-                      value={row.role || ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        const updates = { role: val };
-                        // Auto-fill rate if role matches
-                        const found = availableRoles.find(r => r.name === val);
-                        if (found) {
-                          updates.baseRate = found.rate;
-                        }
-                        updateRow(idx, updates);
-                      }}
-                    />
+                    {isReadonly ? (
+                      <span className="font-medium">{row.role}</span>
+                    ) : (
+                      <input
+                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                        type="text"
+                        list="available-roles"
+                        value={row.role || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const updates = { role: val };
+                          const found = availableRoles.find(r => r.name === val);
+                          if (found) {
+                            updates.baseRate = found.rate;
+                          }
+                          updateRow(idx, updates);
+                        }}
+                      />
+                    )}
                   </td>
                   <td className="py-2 pr-3">
-                    <input
-                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                      type="text"
-                      value={row.description || ""}
-                      onChange={(e) => updateRow(idx, { description: e.target.value })}
-                    />
+                    {isReadonly ? (
+                      <div className="prose prose-invert prose-sm max-w-none">
+                        <ReactMarkdown>{row.description || ""}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <textarea
+                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 resize-vertical min-h-[40px]"
+                        value={row.description || ""}
+                        onChange={(e) => updateRow(idx, { description: e.target.value })}
+                      />
+                    )}
                   </td>
                   <td className="py-2 pr-3 w-24">
-                    <input
-                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                      type="number"
-                      min={0}
-                      value={hours}
-                      onChange={(e) => updateRow(idx, { hours: clampNumber(e.target.value) })}
-                    />
+                    {isReadonly ? <span>{hours}</span> : (
+                      <input
+                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                        type="number"
+                        min={0}
+                        value={hours}
+                        onChange={(e) => updateRow(idx, { hours: clampNumber(e.target.value) })}
+                      />
+                    )}
                   </td>
                   <td className="py-2 pr-3 w-28">
-                    <input
-                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                      type="number"
-                      min={0}
-                      value={rate}
-                      onChange={(e) => updateRow(idx, { baseRate: clampNumber(e.target.value) })}
-                    />
+                    {isReadonly ? <span>{formatCurrency(rate, currency)}</span> : (
+                      <input
+                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                        type="number"
+                        min={0}
+                        value={rate}
+                        onChange={(e) => updateRow(idx, { baseRate: clampNumber(e.target.value) })}
+                      />
+                    )}
                   </td>
                   <td className="py-2 text-right font-medium whitespace-nowrap">
                     {formatCurrency(lineTotal, currency)}
                   </td>
+                  {!isReadonly && (
+                    <td className="py-2 text-right">
+                      <button
+                        onClick={() => removeRow(idx)}
+                        className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-900/30 p-1 rounded"
+                        title="Remove row"
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {!isReadonly && (
+        <button
+          onClick={addRow}
+          className="mt-2 text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300"
+        >
+          + New Item
+        </button>
+      )}
 
       <div className="mt-4 flex justify-end">
         <div className="w-full max-w-sm text-sm text-white/80">
@@ -296,7 +372,7 @@ const PricingTableWidget = ({ model }) => {
             <span className="font-medium">{formatCurrency(totals.subtotal, currency)}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span className="text-white/60">Discount</span>
+            <span className="text-white/60">Discount {discountPercent > 0 && `(${discountPercent}%)`}</span>
             <span className="font-medium">-{formatCurrency(totals.discount, currency)}</span>
           </div>
           <div className="flex justify-between py-1">
@@ -304,7 +380,7 @@ const PricingTableWidget = ({ model }) => {
             <span className="font-medium">{formatCurrency(totals.afterDiscount, currency)}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span className="text-white/60">GST</span>
+            <span className="text-white/60">GST {gstPercent > 0 && `(${gstPercent}%)`}</span>
             <span className="font-medium">{formatCurrency(totals.gst, currency)}</span>
           </div>
           <div className="flex justify-between py-2 mt-2 border-t border-white/10">
