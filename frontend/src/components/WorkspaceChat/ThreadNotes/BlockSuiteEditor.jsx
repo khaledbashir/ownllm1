@@ -585,6 +585,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             const rows = (Array.isArray(dataRows) ? dataRows : [])
                 .map((cells, idx) => {
                     const role = cells[idxRole] || "";
+                    // Fix: Ignore garbage rows that look like summaries
+                    if (/subtotal|total/i.test(role)) return null;
+
                     const hours = idxHours !== -1 ? (parseNumber(cells[idxHours]) ?? 0) : 0;
                     const baseRate = parseNumber(cells[idxRate]) ?? 0;
                     const description = idxDesc !== -1 ? (cells[idxDesc] || "") : "";
@@ -2033,7 +2036,12 @@ const serializeDocToHtml = async (doc) => {
                 const currency = model.currency || "AUD";
                 const discountPercent = Number(model.discountPercent) || 0;
                 const gstPercent = Number(model.gstPercent) || 0;
-                const rows = Array.isArray(model.rows) ? model.rows : [];
+                const gstPercent = Number(model.gstPercent) || 0;
+
+                // Fix: Handle Yjs Arrays/Proxies for PDF export
+                let rawRows = model.rows;
+                if (rawRows && typeof rawRows.toJSON === "function") rawRows = rawRows.toJSON();
+                const rows = Array.isArray(rawRows) ? rawRows : [];
 
                 const clamp = (n, { min = 0, max = 100 } = {}) => {
                     const v = Number(n);
