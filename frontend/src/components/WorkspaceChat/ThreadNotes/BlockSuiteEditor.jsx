@@ -8,7 +8,11 @@ import React, {
 } from "react";
 import { AffineEditorContainer } from "@blocksuite/presets";
 import { Schema, DocCollection, Text, Job } from "@blocksuite/store";
-import { AffineSchemas } from "@blocksuite/blocks";
+import { AffineSchemas, PageEditorBlockSpecs } from "@blocksuite/blocks";
+import {
+    PricingTableBlockSchema,
+    PricingTableBlockSpec,
+} from "@/components/BlockSuite/pricing-table-block.jsx";
 import "@blocksuite/presets/themes/affine.css";
 // Deep import for HtmlAdapter as it is not exposed in main entry
 import { HtmlAdapter } from "@blocksuite/blocks/dist/_common/adapters/html.js";
@@ -231,8 +235,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         const initEditor = async () => {
             try {
-                // Create schema with Affine blocks
-                const schema = new Schema().register(AffineSchemas);
+                // Create schema with Affine blocks (+ our custom embed blocks)
+                const schema = new Schema().register([
+                    ...AffineSchemas,
+                    PricingTableBlockSchema,
+                ]);
                 const collection = new DocCollection({ schema });
                 collection.meta.initialize();
                 collectionRef.current = collection;
@@ -284,6 +291,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
                 // Create editor and attach document
                 const editor = new AffineEditorContainer();
+                editor.pageSpecs = [...PageEditorBlockSpecs, PricingTableBlockSpec];
                 editor.doc = doc;
 
                 // Clear container and append editor
@@ -1209,6 +1217,79 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     /**
      * Handle embedding doc content into workspace vector database
      */
+    const insertPricingTable = async () => {
+        if (!editorRef.current?.doc) {
+            toast.error("Editor not ready");
+            return;
+        }
+
+        const doc = editorRef.current.doc;
+
+        const getBlocksByFlavourSafe = (targetDoc, flavour) => {
+            try {
+                if (typeof targetDoc.getBlocksByFlavour === "function") {
+                    return targetDoc.getBlocksByFlavour(flavour) || [];
+                }
+            } catch {
+                // ignore
+            }
+            const found = [];
+            const traverse = (block) => {
+                if (!block) return;
+                if (block.flavour === flavour) found.push(block);
+                block.children?.forEach?.(traverse);
+            };
+            traverse(targetDoc.root);
+            return found;
+        };
+
+        const ensureThreadNoteBlock = () => {
+            let noteBlock = getBlocksByFlavourSafe(doc, "affine:note")[0];
+            if (noteBlock) return noteBlock;
+
+            let pageBlock = getBlocksByFlavourSafe(doc, "affine:page")[0];
+            if (!pageBlock && doc.root?.flavour === "affine:page") pageBlock = doc.root;
+            if (!pageBlock) {
+                const pageBlockId = doc.addBlock("affine:page", {});
+                pageBlock = doc.getBlock(pageBlockId);
+            }
+            if (!pageBlock?.id) return null;
+
+            const hasSurface = getBlocksByFlavourSafe(doc, "affine:surface").length > 0;
+            if (!hasSurface) {
+                try {
+                    doc.addBlock("affine:surface", {}, pageBlock.id);
+                } catch {
+                    // ignore
+                }
+            }
+
+            try {
+                const noteBlockId = doc.addBlock("affine:note", {}, pageBlock.id);
+                doc.addBlock("affine:paragraph", { text: new Text() }, noteBlockId);
+                noteBlock = doc.getBlock(noteBlockId);
+                return noteBlock;
+            } catch (e) {
+                console.error("[BlockSuiteEditor] Failed to create note block for pricing table:", e);
+                return null;
+            }
+        };
+
+        const noteBlock = ensureThreadNoteBlock();
+        if (!noteBlock?.id) {
+            toast.error("Could not find/create note block");
+            return;
+        }
+
+        try {
+            doc.addBlock("affine:embed-pricing-table", {}, noteBlock.id);
+            toast.success("Pricing table added");
+        } catch (e) {
+            console.error("[BlockSuiteEditor] Failed to insert pricing table:", e);
+            toast.error("Failed to insert pricing table");
+        }
+    };
+
     const handleEmbed = async () => {
         if (!workspaceSlug || !threadSlug) {
             toast.error("Missing workspace or thread information");
@@ -1376,6 +1457,14 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     </div>
 
                     {/* Action buttons styled like mode pills but differentiated */}
+                    <button
+                        onClick={insertPricingTable}
+                        disabled={!isReady}
+                        className="flex items-center gap-x-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-sm font-medium rounded-full border border-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        title="Insert interactive pricing table"
+                    >
+                        Pricing Table
+                    </button>
                     <button
                         onClick={handleEmbed}
                         disabled={embedding || !isReady || !threadSlug}
@@ -1611,6 +1700,110 @@ const serializeDocToHtml = async (doc) => {
                     <span style="color: #9ca3af; font-size: 0.875rem;">${attachmentSize}</span>
                 </div>`;
                 break;
+
+            case "affine:embed-pricing-table": {
+                const title = model.title?.toString?.() || "Project Pricing";
+                const currency = model.currency || "AUD";
+                const discountPercent = Number(model.discountPercent) || 0;
+                const gstPercent = Number(model.gstPercent) || 0;
+                const rows = Array.isArray(model.rows) ? model.rows : [];
+
+                const clamp = (n, { min = 0, max = 100 } = {}) => {
+                    const v = Number(n);
+                    if (!Number.isFinite(v)) return min;
+                    return Math.max(min, Math.min(max, v));
+                };
+
+                const formatCurrency = (value) => {
+                    const n = Number(value);
+                    if (!Number.isFinite(n)) return "$0";
+                    try {
+                        return n.toLocaleString(undefined, {
+                            style: "currency",
+                            currency,
+                            maximumFractionDigits: 0,
+                        });
+                    } catch {
+                        return `$${Math.round(n)}`;
+                    }
+                };
+
+                const subtotal = rows.reduce((sum, row) => {
+                    const hours = Number(row?.hours) || 0;
+                    const rate = Number(row?.baseRate) || 0;
+                    return sum + hours * rate;
+                }, 0);
+
+                const discount = subtotal * (clamp(discountPercent) / 100);
+                const afterDiscount = subtotal - discount;
+                const gst = afterDiscount * (clamp(gstPercent) / 100);
+                const total = afterDiscount + gst;
+
+                let tableHtml = `<div style="margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
+                    <div style="padding: 0.75rem 1rem; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-weight: 700; color: #111827;">${title}</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">${currency}</div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead style="background: #fafafa; border-bottom: 1px solid #e5e7eb;">
+                            <tr>
+                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">Role</th>
+                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">Description</th>
+                                <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827;">Hours</th>
+                                <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827;">Rate</th>
+                                <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                if (!rows.length) {
+                    tableHtml += `<tr><td colspan="5" style="padding: 1rem; text-align: center; color: #9ca3af;">No rows</td></tr>`;
+                } else {
+                    rows.forEach((row) => {
+                        const hours = Number(row?.hours) || 0;
+                        const rate = Number(row?.baseRate) || 0;
+                        const lineTotal = hours * rate;
+                        tableHtml += `<tr style="border-bottom: 1px solid #f3f4f6;">
+                            <td style="padding: 0.75rem 1rem; color: #111827;">${row?.role || ""}</td>
+                            <td style="padding: 0.75rem 1rem; color: #4b5563;">${row?.description || ""}</td>
+                            <td style="padding: 0.75rem 1rem; text-align: right; color: #111827;">${hours}</td>
+                            <td style="padding: 0.75rem 1rem; text-align: right; color: #111827;">${formatCurrency(rate)}</td>
+                            <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827;">${formatCurrency(lineTotal)}</td>
+                        </tr>`;
+                    });
+                }
+
+                tableHtml += `</tbody></table></div>
+                    <div style="padding: 0.75rem 1rem; display: flex; justify-content: flex-end;">
+                        <div style="width: 320px; font-size: 0.9rem;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
+                                <span style="color: #6b7280;">Subtotal</span>
+                                <span style="color: #111827; font-weight: 600;">${formatCurrency(subtotal)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
+                                <span style="color: #6b7280;">Discount (${clamp(discountPercent)}%)</span>
+                                <span style="color: #111827; font-weight: 600;">-${formatCurrency(discount)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
+                                <span style="color: #6b7280;">After discount</span>
+                                <span style="color: #111827; font-weight: 600;">${formatCurrency(afterDiscount)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
+                                <span style="color: #6b7280;">GST (${clamp(gstPercent)}%)</span>
+                                <span style="color: #111827; font-weight: 600;">${formatCurrency(gst)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; margin-top: 0.25rem; border-top: 1px solid #e5e7eb;">
+                                <span style="color: #111827; font-weight: 700;">Total</span>
+                                <span style="color: #111827; font-weight: 700;">${formatCurrency(total)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+
+                html = tableHtml;
+                break;
+            }
 
             case "affine:image": {
                 console.log("[PDF Export] Image Model:", model);
