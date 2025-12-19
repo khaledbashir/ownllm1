@@ -27,9 +27,13 @@
   background: var(--affine-background-primary-color, #141414) !important;
 }
 
-/* Ensure text is always light */
-.blocksuite-editor-wrapper,
-.blocksuite-editor-wrapper * {
+/* Ensure text is always light (but don't break widget icon styling) */
+.blocksuite-editor-wrapper {
+  color: var(--affine-text-primary-color, #eaeaea);
+}
+
+.blocksuite-editor-wrapper [contenteditable="true"],
+.blocksuite-editor-wrapper [contenteditable="true"] * {
   color: var(--affine-text-primary-color, #eaeaea);
 }
 
@@ -147,6 +151,15 @@
   fill: currentColor;
 }
 
+/* BlockSuite toolbars/menus often render in a body-level portal.
+   Ensure SVG icons there keep their intended contrast. */
+[class*="affine-"] svg,
+.blocksuite-portal svg,
+.blocksuite-overlay svg {
+  color: var(--affine-text-primary-color, #eaeaea) !important;
+  fill: currentColor !important;
+}
+
 /* Scrollbar - dark themed */
 .blocksuite-editor-wrapper::-webkit-scrollbar {
   width: 8px;
@@ -225,8 +238,9 @@ body {
   --affine-hover-color-filled: #2a2a2a;
   --affine-link-color: #78BEFF;
   --affine-icon-color: #a8a8a0;
-  --affine-white: #000;
-  --affine-black: #fff;
+  /* Keep semantic colors correct; used by icons/controls in portals */
+  --affine-white: #ffffff;
+  --affine-black: #000000;
 }
 
 /* ALL Affine/BlockSuite popups, menus, overlays */
