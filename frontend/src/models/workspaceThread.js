@@ -251,12 +251,12 @@ const WorkspaceThread = {
     return { thread, message };
   },
 
-  smartAction: async function (workspaceSlug, threadSlug, action) {
+  smartAction: async function (workspaceSlug, threadSlug, action, options = {}) {
     const res = await fetch(
       `${API_BASE}/workspace/${workspaceSlug}/thread/${threadSlug}/smart-action`,
       {
         method: "POST",
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, ...(options || {}) }),
         headers: { ...baseHeaders(), "Content-Type": "application/json" },
       }
     ).catch((e) => null);

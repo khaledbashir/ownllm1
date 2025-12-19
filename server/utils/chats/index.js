@@ -202,14 +202,18 @@ function buildProposalContext(workspace) {
       if (Array.isArray(rateCard) && rateCard.length > 0) {
         const normalizedRateCard = rateCard.map((r) => {
           if (!r || typeof r !== "object") return r;
+          const rawRate = r.hourlyRate ?? r.rate;
           return {
-            ...r,
-            hourlyRate: normalizeMoneyValue(r.hourlyRate),
+            id: r.id,
+            name: r.name,
+            category: r.category,
+            hourlyRate: normalizeMoneyValue(rawRate),
           };
         });
 
         context += "\n\n## HOURLY RATE CARD\n";
-        context += "Use these roles and hourly rates for time & materials estimates. Do NOT invent rates.\n";
+        context += "All rates are in AUD (ex GST) unless explicitly stated otherwise.\n";
+        context += "Use these exact role names and hourly rates for time & materials estimates. Do NOT invent, rename, or substitute roles/rates.\n";
         context += JSON.stringify(normalizedRateCard, null, 2);
       }
     } catch (e) {

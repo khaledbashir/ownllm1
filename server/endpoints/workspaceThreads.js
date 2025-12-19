@@ -306,7 +306,7 @@ function workspaceThreadEndpoints(app) {
     ],
     async (request, response) => {
       try {
-        const { action } = reqBody(request);
+        const { action, targetAfterDiscountExGst = null, discountPercent = null } = reqBody(request);
         if (!isValidSmartAction(action)) {
           return response
             .status(400)
@@ -317,15 +317,23 @@ function workspaceThreadEndpoints(app) {
         const workspace = response.locals.workspace;
         const thread = response.locals.thread;
 
-        const markdown = await runThreadSmartAction({
+        const result = await runThreadSmartAction({
           workspace,
           thread,
           user,
           action,
           messageLimit: 10,
+          targetAfterDiscountExGst,
+          discountPercent,
         });
 
-        return response.status(200).json({ success: true, markdown });
+        if (result && typeof result === "object" && "markdown" in result) {
+          return response
+            .status(200)
+            .json({ success: true, markdown: result.markdown, pricingTable: result.pricingTable ?? null });
+        }
+
+        return response.status(200).json({ success: true, markdown: result });
       } catch (e) {
         console.error(e.message, e);
         return response

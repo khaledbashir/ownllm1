@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef, Suspense } from "react
 import { useParams } from "react-router-dom";
 import WorkspaceThread from "@/models/workspaceThread";
 import AICommandModal from "./AICommandModal";
-import { NotePencil, WarningCircle, CaretDown, FileText } from "@phosphor-icons/react";
+import MultiScopeSowModal from "./MultiScopeSowModal";
+import { NotePencil, WarningCircle, CaretDown, FileText, MagicWand } from "@phosphor-icons/react";
 import showToast from "@/utils/toast";
 import { EditorProvider, useEditorContext } from "./EditorContext";
 import { DOC_TEMPLATES } from "./BlockSuiteEditor";
@@ -59,6 +60,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
     // Use external ref if provided, otherwise use internal
     const editorRef = externalEditorRef || internalEditorRef;
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+    const [isMultiScopeModalOpen, setIsMultiScopeModalOpen] = useState(false);
     const [showTemplateMenu, setShowTemplateMenu] = useState(false);
     const templateMenuRef = useRef(null);
 
@@ -90,7 +92,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
         }
     }, [editorRef]);
 
-    const runSmartAction = useCallback(async (action) => {
+    const runSmartAction = useCallback(async (action, options = {}) => {
         if (!workspace?.slug || !threadSlug) return;
         if (!editorRef.current) {
             showToast("Notes editor is not ready yet.", "error");
@@ -99,7 +101,7 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
 
         setSmartActionLoading(action);
         try {
-            const res = await WorkspaceThread.smartAction(workspace.slug, threadSlug, action);
+            const res = await WorkspaceThread.smartAction(workspace.slug, threadSlug, action, options);
             if (!res?.success) {
                 showToast(res?.error || "Smart action failed.", "error");
                 return;
@@ -112,6 +114,20 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
             }
 
             editorRef.current.insertMarkdown(`\n\n${markdown}\n`);
+
+            // If the markdown contains pricing tables, BlockSuiteEditor.insertMarkdown will convert them
+            // into interactive pricing blocks automatically. Only insert the structured pricing payload
+            // as a fallback when the markdown contains no pipe tables.
+            const markdownHasPipeTable = /\n\s*\|.*\|\s*\n\s*\|\s*[-:|\s]+\|/m.test(markdown);
+            if (
+                action === "draft_sow" &&
+                res?.pricingTable &&
+                editorRef.current?.insertPricingTableWithData &&
+                !markdownHasPipeTable
+            ) {
+                editorRef.current.insertPricingTableWithData(res.pricingTable);
+            }
+
             showToast("Inserted into notes.", "success");
         } catch (e) {
             showToast(e?.message || "Smart action failed.", "error");
@@ -119,6 +135,11 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
             setSmartActionLoading(null);
         }
     }, [workspace?.slug, threadSlug, editorRef]);
+
+    const runMultiScopeSow = useCallback(async ({ targetAfterDiscountExGst, discountPercent } = {}) => {
+        setIsMultiScopeModalOpen(false);
+        return runSmartAction("multi_scope_sow", { targetAfterDiscountExGst, discountPercent });
+    }, [runSmartAction]);
 
     // Fetch notes on mount or thread change
     useEffect(() => {
@@ -194,6 +215,28 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                             Actions
                         </div>
                         {/* Template Picker Dropdown */}
+                        <button
+                            type="button"
+                            onClick={() => runSmartAction("draft_sow")}
+                            disabled={smartActionLoading === "draft_sow"}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors"
+                            title="Generate a SOW + interactive pricing table"
+                        >
+                            <MagicWand size={16} />
+                            {smartActionLoading === "draft_sow" ? "Drafting..." : "Draft SOW"}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsMultiScopeModalOpen(true)}
+                            disabled={smartActionLoading === "multi_scope_sow"}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/70 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors"
+                            title="Generate Lean/Standard/Premium SOW options with pricing"
+                        >
+                            <MagicWand size={16} />
+                            {smartActionLoading === "multi_scope_sow" ? "Drafting..." : "Multi-Scope SOW"}
+                        </button>
+
                         <div className="relative" ref={templateMenuRef}>
                             <button
                                 type="button"
@@ -243,6 +286,15 @@ export default function ThreadNotes({ workspace, editorRef: externalEditorRef })
                     isOpen={isAIModalOpen}
                     onClose={() => setIsAIModalOpen(false)}
                     onInsertText={handleInsertAI}
+                />
+
+                <MultiScopeSowModal
+                    isOpen={isMultiScopeModalOpen}
+                    onClose={() => setIsMultiScopeModalOpen(false)}
+                    onSubmit={runMultiScopeSow}
+                    loading={smartActionLoading === "multi_scope_sow"}
+                    defaultBudget="22000"
+                    defaultDiscountPercent="5"
                 />
             </div>
         </EditorProvider>

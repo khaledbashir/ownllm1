@@ -451,6 +451,116 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     const parseMarkdownToBlocks = (doc, noteBlockId, markdown) => {
         const lines = markdown.split("\n");
         let i = 0;
+        let lastHeadingText = null;
+
+        const parseMarkdownTableRow = (row) => {
+            const parts = String(row || "").split("|");
+            if (parts.length >= 2 && parts[0] === "") parts.shift();
+            if (parts.length >= 2 && parts[parts.length - 1] === "") parts.pop();
+            return parts.map((cell) => String(cell || "").trim());
+        };
+
+        const parseNumber = (value) => {
+            const text = String(value || "");
+            const match = text.replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+            if (!match) return null;
+            const n = Number(match[0]);
+            return Number.isFinite(n) ? n : null;
+        };
+
+        const normalizeHeader = (h) => String(h || "").trim().toLowerCase();
+        const normalizeRoleKey = (role) => String(role || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "");
+
+        const detectCurrency = (texts) => {
+            const blob = texts.map((t) => String(t || "").toLowerCase()).join(" ");
+            if (blob.includes("usd")) return "USD";
+            if (blob.includes("aud")) return "AUD";
+            if (blob.includes("gbp")) return "GBP";
+            if (blob.includes("eur")) return "EUR";
+            return "AUD";
+        };
+
+        const parsePercentFromContext = (contextLines, key) => {
+            const joined = contextLines.join("\n");
+            const direct = joined.match(new RegExp(`${key}\\s*[:=]?\\s*(\\d+(?:\\.\\d+)?)\\s*%`, "i"));
+            if (direct) return Number(direct[1]);
+            const reversed = joined.match(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*%\\s*${key}`, "i"));
+            if (reversed) return Number(reversed[1]);
+            return null;
+        };
+
+        const mandatoryRoleKeys = {
+            techHead: normalizeRoleKey("Tech - Head Of- Senior Project Management"),
+            projectCoordination: normalizeRoleKey("Tech - Delivery - Project Coordination"),
+            accountManagement: normalizeRoleKey("Account Management - (Account Manager)"),
+        };
+
+        const orderPricingRows = (rows) => {
+            if (!Array.isArray(rows) || rows.length < 2) return rows;
+            const rank = (roleName) => {
+                const key = normalizeRoleKey(roleName);
+                if (key === mandatoryRoleKeys.techHead) return 0;
+                if (key === mandatoryRoleKeys.projectCoordination) return 1;
+                if (key === mandatoryRoleKeys.accountManagement) return 999;
+                return 2;
+            };
+
+            return rows
+                .map((row, originalIndex) => ({ row, originalIndex }))
+                .sort((a, b) => {
+                    const ra = rank(a.row?.role);
+                    const rb = rank(b.row?.role);
+                    if (ra !== rb) return ra - rb;
+                    return a.originalIndex - b.originalIndex;
+                })
+                .map((x) => x.row);
+        };
+
+        const tryParsePricingTable = ({ headerCells, dataRows, titleHint, contextLines }) => {
+            if (!Array.isArray(headerCells) || headerCells.length < 2) return null;
+
+            const headers = headerCells.map(normalizeHeader);
+            const idxRole = headers.findIndex((h) => h === "role" || h.includes("role") || h.includes("resource") || h.includes("service"));
+            const idxHours = headers.findIndex((h) => h.includes("hour"));
+            const idxRate = headers.findIndex((h) => h.includes("rate") || h.includes("hourly") || h.includes("/hr") || h.includes("hr"));
+            const idxDesc = headers.findIndex((h) => h.includes("description") || h.includes("details") || h.includes("notes"));
+
+            if (idxRole === -1 || idxHours === -1 || idxRate === -1) return null;
+
+            const currency = detectCurrency([...headerCells, ...(contextLines || [])]);
+            const discountPercent = parsePercentFromContext(contextLines || [], "discount") ?? 0;
+            const gstPercent = parsePercentFromContext(contextLines || [], "gst") ?? 10;
+            const title = typeof titleHint === "string" && titleHint.trim() ? titleHint.trim() : "Project Pricing";
+
+            const rows = (Array.isArray(dataRows) ? dataRows : [])
+                .map((cells, idx) => {
+                    const role = cells[idxRole] || "";
+                    const hours = parseNumber(cells[idxHours]) ?? 0;
+                    const baseRate = parseNumber(cells[idxRate]) ?? 0;
+                    const description = idxDesc !== -1 ? (cells[idxDesc] || "") : "";
+                    return {
+                        id: `${Date.now()}-${idx}`,
+                        role,
+                        description,
+                        hours,
+                        baseRate,
+                    };
+                })
+                .filter((r) => r.role);
+
+            if (!rows.length) return null;
+
+            return {
+                title,
+                currency,
+                discountPercent,
+                gstPercent,
+                rows: orderPricingRows(rows),
+            };
+        };
 
         while (i < lines.length) {
             const line = lines[i];
@@ -462,8 +572,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 continue;
             }
 
-            // Markdown table detection - create proper affine:database block
+            // Markdown table detection - either pricing table embed or affine:database
             if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+                const tableStartIndex = i;
                 const tableLines = [];
                 while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
                     const tableLine = lines[i].trim();
@@ -476,11 +587,34 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 }
 
                 if (tableLines.length > 0) {
-                    // Parse header row (first line) and data rows
-                    const parseRow = (row) => row.split("|").filter(cell => cell.trim()).map(cell => cell.trim());
-                    const headerCells = parseRow(tableLines[0]);
-                    const dataRows = tableLines.slice(1).map(parseRow);
+                    const headerCells = parseMarkdownTableRow(tableLines[0]);
+                    const dataRows = tableLines.slice(1).map(parseMarkdownTableRow);
+                    const contextLines = lines.slice(Math.max(0, tableStartIndex - 6), Math.min(lines.length, i + 6));
 
+                    const parsedPricing = tryParsePricingTable({
+                        headerCells,
+                        dataRows,
+                        titleHint: lastHeadingText,
+                        contextLines,
+                    });
+
+                    if (parsedPricing) {
+                        try {
+                            doc.addBlock("affine:embed-pricing-table", {
+                                title: new Text(parsedPricing.title),
+                                currency: parsedPricing.currency,
+                                discountPercent: parsedPricing.discountPercent,
+                                gstPercent: parsedPricing.gstPercent,
+                                rows: parsedPricing.rows,
+                            }, noteBlockId);
+                            continue;
+                        } catch (e) {
+                            console.error("[BlockSuiteEditor] Failed to insert pricing table embed; falling back to database:", e);
+                            // fall through to database handling
+                        }
+                    }
+
+                    // Fallback: Create affine:database for non-pricing tables
                     // Generate unique IDs for columns
                     const genId = () => Math.random().toString(36).substring(2, 10);
                     const viewsColumns = headerCells.map(() => ({
@@ -567,11 +701,13 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
             if (headingMatch) {
                 const level = headingMatch[1].length; // 1-6
+                const headingText = parseInlineFormatting(headingMatch[2]);
                 const headingType = level <= 3 ? `h${level}` : "h3";
                 doc.addBlock("affine:paragraph", {
                     type: headingType,
-                    text: new Text(parseInlineFormatting(headingMatch[2]))
+                    text: new Text(headingText)
                 }, noteBlockId);
+                lastHeadingText = headingText;
                 i++;
                 continue;
             }
@@ -796,6 +932,136 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     console.error("[BlockSuiteEditor] Fallback failed:", fallbackError);
                     return false;
                 }
+            }
+        },
+
+        // Insert a prefilled interactive pricing table block.
+        insertPricingTableWithData: async (data = {}) => {
+            if (!editorRef.current) return false;
+            const doc = editorRef.current.doc;
+            if (!doc) return false;
+
+            const getBlocksByFlavourSafe = (targetDoc, flavour) => {
+                try {
+                    if (typeof targetDoc.getBlocksByFlavour === "function") {
+                        return targetDoc.getBlocksByFlavour(flavour) || [];
+                    }
+                } catch {
+                    // ignore
+                }
+                const found = [];
+                const traverse = (block) => {
+                    if (!block) return;
+                    if (block.flavour === flavour) found.push(block);
+                    if (block.children?.length) block.children.forEach(traverse);
+                };
+                traverse(targetDoc.root);
+                return found;
+            };
+
+            const ensureThreadNoteBlock = () => {
+                let noteBlock = getBlocksByFlavourSafe(doc, "affine:note")[0];
+                if (noteBlock) return noteBlock;
+
+                let pageBlock = getBlocksByFlavourSafe(doc, "affine:page")[0];
+                if (!pageBlock && doc.root?.flavour === "affine:page") pageBlock = doc.root;
+                if (!pageBlock) {
+                    const pageBlockId = doc.addBlock("affine:page", {});
+                    pageBlock = doc.getBlock(pageBlockId);
+                }
+                if (!pageBlock?.id) return null;
+
+                const hasSurface = getBlocksByFlavourSafe(doc, "affine:surface").length > 0;
+                if (!hasSurface) {
+                    try {
+                        doc.addBlock("affine:surface", {}, pageBlock.id);
+                    } catch {
+                        // ignore
+                    }
+                }
+
+                try {
+                    const noteBlockId = doc.addBlock("affine:note", {}, pageBlock.id);
+                    doc.addBlock("affine:paragraph", { text: new Text() }, noteBlockId);
+                    noteBlock = doc.getBlock(noteBlockId);
+                    return noteBlock;
+                } catch (e) {
+                    console.error("[BlockSuiteEditor] Failed to create note block for pricing table:", e);
+                    return null;
+                }
+            };
+
+            const toNumber = (v, fallback = 0) => {
+                const n = Number(v);
+                return Number.isFinite(n) ? n : fallback;
+            };
+
+            const normalizeRoleKeyLocal = (role) => String(role || "")
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "");
+
+            const mandatoryRoleKeysLocal = {
+                techHead: normalizeRoleKeyLocal("Tech - Head Of- Senior Project Management"),
+                projectCoordination: normalizeRoleKeyLocal("Tech - Delivery - Project Coordination"),
+                accountManagement: normalizeRoleKeyLocal("Account Management - (Account Manager)"),
+            };
+
+            const normalizeRows = (rows) => {
+                if (!Array.isArray(rows)) return [];
+
+                const cleaned = rows.map((row, idx) => {
+                    const safeRow = row && typeof row === "object" ? row : {};
+                    return {
+                        id: safeRow.id || `${Date.now()}-${idx}`,
+                        role: safeRow.role || "",
+                        description: safeRow.description || "",
+                        hours: toNumber(safeRow.hours, 0),
+                        baseRate: toNumber(safeRow.baseRate ?? safeRow.rate ?? safeRow.hourlyRate, 0),
+                    };
+                });
+
+                const rank = (roleName) => {
+                    const key = normalizeRoleKeyLocal(roleName);
+                    if (key === mandatoryRoleKeysLocal.techHead) return 0;
+                    if (key === mandatoryRoleKeysLocal.projectCoordination) return 1;
+                    if (key === mandatoryRoleKeysLocal.accountManagement) return 999;
+                    return 2;
+                };
+
+                return cleaned
+                    .map((row, originalIndex) => ({ row, originalIndex }))
+                    .sort((a, b) => {
+                        const ra = rank(a.row.role);
+                        const rb = rank(b.row.role);
+                        if (ra !== rb) return ra - rb;
+                        return a.originalIndex - b.originalIndex;
+                    })
+                    .map((x) => x.row);
+            };
+
+            const noteBlock = ensureThreadNoteBlock();
+            if (!noteBlock?.id) return false;
+
+            const payload = data && typeof data === "object" ? data : {};
+            const title = typeof payload.title === "string" ? payload.title : "Project Pricing";
+            const currency = typeof payload.currency === "string" ? payload.currency : "AUD";
+            const discountPercent = toNumber(payload.discountPercent, 0);
+            const gstPercent = toNumber(payload.gstPercent, 10);
+            const rows = normalizeRows(payload.rows);
+
+            try {
+                doc.addBlock("affine:embed-pricing-table", {
+                    title: new Text(title),
+                    currency,
+                    discountPercent,
+                    gstPercent,
+                    rows,
+                }, noteBlock.id);
+                return true;
+            } catch (e) {
+                console.error("[BlockSuiteEditor] Failed to insert prefilled pricing table:", e);
+                return false;
             }
         },
 
