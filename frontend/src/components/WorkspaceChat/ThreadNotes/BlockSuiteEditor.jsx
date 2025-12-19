@@ -241,6 +241,18 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 const job = new Job({ collection });
                 jobRef.current = job;
 
+                const ensureDocLoaded = async (targetDoc) => {
+                    if (!targetDoc || typeof targetDoc.load !== "function") return;
+                    try {
+                        const result = targetDoc.load();
+                        if (result && typeof result.then === "function") {
+                            await result;
+                        }
+                    } catch (e) {
+                        console.warn("[BlockSuiteEditor] doc.load() failed (continuing):", e);
+                    }
+                };
+
                 let doc;
 
                 // Try to restore from saved snapshot
@@ -266,6 +278,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     // No content - create fresh doc
                     doc = createEmptyDoc(collection);
                 }
+
+                // Important: doc must be loaded or editor may appear "frozen"
+                await ensureDocLoaded(doc);
 
                 // Create editor and attach document
                 const editor = new AffineEditorContainer();
@@ -398,7 +413,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         function createEmptyDoc(collection) {
             const doc = collection.createDoc({ id: "thread-notes" });
-            // Initialize directly without doc.load wrapper to avoid Yjs "before reading data" error
+            // Keep structure minimal; caller will doc.load() safely.
             const pageBlockId = doc.addBlock("affine:page", {});
             doc.addBlock("affine:surface", {}, pageBlockId);
             const noteId = doc.addBlock("affine:note", {}, pageBlockId);
