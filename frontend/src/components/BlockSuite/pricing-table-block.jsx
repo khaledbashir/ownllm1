@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BlockModel, Text } from "@blocksuite/store";
 import { createEmbedBlockSchema, defineEmbedModel } from "@blocksuite/blocks";
@@ -64,12 +64,13 @@ const clampNumber = (input, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) => 
 
 const formatCurrency = (value, currency = "AUD") => {
   const n = Number(value);
-  if (!Number.isFinite(n)) return "$0";
-  return n.toLocaleString(undefined, {
+  if (!Number.isFinite(n)) return "$0+GST";
+  const formatted = n.toLocaleString(undefined, {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
   });
+  return `${formatted}+GST`;
 };
 
 const calcTotals = ({ rows, discountPercent, gstPercent }) => {
@@ -82,9 +83,12 @@ const calcTotals = ({ rows, discountPercent, gstPercent }) => {
   const discount = subtotal * (clampNumber(discountPercent, { max: 100 }) / 100);
   const afterDiscount = subtotal - discount;
   const gst = afterDiscount * (clampNumber(gstPercent, { max: 100 }) / 100);
-  const total = afterDiscount + gst;
+  const rawTotal = afterDiscount + gst;
 
-  return { subtotal, discount, afterDiscount, gst, total };
+  // Commercial Rounding: Nearest $100
+  const total = Math.round(rawTotal / 100) * 100;
+
+  return { subtotal, discount, afterDiscount, gst, total, rawTotal };
 };
 
 // This is the block model (holds props) for BlockSuite.
@@ -100,9 +104,10 @@ export const PricingTableBlockSchema = createEmbedBlockSchema({
     style: "pricing-table",
     title: internal.Text("Project Pricing"),
     currency: "AUD",
-    discountPercent: 20,
+    discountPercent: 0,
     gstPercent: 10,
     rows: DEFAULT_ROWS,
+    showTotals: true, // "Total Price Toggle"
   }),
 });
 
@@ -150,6 +155,7 @@ const PricingTableWidget = ({ model }) => {
   const currency = getProp("currency", "AUD");
   const discountPercent = onNumberInput(getProp("discountPercent", 0));
   const gstPercent = onNumberInput(getProp("gstPercent", 10));
+  const showTotals = getProp("showTotals", true);
   const rawRows = getProp("rows", []);
   const rows = Array.isArray(rawRows) ? rawRows : [];
 
@@ -194,6 +200,22 @@ const PricingTableWidget = ({ model }) => {
     updateModel({ rows: nextRows });
   };
 
+  const sortRows = () => {
+    if (isReadonly) return;
+    // "Account Management" to bottom rule
+    const sorted = [...rows].sort((a, b) => {
+      const roleA = (a.role || "").toLowerCase();
+      const roleB = (b.role || "").toLowerCase();
+      const isAccA = roleA.includes("account management");
+      const isAccB = roleB.includes("account management");
+
+      if (isAccA && !isAccB) return 1;
+      if (!isAccA && isAccB) return -1;
+      return 0; // Keep existing order for others
+    });
+    updateModel({ rows: sorted });
+  };
+
   if (error) {
     return <div className="p-4 text-red-400 bg-red-900/20 rounded">Error loading pricing table</div>;
   }
@@ -220,7 +242,22 @@ const PricingTableWidget = ({ model }) => {
 
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="text-lg font-semibold text-white/90">{title}</div>
-        <div className="text-xs text-white/50">{currency}</div>
+        <div className="flex items-center gap-3">
+          {!isReadonly && (
+            <button
+              onClick={() => updateModel({ showTotals: !showTotals })}
+              className="text-white/40 hover:text-white/80 transition-colors"
+              title={showTotals ? "Hide Totals" : "Show Totals"}
+            >
+              {showTotals ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path fill="currentColor" d="M247.31 124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57 61.26 162.88 48 128 48S61.43 61.26 36.34 86.35C17.51 105.18 9 124 8.69 124.76a8 8 0 0 0 0 6.5c.35.79 8.82 19.57 27.65 38.4C61.43 194.74 93.12 208 128 208s66.57-13.26 91.66-38.34c18.83-18.83 27.3-37.61 27.65-38.4a8 8 0 0 0 0-6.5M128 192c-30.78 0-57.67-11.19-79.93-33.25A133.5 133.5 0 0 1 25 128a133.3 133.3 0 0 1 23.07-30.75C70.33 75.19 97.22 64 128 64s57.67 11.19 79.93 33.25A133.5 133.5 0 0 1 231 128c-7.21 13.46-38.62 64-103 64m0-112a48 48 0 1 0 48 48a48.05 48.05 0 0 0-48-48m0 80a32 32 0 1 1 32-32a32 32 0 0 1-32 32" /></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path fill="currentColor" d="M53.92 34.62a8 8 0 1 0-11.84 10.76l34.86 38.35A132.8 132.8 0 0 0 25 128a133.5 133.5 0 0 0 79.93 33.25a137.6 137.6 0 0 0 28.59-1.93l69.1 76.02a8 8 0 0 0 11.84-.54a8 8 0 0 0-.54-11.3ZM128 192c-30.78 0-57.67-11.19-79.93-33.25A133.4 133.4 0 0 1 25 128a134.4 134.4 0 0 1 12.81-22.33l97.88 107.69A90 90 0 0 1 128 192m118.8-57.24C226 111.9 196.21 82.57 148.44 67.22a8 8 0 0 0-4.88 15.24c39.69 12.75 66.86 37.07 87.44 59.79a133.4 133.4 0 0 1-23.07 30.75a137 137 0 0 1-27.1 19.33a8 8 0 1 0 8.08 13.78a156 156 0 0 0 32-23.29C237.12 180.81 245.63 162 247.31 139.54a8 8 0 0 0-.51-4.78M99.63 84.9a48 48 0 0 1 65.58 72.15l-12.75-14A32 32 0 0 0 108 108.73Z" /></svg>
+              )}
+            </button>
+          )}
+          <div className="text-xs text-white/50">{currency}</div>
+        </div>
       </div>
 
       {!isReadonly && (
@@ -357,38 +394,54 @@ const PricingTableWidget = ({ model }) => {
       </div>
 
       {!isReadonly && (
-        <button
-          onClick={addRow}
-          className="mt-2 text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300"
-        >
-          + New Item
-        </button>
+        <div className="flex items-center gap-2 mt-2">
+          <button
+            onClick={addRow}
+            className="text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300"
+          >
+            + New Item
+          </button>
+          <span className="text-white/20 text-xs">|</span>
+          <button
+            onClick={sortRows}
+            className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300"
+            title="Sort Accountant Management to bottom"
+          >
+            Sort Roles
+          </button>
+        </div>
       )}
 
-      <div className="mt-4 flex justify-end">
-        <div className="w-full max-w-sm text-sm text-white/80">
-          <div className="flex justify-between py-1">
-            <span className="text-white/60">Subtotal</span>
-            <span className="font-medium">{formatCurrency(totals.subtotal, currency)}</span>
-          </div>
-          <div className="flex justify-between py-1">
-            <span className="text-white/60">Discount {discountPercent > 0 && `(${discountPercent}%)`}</span>
-            <span className="font-medium">-{formatCurrency(totals.discount, currency)}</span>
-          </div>
-          <div className="flex justify-between py-1">
-            <span className="text-white/60">After discount</span>
-            <span className="font-medium">{formatCurrency(totals.afterDiscount, currency)}</span>
-          </div>
-          <div className="flex justify-between py-1">
-            <span className="text-white/60">GST {gstPercent > 0 && `(${gstPercent}%)`}</span>
-            <span className="font-medium">{formatCurrency(totals.gst, currency)}</span>
-          </div>
-          <div className="flex justify-between py-2 mt-2 border-t border-white/10">
-            <span className="text-white/80 font-semibold">Total</span>
-            <span className="text-white/90 font-semibold">{formatCurrency(totals.total, currency)}</span>
+      {showTotals && (
+        <div className="mt-4 flex justify-end">
+          <div className="w-full max-w-sm text-sm text-white/80">
+            <div className="flex justify-between py-1">
+              <span className="text-white/60">Subtotal</span>
+              <span className="font-medium">{formatCurrency(totals.subtotal, currency)}</span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span className="text-white/60">Discount {discountPercent > 0 && `(${discountPercent}%)`}</span>
+              <span className="font-medium">-{formatCurrency(totals.discount, currency)}</span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span className="text-white/60">After discount</span>
+              <span className="font-medium">{formatCurrency(totals.afterDiscount, currency)}</span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span className="text-white/60">GST {gstPercent > 0 && `(${gstPercent}%)`}</span>
+              <span className="font-medium">{formatCurrency(totals.gst, currency)}</span>
+            </div>
+            <div className="flex justify-between py-2 mt-2 border-t border-white/10">
+              <span className="text-white/80 font-semibold">Total (Commercial Rounding)</span>
+              <span className="text-white/90 font-semibold text-lg">{formatCurrency(totals.total, currency)}</span>
+            </div>
+            <div className="flex justify-between py-0.5 opacity-50 text-xs">
+              <span className="text-white/60">Exact</span>
+              <span className="">{formatCurrency(totals.rawTotal, currency)}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
