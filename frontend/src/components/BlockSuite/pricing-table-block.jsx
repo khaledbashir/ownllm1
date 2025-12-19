@@ -6,6 +6,8 @@ import { BlockElement } from "@blocksuite/block-std";
 import { html } from "lit";
 import { literal } from "lit/static-html.js";
 
+import Workspace from "@/models/workspace";
+
 const defineOnce = (tag, ctor) => {
   if (!customElements.get(tag)) customElements.define(tag, ctor);
 };
@@ -85,22 +87,22 @@ const calcTotals = ({ rows, discountPercent, gstPercent }) => {
 };
 
 // This is the block model (holds props) for BlockSuite.
-export class PricingTableModel extends defineEmbedModel(BlockModel) {}
+export class PricingTableModel extends defineEmbedModel(BlockModel) { }
 
 // We implement as an embed block so affine:note allows it.
 export const PricingTableBlockSchema = createEmbedBlockSchema({
   name: "pricing-table",
   version: 1,
   toModel: () => new PricingTableModel(),
-   props: (internal) => ({
-     caption: null,
-     style: "pricing-table",
-     title: internal.Text("Project Pricing"),
-     currency: "AUD",
-     discountPercent: 20,
-     gstPercent: 10,
-     rows: DEFAULT_ROWS,
-   }),
+  props: (internal) => ({
+    caption: null,
+    style: "pricing-table",
+    title: internal.Text("Project Pricing"),
+    currency: "AUD",
+    discountPercent: 20,
+    gstPercent: 10,
+    rows: DEFAULT_ROWS,
+  }),
 });
 
 const onNumberInput = (value, fallback = 0) => {
@@ -110,6 +112,26 @@ const onNumberInput = (value, fallback = 0) => {
 
 const PricingTableWidget = ({ model }) => {
   const [localTick, setLocalTick] = useState(0);
+  const [availableRoles, setAvailableRoles] = useState([]);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      const matches = window.location.pathname.match(/\/workspace\/([^\/]+)/);
+      if (!matches) return;
+      const slug = matches[1];
+
+      const workspace = await Workspace.bySlug(slug);
+      if (workspace?.rateCard) {
+        try {
+          const rates = JSON.parse(workspace.rateCard);
+          setAvailableRoles(rates);
+        } catch (e) {
+          console.error("Failed to parse rate card", e);
+        }
+      }
+    };
+    fetchRoles();
+  }, []);
 
   const title = model.title?.toString?.() ?? "Project Pricing";
   const currency = model.currency || "AUD";
@@ -147,6 +169,14 @@ const PricingTableWidget = ({ model }) => {
       }}
       contentEditable={false}
     >
+      <datalist id="available-roles">
+        {availableRoles.map((role) => (
+          <option key={role.id} value={role.name}>
+            {role.category ? `${role.category} - ` : ""}{formatCurrency(role.rate)}/hr
+          </option>
+        ))}
+      </datalist>
+
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="text-lg font-semibold text-white/90">{title}</div>
         <div className="text-xs text-white/50">{currency}</div>
@@ -180,8 +210,8 @@ const PricingTableWidget = ({ model }) => {
           <input
             className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
             type="text"
-             value={title}
-             onChange={(e) => updateModel({ title: new Text(e.target.value || "") })}
+            value={title}
+            onChange={(e) => updateModel({ title: new Text(e.target.value || "") })}
           />
         </label>
       </div>
@@ -209,8 +239,18 @@ const PricingTableWidget = ({ model }) => {
                     <input
                       className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
                       type="text"
+                      list="available-roles"
                       value={row.role || ""}
-                      onChange={(e) => updateRow(idx, { role: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const updates = { role: val };
+                        // Auto-fill rate if role matches
+                        const found = availableRoles.find(r => r.name === val);
+                        if (found) {
+                          updates.baseRate = found.rate;
+                        }
+                        updateRow(idx, updates);
+                      }}
                     />
                   </td>
                   <td className="py-2 pr-3">
@@ -240,7 +280,7 @@ const PricingTableWidget = ({ model }) => {
                     />
                   </td>
                   <td className="py-2 text-right font-medium whitespace-nowrap">
-                     {formatCurrency(lineTotal, currency)}
+                    {formatCurrency(lineTotal, currency)}
                   </td>
                 </tr>
               );
@@ -253,23 +293,23 @@ const PricingTableWidget = ({ model }) => {
         <div className="w-full max-w-sm text-sm text-white/80">
           <div className="flex justify-between py-1">
             <span className="text-white/60">Subtotal</span>
-             <span className="font-medium">{formatCurrency(totals.subtotal, currency)}</span>
+            <span className="font-medium">{formatCurrency(totals.subtotal, currency)}</span>
           </div>
           <div className="flex justify-between py-1">
             <span className="text-white/60">Discount</span>
-             <span className="font-medium">-{formatCurrency(totals.discount, currency)}</span>
+            <span className="font-medium">-{formatCurrency(totals.discount, currency)}</span>
           </div>
           <div className="flex justify-between py-1">
             <span className="text-white/60">After discount</span>
-             <span className="font-medium">{formatCurrency(totals.afterDiscount, currency)}</span>
+            <span className="font-medium">{formatCurrency(totals.afterDiscount, currency)}</span>
           </div>
           <div className="flex justify-between py-1">
             <span className="text-white/60">GST</span>
-             <span className="font-medium">{formatCurrency(totals.gst, currency)}</span>
+            <span className="font-medium">{formatCurrency(totals.gst, currency)}</span>
           </div>
           <div className="flex justify-between py-2 mt-2 border-t border-white/10">
             <span className="text-white/80 font-semibold">Total</span>
-             <span className="text-white/90 font-semibold">{formatCurrency(totals.total, currency)}</span>
+            <span className="text-white/90 font-semibold">{formatCurrency(totals.total, currency)}</span>
           </div>
         </div>
       </div>
