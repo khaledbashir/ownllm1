@@ -935,6 +935,17 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             const doc = editorRef.current.doc;
             if (!doc) throw new Error("Document not found");
 
+            // Ensure the doc is loaded before exporting.
+            // Without this, some content (tables/images) can serialize as empty.
+            try {
+                const maybePromise = doc.load?.();
+                if (maybePromise && typeof maybePromise.then === "function") {
+                    await maybePromise;
+                }
+            } catch {
+                // ignore; continue export best-effort
+            }
+
             // 1. Serialize Doc to Standard HTML
             const bodyHtml = await serializeDocToHtml(doc);
             if (!bodyHtml || bodyHtml.includes("No content found")) {
@@ -1481,10 +1492,10 @@ const serializeDocToHtml = async (doc) => {
 
     // Create job to access assets
     const job = new Job({ collection: doc.collection });
-    // We need to wait for the job to be ready or just use assets directly?
-    // Usually job.docToSnapshot loads assets.
+    // Populate transformer context and allow asset reads
     await job.docToSnapshot(doc);
-    const assets = job.assets; // Map<string, Blob>
+    const assetsManager = job.assetsManager;
+    const assets = assetsManager.getAssets(); // Map<string, Blob>
 
     const getText = (block) => {
         // Try various text access patterns
@@ -1601,79 +1612,86 @@ const serializeDocToHtml = async (doc) => {
                 </div>`;
                 break;
 
-            case "affine:image":
+            case "affine:image": {
                 console.log("[PDF Export] Image Model:", model);
                 let imgSrc = "";
-                const sourceId = model.sourceId;
 
-                // If sourceId is present, try to resolve it
-                if (sourceId) {
+                // BlockSuite typically uses `sourceId` pointing to blob storage.
+                // Our app's upload flow stores a persistent URL in `sourceId` (e.g. `/api/assets/<file>`).
+                // Some BlockSuite versions may use `src`.
+                const sourceId = model.sourceId || model.src;
+
+                const toDataUrl = async (blob) => {
+                    if (!blob) return "";
+                    const reader = new FileReader();
+                    const base64 = await new Promise((resolve) => {
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                    return base64 || "";
+                };
+
+                const fetchAsDataUrl = async (url) => {
+                    if (!url) return "";
+                    try {
+                        const fetchUrl = url.startsWith("/") ? `${window.location.origin}${url}` : url;
+                        const token = localStorage.getItem("anythingllm_auth_token");
+                        const res = await fetch(fetchUrl, {
+                            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                        });
+                        if (!res.ok) {
+                            console.warn(`[PDF Export] Failed to fetch image ${fetchUrl} (status ${res.status})`);
+                            return "";
+                        }
+                        return await toDataUrl(await res.blob());
+                    } catch (e) {
+                        console.error("[PDF Export] Error fetching image url:", e);
+                        return "";
+                    }
+                };
+
+                if (typeof sourceId === "string" && sourceId) {
+                    // 1) Try blob assets via assetsManager (correct BlockSuite path)
+                    try {
+                        await assetsManager.readFromBlob(sourceId);
+                    } catch {
+                        // Ignore; we'll fall back to other strategies.
+                    }
+
                     if (assets.has(sourceId)) {
-                        // Blob in memory (old behavior)
-                        const blob = assets.get(sourceId);
-                        if (blob) {
-                            const reader = new FileReader();
-                            const base64 = await new Promise(r => {
-                                reader.onload = () => r(reader.result);
-                                reader.readAsDataURL(blob);
-                            });
-                            imgSrc = base64;
-                        }
-                    } else if (typeof sourceId === 'string' && (sourceId.startsWith('http') || sourceId.startsWith('/'))) {
-                        // Persistent URL (new behavior)
-                        try {
-                            // Resolve relative URLs to absolute for fetching
-                            const fetchUrl = sourceId.startsWith('/')
-                                ? `${window.location.origin}${sourceId}`
-                                : sourceId;
+                        imgSrc = await toDataUrl(assets.get(sourceId));
+                    }
 
-                            const res = await fetch(fetchUrl);
-                            if (res.ok) {
-                                const b = await res.blob();
-                                const reader = new FileReader();
-                                const base64 = await new Promise(r => {
-                                    reader.onload = () => r(reader.result);
-                                    reader.readAsDataURL(b);
-                                });
-                                imgSrc = base64;
-                                console.log(`[PDF Export] Inlined persistent image ${sourceId}`);
-                            } else {
-                                console.warn(`[PDF Export] Failed to fetch image ${fetchUrl}`);
-                            }
-                        } catch (e) {
-                            console.error("[PDF Export] Error fetching image url:", e);
-                        }
+                    // 2) If sourceId is a URL (our persistent uploads), fetch and inline
+                    if (!imgSrc && (sourceId.startsWith("http") || sourceId.startsWith("/"))) {
+                        imgSrc = await fetchAsDataUrl(sourceId);
+                        if (imgSrc) console.log(`[PDF Export] Inlined persistent image ${sourceId}`);
                     }
                 }
 
-                // Fallback to DOM if still no image (e.g. some other adapter logic?)
+                // 3) Fallback to DOM if still no image
                 if (!imgSrc) {
                     const domEl = document.querySelector(`[data-block-id="${block.id}"] img`);
                     if (domEl) {
                         const domSrc = domEl.getAttribute("src");
-                        if (domSrc && (domSrc.startsWith("data:") || domSrc.startsWith("blob:"))) {
-                            // If it's a blob URL that we missed, try to fetch it
-                            if (domSrc.startsWith("blob:")) {
+                        if (domSrc) {
+                            if (domSrc.startsWith("data:")) {
+                                imgSrc = domSrc;
+                            } else if (domSrc.startsWith("blob:")) {
                                 try {
                                     const res = await fetch(domSrc);
-                                    const b = await res.blob();
-                                    const reader = new FileReader();
-                                    const base64 = await new Promise(r => {
-                                        reader.onload = () => r(reader.result);
-                                        reader.readAsDataURL(b);
-                                    });
-                                    imgSrc = base64;
-                                } catch (e) { }
-                            } else {
-                                imgSrc = domSrc;
+                                    imgSrc = await toDataUrl(await res.blob());
+                                } catch {
+                                    // ignore
+                                }
+                            } else if (domSrc.startsWith("http") || domSrc.startsWith("/")) {
+                                imgSrc = await fetchAsDataUrl(domSrc);
                             }
                         }
                     }
                 }
 
                 if (imgSrc) {
-                    // Dynamic Alignment based on model property
-                    // Default to center if not specified, or respect 'align'/'alignment' prop
                     const align = model.align || model.alignment || "center";
                     let justify = "center";
                     if (align === "left" || align === "start") justify = "flex-start";
@@ -1684,67 +1702,128 @@ const serializeDocToHtml = async (doc) => {
                     html = `<p style="color: red;">[Image Missing]</p>`;
                 }
                 break;
+            }
 
-            case "affine:database":
+            case "affine:database": {
                 // Database/Table Rendering
-                // Key insight: Each ROW is a child paragraph/list block, not a cells object entry
+                // Key insight: Each ROW is a child paragraph/list block, not only a cells object entry.
                 const columns = model.columns || [];
-                const headers = columns.map(c => c.name || "");
-                const childBlocks = block.children || [];
+                const headers = columns.map((c) => c.name || "");
+                const children = block.children || [];
 
-                if (headers.length > 0) {
-                    console.log(`[PDF Export] Database found. Headers: ${headers.length}, Rows (Children): ${childBlocks.length}`);
-                    let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                        <thead style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
-                            <tr>`;
-                    headers.forEach(h => tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">${h}</th>`);
-                    tableHtml += `</tr></thead><tbody>`;
-
-                    // Each child is a ROW - the first column is the child's text, other columns are in cells
-                    const cells = model.cells || {};
-
-                    if (childBlocks.length > 0) {
-                        for (const childBlock of childBlocks) {
-                            const rowId = childBlock.id;
-                            const firstColText = getText(childBlock); // Title column from paragraph text
-
-                            tableHtml += `<tr style="border-bottom: 1px solid #e5e7eb;">`;
-
-                            // First column is the child block's text content
-                            tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151;">${firstColText}</td>`;
-
-                            // Remaining columns from cells object
-                            const rowCells = cells[rowId] || {};
-                            columns.slice(1).forEach(col => {
-                                const cell = rowCells[col.id];
-                                let cellVal = "";
-                                if (cell) {
-                                    // Cell value can be Text object, string, or other
-                                    if (cell.value?.toString) {
-                                        cellVal = cell.value.toString();
-                                    } else if (typeof cell.value === "string") {
-                                        cellVal = cell.value;
-                                    } else if (cell.value?.text) {
-                                        cellVal = cell.value.text;
-                                    }
-                                }
-                                tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280;">${cellVal}</td>`;
-                            });
-                            tableHtml += "</tr>";
-                        }
-                    } else {
-                        // Fallback: If no children, check if rows are stored in model? (Rare case)
-                        tableHtml += `<tr><td colspan="${headers.length}" style="padding: 1rem; text-align: center; color: #9ca3af;">No Data Rows Found (Debug: ${childBlocks.length} children)</td></tr>`;
-                    }
-
-                    tableHtml += "</tbody></table></div>";
-                    html = tableHtml;
-                } else {
+                if (headers.length === 0) {
                     console.warn("[PDF Export] Database skipped: No headers found");
+                    break;
                 }
 
+                console.log(`[PDF Export] Database found. Headers: ${headers.length}, Children: ${children.length}`);
+
+                let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+                        <tr>`;
+
+                headers.forEach((h) => {
+                    tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">${h}</th>`;
+                });
+                tableHtml += `</tr></thead><tbody>`;
+
+                const cells = model.cells || {};
+
+                // IMPORTANT: BlockSuite can store children as IDs or block objects depending on API.
+                // Normalize children to block objects.
+                const rowBlocks = children
+                    .map((child) => (typeof child === "string" ? doc.getBlock(child) : child))
+                    .filter(Boolean);
+
+                if (rowBlocks.length === 0) {
+                    tableHtml += `<tr><td colspan="${headers.length}" style="padding: 1rem; text-align: center; color: #9ca3af;">No Data Rows Found</td></tr>`;
+                } else {
+                    for (const rowBlock of rowBlocks) {
+                        const rowId = rowBlock.id;
+                        const firstColText = getText(rowBlock);
+
+                        tableHtml += `<tr style="border-bottom: 1px solid #e5e7eb;">`;
+                        tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151;">${firstColText}</td>`;
+
+                        const rowCells = cells[rowId] || {};
+                        columns.slice(1).forEach((col) => {
+                            const cell = rowCells[col.id];
+                            let cellVal = "";
+                            if (cell) {
+                                if (cell.value?.toString) cellVal = cell.value.toString();
+                                else if (typeof cell.value === "string") cellVal = cell.value;
+                                else if (cell.value?.text) cellVal = cell.value.text;
+                            }
+                            tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280;">${cellVal}</td>`;
+                        });
+
+                        tableHtml += "</tr>";
+                    }
+                }
+
+                tableHtml += "</tbody></table></div>";
+                html = tableHtml;
                 break;
+            }
+
+            case "affine:table": {
+                // Some BlockSuite versions use a dedicated table flavour.
+                // Treat it similarly to database export if it exposes columns/cells/children.
+                const columns = model.columns || [];
+                const headers = columns.map((c) => c.name || "");
+                const children = block.children || [];
+                const cells = model.cells || {};
+
+                if (headers.length === 0) {
+                    html = childHtml;
+                    break;
+                }
+
+                const rowBlocks = children
+                    .map((child) => (typeof child === "string" ? doc.getBlock(child) : child))
+                    .filter(Boolean);
+
+                let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+                        <tr>`;
+
+                headers.forEach((h) => {
+                    tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">${h}</th>`;
+                });
+                tableHtml += `</tr></thead><tbody>`;
+
+                if (rowBlocks.length === 0) {
+                    tableHtml += `<tr><td colspan="${headers.length}" style="padding: 1rem; text-align: center; color: #9ca3af;">No Data Rows Found</td></tr>`;
+                } else {
+                    for (const rowBlock of rowBlocks) {
+                        const rowId = rowBlock.id;
+                        const firstColText = getText(rowBlock);
+
+                        tableHtml += `<tr style="border-bottom: 1px solid #e5e7eb;">`;
+                        tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151;">${firstColText}</td>`;
+
+                        const rowCells = cells[rowId] || {};
+                        columns.slice(1).forEach((col) => {
+                            const cell = rowCells[col.id];
+                            let cellVal = "";
+                            if (cell) {
+                                if (cell.value?.toString) cellVal = cell.value.toString();
+                                else if (typeof cell.value === "string") cellVal = cell.value;
+                                else if (cell.value?.text) cellVal = cell.value.text;
+                            }
+                            tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280;">${cellVal}</td>`;
+                        });
+
+                        tableHtml += "</tr>";
+                    }
+                }
+
+                tableHtml += "</tbody></table></div>";
+                html = tableHtml;
+                break;
+            }
 
             default:
                 if (text) html = `<p>${text}</p>`;
