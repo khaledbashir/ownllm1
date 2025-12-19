@@ -179,13 +179,28 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
     let cancelled = false;
     let attempts = 0;
 
-    const tryInsert = () => {
+    const tryInsert = async () => {
       if (cancelled) return;
       const target = notesEditorRef.current;
-      if (target && typeof target.insertMarkdown === "function") {
-        target.insertMarkdown(pendingNoteInsert);
-        toast.success("Content added to your Notes!");
-        setPendingNoteInsert(null);
+
+      const canInsert =
+        target &&
+        typeof target.insertMarkdown === "function" &&
+        (typeof target.isReady !== "function" || target.isReady() === true);
+
+      if (canInsert) {
+        try {
+          const ok = await target.insertMarkdown(pendingNoteInsert);
+          if (ok) {
+            toast.success("Content added to your Notes!");
+          } else {
+            toast.error("Could not insert into Notes.");
+          }
+        } catch (e) {
+          toast.error(e?.message || "Could not insert into Notes.");
+        } finally {
+          setPendingNoteInsert(null);
+        }
         return;
       }
 

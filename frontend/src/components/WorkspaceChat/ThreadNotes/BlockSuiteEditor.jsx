@@ -621,29 +621,95 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
     // Expose insert method to parent
     useImperativeHandle(ref, () => ({
+        isReady: () => isReady,
+
         insertMarkdown: async (markdown) => {
             console.log("[BlockSuiteEditor] insertMarkdown called with:", markdown?.substring(0, 100));
 
-            if (!editorRef.current || !markdown) {
-                console.error("[BlockSuiteEditor] Missing editor or markdown");
-                return;
+            if (!markdown) {
+                console.error("[BlockSuiteEditor] Missing markdown");
+                return false;
+            }
+
+            if (!editorRef.current) {
+                console.error("[BlockSuiteEditor] Missing editor");
+                return false;
             }
 
             // Get current doc
             const doc = editorRef.current.doc;
             if (!doc) {
                 console.error("[BlockSuiteEditor] No doc found");
-                return;
+                return false;
             }
 
-            // Find the note block for adding content
-            const noteBlock = doc.getBlocksByFlavour("affine:note")[0];
+            const getBlocksByFlavourSafe = (targetDoc, flavour) => {
+                try {
+                    if (typeof targetDoc.getBlocksByFlavour === "function") {
+                        return targetDoc.getBlocksByFlavour(flavour) || [];
+                    }
+                } catch (e) {
+                    // ignore
+                }
+                // Fallback: traverse from root
+                const found = [];
+                const traverse = (block) => {
+                    if (!block) return;
+                    if (block.flavour === flavour) found.push(block);
+                    if (block.children?.length) block.children.forEach(traverse);
+                };
+                traverse(targetDoc.root);
+                return found;
+            };
+
+            const ensureThreadNoteBlock = () => {
+                // 1) Prefer existing note blocks
+                let noteBlock = getBlocksByFlavourSafe(doc, "affine:note")[0];
+                if (noteBlock) return noteBlock;
+
+                // 2) Find or create a page block
+                let pageBlock = getBlocksByFlavourSafe(doc, "affine:page")[0];
+                if (!pageBlock && doc.root?.flavour === "affine:page") {
+                    pageBlock = doc.root;
+                }
+                if (!pageBlock) {
+                    const pageBlockId = doc.addBlock("affine:page", {});
+                    pageBlock = doc.getBlock(pageBlockId);
+                }
+
+                if (!pageBlock?.id) return null;
+
+                // 3) Ensure surface exists (some editor flows assume it)
+                const hasSurface = getBlocksByFlavourSafe(doc, "affine:surface").length > 0;
+                if (!hasSurface) {
+                    try {
+                        doc.addBlock("affine:surface", {}, pageBlock.id);
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+
+                // 4) Create note block + an initial paragraph
+                try {
+                    const noteBlockId = doc.addBlock("affine:note", {}, pageBlock.id);
+                    doc.addBlock("affine:paragraph", { text: new Text() }, noteBlockId);
+                    noteBlock = doc.getBlock(noteBlockId);
+                    console.log("[BlockSuiteEditor] Created missing note block:", noteBlockId);
+                    return noteBlock;
+                } catch (e) {
+                    console.error("[BlockSuiteEditor] Failed to create note block:", e);
+                    return null;
+                }
+            };
+
+            // Find the note block for adding content (or create it)
+            const noteBlock = ensureThreadNoteBlock();
             if (!noteBlock) {
-                console.error("[BlockSuiteEditor] No note block found");
-                return;
+                console.error("[BlockSuiteEditor] No valid note block found/created");
+                return false;
             }
 
-            console.log("[BlockSuiteEditor] Found note block:", noteBlock.id);
+            console.log("[BlockSuiteEditor] Using note block:", noteBlock.id);
 
             try {
                 // Extract title from first heading and remaining content
@@ -653,7 +719,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 if (title) {
                     try {
                         // Get the page block - it holds the document title
-                        const pageBlock = doc.getBlocksByFlavour("affine:page")[0];
+                        const pageBlock = getBlocksByFlavourSafe(doc, "affine:page")[0] || doc.root;
                         if (pageBlock) {
                             // BlockSuite page title is stored in the page block's title property
                             // We need to update the title text
@@ -693,6 +759,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 }
 
                 console.log("[BlockSuiteEditor] Successfully parsed and inserted markdown");
+                return true;
             } catch (e) {
                 console.error("[BlockSuiteEditor] parseMarkdownToBlocks failed:", e);
                 // Fallback
@@ -701,8 +768,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                     for (const line of lines) {
                         doc.addBlock("affine:paragraph", { text: new Text(line) }, noteBlock.id);
                     }
+                    return true;
                 } catch (fallbackError) {
                     console.error("[BlockSuiteEditor] Fallback failed:", fallbackError);
+                    return false;
                 }
             }
         },
