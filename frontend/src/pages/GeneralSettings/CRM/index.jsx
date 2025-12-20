@@ -368,7 +368,9 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-theme-text-secondary">Notes</label>
+                    <label className="text-xs text-theme-text-secondary">
+                      Notes
+                    </label>
                     <textarea
                       value={formData.notes}
                       onChange={(e) =>
@@ -610,8 +612,8 @@ export default function CRMPage() {
               </div>
             </div>
             <p className="text-xs leading-[18px] font-base text-theme-text-secondary mt-2">
-              Organize leads by stage, drag cards across columns, and quickly edit
-              opportunity details.
+              Organize leads by stage, drag cards across columns, and quickly
+              edit opportunity details.
             </p>
           </div>
 

@@ -49,7 +49,11 @@ function TemplatePreview({ template }) {
             fontFamily,
             height: headerHeight + "px",
             justifyContent: isCenterAligned ? "center" : "space-between",
-            flexDirection: isCenterAligned ? "column" : (isRightAligned ? "row-reverse" : "row"),
+            flexDirection: isCenterAligned
+              ? "column"
+              : isRightAligned
+                ? "row-reverse"
+                : "row",
             borderBottom: `2px solid ${primaryColor}`,
             paddingTop: isCenterAligned ? "10px" : "0",
             paddingBottom: isCenterAligned ? "10px" : "0",
@@ -354,7 +358,10 @@ function TemplateEditor({ template: initialTemplate, onSave, onCancel }) {
                   if (file) {
                     if (file.size > 2 * 1024 * 1024) {
                       // 2MB limit
-                      showToast("File too large. Please use an image under 2MB.", "error");
+                      showToast(
+                        "File too large. Please use an image under 2MB.",
+                        "error"
+                      );
                       return;
                     }
                     const reader = new FileReader();
@@ -525,7 +532,8 @@ export default function DocumentTemplates() {
   const handleDelete = async (id) => {
     const confirmed = await confirm({
       title: "Delete Template?",
-      message: "This will permanently delete this template. This action cannot be undone.",
+      message:
+        "This will permanently delete this template. This action cannot be undone.",
       confirmText: "Delete",
       cancelText: "Keep",
       variant: "danger",

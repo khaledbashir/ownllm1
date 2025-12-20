@@ -224,8 +224,11 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
           }
 
           attempts += 1;
-          if (attempts >= 100) { // 10 seconds max
-            reject(new Error("Editor took too long to initialize. Please try again."));
+          if (attempts >= 100) {
+            // 10 seconds max
+            reject(
+              new Error("Editor took too long to initialize. Please try again.")
+            );
             return;
           }
 
@@ -236,20 +239,19 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
       });
     };
 
-    toast.promise(
-      waitForEditorAndInsert(),
-      {
+    toast
+      .promise(waitForEditorAndInsert(), {
         pending: "Waiting for editor...",
         success: "Content added to your Notes!",
         error: {
           render({ data }) {
             return data?.message || "Could not insert into Notes.";
-          }
-        }
-      }
-    ).finally(() => {
-      setPendingNoteInsert(null);
-    });
+          },
+        },
+      })
+      .finally(() => {
+        setPendingNoteInsert(null);
+      });
 
     return () => {
       cancelled = true;
@@ -535,20 +537,22 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+              activeTab === "chat"
                 ? "border-theme-text-primary text-theme-text-primary"
                 : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-              }`}
+            }`}
           >
             <ChatText size={18} />
             Chat
           </button>
           <button
             onClick={() => setActiveTab("notes")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+              activeTab === "notes"
                 ? "border-theme-text-primary text-theme-text-primary"
                 : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-              }`}
+            }`}
           >
             <FileText size={18} />
             Doc

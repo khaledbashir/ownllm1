@@ -95,7 +95,7 @@ const calcTotals = ({ rows, discountPercent, gstPercent }) => {
 };
 
 // This is the block model (holds props) for BlockSuite.
-export class PricingTableModel extends defineEmbedModel(BlockModel) { }
+export class PricingTableModel extends defineEmbedModel(BlockModel) {}
 
 // We implement as an embed block so affine:note allows it.
 export const PricingTableBlockSchema = createEmbedBlockSchema({
@@ -305,7 +305,11 @@ const PricingTableWidget = ({ model }) => {
         {/* Header row */}
         <div
           className="grid text-left text-xs text-white/60 border-b border-white/10 py-2"
-          style={{ gridTemplateColumns: !isReadonly ? '1fr 2fr 80px 100px 100px 60px' : '1fr 2fr 80px 100px 100px' }}
+          style={{
+            gridTemplateColumns: !isReadonly
+              ? "1fr 2fr 80px 100px 100px 60px"
+              : "1fr 2fr 80px 100px 100px",
+          }}
         >
           <div className="pr-3">Role</div>
           <div className="pr-3">Description</div>
@@ -381,8 +385,10 @@ const PricingTableWidget = ({ model }) => {
                           {...draggableProvided.draggableProps}
                           className={`grid items-start border-b border-white/5 py-2 text-sm text-white/80 group ${snapshot.isDragging ? "opacity-60 bg-white/10 rounded" : ""}`}
                           style={{
-                            gridTemplateColumns: !isReadonly ? '1fr 2fr 80px 100px 100px 60px' : '1fr 2fr 80px 100px 100px',
-                            ...draggableProvided.draggableProps.style
+                            gridTemplateColumns: !isReadonly
+                              ? "1fr 2fr 80px 100px 100px 60px"
+                              : "1fr 2fr 80px 100px 100px",
+                            ...draggableProvided.draggableProps.style,
                           }}
                         >
                           {/* Role Column with Drag Handle */}

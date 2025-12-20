@@ -90,14 +90,16 @@ export default function MarketingHome() {
               <div className="mt-6 grid lg:grid-cols-2 gap-10 items-center">
                 <div>
                   <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05]">
-                    Turn scope into <span className="text-primary-button">proposals</span>.
+                    Turn scope into{" "}
+                    <span className="text-primary-button">proposals</span>.
                     <br />
-                    Turn work into <span className="text-primary-button">invoices</span>.
+                    Turn work into{" "}
+                    <span className="text-primary-button">invoices</span>.
                   </h1>
                   <p className="mt-6 text-lg text-theme-text-secondary leading-relaxed max-w-xl">
                     The PAID Platform combines a collaborative creation studio,
-                    high-fidelity PDF export, model-agnostic AI, and workflow automation
-                    to ship Proposals And Invoices Delivered.
+                    high-fidelity PDF export, model-agnostic AI, and workflow
+                    automation to ship Proposals And Invoices Delivered.
                   </p>
 
                   <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -128,13 +130,26 @@ export default function MarketingHome() {
                 <div className="rounded-2xl border border-theme-sidebar-border bg-theme-bg-primary p-4">
                   <div className="rounded-xl border border-theme-sidebar-border bg-theme-bg-secondary overflow-hidden">
                     <div className="px-4 py-3 border-b border-theme-sidebar-border flex items-center justify-between">
-                      <div className="text-sm font-semibold">Proposal Generator</div>
-                      <div className="text-xs text-theme-text-secondary">PAID Studio</div>
+                      <div className="text-sm font-semibold">
+                        Proposal Generator
+                      </div>
+                      <div className="text-xs text-theme-text-secondary">
+                        PAID Studio
+                      </div>
                     </div>
                     <div className="p-4 space-y-3">
-                      <PreviewRow title="RFP → Proposal" desc="Extract requirements, build scope, generate a branded PDF." />
-                      <PreviewRow title="Timesheet → Invoice" desc="Calculate line items, apply tax/discounts, export in batch." />
-                      <PreviewRow title="Artifacts" desc="Reuse code snippets, assets, and templates across projects." />
+                      <PreviewRow
+                        title="RFP → Proposal"
+                        desc="Extract requirements, build scope, generate a branded PDF."
+                      />
+                      <PreviewRow
+                        title="Timesheet → Invoice"
+                        desc="Calculate line items, apply tax/discounts, export in batch."
+                      />
+                      <PreviewRow
+                        title="Artifacts"
+                        desc="Reuse code snippets, assets, and templates across projects."
+                      />
                       <div className="pt-1">
                         <div className="h-10 rounded-lg border border-theme-sidebar-border bg-theme-bg-container" />
                       </div>
@@ -202,7 +217,10 @@ export default function MarketingHome() {
       </section>
 
       {/* Core AI */}
-      <section id="ai" className="py-16 px-6 bg-theme-bg-secondary/40 border-y border-theme-sidebar-border">
+      <section
+        id="ai"
+        className="py-16 px-6 bg-theme-bg-secondary/40 border-y border-theme-sidebar-border"
+      >
         <SectionHeader
           title="Core AI & Intelligence"
           subtitle="Model-agnostic, RAG-native, built for citations and multiple chat modes."
@@ -284,7 +302,10 @@ export default function MarketingHome() {
       </section>
 
       {/* Security */}
-      <section id="security" className="py-16 px-6 bg-theme-bg-secondary/40 border-y border-theme-sidebar-border">
+      <section
+        id="security"
+        className="py-16 px-6 bg-theme-bg-secondary/40 border-y border-theme-sidebar-border"
+      >
         <SectionHeader
           title="Security & Administration"
           subtitle="Paranoid-level security with local-first data control and role-based access."
@@ -325,7 +346,11 @@ export default function MarketingHome() {
           <FeatureCard
             icon={<Workflow size={18} className="text-primary-button" />}
             title="CRM System"
-            items={["Customer management", "Lead tracking", "Interaction history"]}
+            items={[
+              "Customer management",
+              "Lead tracking",
+              "Interaction history",
+            ]}
           />
           <FeatureCard
             icon={<Plug size={18} className="text-primary-button" />}
@@ -353,8 +378,8 @@ export default function MarketingHome() {
                 Ready to ship PAID?
               </h2>
               <p className="mt-2 text-theme-text-secondary leading-relaxed max-w-2xl">
-                Launch your first workspace and start generating deliverables with
-                a secure, model-agnostic AI platform.
+                Launch your first workspace and start generating deliverables
+                with a secure, model-agnostic AI platform.
               </p>
             </div>
             <Link

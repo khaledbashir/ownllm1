@@ -12,7 +12,6 @@ import {
   ArrowsOut,
   X,
   Check,
-  Warning,
   FileArrowUp,
 } from "@phosphor-icons/react";
 import Artifacts from "../../models/artifacts";
@@ -27,7 +26,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [artifactName, setArtifactName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState("split");
+  const [viewMode, setViewMode] = useState("preview");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [splitPct, setSplitPct] = useState(52);
   const isDraggingRef = useRef(false);
@@ -294,155 +293,156 @@ export default function SandpackRenderer({ code, language, workspace }) {
             </div>
           </div>
 
-      {/* Save Modal */}
-      {showSaveModal && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-theme-bg-secondary p-6 rounded-xl shadow-2xl w-[400px] border border-theme-border">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-blue-600/20 rounded-lg">
-                <FloppyDisk size={24} className="text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-theme-text-primary">
-                  Save to Artifacts
-                </h3>
-                <p className="text-xs text-theme-text-secondary">
-                  Save this code to your library
-                </p>
-              </div>
-            </div>
-
-            <input
-              type="text"
-              placeholder="Artifact Name (e.g. Landing Page V1)"
-              value={artifactName}
-              onChange={(e) => setArtifactName(e.target.value)}
-              className="w-full p-3 rounded-lg bg-theme-bg-primary text-theme-text-primary border border-theme-border mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-theme-text-secondary/50"
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && handleSave()}
-            />
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowSaveModal(false)}
-                className="px-4 py-2 text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-primary rounded-lg transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={loading || !artifactName}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Check size={16} />
-                    Save
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Sandpack */}
-      <SandpackProvider
-        template={template}
-        theme={sandpackTheme}
-        files={{
-          [primaryFile]: code,
-        }}
-        options={{
-          activeFile: primaryFile,
-          visibleFiles: [primaryFile],
-        }}
-        customSetup={{
-          dependencies: {
-            recharts: "2.12.7",
-            clsx: "2.1.1",
-            "tailwind-merge": "1.14.0",
-          },
-        }}
-      >
-        <div className="flex-1 min-h-0">
-          <SandpackLayout style={{ height: "100%" }}>
-            <div className="h-full min-h-0">
-              {viewMode === "code" && (
-                <div className="h-full border-t border-white/5">
-                  <SandpackCodeEditor
-                    showTabs={false}
-                    showLineNumbers={true}
-                    showInlineErrors={true}
-                    wrapContent={true}
-                    style={{ height: "100%" }}
-                  />
+          {/* Save Modal */}
+          {showSaveModal && (
+            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className="bg-theme-bg-secondary p-6 rounded-xl shadow-2xl w-[400px] border border-theme-border">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-blue-600/20 rounded-lg">
+                    <FloppyDisk size={24} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-theme-text-primary">
+                      Save to Artifacts
+                    </h3>
+                    <p className="text-xs text-theme-text-secondary">
+                      Save this code to your library
+                    </p>
+                  </div>
                 </div>
-              )}
 
-              {viewMode === "preview" && (
-                <div className="h-full border-t border-white/5">
-                  <SandpackPreview
-                    showNavigator={false}
-                    showRefreshButton={true}
-                    style={{ height: "100%" }}
-                  />
-                </div>
-              )}
+                <input
+                  type="text"
+                  placeholder="Artifact Name (e.g. Landing Page V1)"
+                  value={artifactName}
+                  onChange={(e) => setArtifactName(e.target.value)}
+                  className="w-full p-3 rounded-lg bg-theme-bg-primary text-theme-text-primary border border-theme-border mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-theme-text-secondary/50"
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && handleSave()}
+                />
 
-              {viewMode === "split" && (
-                <div
-                  ref={splitContainerRef}
-                  className="h-full min-h-0 flex flex-col md:flex-row border-t border-white/5"
-                >
-                  <div
-                    className="h-1/2 md:h-full md:min-w-[320px] border-b md:border-b-0 md:border-r border-theme-border"
-                    style={{
-                      flexBasis: `${splitPct}%`,
-                      flexShrink: 0,
-                    }}
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setShowSaveModal(false)}
+                    className="px-4 py-2 text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-primary rounded-lg transition-all"
                   >
-                    <SandpackCodeEditor
-                      showTabs={false}
-                      showLineNumbers={true}
-                      showInlineErrors={true}
-                      wrapContent={true}
-                      style={{ height: "100%" }}
-                    />
-                  </div>
-
-                  <div className="hidden md:flex w-3 items-stretch justify-center bg-theme-bg-secondary">
-                    <div
-                      onPointerDown={handlePointerDown}
-                      onPointerMove={handlePointerMove}
-                      onPointerUp={handlePointerUp}
-                      onPointerCancel={handlePointerUp}
-                      className="w-3 cursor-col-resize flex items-center justify-center group"
-                      role="separator"
-                      aria-orientation="vertical"
-                    >
-                      <div className="w-px h-10 bg-white/15 group-hover:bg-blue-400/60 transition-colors" />
-                    </div>
-                  </div>
-
-                  <div className="flex-1 min-w-0 h-1/2 md:h-full">
-                    <SandpackPreview
-                      showNavigator={false}
-                      showRefreshButton={true}
-                      style={{ height: "100%" }}
-                    />
-                  </div>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={loading || !artifactName}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={16} />
+                        Save
+                      </>
+                    )}
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
-          </SandpackLayout>
+          )}
+
+          {/* Sandpack */}
+          <SandpackProvider
+            template={template}
+            theme={sandpackTheme}
+            files={{
+              [primaryFile]: code,
+            }}
+            options={{
+              activeFile: primaryFile,
+              visibleFiles: [primaryFile],
+            }}
+            customSetup={{
+              dependencies: {
+                recharts: "2.12.7",
+                clsx: "2.1.1",
+                "tailwind-merge": "1.14.0",
+              },
+            }}
+          >
+            <div className="flex-1 min-h-0">
+              <SandpackLayout style={{ height: "100%" }}>
+                <div className="h-full min-h-0">
+                  {viewMode === "code" && (
+                    <div className="h-full border-t border-white/5">
+                      <SandpackCodeEditor
+                        showTabs={false}
+                        showLineNumbers={true}
+                        showInlineErrors={true}
+                        wrapContent={true}
+                        style={{ height: "100%" }}
+                      />
+                    </div>
+                  )}
+
+                  {viewMode === "preview" && (
+                    <div className="h-full border-t border-white/5">
+                      <SandpackPreview
+                        showNavigator={false}
+                        showRefreshButton={true}
+                        style={{ height: "100%" }}
+                      />
+                    </div>
+                  )}
+
+                  {viewMode === "split" && (
+                    <div
+                      ref={splitContainerRef}
+                      className="h-full min-h-0 flex flex-col md:flex-row border-t border-white/5"
+                    >
+                      <div
+                        className="h-1/2 md:h-full md:min-w-[320px] border-b md:border-b-0 md:border-r border-theme-border"
+                        style={{
+                          flexBasis: `${splitPct}%`,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <SandpackCodeEditor
+                          showTabs={false}
+                          showLineNumbers={true}
+                          showInlineErrors={true}
+                          wrapContent={true}
+                          style={{ height: "100%" }}
+                        />
+                      </div>
+
+                      <div className="hidden md:flex w-3 items-stretch justify-center bg-theme-bg-secondary">
+                        <div
+                          onPointerDown={handlePointerDown}
+                          onPointerMove={handlePointerMove}
+                          onPointerUp={handlePointerUp}
+                          onPointerCancel={handlePointerUp}
+                          className="w-3 cursor-col-resize flex items-center justify-center group"
+                          role="separator"
+                          aria-orientation="vertical"
+                        >
+                          <div className="w-px h-10 bg-white/15 group-hover:bg-blue-400/60 transition-colors" />
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0 h-1/2 md:h-full">
+                        <SandpackPreview
+                          showNavigator={false}
+                          showRefreshButton={true}
+                          style={{ height: "100%" }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </SandpackLayout>
+            </div>
+          </SandpackProvider>
         </div>
-      </SandpackProvider>
       </div>
     </div>
   );

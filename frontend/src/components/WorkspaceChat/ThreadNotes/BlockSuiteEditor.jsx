@@ -227,7 +227,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           expand: `Expand this text with more detail and explanation. Return ONLY the expanded text:\n\n${selectedText}`,
         };
 
-        if (selectionAction === 'custom') {
+        if (selectionAction === "custom") {
           // Open modal for custom prompt
           setShowAIModal(true);
           break;
@@ -254,7 +254,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
               if (selection && selection.rangeCount > 0) {
                 const range = selection.getRangeAt(0);
                 range.deleteContents();
-                range.insertNode(document.createTextNode(result.response.trim()));
+                range.insertNode(
+                  document.createTextNode(result.response.trim())
+                );
                 selection.removeAllRanges();
               }
               return result.response;
@@ -263,7 +265,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           })(),
           {
             pending: `✨ AI ${selectionAction}ing text...`,
-            success: `✅ Text ${selectionAction === 'expand' ? 'expanded' : selectionAction + 'd'}!`,
+            success: `✅ Text ${selectionAction === "expand" ? "expanded" : selectionAction + "d"}!`,
             error: "❌ AI failed to process text",
           }
         );
@@ -1544,6 +1546,64 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         );
       }
 
+      // 2.5 Generate Table of Contents from H1/H2 headings
+      const generateToc = (html) => {
+        // Extract headings using regex
+        const headingRegex = /<h([12])[^>]*>([^<]+)<\/h[12]>/gi;
+        const headings = [];
+        let match;
+        let counter = 0;
+        let processedHtml = html;
+
+        while ((match = headingRegex.exec(html)) !== null) {
+          counter++;
+          const level = match[1];
+          const text = match[2].trim();
+          const id = `toc-heading-${counter}`;
+          headings.push({ level, text, id });
+
+          // Add ID to the heading in the HTML
+          const originalTag = match[0];
+          const tagWithId = originalTag.replace(
+            `<h${level}`,
+            `<h${level} id="${id}"`
+          );
+          processedHtml = processedHtml.replace(originalTag, tagWithId);
+        }
+
+        if (headings.length === 0) {
+          return { tocHtml: "", processedHtml: html };
+        }
+
+        // Build TOC HTML
+        const tocItems = headings
+          .map((h) => {
+            const indent = h.level === "2" ? "padding-left: 20px;" : "";
+            return `<li style="${indent}margin: 8px 0;"><a href="#${h.id}" style="color: #374151; text-decoration: none;">${h.text}</a></li>`;
+          })
+          .join("\n");
+
+        const tocHtml = `
+          <div class="table-of-contents" style="
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            break-after: page;
+          ">
+            <h2 style="margin: 0 0 15px 0; font-size: 1.4em; color: #111827; border: none;">Table of Contents</h2>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              ${tocItems}
+            </ul>
+          </div>
+        `;
+
+        return { tocHtml, processedHtml };
+      };
+
+      const { tocHtml, processedHtml: bodyWithIds } = generateToc(bodyHtml);
+
       // 2. Build the Full HTML Wrapper with Styles and Google Fonts
       // Determine which font to use - from template or default
       const templateFont = selectedTemplate?.fontFamily || "Inter";
@@ -1556,13 +1616,14 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       // Map font names to Google Fonts URL format
       const googleFontMap = {
         "Plus Jakarta Sans": "Plus+Jakarta+Sans:wght@400;500;600;700",
-        "Inter": "Inter:wght@400;500;600;700",
-        "Roboto": "Roboto:wght@400;500;700",
+        Inter: "Inter:wght@400;500;600;700",
+        Roboto: "Roboto:wght@400;500;700",
         "Open Sans": "Open+Sans:wght@400;500;600;700",
-        "Poppins": "Poppins:wght@400;500;600;700",
+        Poppins: "Poppins:wght@400;500;600;700",
       };
 
-      const fontUrlParam = googleFontMap[templateFont] || "Inter:wght@400;500;600;700";
+      const fontUrlParam =
+        googleFontMap[templateFont] || "Inter:wght@400;500;600;700";
       const googleFontsUrl = isGoogleFont
         ? `https://fonts.googleapis.com/css2?family=${fontUrlParam}&family=JetBrains+Mono&display=swap`
         : `https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap`;
@@ -1818,7 +1879,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 </head>
 <body>
 ${activeTemplateHeader}
-    ${bodyHtml}
+${tocHtml}
+    ${bodyWithIds}
 ${activeTemplateFooter}
 </body>
 </html>`;
@@ -2032,7 +2094,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-          "Doc embedded successfully! AI can now retrieve this content."
+            "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -2253,14 +2315,17 @@ ${activeTemplateFooter}
           style={{
             fontFamily: selectedBrandTemplate?.fontFamily
               ? `'${selectedBrandTemplate.fontFamily}', sans-serif`
-              : undefined
+              : undefined,
           }}
         >
           {/* Brand Header - Fixed HTML outside editor */}
           {selectedBrandTemplate && (
             <div
               className="brand-template-header flex items-center gap-4 px-6 py-4 bg-white border-b-2 mx-4 mt-4 rounded-t-lg"
-              style={{ borderBottomColor: selectedBrandTemplate.primaryColor || '#3b82f6' }}
+              style={{
+                borderBottomColor:
+                  selectedBrandTemplate.primaryColor || "#3b82f6",
+              }}
             >
               {selectedBrandTemplate.logoPath && (
                 <img
@@ -2269,8 +2334,9 @@ ${activeTemplateFooter}
                   className="h-10 object-contain"
                   style={{
                     height: selectedBrandTemplate.cssOverrides
-                      ? JSON.parse(selectedBrandTemplate.cssOverrides).logoHeight || 40
-                      : 40
+                      ? JSON.parse(selectedBrandTemplate.cssOverrides)
+                          .logoHeight || 40
+                      : 40,
                   }}
                 />
               )}
@@ -2286,15 +2352,13 @@ ${activeTemplateFooter}
           <div
             ref={containerRef}
             data-theme="dark"
-            className={`blocksuite-editor-wrapper ${selectedBrandTemplate ? 'mx-4 bg-white' : 'flex-1'}`}
+            className={`blocksuite-editor-wrapper ${selectedBrandTemplate ? "mx-4 bg-white" : "flex-1"}`}
             style={{ minHeight: "300px" }}
           />
 
           {/* Brand Footer - Fixed HTML outside editor */}
           {selectedBrandTemplate?.footerText && (
-            <div
-              className="brand-template-footer px-6 py-3 bg-white border-t border-gray-200 mx-4 mb-4 rounded-b-lg text-center text-gray-500 text-xs"
-            >
+            <div className="brand-template-footer px-6 py-3 bg-white border-t border-gray-200 mx-4 mb-4 rounded-b-lg text-center text-gray-500 text-xs">
               {selectedBrandTemplate.footerText}
             </div>
           )}
@@ -2530,20 +2594,24 @@ const serializeDocToHtml = async (doc) => {
             // Check model (if it exists)
             if (model && model[key] !== undefined) return model[key];
             // Check block.props
-            if (block.props && block.props[key] !== undefined) return block.props[key];
+            if (block.props && block.props[key] !== undefined)
+              return block.props[key];
             // Check model.props
             if (model && model.props) {
               if (model.props[key] !== undefined) return model.props[key];
-              if (typeof model.props.get === "function") return model.props.get(key);
+              if (typeof model.props.get === "function")
+                return model.props.get(key);
             }
             // Check block.yBlock (Yjs-backed properties)
             if (block.yBlock) {
-              const yProps = block.yBlock.get("prop:props") || block.yBlock.get("props");
+              const yProps =
+                block.yBlock.get("prop:props") || block.yBlock.get("props");
               if (yProps && typeof yProps.get === "function") {
                 return yProps.get(key);
               }
               // Direct key on yBlock
-              const yVal = block.yBlock.get(`prop:${key}`) || block.yBlock.get(key);
+              const yVal =
+                block.yBlock.get(`prop:${key}`) || block.yBlock.get(key);
               if (yVal !== undefined) return yVal;
             }
             return undefined;
@@ -2573,7 +2641,7 @@ const serializeDocToHtml = async (doc) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch { }
+          } catch {}
           return value;
         };
 
@@ -2606,7 +2674,12 @@ const serializeDocToHtml = async (doc) => {
           "Project Pricing";
 
         let rawRows = readProp("rows");
-        console.log("[PDF Export] Pricing table raw rows:", rawRows, "block:", block.id);
+        console.log(
+          "[PDF Export] Pricing table raw rows:",
+          rawRows,
+          "block:",
+          block.id
+        );
 
         rawRows = toPlain(rawRows);
         if (typeof rawRows === "string") {
@@ -2617,13 +2690,16 @@ const serializeDocToHtml = async (doc) => {
           }
         }
         const rows = Array.isArray(rawRows) ? rawRows.map(toPlain) : [];
-        console.log("[PDF Export] Pricing table parsed rows:", rows.length, "rows");
+        console.log(
+          "[PDF Export] Pricing table parsed rows:",
+          rows.length,
+          "rows"
+        );
 
         const clamp = (n, { min = 0, max = 100 } = {}) => {
           const v = Number(n);
           if (!Number.isFinite(v)) return min;
           return Math.max(min, Math.min(max, v));
-
         };
 
         const escapeHtml = (unsafe) => {
