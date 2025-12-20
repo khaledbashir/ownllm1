@@ -57,6 +57,7 @@ const Workspace = {
     "vectorSearchMode",
     "products",
     "rateCard",
+    "enableProposalMode",
   ],
 
   validations: {
@@ -130,6 +131,11 @@ const Workspace = {
       )
         return "default";
       return value;
+    },
+    enableProposalMode: (value) => {
+      if (value === true || value === "true") return true;
+      if (value === false || value === "false") return false;
+      return false;
     },
   },
 

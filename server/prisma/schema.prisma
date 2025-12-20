@@ -153,6 +153,7 @@ model workspaces {
   // Products and Rate Card for proposal generation
   products                     String?                        // JSON array of products/services
   rateCard                     String?                        // JSON array of roles with hourly rates
+  enableProposalMode           Boolean                        @default(false)
   workspace_users              workspace_users[]
   documents                    workspace_documents[]
   workspace_suggested_messages workspace_suggested_messages[]

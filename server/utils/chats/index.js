@@ -262,7 +262,9 @@ async function chatPrompt(workspace, user = null) {
   );
 
   const smartPluginsAppendix = await smartPluginsPromptAppendix(workspace?.id);
-  const proposalContext = buildProposalContext(workspace);
+  const proposalContext = workspace?.enableProposalMode
+    ? buildProposalContext(workspace)
+    : "";
 
   return `${expanded}${proposalContext}${smartPluginsAppendix}`;
 }

@@ -12,6 +12,9 @@ export function castToType(key, value) {
     topN: {
       cast: (value) => Number(value),
     },
+    enableProposalMode: {
+      cast: (value) => value === true || value === "true",
+    },
   };
 
   if (!definitions.hasOwnProperty(key)) return value;
