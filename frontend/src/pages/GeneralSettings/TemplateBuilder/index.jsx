@@ -394,8 +394,8 @@ export default function TemplateBuilder() {
                 >
                   <div
                     className={`max-w-[85%] px-4 py-3 rounded-2xl ${msg.role === "user"
-                        ? "bg-blue-600 text-white"
-                        : "bg-theme-bg-primary text-theme-text-primary"
+                      ? "bg-blue-600 text-white"
+                      : "bg-theme-bg-primary text-theme-text-primary"
                       }`}
                   >
                     <MessageContent content={msg.content} role={msg.role} />
@@ -450,7 +450,7 @@ export default function TemplateBuilder() {
                 Reset
               </button>
             </div>
-            <div className="flex-1 overflow-auto flex flex-col">
+            <div className="flex-1 overflow-hidden">
               <SandpackProvider
                 template="static"
                 theme="dark"
@@ -458,11 +458,11 @@ export default function TemplateBuilder() {
                   "/index.html": templateHtml,
                 }}
               >
-                <SandpackLayout className="flex-1 min-h-0" style={{ height: 'auto', minHeight: '100%' }}>
+                <SandpackLayout className="h-full" style={{ height: '100%' }}>
                   <SandpackPreview
                     showNavigator={false}
                     showRefreshButton={true}
-                    style={{ height: 'auto', minHeight: '100%', flexGrow: 1 }}
+                    style={{ height: '100%' }}
                   />
                 </SandpackLayout>
               </SandpackProvider>

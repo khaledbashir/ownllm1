@@ -58,6 +58,8 @@ const Workspace = {
     "products",
     "rateCard",
     "enableProposalMode",
+    "inlineAiSystemPrompt",
+    "inlineAiActions",
   ],
 
   validations: {
@@ -136,6 +138,26 @@ const Workspace = {
       if (value === true || value === "true") return true;
       if (value === false || value === "false") return false;
       return false;
+    },
+    inlineAiSystemPrompt: (value) => {
+      if (!value || typeof value !== "string") return null;
+      return String(value);
+    },
+    inlineAiActions: (value) => {
+      // Accepts JSON string or array, always stores as JSON string
+      if (!value) return null;
+      if (typeof value === "string") {
+        try {
+          JSON.parse(value); // Validate it's valid JSON
+          return value;
+        } catch {
+          return null;
+        }
+      }
+      if (Array.isArray(value)) {
+        return JSON.stringify(value);
+      }
+      return null;
     },
   },
 

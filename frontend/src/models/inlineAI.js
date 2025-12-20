@@ -38,6 +38,7 @@ const InlineAI = {
         context: params.context || "",
         selectedText: params.selectedText || "",
         language: params.language || "English",
+        workspaceSlug: params.workspaceSlug || null,
       }),
     })
       .then((res) => res.json())

@@ -10,6 +10,7 @@ import ChatModeSelection from "./ChatModeSelection";
 import WorkspaceLLMSelection from "./WorkspaceLLMSelection";
 import ChatQueryRefusalResponse from "./ChatQueryRefusalResponse";
 import ProposalModeSelection from "./ProposalModeSelection";
+import DocAISettings from "./DocAISettings";
 import CTAButton from "@/components/lib/CTAButton";
 
 export default function ChatSettings({ workspace }) {
@@ -94,7 +95,12 @@ export default function ChatSettings({ workspace }) {
           workspace={workspace}
           setHasChanges={setHasChanges}
         />
+        <DocAISettings
+          workspace={workspace}
+          setHasChanges={setHasChanges}
+        />
       </form>
     </div>
   );
 }
+

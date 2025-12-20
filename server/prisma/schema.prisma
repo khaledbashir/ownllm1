@@ -154,6 +154,9 @@ model workspaces {
   products                     String?                        // JSON array of products/services
   rateCard                     String?                        // JSON array of roles with hourly rates
   enableProposalMode           Boolean                        @default(false)
+  // Inline AI (Doc Editor) settings
+  inlineAiSystemPrompt         String?                        // Custom system prompt for doc AI (falls back to openAiPrompt)
+  inlineAiActions              String?                        // JSON array of custom actions [{name, prompt, icon}]
   workspace_users              workspace_users[]
   documents                    workspace_documents[]
   workspace_suggested_messages workspace_suggested_messages[]

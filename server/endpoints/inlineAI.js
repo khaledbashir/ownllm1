@@ -12,6 +12,7 @@ const {
   flexUserRoleValid,
   ROLES,
 } = require("../utils/middleware/multiUserProtected");
+const { Workspace } = require("../models/workspace");
 
 // System prompts for different actions
 const ACTION_PROMPTS = {
@@ -43,7 +44,7 @@ function inlineAIEndpoints(app) {
     [validatedRequest, flexUserRoleValid([ROLES.all])],
     async (request, response) => {
       try {
-        const { action, prompt, context, selectedText, language } =
+        const { action, prompt, context, selectedText, language, workspaceSlug } =
           request.body;
 
         if (!action || !prompt) {
@@ -53,8 +54,25 @@ function inlineAIEndpoints(app) {
           });
         }
 
-        // Get LLM provider
-        const LLMConnector = getLLMProvider();
+        // Get workspace settings if provided
+        let workspace = null;
+        let customActions = [];
+        if (workspaceSlug) {
+          workspace = await Workspace.get({ slug: workspaceSlug });
+          if (workspace?.inlineAiActions) {
+            try {
+              customActions = JSON.parse(workspace.inlineAiActions);
+            } catch (e) {
+              console.warn("[InlineAI] Failed to parse custom actions:", e);
+            }
+          }
+        }
+
+        // Get LLM provider - use workspace settings if available
+        const LLMConnector = getLLMProvider({
+          provider: workspace?.chatProvider || null,
+          model: workspace?.chatModel || null,
+        });
         if (!LLMConnector) {
           return response.status(500).json({
             success: false,
@@ -63,40 +81,54 @@ function inlineAIEndpoints(app) {
         }
 
         // Build the appropriate prompt based on action
+        // Use workspace's inline AI system prompt, fall back to main prompt, then default
         let systemPrompt =
+          workspace?.inlineAiSystemPrompt ||
+          workspace?.openAiPrompt ||
           "You are a helpful AI writing assistant. Be concise and direct.";
         let userPrompt;
 
-        switch (action) {
-          case "ask":
-            userPrompt = ACTION_PROMPTS.ask(prompt, context);
-            break;
-          case "continue":
-            userPrompt = ACTION_PROMPTS.continue(context || prompt);
-            systemPrompt =
-              "You are a writing assistant. Continue the text naturally and seamlessly.";
-            break;
-          case "summarize":
-            userPrompt = ACTION_PROMPTS.summarize(selectedText || prompt);
-            break;
-          case "improve":
-            userPrompt = ACTION_PROMPTS.improve(selectedText || prompt);
-            break;
-          case "grammar":
-            userPrompt = ACTION_PROMPTS.grammar(selectedText || prompt);
-            systemPrompt =
-              "You are a proofreader. Only fix errors and return the corrected text.";
-            break;
-          case "translate":
-            userPrompt = ACTION_PROMPTS.translate(
-              selectedText || prompt,
-              language || "English"
-            );
-            systemPrompt =
-              "You are a translator. Only return the translation, nothing else.";
-            break;
-          default:
-            userPrompt = prompt;
+        // Check if this is a custom action
+        const customAction = customActions.find(a => a.name === action || a.id === action);
+        if (customAction) {
+          // Use custom action's prompt template
+          userPrompt = customAction.prompt
+            .replace("{{context}}", context || "")
+            .replace("{{selectedText}}", selectedText || "")
+            .replace("{{prompt}}", prompt || "");
+        } else {
+          // Built-in actions
+          switch (action) {
+            case "ask":
+              userPrompt = ACTION_PROMPTS.ask(prompt, context);
+              break;
+            case "continue":
+              userPrompt = ACTION_PROMPTS.continue(context || prompt);
+              systemPrompt = workspace?.inlineAiSystemPrompt ||
+                "You are a writing assistant. Continue the text naturally and seamlessly.";
+              break;
+            case "summarize":
+              userPrompt = ACTION_PROMPTS.summarize(selectedText || prompt);
+              break;
+            case "improve":
+              userPrompt = ACTION_PROMPTS.improve(selectedText || prompt);
+              break;
+            case "grammar":
+              userPrompt = ACTION_PROMPTS.grammar(selectedText || prompt);
+              systemPrompt = workspace?.inlineAiSystemPrompt ||
+                "You are a proofreader. Only fix errors and return the corrected text.";
+              break;
+            case "translate":
+              userPrompt = ACTION_PROMPTS.translate(
+                selectedText || prompt,
+                language || "English"
+              );
+              systemPrompt = workspace?.inlineAiSystemPrompt ||
+                "You are a translator. Only return the translation, nothing else.";
+              break;
+            default:
+              userPrompt = prompt;
+          }
         }
 
         // Make the LLM call
@@ -106,7 +138,7 @@ function inlineAIEndpoints(app) {
         ];
 
         const result = await LLMConnector.getChatCompletion(chatHistory, {
-          temperature: 0.7,
+          temperature: workspace?.openAiTemp ?? 0.7,
         });
 
         if (!result) {
