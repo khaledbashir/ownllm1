@@ -127,22 +127,23 @@ export default function ThreadNotes({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showTemplateMenu]);
 
-  (templateKey) => {
-    if (!editorRef.current) return;
+  const handleLoadTemplate = useCallback(
+    (templateKey) => {
+      if (!editorRef.current) return;
 
-    // Check if it's a standard template or custom ID
-    if (DOC_TEMPLATES[templateKey]) {
-      if (editorRef.current.loadTemplate) {
-        editorRef.current.loadTemplate(templateKey);
+      // Check if it's a standard template or custom ID
+      if (DOC_TEMPLATES[templateKey]) {
+        if (editorRef.current.loadTemplate) {
+          editorRef.current.loadTemplate(templateKey);
+        }
+      } else {
+        // Assume it's a block template ID
+        if (editorRef.current.loadBlockTemplate) {
+          editorRef.current.loadBlockTemplate(templateKey);
+        }
       }
-    } else {
-      // Assume it's a block template ID
-      if (editorRef.current.loadBlockTemplate) {
-        editorRef.current.loadBlockTemplate(templateKey);
-      }
-    }
-    setShowTemplateMenu(false);
-  },
+      setShowTemplateMenu(false);
+    },
     [editorRef]
   );
 

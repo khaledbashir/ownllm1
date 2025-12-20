@@ -12,7 +12,6 @@ import {
   Sparkles,
   ArrowRight,
   Star,
-  Lightning,
   Terminal,
   GitBranch,
   Database,

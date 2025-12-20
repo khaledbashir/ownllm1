@@ -38,9 +38,9 @@ const FEATURES = [
                 <span className="text-[10px] uppercase tracking-widest opacity-50">Analysis Complete</span>
               </div>
               <div className="text-sm font-mono text-primary-button">
-                    > Extracted 14 line items<br />
-                    > Identified $4,200 in recurring value<br />
-                    > Risk factor: Low
+                &gt; Extracted 14 line items<br />
+                &gt; Identified $4,200 in recurring value<br />
+                &gt; Risk factor: Low
               </div>
             </div>
           </div>
