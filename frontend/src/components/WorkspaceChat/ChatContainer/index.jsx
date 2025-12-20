@@ -155,6 +155,7 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
   const [pendingNoteInsert, setPendingNoteInsert] = useState(null);
   const [pendingContent, setPendingContent] = useState(null); // Content waiting for user choice
   const [showInsertModal, setShowInsertModal] = useState(false);
+  const [shouldReplace, setShouldReplace] = useState(false); // Flag to clear doc before insert
   const { files, parseAttachments } = useContext(DndUploaderContext);
 
   // Ref for notes editor to allow AI to insert content
@@ -233,6 +234,11 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
 
           if (canInsert) {
             try {
+              // If Replace was chosen, clear doc first
+              if (shouldReplace && typeof target.clearDocument === 'function') {
+                target.clearDocument();
+                setShouldReplace(false); // Reset flag
+              }
               const ok = await target.insertMarkdown(pendingNoteInsert);
               if (ok) {
                 resolve();
@@ -278,7 +284,7 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
     return () => {
       cancelled = true;
     };
-  }, [pendingNoteInsert]);
+  }, [pendingNoteInsert, shouldReplace]);
 
   // Maintain state of message from whatever is in PromptInput
   const handleMessageChange = (event) => {
@@ -623,11 +629,7 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
               <button
                 onClick={() => {
                   if (pendingContent) {
-                    // Clear first, then insert
-                    const target = notesEditorRef.current;
-                    if (target && typeof target.clearDocument === 'function') {
-                      target.clearDocument();
-                    }
+                    setShouldReplace(true); // Set flag, will clear after editor mounts
                     setPendingNoteInsert(pendingContent);
                     setActiveTab("notes");
                   }
