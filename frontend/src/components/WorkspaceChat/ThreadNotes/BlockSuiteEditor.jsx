@@ -1980,30 +1980,10 @@ ${activeTemplateFooter}
     const doc = editor.doc;
 
     try {
-      // Find the note block to insert content at the start
-      const noteBlocks = doc.getBlocksByFlavour("affine:note");
-      if (noteBlocks.length === 0) {
-        toast.error("No editable area found");
-        return;
-      }
-      const noteBlock = noteBlocks[0];
-      const firstChild = noteBlock.children?.[0];
+      // Note: Logo image insertion skipped - requires blob manager registration
+      // Logo will still appear in PDF export via template header injection
 
-      // 1. Insert logo as image block at the very top (if logo exists)
-      if (template.logoPath) {
-        doc.addBlock(
-          "affine:image",
-          {
-            sourceId: template.logoPath, // Base64 data URL works as source
-            caption: "",
-            width: 150, // Reasonable default size
-          },
-          noteBlock.id,
-          firstChild ? 0 : undefined // Insert at position 0 (top)
-        );
-      }
-
-      // 2. Inject CSS into the editor for font and brand color
+      // Inject CSS into the editor for font and brand color
       const brandFont = template.fontFamily || "Inter";
       const brandColor = template.primaryColor || "#3b82f6";
 
