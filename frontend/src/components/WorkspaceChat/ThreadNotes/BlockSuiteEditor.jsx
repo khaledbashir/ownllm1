@@ -1019,6 +1019,39 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
   useImperativeHandle(ref, () => ({
     isReady: () => isReady,
 
+    // Clear all content from the document
+    clearDocument: () => {
+      if (!editorRef.current?.doc) return false;
+      const doc = editorRef.current.doc;
+
+      try {
+        // Find the note block
+        const noteBlocks = doc.getBlocksByFlavour?.("affine:note") || [];
+        if (noteBlocks.length === 0) return false;
+
+        const noteBlock = noteBlocks[0];
+
+        // Remove all children from the note block
+        const children = [...(noteBlock.children || [])];
+        for (const child of children) {
+          try {
+            doc.deleteBlock(child.id || child);
+          } catch (e) {
+            // ignore
+          }
+        }
+
+        // Add an empty paragraph to start fresh
+        doc.addBlock("affine:paragraph", { text: new Text() }, noteBlock.id);
+
+        console.log("[BlockSuiteEditor] Document cleared");
+        return true;
+      } catch (e) {
+        console.error("[BlockSuiteEditor] Failed to clear document:", e);
+        return false;
+      }
+    },
+
     insertMarkdown: async (markdown) => {
       console.log(
         "[BlockSuiteEditor] insertMarkdown called with:",
@@ -2094,7 +2127,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-            "Doc embedded successfully! AI can now retrieve this content."
+          "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -2335,7 +2368,7 @@ ${activeTemplateFooter}
                   style={{
                     height: selectedBrandTemplate.cssOverrides
                       ? JSON.parse(selectedBrandTemplate.cssOverrides)
-                          .logoHeight || 40
+                        .logoHeight || 40
                       : 40,
                   }}
                 />
@@ -2641,7 +2674,7 @@ const serializeDocToHtml = async (doc) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch {}
+          } catch { }
           return value;
         };
 

@@ -153,6 +153,8 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
   const [websocket, setWebsocket] = useState(null);
   const [activeTab, setActiveTab] = useState("chat");
   const [pendingNoteInsert, setPendingNoteInsert] = useState(null);
+  const [pendingContent, setPendingContent] = useState(null); // Content waiting for user choice
+  const [showInsertModal, setShowInsertModal] = useState(false);
   const { files, parseAttachments } = useContext(DndUploaderContext);
 
   // Ref for notes editor to allow AI to insert content
@@ -175,12 +177,32 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
         return;
       }
 
-      // Notes editor isn't mounted while on the Chat tab.
-      // Queue the content and switch to Notes. A separate effect will
-      // insert once the editor ref becomes available.
-      setPendingNoteInsert(cleaned);
-      setActiveTab("notes");
+      // Show modal asking user to Replace or Add
+      setPendingContent(cleaned);
+      setShowInsertModal(true);
     };
+
+    // Handle user's choice from insert modal
+    const handleInsertChoice = (mode) => {
+      if (!pendingContent) return;
+
+      if (mode === 'replace') {
+        // Clear first, then insert
+        const target = notesEditorRef.current;
+        if (target && typeof target.clearDocument === 'function') {
+          target.clearDocument();
+        }
+      }
+
+      // Queue the content and switch to Notes
+      setPendingNoteInsert(pendingContent);
+      setActiveTab("notes");
+      setShowInsertModal(false);
+      setPendingContent(null);
+    };
+
+    // Expose handler to window for modal access
+    window._handleInsertChoice = handleInsertChoice;
 
     window.addEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
     return () =>
@@ -537,22 +559,20 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
-              activeTab === "chat"
-                ? "border-theme-text-primary text-theme-text-primary"
-                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-            }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
+              ? "border-theme-text-primary text-theme-text-primary"
+              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              }`}
           >
             <ChatText size={18} />
             Chat
           </button>
           <button
             onClick={() => setActiveTab("notes")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
-              activeTab === "notes"
-                ? "border-theme-text-primary text-theme-text-primary"
-                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-            }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
+              ? "border-theme-text-primary text-theme-text-primary"
+              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              }`}
           >
             <FileText size={18} />
             Doc
@@ -588,6 +608,64 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
       </div>
 
       {activeTab === "chat" && <ChatTooltips />}
+
+      {/* Insert Mode Modal */}
+      {showInsertModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-theme-bg-secondary border border-white/10 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-white text-lg font-semibold mb-2">
+              Insert to Notes
+            </h3>
+            <p className="text-white/60 text-sm mb-6">
+              How would you like to add this content?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  if (pendingContent) {
+                    // Clear first, then insert
+                    const target = notesEditorRef.current;
+                    if (target && typeof target.clearDocument === 'function') {
+                      target.clearDocument();
+                    }
+                    setPendingNoteInsert(pendingContent);
+                    setActiveTab("notes");
+                  }
+                  setShowInsertModal(false);
+                  setPendingContent(null);
+                }}
+                className="flex-1 px-4 py-3 bg-red-600/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors"
+              >
+                <div className="font-medium">🔄 Replace</div>
+                <div className="text-xs opacity-70">Clear existing content</div>
+              </button>
+              <button
+                onClick={() => {
+                  if (pendingContent) {
+                    setPendingNoteInsert(pendingContent);
+                    setActiveTab("notes");
+                  }
+                  setShowInsertModal(false);
+                  setPendingContent(null);
+                }}
+                className="flex-1 px-4 py-3 bg-green-600/20 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-600/30 transition-colors"
+              >
+                <div className="font-medium">➕ Add</div>
+                <div className="text-xs opacity-70">Append to existing</div>
+              </button>
+            </div>
+            <button
+              onClick={() => {
+                setShowInsertModal(false);
+                setPendingContent(null);
+              }}
+              className="w-full mt-3 px-4 py-2 text-white/50 hover:text-white/70 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
