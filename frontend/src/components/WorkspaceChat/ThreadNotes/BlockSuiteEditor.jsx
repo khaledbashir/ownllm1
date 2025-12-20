@@ -2153,13 +2153,58 @@ ${activeTemplateFooter}
           </button>
         </div>
 
-        {/* BlockSuite Editor Container - data-theme forces dark mode */}
+        {/* Document Preview Area - Header + Editor + Footer */}
         <div
-          ref={containerRef}
-          data-theme="dark"
-          className="flex-1 overflow-y-auto blocksuite-editor-wrapper"
-          style={{ minHeight: "300px" }}
-        />
+          className="flex-1 overflow-y-auto"
+          style={{
+            fontFamily: selectedBrandTemplate?.fontFamily
+              ? `'${selectedBrandTemplate.fontFamily}', sans-serif`
+              : undefined
+          }}
+        >
+          {/* Brand Header - Fixed HTML outside editor */}
+          {selectedBrandTemplate && (
+            <div
+              className="brand-template-header flex items-center gap-4 px-6 py-4 bg-white border-b-2 mx-4 mt-4 rounded-t-lg"
+              style={{ borderBottomColor: selectedBrandTemplate.primaryColor || '#3b82f6' }}
+            >
+              {selectedBrandTemplate.logoPath && (
+                <img
+                  src={selectedBrandTemplate.logoPath}
+                  alt="Logo"
+                  className="h-10 object-contain"
+                  style={{
+                    height: selectedBrandTemplate.cssOverrides
+                      ? JSON.parse(selectedBrandTemplate.cssOverrides).logoHeight || 40
+                      : 40
+                  }}
+                />
+              )}
+              {selectedBrandTemplate.headerText && (
+                <span className="text-gray-600 text-sm">
+                  {selectedBrandTemplate.headerText}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* BlockSuite Editor Container - data-theme forces dark mode */}
+          <div
+            ref={containerRef}
+            data-theme="dark"
+            className={`blocksuite-editor-wrapper ${selectedBrandTemplate ? 'mx-4 bg-white' : 'flex-1'}`}
+            style={{ minHeight: "300px" }}
+          />
+
+          {/* Brand Footer - Fixed HTML outside editor */}
+          {selectedBrandTemplate?.footerText && (
+            <div
+              className="brand-template-footer px-6 py-3 bg-white border-t border-gray-200 mx-4 mb-4 rounded-b-lg text-center text-gray-500 text-xs"
+            >
+              {selectedBrandTemplate.footerText}
+            </div>
+          )}
+        </div>
       </div>
 
       <ExportPdfModal
