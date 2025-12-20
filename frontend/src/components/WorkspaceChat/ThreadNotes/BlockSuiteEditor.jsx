@@ -147,6 +147,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
   const [brandTemplates, setBrandTemplates] = useState([]);
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [selectedBrandTemplate, setSelectedBrandTemplate] = useState(null);
 
   // Handler for AI slash menu actions
   const handleAIAction = async (actionType, context) => {
@@ -1964,7 +1965,7 @@ ${activeTemplateFooter}
     }
   };
 
-  // Apply a brand template (header + footer) to current document
+  // Apply a brand template to the editor (logo + styling)
   const applyBrandTemplate = (template) => {
     const editor = editorRef.current;
     if (!editor || !editor.doc) {
@@ -1972,54 +1973,86 @@ ${activeTemplateFooter}
       return;
     }
 
+    // Store selected template for PDF export
+    setSelectedBrandTemplate(template);
+    setShowTemplateDropdown(false);
+
     const doc = editor.doc;
 
     try {
-      // Find the note block to insert content
+      // Find the note block to insert content at the start
       const noteBlocks = doc.getBlocksByFlavour("affine:note");
       if (noteBlocks.length === 0) {
         toast.error("No editable area found");
         return;
       }
       const noteBlock = noteBlocks[0];
+      const firstChild = noteBlock.children?.[0];
 
-      // Create header paragraph with template styling
-      const headerText = `${template.headerText || template.name}`;
-      doc.addBlock(
-        "affine:paragraph",
-        {
-          type: "h1",
-          text: new Text(headerText),
-        },
-        noteBlock.id
-      );
-
-      // Add separator
-      doc.addBlock("affine:divider", {}, noteBlock.id);
-
-      // Add placeholder for content
-      doc.addBlock(
-        "affine:paragraph",
-        {
-          text: new Text(""),
-        },
-        noteBlock.id
-      );
-
-      // Add footer
-      if (template.footerText) {
-        doc.addBlock("affine:divider", {}, noteBlock.id);
+      // 1. Insert logo as image block at the very top (if logo exists)
+      if (template.logoPath) {
         doc.addBlock(
-          "affine:paragraph",
+          "affine:image",
           {
-            text: new Text(template.footerText),
+            sourceId: template.logoPath, // Base64 data URL works as source
+            caption: "",
+            width: 150, // Reasonable default size
           },
-          noteBlock.id
+          noteBlock.id,
+          firstChild ? 0 : undefined // Insert at position 0 (top)
         );
       }
 
-      toast.success(`Applied "${template.name}" template`);
-      setShowTemplateDropdown(false);
+      // 2. Inject CSS into the editor for font and brand color
+      const brandFont = template.fontFamily || "Inter";
+      const brandColor = template.primaryColor || "#3b82f6";
+
+      // Create or update brand style element
+      let styleEl = document.getElementById("brand-template-style");
+      if (!styleEl) {
+        styleEl = document.createElement("style");
+        styleEl.id = "brand-template-style";
+        document.head.appendChild(styleEl);
+      }
+      styleEl.textContent = `
+        /* Brand Template Applied: ${template.name} */
+        .blocksuite-editor-container,
+        affine-editor-container {
+          --affine-font-family: '${brandFont}', sans-serif !important;
+        }
+        .blocksuite-editor-container [data-block-id],
+        affine-editor-container [data-block-id] {
+          font-family: '${brandFont}', sans-serif !important;
+        }
+        affine-editor-container h1,
+        affine-editor-container [data-block-flavour="affine:paragraph"][data-type="h1"] * {
+          border-bottom: 2px solid ${brandColor} !important;
+          padding-bottom: 4px !important;
+        }
+        affine-editor-container h2,
+        affine-editor-container [data-block-flavour="affine:paragraph"][data-type="h2"] * {
+          border-bottom: 1px solid ${brandColor} !important;
+          padding-bottom: 2px !important;
+        }
+        /* Pricing table accent */
+        .pricing-table-container {
+          border-left: 4px solid ${brandColor} !important;
+        }
+      `;
+
+      // 3. Load Google Font if needed
+      const systemFonts = ["Arial", "Georgia", "Times New Roman"];
+      if (!systemFonts.includes(brandFont)) {
+        const fontLink = document.getElementById("brand-font-link");
+        if (fontLink) fontLink.remove();
+        const link = document.createElement("link");
+        link.id = "brand-font-link";
+        link.rel = "stylesheet";
+        link.href = `https://fonts.googleapis.com/css2?family=${brandFont.replace(/ /g, "+")}:wght@400;500;600;700&display=swap`;
+        document.head.appendChild(link);
+      }
+
+      toast.success(`Applied: ${template.name}`);
     } catch (error) {
       console.error("Failed to apply brand template:", error);
       toast.error("Failed to apply template");

@@ -257,7 +257,7 @@ export default function ThreadNotes({
         <div className="sticky top-0 z-30 bg-theme-bg-secondary border-b border-theme-sidebar-border flex items-center justify-between gap-x-2 px-3 py-2">
           <div className="flex items-center gap-x-3">
             <div className="text-sm font-semibold text-white">Actions</div>
-            {/* Template Picker Dropdown */}
+            {/* Draft SOW and Multi-Scope SOW buttons hidden for now
             <button
               type="button"
               onClick={() => runSmartAction("draft_sow")}
@@ -281,6 +281,7 @@ export default function ThreadNotes({
                 ? "Drafting..."
                 : "Multi-Scope SOW"}
             </button>
+            */}
 
             <div className="relative" ref={templateMenuRef}>
               <button
