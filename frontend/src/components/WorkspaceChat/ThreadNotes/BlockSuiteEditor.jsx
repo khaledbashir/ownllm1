@@ -28,6 +28,7 @@ import { toast } from "react-toastify";
 import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
 import WorkspaceThread from "@/models/workspaceThread";
+import Workspace from "@/models/workspace";
 import PdfTemplates from "@/models/pdfTemplates";
 import { useEditorContext } from "./EditorContext";
 import { setupAISlashMenu } from "@/utils/aiSlashMenu";
@@ -148,6 +149,27 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [selectedBrandTemplate, setSelectedBrandTemplate] = useState(null);
+
+  // Custom AI actions from workspace settings
+  const [customAIActions, setCustomAIActions] = useState([]);
+
+  // Fetch custom AI actions from workspace settings
+  useEffect(() => {
+    async function fetchCustomActions() {
+      if (!workspaceSlug) return;
+      try {
+        const workspace = await Workspace.bySlug(workspaceSlug);
+        if (workspace?.inlineAiActions) {
+          const actions = JSON.parse(workspace.inlineAiActions);
+          setCustomAIActions(Array.isArray(actions) ? actions : []);
+          console.log("[BlockSuiteEditor] Loaded custom AI actions:", actions);
+        }
+      } catch (e) {
+        console.warn("[BlockSuiteEditor] Failed to load custom AI actions:", e);
+      }
+    }
+    fetchCustomActions();
+  }, [workspaceSlug]);
 
   // Handler for AI slash menu actions
   const handleAIAction = async (actionType, context) => {
@@ -745,7 +767,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             if (pageRoot?.widgetElements?.["affine-format-bar-widget"]) {
               const formatBar =
                 pageRoot.widgetElements["affine-format-bar-widget"];
-              setupAIFormatBar(formatBar, handleAIAction);
+              setupAIFormatBar(formatBar, handleAIAction, customAIActions);
             }
           } catch (err) {
             console.warn("[BlockSuiteEditor] Could not setup AI widgets:", err);
