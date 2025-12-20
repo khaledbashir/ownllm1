@@ -2639,7 +2639,14 @@ ${activeTemplateFooter}
           </button>
           {/* Export PDF button */}
           <button
-            onClick={() => setShowExportModal(true)}
+            onClick={() => {
+              // If brand template already selected, skip modal and export directly
+              if (selectedBrandTemplate) {
+                handleExport(selectedBrandTemplate);
+              } else {
+                setShowExportModal(true);
+              }
+            }}
             disabled={exporting || !isReady}
             className="flex items-center gap-x-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-sm font-medium rounded-full border border-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
