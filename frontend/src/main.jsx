@@ -41,6 +41,14 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "/landingkimi",
+        lazy: async () => {
+          const { default: LandingKimi } =
+            await import("@/pages/LandingKimi");
+          return { element: <LandingKimi /> };
+        },
+      },
+      {
         path: "/app",
         lazy: async () => {
           const { default: Main } = await import("@/pages/Main");
