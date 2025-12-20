@@ -1,57 +1,70 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import paths from "@/utils/paths";
 import {
-  RocketLaunch,
-  Users,
-  ShieldCheck,
-  CheckCircle,
   ArrowRight,
-  Brain,
-  Globe,
-  Robot,
+  CheckCircle,
+  Cloud,
   Database,
-  Lightning,
-} from "@phosphor-icons/react";
+  FileText,
+  Lock,
+  Plug,
+  Rocket,
+  ShieldCheck,
+  Workflow,
+  Wrench,
+} from "lucide-react";
+
+const NAV_LINKS = [
+  { label: "Workflow", href: "#workflow" },
+  { label: "Core AI", href: "#ai" },
+  { label: "Agents", href: "#agents" },
+  { label: "Security", href: "#security" },
+  { label: "Developer", href: "#developer" },
+];
 
 export default function MarketingHome() {
-  const [activePersona, setActivePersona] = useState("entrepreneur");
-
   return (
-    <div className="min-h-screen bg-[#0e0f0f] text-white selection:bg-blue-500 selection:text-white font-sans overflow-x-hidden">
-      {/* Navbar */}
-      <nav className="fixed w-full z-50 bg-[#0e0f0f]/80 backdrop-blur-md border-b border-white/5 top-0 transition-all duration-300">
+    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-sans overflow-x-hidden">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-primary/70 backdrop-blur-md border-b border-theme-sidebar-border">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link
             to={paths.marketing()}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-3 hover:opacity-90 transition-opacity"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="font-bold text-lg">O</span>
+            <div className="w-9 h-9 rounded-lg bg-theme-bg-secondary border border-theme-sidebar-border flex items-center justify-center">
+              <span className="font-semibold">P</span>
             </div>
-            <span className="font-bold text-xl tracking-tight">OwnLLM</span>
+            <div className="leading-tight">
+              <div className="font-bold tracking-tight">PAID Platform</div>
+              <div className="text-xs text-theme-text-secondary">
+                Proposals And Invoices Delivered
+              </div>
+            </div>
           </Link>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-            <a href="#features" className="hover:text-white transition-colors">
-              Features
-            </a>
-            <a href="#personas" className="hover:text-white transition-colors">
-              Solutions
-            </a>
-            <a href="#pricing" className="hover:text-white transition-colors">
-              Pricing
-            </a>
+
+          <div className="hidden lg:flex items-center gap-6 text-sm text-theme-text-secondary">
+            {NAV_LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className="hover:text-theme-text-primary transition-colors"
+              >
+                {l.label}
+              </a>
+            ))}
           </div>
+
           <div className="flex items-center gap-4">
             <Link
               to={paths.login()}
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              className="text-sm font-medium text-theme-text-secondary hover:text-theme-text-primary transition-colors"
             >
               Log in
             </Link>
             <Link
               to={paths.login()}
-              className="px-5 py-2.5 bg-white text-black text-sm font-bold rounded-full hover:bg-gray-200 transition-all transform hover:scale-105"
+              className="px-4 py-2 rounded-lg bg-primary-button text-theme-bg-primary text-sm font-bold hover:opacity-90 transition-opacity"
             >
               Get Started
             </Link>
@@ -59,457 +72,369 @@ export default function MarketingHome() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-40 pb-20 md:pt-48 md:pb-32 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
-        {/* Background Gradients */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/20 rounded-full blur-[120px] -z-10 opacity-50" />
-
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-blue-400 mb-8 animate-fade-in">
-          <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
-          v1.0 Now Available with Multi-Agent Support
-        </div>
-
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]">
-          Your Brand. Your AI. <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-            Your Revenue.
-          </span>
-        </h1>
-
-        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mb-12 leading-relaxed">
-          The ultimate white-label AI platform. Launch your own ChatGPT-like
-          SaaS in minutes, fully branded, on your own domain.
-        </p>
-
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <Link
-            to={paths.login()}
-            className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
-          >
-            <RocketLaunch size={20} weight="fill" />
-            Launch My Platform
-          </Link>
-          <a
-            href="#personas"
-            className="w-full md:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
-          >
-            Explore Use Cases
-            <ArrowRight size={16} />
-          </a>
-        </div>
-
-        {/* Dashboard Preview Image Placeholder */}
-        <div className="mt-20 relative rounded-xl border border-white/10 bg-[#1b1b1e] p-2 shadow-2xl w-full max-w-5xl mx-auto aspect-video flex flex-col overflow-hidden group">
-          <div className="h-8 bg-[#25272c] w-full rounded-t-lg flex items-center px-4 gap-2 border-b border-white/5">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-red-500/50" />
-              <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-              <div className="w-3 h-3 rounded-full bg-green-500/50" />
+      {/* Hero */}
+      <header className="pt-36 pb-16 md:pt-44 md:pb-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative overflow-hidden rounded-3xl border border-theme-sidebar-border bg-theme-bg-secondary">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-24 -left-24 w-[520px] h-[520px] rounded-full bg-primary-button/10 blur-[90px]" />
+              <div className="absolute -bottom-24 -right-24 w-[520px] h-[520px] rounded-full bg-purple-500/10 blur-[90px]" />
             </div>
-            <div className="mx-auto w-1/3 h-4 bg-black/20 rounded-full" />
-          </div>
-          <div className="flex-1 bg-gradient-to-b from-[#1b1b1e] to-black relative p-8 flex items-center justify-center text-gray-600">
-            {/* Fake UI mockup */}
-            <div className="absolute inset-0 flex">
-              <div className="w-64 border-r border-white/5 p-4 flex flex-col gap-3">
-                <div className="h-8 bg-white/5 rounded w-3/4 mb-4" />
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="h-6 bg-white/5 rounded w-full opacity-50"
-                  />
-                ))}
+
+            <div className="relative p-8 md:p-14">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-theme-bg-primary border border-theme-sidebar-border text-xs text-theme-text-secondary">
+                <span className="w-2 h-2 rounded-full bg-primary-button animate-pulse" />
+                Paid platform features (white-label + enterprise)
               </div>
-              <div className="flex-1 p-8 flex flex-col">
-                <div className="flex-1" />
-                <div className="flex gap-4 mb-8">
-                  <div className="w-10 h-10 rounded-full bg-blue-500/20" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-white/10 rounded w-1/4" />
-                    <div className="h-4 bg-white/10 rounded w-1/2" />
+
+              <div className="mt-6 grid lg:grid-cols-2 gap-10 items-center">
+                <div>
+                  <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05]">
+                    Turn scope into <span className="text-primary-button">proposals</span>.
+                    <br />
+                    Turn work into <span className="text-primary-button">invoices</span>.
+                  </h1>
+                  <p className="mt-6 text-lg text-theme-text-secondary leading-relaxed max-w-xl">
+                    The PAID Platform combines a collaborative creation studio,
+                    high-fidelity PDF export, model-agnostic AI, and workflow automation
+                    to ship Proposals And Invoices Delivered.
+                  </p>
+
+                  <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                    <Link
+                      to={paths.login()}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary-button text-theme-bg-primary font-bold"
+                    >
+                      <Rocket size={18} />
+                      Launch Workspace
+                    </Link>
+                    <a
+                      href="#workflow"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-theme-sidebar-border bg-theme-bg-primary text-theme-text-primary hover:bg-theme-bg-container transition-colors"
+                    >
+                      Explore features
+                      <ArrowRight size={16} />
+                    </a>
+                  </div>
+
+                  <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
+                    <HeroStat label="Creation Studio" value="BlockSuite" />
+                    <HeroStat label="PDF Export" value="Playwright" />
+                    <HeroStat label="Models" value="Cloud + Local" />
+                    <HeroStat label="Automation" value="Agents + API" />
                   </div>
                 </div>
-                <div className="h-16 border border-white/10 rounded-xl bg-black/40 p-4" />
+
+                <div className="rounded-2xl border border-theme-sidebar-border bg-theme-bg-primary p-4">
+                  <div className="rounded-xl border border-theme-sidebar-border bg-theme-bg-secondary overflow-hidden">
+                    <div className="px-4 py-3 border-b border-theme-sidebar-border flex items-center justify-between">
+                      <div className="text-sm font-semibold">Proposal Generator</div>
+                      <div className="text-xs text-theme-text-secondary">PAID Studio</div>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <PreviewRow title="RFP → Proposal" desc="Extract requirements, build scope, generate a branded PDF." />
+                      <PreviewRow title="Timesheet → Invoice" desc="Calculate line items, apply tax/discounts, export in batch." />
+                      <PreviewRow title="Artifacts" desc="Reuse code snippets, assets, and templates across projects." />
+                      <div className="pt-1">
+                        <div className="h-10 rounded-lg border border-theme-sidebar-border bg-theme-bg-container" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <p className="z-10 opacity-50">App Preview</p>
           </div>
+        </div>
+      </header>
+
+      {/* Workflow */}
+      <section id="workflow" className="py-16 px-6">
+        <SectionHeader
+          title="The P.A.I.D. Workflow"
+          subtitle="Create, export, and automate proposals/invoices with a studio-grade document system."
+          icon={<Workflow size={18} className="text-primary-button" />}
+        />
+
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-6">
+          <FeatureCard
+            icon={<Wrench size={18} className="text-primary-button" />}
+            title="Creation Studio (BlockSuite Editor)"
+            items={[
+              "Rich text canvas (blocks, headers, lists, quotes, dividers)",
+              "Real-time collaboration (multi-user editing)",
+              "Specialized blocks: tables, images, code (syntax highlighting)",
+              "Interactive code with Sandpack (React + HTML previews)",
+            ]}
+          />
+          <FeatureCard
+            icon={<FileText size={18} className="text-primary-button" />}
+            title="Professional PDF Export"
+            items={[
+              "High-fidelity rendering via Playwright",
+              "Branding control: headers, footers, logos, colors, CSS overrides",
+              "Batch processing for multiple documents",
+              "Built for RFP→Proposal and Timesheet→Invoice automation",
+            ]}
+          />
+          <FeatureCard
+            icon={<Plug size={18} className="text-primary-button" />}
+            title="AI-Powered Template Builder"
+            items={[
+              "Chat-to-Design: describe a template, get HTML/CSS",
+              "Visual editor to refine the output",
+              "Reusable templates across teams and clients",
+            ]}
+          />
+        </div>
+
+        <div className="max-w-7xl mx-auto mt-6">
+          <FeatureCard
+            wide
+            icon={<Database size={18} className="text-primary-button" />}
+            title="Artifact Library"
+            items={[
+              "Save + categorize reusable snippets and assets",
+              "Search and import/export artifacts",
+              "Standardize deliverables across the org",
+            ]}
+          />
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-10 border-y border-white/5 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-sm font-medium text-gray-500 mb-8 uppercase tracking-wider">
-            Trusted by innovative teams worldwide
-          </p>
-          <div className="flex justify-center flex-wrap gap-12 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
-            {/* Simple text logos for now */}
-            <span className="text-xl font-bold opacity-50">CLIENT 1</span>
-            <span className="text-xl font-bold opacity-50">CLIENT 2</span>
-            <span className="text-xl font-bold opacity-50">CLIENT 3</span>
-            <span className="text-xl font-bold opacity-50">CLIENT 4</span>
-            <span className="text-xl font-bold opacity-50">CLIENT 5</span>
-          </div>
+      {/* Core AI */}
+      <section id="ai" className="py-16 px-6 bg-theme-bg-secondary/40 border-y border-theme-sidebar-border">
+        <SectionHeader
+          title="Core AI & Intelligence"
+          subtitle="Model-agnostic, RAG-native, built for citations and multiple chat modes."
+          icon={<Cloud size={18} className="text-primary-button" />}
+        />
+
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-6">
+          <FeatureCard
+            icon={<Cloud size={18} className="text-primary-button" />}
+            title="Model-Agnostic (Talk to Everything)"
+            items={[
+              "Cloud: OpenAI, Anthropic, Google Gemini, AWS Bedrock, Azure OpenAI",
+              "Local privacy: Ollama, LM Studio, LocalAI, KoboldCPP",
+              "Specialized providers: Perplexity, Groq, Mistral, DeepSeek",
+            ]}
+          />
+          <FeatureCard
+            icon={<FileText size={18} className="text-primary-button" />}
+            title="Chat System"
+            items={[
+              "Citations in responses (link back to sources)",
+              "Chat modes: Workspace Chat, Direct Chat, Agent Chat",
+              "Slash commands, streaming, temperature control",
+            ]}
+          />
+        </div>
+
+        <div className="max-w-7xl mx-auto mt-6">
+          <FeatureCard
+            wide
+            icon={<Database size={18} className="text-primary-button" />}
+            title="Vector Databases"
+            items={[
+              "Connect to 10+ vector stores (Pinecone, Chroma, Weaviate, etc.)",
+              "Supports local options like LanceDB",
+              "Built for retrieval-augmented generation at scale",
+            ]}
+          />
         </div>
       </section>
 
-      {/* Personas Section */}
-      <section id="personas" className="py-24 max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Who is OwnLLM for?
-          </h2>
-          <p className="text-gray-400 text-lg">
-            Choose your path to AI dominance.
-          </p>
+      {/* Ingestion + Agents */}
+      <section id="agents" className="py-16 px-6">
+        <SectionHeader
+          title="Ingestion, Agents & Automation"
+          subtitle="Bring in anything, then automate the work with drag-and-drop agents."
+          icon={<Workflow size={18} className="text-primary-button" />}
+        />
+
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-6">
+          <FeatureCard
+            icon={<FileText size={18} className="text-primary-button" />}
+            title="Universal Ingestion"
+            items={[
+              "Files: PDF, DOCX, CSV, JSON, XML, code",
+              "Audio via Whisper; OCR for images",
+              "Web scraping (URLs, site depth, YouTube transcripts)",
+            ]}
+          />
+          <FeatureCard
+            icon={<Database size={18} className="text-primary-button" />}
+            title="Processing Engine"
+            items={[
+              "Intelligent chunking and duplicate detection",
+              "Connectors: Obsidian, Confluence, GitLab, Paperless-ngx",
+              "Reliable embeddings + vector search pipeline",
+            ]}
+          />
+          <FeatureCard
+            icon={<Workflow size={18} className="text-primary-button" />}
+            title="Agents"
+            items={[
+              "Visual agent builder (drag-and-drop flow editor)",
+              "Skills: SQL, chart generation, memory management",
+              "Automation built for deliverables and ops",
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* Security */}
+      <section id="security" className="py-16 px-6 bg-theme-bg-secondary/40 border-y border-theme-sidebar-border">
+        <SectionHeader
+          title="Security & Administration"
+          subtitle="Paranoid-level security with local-first data control and role-based access."
+          icon={<ShieldCheck size={18} className="text-primary-button" />}
+        />
+
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-6">
+          <FeatureCard
+            icon={<Lock size={18} className="text-primary-button" />}
+            title="Local-First"
+            items={[
+              "Keep data and API keys on local hardware",
+              "Avoid pasting sensitive data into public tools",
+              "Deploy private cloud when needed",
+            ]}
+          />
+          <FeatureCard
+            icon={<ShieldCheck size={18} className="text-primary-button" />}
+            title="Administration"
+            items={[
+              "Multi-tenant workspaces with granular permissions",
+              "Roles: Admin, Manager, User",
+              "Audit logs, authentication flows, simple SSO",
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* Developer */}
+      <section id="developer" className="py-16 px-6">
+        <SectionHeader
+          title="Enterprise & Developer Tools"
+          subtitle="Embed, integrate, and measure."
+          icon={<Plug size={18} className="text-primary-button" />}
+        />
+
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-6">
+          <FeatureCard
+            icon={<Workflow size={18} className="text-primary-button" />}
+            title="CRM System"
+            items={["Customer management", "Lead tracking", "Interaction history"]}
+          />
+          <FeatureCard
+            icon={<Plug size={18} className="text-primary-button" />}
+            title="Developer API"
+            items={[
+              "REST API + WebSockets + Webhooks",
+              "Embeddable chat widgets with branding controls",
+            ]}
+          />
+          <FeatureCard
+            icon={<Database size={18} className="text-primary-button" />}
+            title="Analytics"
+            items={[
+              "Usage behavior and system performance",
+              "Template usage and export statistics",
+              "Operational visibility for admins",
+            ]}
+          />
         </div>
 
-        <div className="flex justify-center mb-12">
-          <div className="p-1 bg-white/5 rounded-full inline-flex border border-white/10">
-            {["entrepreneur", "agency", "enterprise"].map((persona) => (
-              <button
-                key={persona}
-                onClick={() => setActivePersona(persona)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  activePersona === persona
-                    ? "bg-white text-black shadow-lg"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {persona.charAt(0).toUpperCase() + persona.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-12 items-center min-h-[400px]">
-          <div className="space-y-6 animate-fade-in" key={activePersona}>
-            {activePersona === "entrepreneur" && (
-              <>
-                <div className="inline-flex items-center gap-2 text-blue-400 font-bold uppercase tracking-wide text-sm">
-                  <RocketLaunch size={20} /> Aspiring Entrepreneur
-                </div>
-                <h3 className="text-4xl font-bold">
-                  Start your own AI SaaS in 48 hours.
-                </h3>
-                <p className="text-xl text-gray-400 leading-relaxed">
-                  Don't code from scratch. White-label our platform and start
-                  selling recurring revenue AI subscriptions to local businesses
-                  immediately.
-                </p>
-                <ul className="space-y-4 pt-4">
-                  <li className="flex items-center gap-3 text-gray-300">
-                    <CheckCircle
-                      weight="fill"
-                      className="text-blue-500"
-                      size={20}
-                    />
-                    Done-for-you technical infrastructure
-                  </li>
-                  <li className="flex items-center gap-3 text-gray-300">
-                    <CheckCircle
-                      weight="fill"
-                      className="text-blue-500"
-                      size={20}
-                    />
-                    Set your own pricing & keep 100% of profits
-                  </li>
-                  <li className="flex items-center gap-3 text-gray-300">
-                    <CheckCircle
-                      weight="fill"
-                      className="text-blue-500"
-                      size={20}
-                    />
-                    Your custom domain & branding
-                  </li>
-                </ul>
-              </>
-            )}
-            {activePersona === "agency" && (
-              <>
-                <div className="inline-flex items-center gap-2 text-purple-400 font-bold uppercase tracking-wide text-sm">
-                  <Users size={20} /> Agency CEO
-                </div>
-                <h3 className="text-4xl font-bold">
-                  Scale your service without scaling headcount.
-                </h3>
-                <p className="text-xl text-gray-400 leading-relaxed">
-                  Give every client a branded AI portal trained on your
-                  strategies. Productize your expertise and turn one-off
-                  projects into monthly retainers.
-                </p>
-                <ul className="space-y-4 pt-4">
-                  <li className="flex items-center gap-3 text-gray-300">
-                    <CheckCircle
-                      weight="fill"
-                      className="text-purple-500"
-                      size={20}
-                    />
-                    Client-specific knowledge bases
-                  </li>
-                  <li className="flex items-center gap-3 text-gray-300">
-                    <CheckCircle
-                      weight="fill"
-                      className="text-purple-500"
-                      size={20}
-                    />
-                    Automated reporting & deliverables
-                  </li>
-                  <li className="flex items-center gap-3 text-gray-300">
-                    <CheckCircle
-                      weight="fill"
-                      className="text-purple-500"
-                      size={20}
-                    />
-                    High-stickiness client portal
-                  </li>
-                </ul>
-              </>
-            )}
-            {activePersona === "enterprise" && (
-              <>
-                <div className="inline-flex items-center gap-2 text-green-400 font-bold uppercase tracking-wide text-sm">
-                  <ShieldCheck size={20} /> Enterprise
-                </div>
-                <h3 className="text-4xl font-bold">
-                  ChatGPT power, inside your firewall.
-                </h3>
-                <p className="text-xl text-gray-400 leading-relaxed">
-                  Stop employees from pasting sensitive data into public AI.
-                  Deploy OwnLLM on your private cloud for secure, compliant,
-                  department-level AI.
-                </p>
-                <ul className="space-y-4 pt-4">
-                  <li className="flex items-center gap-3 text-gray-300">
-                    <CheckCircle
-                      weight="fill"
-                      className="text-green-500"
-                      size={20}
-                    />
-                    Self-hosted data sovereignty
-                  </li>
-                  <li className="flex items-center gap-3 text-gray-300">
-                    <CheckCircle
-                      weight="fill"
-                      className="text-green-500"
-                      size={20}
-                    />
-                    Role-based access controls
-                  </li>
-                  <li className="flex items-center gap-3 text-gray-300">
-                    <CheckCircle
-                      weight="fill"
-                      className="text-green-500"
-                      size={20}
-                    />
-                    Audit logs & compliance
-                  </li>
-                </ul>
-              </>
-            )}
-          </div>
-
-          <div className="bg-gradient-to-br from-white/10 to-transparent p-1 rounded-2xl border border-white/10">
-            <div className="bg-[#1b1b1e] rounded-xl p-8 h-full min-h-[400px] flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20 transform rotate-12 scale-150"></div>
-              {/* Abstract Visual Representation */}
-              {activePersona === "entrepreneur" && (
-                <RocketLaunch
-                  size={120}
-                  weight="thin"
-                  className="text-blue-500/50"
-                />
-              )}
-              {activePersona === "agency" && (
-                <Users
-                  size={120}
-                  weight="thin"
-                  className="text-purple-500/50"
-                />
-              )}
-              {activePersona === "enterprise" && (
-                <ShieldCheck
-                  size={120}
-                  weight="thin"
-                  className="text-green-500/50"
-                />
-              )}
+        <div className="max-w-7xl mx-auto mt-10">
+          <div className="rounded-2xl border border-theme-sidebar-border bg-theme-bg-secondary p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">
+                Ready to ship PAID?
+              </h2>
+              <p className="mt-2 text-theme-text-secondary leading-relaxed max-w-2xl">
+                Launch your first workspace and start generating deliverables with
+                a secure, model-agnostic AI platform.
+              </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="py-24 bg-[#0a0a0a]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-left max-w-2xl mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Everything needed to dominate.
-            </h2>
-            <p className="text-gray-400 text-lg">
-              We built the hard stuff so you can focus on the selling stuff.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={<Brain size={32} className="text-pink-400" />}
-              title="33+ AI Models"
-              desc="Switch between GPT-4, Claude 3, Llama 3, and Gemini instantly. Offer the best model for every task."
-            />
-            <FeatureCard
-              icon={<Database size={32} className="text-blue-400" />}
-              title="RAG & Vector DBs"
-              desc="Chat with unlimited PDFs, Excel sheets, and websites. We handle the embeddings and vector search."
-            />
-            <FeatureCard
-              icon={<Robot size={32} className="text-purple-400" />}
-              title="Autonomous Agents"
-              desc="Visual flow builder lets you create agents that browse the web, scrape data, and execute tasks."
-            />
-            <FeatureCard
-              icon={<Globe size={32} className="text-green-400" />}
-              title="White-Label Ready"
-              desc="Your logo, your colors, your domain. Remove all traces of OwnLLM and make it yours."
-            />
-            <FeatureCard
-              icon={<Users size={32} className="text-yellow-400" />}
-              title="CRM & Multi-User"
-              desc="Manage thousands of users and workspaces. Track usage, conversations, and engagement."
-            />
-            <FeatureCard
-              icon={<Lightning size={32} className="text-cyan-400" />}
-              title="Smart Plugins"
-              desc="Connect to Zapier, Salesforce, and external APIs with built-in tool calling capabilities."
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Marketing / Pricing Section */}
-      <section id="pricing" className="py-24 max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Profitable Pricing Models
-          </h2>
-          <p className="text-gray-400 text-lg">
-            Pick the model that fits your business strategy.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8">
-          <PricingCard
-            title="SaaS Model"
-            price="$29 - $99"
-            unit="/ user / mo"
-            desc="Perfect for volume. Sell seat-based access to your platform."
-            features={[
-              "Predictable revenue",
-              "Scales with headcount",
-              "Low touch",
-            ]}
-          />
-          <PricingCard
-            title="Retainer Model"
-            price="$499+"
-            unit="/ client / mo"
-            desc="Bundle AI with your agency services to increase stickiness."
-            features={[
-              "High value",
-              "Increases retention",
-              "Service differentiator",
-            ]}
-            highlight={true}
-          />
-          <PricingCard
-            title="Setup Model"
-            price="$5,000+"
-            unit="one-time setup"
-            desc="Charge for custom implementation and training."
-            features={[
-              "Upfront cashflow",
-              "Custom solutions",
-              "Maintenance fees",
-            ]}
-          />
-        </div>
-      </section>
-
-      {/* CTA Footer */}
-      <footer className="py-20 border-t border-white/10 bg-[#050505] text-center">
-        <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-4xl md:text-5xl font-bold mb-8">
-            Ready to launch your empire?
-          </h2>
-          <p className="text-xl text-gray-400 mb-10">
-            Stop planning and start selling. Your branded AI platform is
-            waiting.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               to={paths.login()}
-              className="px-10 py-4 bg-white text-black text-lg font-bold rounded-xl hover:bg-gray-200 transition-all hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary-button text-theme-bg-primary font-bold"
             >
-              Get Started Now
+              Get Started
+              <ArrowRight size={16} />
             </Link>
           </div>
-          <p className="mt-12 text-sm text-gray-600">
-            © {new Date().getFullYear()} OwnLLM. All rights reserved.
-          </p>
+
+          <div className="mt-10 text-center text-xs text-theme-text-secondary">
+            © {new Date().getFullYear()} PAID Platform. All rights reserved.
+          </div>
         </div>
-      </footer>
+      </section>
     </div>
   );
 }
 
-function FeatureCard({ icon, title, desc }) {
+function HeroStat({ label, value }) {
   return (
-    <div className="p-8 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-      <div className="mb-6 p-3 bg-white/5 rounded-xl inline-block">{icon}</div>
-      <h3 className="text-xl font-bold mb-3">{title}</h3>
-      <p className="text-gray-400 leading-relaxed text-sm">{desc}</p>
+    <div className="rounded-xl border border-theme-sidebar-border bg-theme-bg-primary p-4">
+      <div className="text-xs text-theme-text-secondary">{label}</div>
+      <div className="mt-1 text-sm font-semibold text-theme-text-primary">
+        {value}
+      </div>
     </div>
   );
 }
 
-function PricingCard({
-  title,
-  price,
-  unit,
-  desc,
-  features,
-  highlight = false,
-}) {
+function SectionHeader({ title, subtitle, icon }) {
+  return (
+    <div className="max-w-7xl mx-auto mb-8">
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-theme-bg-secondary border border-theme-sidebar-border text-xs text-theme-text-secondary">
+        {icon}
+        <span className="font-medium">{title}</span>
+      </div>
+      <h2 className="mt-4 text-3xl md:text-4xl font-bold tracking-tight">
+        {title}
+      </h2>
+      <p className="mt-3 text-theme-text-secondary text-lg leading-relaxed max-w-3xl">
+        {subtitle}
+      </p>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, items, wide = false }) {
   return (
     <div
-      className={`p-8 rounded-2xl border ${highlight ? "bg-blue-600/10 border-blue-500/50 relative overflow-hidden" : "bg-white/5 border-white/5"}`}
+      className={`rounded-2xl border border-theme-sidebar-border bg-theme-bg-secondary p-6 ${
+        wide ? "" : ""
+      }`}
     >
-      {highlight && (
-        <div className="absolute top-0 right-0 bg-blue-500 text-xs font-bold px-3 py-1 rounded-bl-xl text-white">
-          MOST POPULAR
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-theme-bg-primary border border-theme-sidebar-border flex items-center justify-center">
+          {icon}
         </div>
-      )}
-      <h3 className="text-lg font-bold mb-2 text-gray-300">{title}</h3>
-      <div className="mb-4">
-        <span className="text-4xl font-bold">{price}</span>
-        <span className="text-sm text-gray-500">{unit}</span>
+        <h3 className="font-semibold text-lg tracking-tight">{title}</h3>
       </div>
-      <p className="text-sm text-gray-400 mb-8 border-b border-white/10 pb-8 min-h-[80px]">
-        {desc}
-      </p>
-      <ul className="space-y-3">
-        {features.map((f, i) => (
-          <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
-            <CheckCircle
-              size={16}
-              className={highlight ? "text-blue-400" : "text-gray-500"}
-              weight="fill"
-            />
-            {f}
+      <ul className="mt-4 space-y-2 text-sm text-theme-text-secondary">
+        {items.map((text) => (
+          <li key={text} className="flex items-start gap-2">
+            <CheckCircle size={16} className="text-primary-button mt-0.5" />
+            <span>{text}</span>
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function PreviewRow({ title, desc }) {
+  return (
+    <div className="rounded-xl border border-theme-sidebar-border bg-theme-bg-container p-4">
+      <div className="text-sm font-semibold">{title}</div>
+      <div className="mt-1 text-sm text-theme-text-secondary leading-relaxed">
+        {desc}
+      </div>
     </div>
   );
 }

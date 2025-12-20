@@ -1,36 +1,40 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { isMobile } from "react-device-detect";
+import Sidebar from "@/components/SettingsSidebar";
 import {
-  Plus,
-  GripVertical,
-  MoreHorizontal,
-  User,
-  Mail,
-  Phone,
   Building,
-  X,
-  Trash2,
-  Edit3,
-  DollarSign,
-  MessageSquare,
   ChevronDown,
+  DollarSign,
+  Edit3,
+  Mail,
+  MessageSquare,
+  Phone,
+  Plus,
   Settings,
+  Trash2,
+  User,
+  X,
 } from "lucide-react";
 import CRM from "@/models/crm";
 import showToast from "@/utils/toast";
 
 // Default pipeline stages with colors
 const STAGE_COLORS = {
-  New: "bg-blue-500/20 border-blue-500/50 text-blue-300",
-  Contacted: "bg-yellow-500/20 border-yellow-500/50 text-yellow-300",
-  Qualified: "bg-purple-500/20 border-purple-500/50 text-purple-300",
-  Proposal: "bg-orange-500/20 border-orange-500/50 text-orange-300",
-  Won: "bg-green-500/20 border-green-500/50 text-green-300",
-  Lost: "bg-red-500/20 border-red-500/50 text-red-300",
+  New: "bg-blue-500/15 border-blue-500/40 text-blue-300 light:text-blue-700",
+  Contacted:
+    "bg-yellow-500/15 border-yellow-500/40 text-yellow-300 light:text-yellow-700",
+  Qualified:
+    "bg-purple-500/15 border-purple-500/40 text-purple-300 light:text-purple-700",
+  Proposal:
+    "bg-orange-500/15 border-orange-500/40 text-orange-300 light:text-orange-700",
+  Won: "bg-green-500/15 border-green-500/40 text-green-300 light:text-green-700",
+  Lost: "bg-red-500/15 border-red-500/40 text-red-300 light:text-red-700",
 };
 
 function getStageColor(stage) {
   return (
-    STAGE_COLORS[stage] || "bg-slate-500/20 border-slate-500/50 text-slate-300"
+    STAGE_COLORS[stage] ||
+    "bg-theme-bg-container border-theme-sidebar-border text-theme-text-secondary"
   );
 }
 
@@ -40,20 +44,22 @@ function KanbanCard({ card, onEdit, onDelete, onDragStart }) {
     <div
       draggable
       onDragStart={(e) => onDragStart(e, card)}
-      className="p-4 rounded-xl bg-slate-800/80 border border-slate-700/50 hover:border-slate-600 cursor-grab active:cursor-grabbing transition-all duration-200 group"
+      className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-sidebar-border hover:border-theme-chat-input-border cursor-grab active:cursor-grabbing transition-all duration-200 group"
     >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="text-white font-medium truncate flex-1">{card.title}</h4>
+        <h4 className="text-theme-text-primary font-medium truncate flex-1">
+          {card.title}
+        </h4>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => onEdit(card)}
-            className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white"
+            className="p-1 rounded hover:bg-theme-action-menu-item-hover text-theme-text-secondary hover:text-theme-text-primary"
           >
             <Edit3 size={14} />
           </button>
           <button
             onClick={() => onDelete(card.id)}
-            className="p-1 rounded hover:bg-red-500/20 text-slate-400 hover:text-red-400"
+            className="p-1 rounded hover:bg-theme-button-delete-hover-bg text-theme-text-secondary hover:text-theme-button-delete-hover-text"
           >
             <Trash2 size={14} />
           </button>
@@ -61,7 +67,7 @@ function KanbanCard({ card, onEdit, onDelete, onDragStart }) {
       </div>
 
       {(card.name || card.email || card.company) && (
-        <div className="space-y-1 text-sm text-slate-400">
+        <div className="space-y-1 text-sm text-theme-text-secondary">
           {card.name && (
             <div className="flex items-center gap-2">
               <User size={12} />
@@ -84,14 +90,14 @@ function KanbanCard({ card, onEdit, onDelete, onDragStart }) {
       )}
 
       {card.value && (
-        <div className="mt-2 flex items-center gap-1 text-green-400 text-sm font-medium">
+        <div className="mt-2 flex items-center gap-1 text-green-400 light:text-green-700 text-sm font-medium">
           <DollarSign size={14} />
           {card.value.toLocaleString()}
         </div>
       )}
 
       {card.embedSessionId && (
-        <div className="mt-2 flex items-center gap-1 text-blue-400 text-xs">
+        <div className="mt-2 flex items-center gap-1 text-blue-400 light:text-blue-700 text-xs">
           <MessageSquare size={12} />
           From embed chat
         </div>
@@ -119,16 +125,14 @@ function StageColumn({
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, stage)}
     >
-      <div
-        className={`px-3 py-2 rounded-t-xl border-b-2 ${getStageColor(stage)}`}
-      >
+      <div className={`px-3 py-2 rounded-t-xl border ${getStageColor(stage)}`}>
         <div className="flex items-center justify-between">
           <span className="font-semibold">{stage}</span>
           <span className="text-xs opacity-70">{stageCards.length}</span>
         </div>
       </div>
 
-      <div className="min-h-[400px] p-2 rounded-b-xl bg-slate-900/50 border border-t-0 border-slate-700/30 space-y-2">
+      <div className="min-h-[400px] p-2 rounded-b-xl bg-theme-bg-primary border border-t-0 border-theme-sidebar-border space-y-2">
         {stageCards.map((card) => (
           <KanbanCard
             key={card.id}
@@ -141,7 +145,7 @@ function StageColumn({
 
         <button
           onClick={() => onAddCard(stage)}
-          className="w-full p-3 rounded-xl border border-dashed border-slate-700/50 text-slate-500 hover:border-slate-600 hover:text-slate-400 hover:bg-slate-800/50 transition-all duration-200 flex items-center justify-center gap-2"
+          className="w-full p-3 rounded-xl border border-dashed border-theme-sidebar-border text-theme-text-secondary hover:border-theme-chat-input-border hover:bg-theme-action-menu-item-hover transition-colors flex items-center justify-center gap-2"
         >
           <Plus size={16} />
           Add Card
@@ -202,34 +206,32 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="w-full max-w-2xl transform transition-all">
-        <div className="relative overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl">
-          {/* Header with gradient */}
-          <div className="relative px-8 py-6 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-transparent border-b border-slate-800/50">
+        <div className="relative overflow-hidden rounded-2xl bg-theme-bg-secondary border border-theme-modal-border shadow-2xl">
+          <div className="relative px-6 py-4 border-b border-theme-sidebar-border">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                <h3 className="text-xl font-bold text-theme-text-primary">
                   {card ? "Edit Opportunity" : "New Opportunity"}
                 </h3>
-                <p className="text-slate-500 text-sm mt-1">
+                <p className="text-theme-text-secondary text-sm mt-1">
                   Manage lead details and pipeline status
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
+                className="p-2 rounded-xl hover:bg-theme-action-menu-item-hover text-theme-text-secondary hover:text-theme-text-primary transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            {/* Main Title Input */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Opportunity Title <span className="text-red-400">*</span>
+              <label className="text-xs font-semibold uppercase tracking-wider text-theme-text-secondary">
+                Opportunity Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -237,24 +239,23 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded-xl bg-slate-950/50 border border-slate-800 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-theme-settings-input-bg border border-theme-sidebar-border text-theme-text-primary placeholder:text-theme-settings-input-placeholder focus:outline-none focus:border-primary-button transition-colors"
                 placeholder="e.g. Enterprise License Deal - Acme Corp"
                 autoFocus
               />
             </div>
 
-            {/* Contact Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                  <User size={14} className="text-blue-400" />
+                <h4 className="text-sm font-medium text-theme-text-primary flex items-center gap-2">
+                  <User size={14} className="text-primary-button" />
                   Contact Info
                 </h4>
                 <div className="space-y-3">
                   <div className="relative group">
                     <User
                       size={14}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-secondary group-focus-within:text-primary-button transition-colors"
                     />
                     <input
                       type="text"
@@ -262,14 +263,14 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-colors"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-theme-settings-input-bg border border-theme-sidebar-border text-sm text-theme-text-primary focus:border-primary-button focus:outline-none transition-colors placeholder:text-theme-settings-input-placeholder"
                       placeholder="Contact Name"
                     />
                   </div>
                   <div className="relative group">
                     <Building
                       size={14}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-secondary group-focus-within:text-primary-button transition-colors"
                     />
                     <input
                       type="text"
@@ -277,14 +278,14 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
                       onChange={(e) =>
                         setFormData({ ...formData, company: e.target.value })
                       }
-                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-colors"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-theme-settings-input-bg border border-theme-sidebar-border text-sm text-theme-text-primary focus:border-primary-button focus:outline-none transition-colors placeholder:text-theme-settings-input-placeholder"
                       placeholder="Company Name"
                     />
                   </div>
                   <div className="relative group">
                     <Mail
                       size={14}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-secondary group-focus-within:text-primary-button transition-colors"
                     />
                     <input
                       type="email"
@@ -292,14 +293,14 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-colors"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-theme-settings-input-bg border border-theme-sidebar-border text-sm text-theme-text-primary focus:border-primary-button focus:outline-none transition-colors placeholder:text-theme-settings-input-placeholder"
                       placeholder="Email Address"
                     />
                   </div>
                   <div className="relative group">
                     <Phone
                       size={14}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-secondary group-focus-within:text-primary-button transition-colors"
                     />
                     <input
                       type="tel"
@@ -307,7 +308,7 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
                       onChange={(e) =>
                         setFormData({ ...formData, phone: e.target.value })
                       }
-                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-colors"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-theme-settings-input-bg border border-theme-sidebar-border text-sm text-theme-text-primary focus:border-primary-button focus:outline-none transition-colors placeholder:text-theme-settings-input-placeholder"
                       placeholder="Phone Number"
                     />
                   </div>
@@ -315,13 +316,13 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                  <Settings size={14} className="text-purple-400" />
+                <h4 className="text-sm font-medium text-theme-text-primary flex items-center gap-2">
+                  <Settings size={14} className="text-primary-button" />
                   Deal Settings
                 </h4>
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-500">
+                    <label className="text-xs text-theme-text-secondary">
                       Pipeline Stage
                     </label>
                     <div className="relative">
@@ -330,7 +331,7 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
                         onChange={(e) =>
                           setFormData({ ...formData, stage: e.target.value })
                         }
-                        className="w-full px-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-purple-500/50 focus:outline-none appearance-none cursor-pointer"
+                        className="w-full px-4 py-2.5 rounded-lg bg-theme-settings-input-bg border border-theme-sidebar-border text-sm text-theme-text-primary focus:border-primary-button focus:outline-none appearance-none cursor-pointer"
                       >
                         {stages.map((s) => (
                           <option key={s} value={s}>
@@ -340,19 +341,19 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
                       </select>
                       <ChevronDown
                         size={14}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-text-secondary pointer-events-none"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-500">
+                    <label className="text-xs text-theme-text-secondary">
                       Est. Value ($)
                     </label>
                     <div className="relative group">
                       <DollarSign
                         size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-green-400 transition-colors"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-secondary group-focus-within:text-primary-button transition-colors"
                       />
                       <input
                         type="number"
@@ -360,20 +361,20 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
                         onChange={(e) =>
                           setFormData({ ...formData, value: e.target.value })
                         }
-                        className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white focus:border-green-500/50 focus:outline-none transition-colors"
+                        className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-theme-settings-input-bg border border-theme-sidebar-border text-sm text-theme-text-primary focus:border-primary-button focus:outline-none transition-colors placeholder:text-theme-settings-input-placeholder"
                         placeholder="0.00"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-500">Notes</label>
+                    <label className="text-xs text-theme-text-secondary">Notes</label>
                     <textarea
                       value={formData.notes}
                       onChange={(e) =>
                         setFormData({ ...formData, notes: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 rounded-lg bg-slate-950/30 border border-slate-800 text-sm text-white placeholder:text-slate-600 focus:border-blue-500/50 focus:outline-none resize-none min-h-[88px]"
+                      className="w-full px-4 py-2.5 rounded-lg bg-theme-settings-input-bg border border-theme-sidebar-border text-sm text-theme-text-primary placeholder:text-theme-settings-input-placeholder focus:border-primary-button focus:outline-none resize-none min-h-[88px]"
                       placeholder="Add notes about this deal..."
                     />
                   </div>
@@ -381,18 +382,17 @@ function CardModal({ isOpen, onClose, card, onSave, stages }) {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-4 pt-4 border-t border-slate-800/50">
+            <div className="flex gap-4 pt-4 border-t border-white/10 light:border-theme-sidebar-border border-opacity-10">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-200 font-medium"
+                className="flex-1 px-4 py-3 rounded-xl border border-theme-sidebar-border text-theme-text-secondary hover:bg-theme-action-menu-item-hover hover:text-theme-text-primary transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-blue-500/25 hover:from-blue-500 hover:to-purple-500 transition-all duration-200"
+                className="flex-1 px-4 py-3 rounded-xl bg-primary-button text-theme-bg-primary font-bold hover:opacity-90 transition-opacity"
               >
                 {card ? "Save Changes" : "Create Opportunity"}
               </button>
@@ -529,14 +529,6 @@ export default function CRMPage() {
     setDraggedCard(null);
   };
 
-  if (loading) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center bg-slate-950">
-        <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
   const stages = selectedPipeline?.stages || [
     "New",
     "Contacted",
@@ -546,86 +538,113 @@ export default function CRMPage() {
     "Lost",
   ];
 
+  if (loading) {
+    return (
+      <div className="w-screen h-screen overflow-hidden bg-theme-bg-container flex">
+        <Sidebar />
+        <div
+          style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
+          className="relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[16px] bg-theme-bg-secondary w-full h-full flex items-center justify-center"
+        >
+          <div className="animate-spin w-8 h-8 border-2 border-primary-button border-t-transparent rounded-full" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <div className="border-b border-slate-800 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-white">Pipeline</h1>
+    <div className="w-screen h-screen overflow-hidden bg-theme-bg-container flex">
+      <Sidebar />
+      <div
+        style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
+        className="relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[16px] bg-theme-bg-secondary w-full h-full overflow-y-scroll p-4 md:p-0"
+      >
+        <div className="flex flex-col w-full px-1 md:pl-6 md:pr-[50px] md:py-6 py-16">
+          <div className="w-full flex flex-col gap-y-1 pb-6 border-white/10 light:border-theme-sidebar-border border-b-2 border-opacity-10">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <p className="text-lg leading-6 font-bold text-theme-text-primary">
+                  CRM Pipeline
+                </p>
 
-            {/* Pipeline Selector */}
-            {pipelines.length > 0 && (
-              <div className="relative">
-                <select
-                  value={selectedPipeline?.id || ""}
-                  onChange={(e) => {
-                    const p = pipelines.find(
-                      (p) => p.id === Number(e.target.value)
-                    );
-                    setSelectedPipeline(p);
-                  }}
-                  className="appearance-none px-4 py-2 pr-10 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
-                >
-                  {pipelines.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={16}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                />
+                {pipelines.length > 0 && (
+                  <div className="relative">
+                    <select
+                      value={selectedPipeline?.id || ""}
+                      onChange={(e) => {
+                        const p = pipelines.find(
+                          (p) => p.id === Number(e.target.value)
+                        );
+                        setSelectedPipeline(p);
+                      }}
+                      className="appearance-none px-4 py-2 pr-10 rounded-xl bg-theme-settings-input-bg border border-theme-sidebar-border text-theme-text-primary focus:outline-none focus:border-primary-button"
+                    >
+                      {pipelines.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      size={16}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-text-secondary pointer-events-none"
+                    />
+                  </div>
+                )}
               </div>
-            )}
+
+              <div className="flex items-center gap-3">
+                <button
+                  className="p-2 rounded-xl border border-theme-sidebar-border text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-action-menu-item-hover transition-colors"
+                  aria-label="CRM settings"
+                >
+                  <Settings size={20} />
+                </button>
+                <button
+                  onClick={() => handleAddCard(stages[0])}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-button text-theme-bg-primary font-bold hover:opacity-90 transition-opacity"
+                >
+                  <Plus size={18} />
+                  Add Lead
+                </button>
+              </div>
+            </div>
+            <p className="text-xs leading-[18px] font-base text-theme-text-secondary mt-2">
+              Organize leads by stage, drag cards across columns, and quickly edit
+              opportunity details.
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button className="p-2 rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:border-slate-600 transition-colors">
-              <Settings size={20} />
-            </button>
-            <button
-              onClick={() => handleAddCard(stages[0])}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
-            >
-              <Plus size={18} />
-              Add Lead
-            </button>
+          <div className="mt-6 overflow-x-auto pb-8">
+            <div className="flex gap-4">
+              {stages.map((stage) => (
+                <StageColumn
+                  key={stage}
+                  stage={stage}
+                  cards={cards}
+                  onAddCard={handleAddCard}
+                  onEditCard={handleEditCard}
+                  onDeleteCard={handleDeleteCard}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Kanban Board */}
-      <div className="p-6 overflow-x-auto">
-        <div className="flex gap-4">
-          {stages.map((stage) => (
-            <StageColumn
-              key={stage}
-              stage={stage}
-              cards={cards}
-              onAddCard={handleAddCard}
-              onEditCard={handleEditCard}
-              onDeleteCard={handleDeleteCard}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            />
-          ))}
-        </div>
+        <CardModal
+          isOpen={showCardModal}
+          onClose={() => {
+            setShowCardModal(false);
+            setEditingCard(null);
+          }}
+          card={editingCard}
+          onSave={handleSaveCard}
+          stages={stages}
+        />
       </div>
-
-      {/* Card Modal */}
-      <CardModal
-        isOpen={showCardModal}
-        onClose={() => {
-          setShowCardModal(false);
-          setEditingCard(null);
-        }}
-        card={editingCard}
-        onSave={handleSaveCard}
-        stages={stages}
-      />
     </div>
   );
 }
