@@ -96,7 +96,7 @@ const calcTotals = ({ rows, discountPercent, gstPercent }) => {
 };
 
 // This is the block model (holds props) for BlockSuite.
-export class PricingTableModel extends defineEmbedModel(BlockModel) { }
+export class PricingTableModel extends defineEmbedModel(BlockModel) {}
 
 // We implement as an embed block so affine:note allows it.
 export const PricingTableBlockSchema = createEmbedBlockSchema({
@@ -245,22 +245,29 @@ const PricingTableWidget = ({ model }) => {
     const headers = ["Role", "Description", "Hours", "Rate", "Line Total"];
     const csvRows = [headers.join(",")];
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
       const lineTotal = clampNumber(row.hours) * clampNumber(row.baseRate);
-      const clean = (text) => `"${String(text || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`;
-      csvRows.push([
-        clean(row.role),
-        clean(row.description),
-        row.hours,
-        row.baseRate,
-        lineTotal.toFixed(2)
-      ].join(","));
+      const clean = (text) =>
+        `"${String(text || "")
+          .replace(/"/g, '""')
+          .replace(/\n/g, " ")}"`;
+      csvRows.push(
+        [
+          clean(row.role),
+          clean(row.description),
+          row.hours,
+          row.baseRate,
+          lineTotal.toFixed(2),
+        ].join(",")
+      );
     });
 
     // Add totals
     csvRows.push(",,,,");
     csvRows.push(`,,,"Subtotal",${totals.subtotal.toFixed(2)}`);
-    csvRows.push(`,,,"Discount (-${discountPercent}%)",-${totals.discount.toFixed(2)}`);
+    csvRows.push(
+      `,,,"Discount (-${discountPercent}%)",-${totals.discount.toFixed(2)}`
+    );
     csvRows.push(`,,,"GST (${gstPercent}%)",${totals.gst.toFixed(2)}`);
     csvRows.push(`,,,"Total",${totals.total.toFixed(2)}`);
 
@@ -346,290 +353,327 @@ const PricingTableWidget = ({ model }) => {
 
       {/* Using CSS Grid instead of HTML table for react-beautiful-dnd compatibility */}
       <div className="overflow-x-auto overflow-y-visible">
-        {/* Header row */}
-        <div
-          className="grid text-left text-xs text-white/60 border-b border-white/10 py-2"
-          style={{
-            display: "grid",
-            gridTemplateColumns: !isReadonly
-              ? "20% 35% 10% 10% 15% 10%" // Edit Mode: Steal 10% from desc for actions
-              : "20% 45% 10% 10% 15%",    // ReadOnly Mode: Strict adherence
-            width: "100%",
-          }}
-        >
-          <div className="pr-3">Role</div>
-          <div className="pr-3">Description</div>
-          <div className="pr-3">Hours</div>
-          <div className="pr-3">Rate</div>
-          <div className="text-right">Total</div>
-          {!isReadonly && <div></div>}
-        </div>
+        {(() => {
+          const readonlyColumns = "20% minmax(0, 1fr) 60px 90px 110px";
+          const editColumns = "20% minmax(0, 1fr) 60px 90px 110px 44px";
 
-        <DragDropContext
-          onDragEnd={(result) => {
-            if (isReadonly) return;
-            const destinationIndex = result?.destination?.index;
-            if (destinationIndex === undefined || destinationIndex === null)
-              return;
-            moveRow({
-              fromIndex: result.source.index,
-              toIndex: destinationIndex,
-            });
-          }}
-        >
-          <Droppable droppableId="pricing-table-rows">
-            {(droppableProvided) => (
+          return (
+            <>
+              {/* Header row */}
               <div
-                ref={droppableProvided.innerRef}
-                {...droppableProvided.droppableProps}
+                className="grid text-left text-xs text-white/60 border-b border-white/10 py-2"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: !isReadonly
+                    ? editColumns
+                    : readonlyColumns,
+                  width: "100%",
+                }}
               >
-                {(rows.length === 0 ? [] : rows).map((row, idx) => {
-                  const hours = clampNumber(row.hours);
-                  const rate = clampNumber(row.baseRate);
-                  const lineTotal = hours * rate;
-                  const roleQuery = (row.role || "").trim().toLowerCase();
+                <div className="pr-3">Role</div>
+                <div style={{ paddingRight: 15 }}>Description</div>
+                <div className="pr-3 text-right">Hours</div>
+                <div className="pr-3 text-right">Rate</div>
+                <div className="text-right">Total</div>
+                {!isReadonly && <div></div>}
+              </div>
 
-                  const filteredRoles = (availableRoles || [])
-                    .filter((r) => {
-                      const name = (r?.name || "").toLowerCase();
-                      if (!roleQuery) return true;
-                      return name.includes(roleQuery);
-                    })
-                    .sort((a, b) => {
-                      const an = (a?.name || "").toLowerCase();
-                      const bn = (b?.name || "").toLowerCase();
-                      const aStarts = roleQuery && an.startsWith(roleQuery);
-                      const bStarts = roleQuery && bn.startsWith(roleQuery);
-                      if (aStarts && !bStarts) return -1;
-                      if (!aStarts && bStarts) return 1;
-                      return an.localeCompare(bn);
-                    })
-                    .slice(0, 50);
-
-                  const selectRole = (role) => {
-                    if (!role?.name) return;
-                    updateRow(idx, {
-                      role: role.name,
-                      baseRate:
-                        role?.rate !== undefined
-                          ? clampNumber(role.rate)
-                          : clampNumber(row.baseRate),
-                    });
-                    setRolePickerOpenIndex(null);
-                  };
-
-                  return (
-                    <Draggable
-                      key={row.id || `row-${idx}`}
-                      draggableId={String(row.id || `row-${idx}`)}
-                      index={idx}
-                      isDragDisabled={isReadonly}
+              <DragDropContext
+                onDragEnd={(result) => {
+                  if (isReadonly) return;
+                  const destinationIndex = result?.destination?.index;
+                  if (
+                    destinationIndex === undefined ||
+                    destinationIndex === null
+                  )
+                    return;
+                  moveRow({
+                    fromIndex: result.source.index,
+                    toIndex: destinationIndex,
+                  });
+                }}
+              >
+                <Droppable droppableId="pricing-table-rows">
+                  {(droppableProvided) => (
+                    <div
+                      ref={droppableProvided.innerRef}
+                      {...droppableProvided.droppableProps}
                     >
-                      {(draggableProvided, snapshot) => (
-                        <div
-                          ref={draggableProvided.innerRef}
-                          {...draggableProvided.draggableProps}
-                          className={`grid items-start border-b border-white/5 py-2 text-sm text-white/80 group ${snapshot.isDragging ? "opacity-60 bg-white/10 rounded" : ""}`}
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: !isReadonly
-                              ? "20% 35% 10% 10% 15% 10%"
-                              : "20% 45% 10% 10% 15%",
-                            width: "100%",
-                            ...draggableProvided.draggableProps.style,
-                            // Ensure layout holds during drag
-                            ...(snapshot.isDragging ? { display: "grid", background: "#252525", opacity: 0.9 } : {})
-                          }}
-                        >
-                          {/* Role Column with Drag Handle */}
-                          <div className="pr-3 flex items-start gap-2">
-                            {!isReadonly && (
+                      {(rows.length === 0 ? [] : rows).map((row, idx) => {
+                        const hours = clampNumber(row.hours);
+                        const rate = clampNumber(row.baseRate);
+                        const lineTotal = hours * rate;
+                        const roleQuery = (row.role || "").trim().toLowerCase();
+
+                        const filteredRoles = (availableRoles || [])
+                          .filter((r) => {
+                            const name = (r?.name || "").toLowerCase();
+                            if (!roleQuery) return true;
+                            return name.includes(roleQuery);
+                          })
+                          .sort((a, b) => {
+                            const an = (a?.name || "").toLowerCase();
+                            const bn = (b?.name || "").toLowerCase();
+                            const aStarts =
+                              roleQuery && an.startsWith(roleQuery);
+                            const bStarts =
+                              roleQuery && bn.startsWith(roleQuery);
+                            if (aStarts && !bStarts) return -1;
+                            if (!aStarts && bStarts) return 1;
+                            return an.localeCompare(bn);
+                          })
+                          .slice(0, 50);
+
+                        const selectRole = (role) => {
+                          if (!role?.name) return;
+                          updateRow(idx, {
+                            role: role.name,
+                            baseRate:
+                              role?.rate !== undefined
+                                ? clampNumber(role.rate)
+                                : clampNumber(row.baseRate),
+                          });
+                          setRolePickerOpenIndex(null);
+                        };
+
+                        return (
+                          <Draggable
+                            key={row.id || `row-${idx}`}
+                            draggableId={String(row.id || `row-${idx}`)}
+                            index={idx}
+                            isDragDisabled={isReadonly}
+                          >
+                            {(draggableProvided, snapshot) => (
                               <div
-                                {...draggableProvided.dragHandleProps}
-                                className="cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 select-none mt-1"
-                                title="Drag to reorder"
-                              >
-                                ⋮⋮
-                              </div>
-                            )}
-                            <div className="flex-1">
-                              {isReadonly ? (
-                                <span className="font-medium">{row.role}</span>
-                              ) : (
-                                <div className="relative">
-                                  <div className="flex items-stretch gap-1">
-                                    <input
-                                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                                      type="text"
-                                      value={row.role || ""}
-                                      onFocus={() => {
-                                        setRolePickerOpenIndex(idx);
-                                      }}
-                                      onBlur={() => {
-                                        if (closeRolePickerTimeoutRef.current) {
-                                          clearTimeout(
-                                            closeRolePickerTimeoutRef.current
-                                          );
-                                        }
-                                        closeRolePickerTimeoutRef.current =
-                                          setTimeout(() => {
-                                            setRolePickerOpenIndex((cur) =>
-                                              cur === idx ? null : cur
-                                            );
-                                          }, 120);
-                                      }}
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        const updates = { role: val };
-                                        const found = availableRoles.find(
-                                          (r) => r.name === val
-                                        );
-                                        if (found) {
-                                          updates.baseRate = found.rate;
-                                        }
-                                        updateRow(idx, updates);
-                                        setRolePickerOpenIndex(idx);
-                                      }}
-                                    />
-                                    <button
-                                      type="button"
-                                      className="bg-black/20 border border-white/10 rounded px-2 text-white/50 hover:text-white/80"
-                                      onMouseDown={(e) => e.preventDefault()}
-                                      onClick={() =>
-                                        setRolePickerOpenIndex((cur) =>
-                                          cur === idx ? null : idx
-                                        )
+                                ref={draggableProvided.innerRef}
+                                {...draggableProvided.draggableProps}
+                                className={`grid items-start border-b border-white/5 py-2 text-sm text-white/80 group ${snapshot.isDragging ? "opacity-60 bg-white/10 rounded" : ""}`}
+                                style={{
+                                  display: "grid",
+                                  gridTemplateColumns: !isReadonly
+                                    ? editColumns
+                                    : readonlyColumns,
+                                  width: "100%",
+                                  ...draggableProvided.draggableProps.style,
+                                  // Ensure layout holds during drag
+                                  ...(snapshot.isDragging
+                                    ? {
+                                        display: "grid",
+                                        background: "#252525",
+                                        opacity: 0.9,
                                       }
-                                      title="Choose role"
+                                    : {}),
+                                }}
+                              >
+                                {/* Role Column with Drag Handle */}
+                                <div className="pr-3 flex items-start gap-2">
+                                  {!isReadonly && (
+                                    <div
+                                      {...draggableProvided.dragHandleProps}
+                                      className="cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 select-none mt-1"
+                                      title="Drag to reorder"
                                     >
-                                      ▾
-                                    </button>
-                                  </div>
-                                  {rolePickerOpenIndex === idx &&
-                                    filteredRoles.length > 0 && (
-                                      <div className="absolute left-0 right-0 mt-1 max-h-64 overflow-auto bg-black/90 border border-white/10 rounded shadow-lg z-50">
-                                        {filteredRoles.map((role) => (
-                                          <div
-                                            key={role.id || role.name}
-                                            className="px-2 py-1 text-sm text-white/80 hover:bg-white/10 cursor-pointer flex items-center justify-between gap-3"
-                                            onMouseDown={(e) => {
-                                              e.preventDefault();
-                                              selectRole(role);
+                                      ⋮⋮
+                                    </div>
+                                  )}
+                                  <div className="flex-1">
+                                    {isReadonly ? (
+                                      <span className="font-medium">
+                                        {row.role}
+                                      </span>
+                                    ) : (
+                                      <div className="relative">
+                                        <div className="flex items-stretch gap-1">
+                                          <input
+                                            className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                                            type="text"
+                                            value={row.role || ""}
+                                            onFocus={() => {
+                                              setRolePickerOpenIndex(idx);
                                             }}
+                                            onBlur={() => {
+                                              if (
+                                                closeRolePickerTimeoutRef.current
+                                              ) {
+                                                clearTimeout(
+                                                  closeRolePickerTimeoutRef.current
+                                                );
+                                              }
+                                              closeRolePickerTimeoutRef.current =
+                                                setTimeout(() => {
+                                                  setRolePickerOpenIndex(
+                                                    (cur) =>
+                                                      cur === idx ? null : cur
+                                                  );
+                                                }, 120);
+                                            }}
+                                            onChange={(e) => {
+                                              const val = e.target.value;
+                                              const updates = { role: val };
+                                              const found = availableRoles.find(
+                                                (r) => r.name === val
+                                              );
+                                              if (found) {
+                                                updates.baseRate = found.rate;
+                                              }
+                                              updateRow(idx, updates);
+                                              setRolePickerOpenIndex(idx);
+                                            }}
+                                          />
+                                          <button
+                                            type="button"
+                                            className="bg-black/20 border border-white/10 rounded px-2 text-white/50 hover:text-white/80"
+                                            onMouseDown={(e) =>
+                                              e.preventDefault()
+                                            }
+                                            onClick={() =>
+                                              setRolePickerOpenIndex((cur) =>
+                                                cur === idx ? null : idx
+                                              )
+                                            }
+                                            title="Choose role"
                                           >
-                                            <div className="min-w-0">
-                                              <div className="truncate">
-                                                {role.name}
-                                              </div>
-                                              {role.category && (
-                                                <div className="text-xs text-white/40 truncate">
-                                                  {role.category}
+                                            ▾
+                                          </button>
+                                        </div>
+                                        {rolePickerOpenIndex === idx &&
+                                          filteredRoles.length > 0 && (
+                                            <div className="absolute left-0 right-0 mt-1 max-h-64 overflow-auto bg-black/90 border border-white/10 rounded shadow-lg z-50">
+                                              {filteredRoles.map((role) => (
+                                                <div
+                                                  key={role.id || role.name}
+                                                  className="px-2 py-1 text-sm text-white/80 hover:bg-white/10 cursor-pointer flex items-center justify-between gap-3"
+                                                  onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    selectRole(role);
+                                                  }}
+                                                >
+                                                  <div className="min-w-0">
+                                                    <div className="truncate">
+                                                      {role.name}
+                                                    </div>
+                                                    {role.category && (
+                                                      <div className="text-xs text-white/40 truncate">
+                                                        {role.category}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                  <div className="text-xs text-white/50 whitespace-nowrap">
+                                                    {formatCurrency(
+                                                      role.rate,
+                                                      currency
+                                                    )}
+                                                    /hr
+                                                  </div>
                                                 </div>
-                                              )}
+                                              ))}
                                             </div>
-                                            <div className="text-xs text-white/50 whitespace-nowrap">
-                                              {formatCurrency(
-                                                role.rate,
-                                                currency
-                                              )}
-                                              /hr
-                                            </div>
-                                          </div>
-                                        ))}
+                                          )}
                                       </div>
                                     )}
+                                  </div>
                                 </div>
-                              )}
-                            </div>
-                          </div>
 
-                          {/* Description Column - Fixed Wrapping */}
-                          <div className="pr-3" style={{ whiteSpace: "normal", overflowWrap: "break-word", minWidth: 0 }}>
-                            {isReadonly ? (
-                              <div className="prose prose-invert prose-sm max-w-none">
-                                <ReactMarkdown>
-                                  {row.description || ""}
-                                </ReactMarkdown>
+                                {/* Description Column - Fixed Wrapping */}
+                                <div
+                                  style={{
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
+                                    overflowWrap: "break-word",
+                                    paddingRight: 15,
+                                    minWidth: 0,
+                                  }}
+                                >
+                                  {isReadonly ? (
+                                    <div className="prose prose-invert prose-sm max-w-none">
+                                      <ReactMarkdown>
+                                        {row.description || ""}
+                                      </ReactMarkdown>
+                                    </div>
+                                  ) : (
+                                    <textarea
+                                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 resize-vertical min-h-[40px]"
+                                      value={row.description || ""}
+                                      onChange={(e) =>
+                                        updateRow(idx, {
+                                          description: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  )}
+                                </div>
+
+                                {/* Hours Column */}
+                                <div className="pr-3 text-right">
+                                  {isReadonly ? (
+                                    <span>{hours}</span>
+                                  ) : (
+                                    <input
+                                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 text-right"
+                                      type="number"
+                                      min={0}
+                                      value={hours}
+                                      onChange={(e) =>
+                                        updateRow(idx, {
+                                          hours: clampNumber(e.target.value),
+                                        })
+                                      }
+                                    />
+                                  )}
+                                </div>
+
+                                {/* Rate Column */}
+                                <div className="pr-3 text-right">
+                                  {isReadonly ? (
+                                    <span>
+                                      {formatCurrency(rate, currency)}
+                                    </span>
+                                  ) : (
+                                    <input
+                                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 text-right"
+                                      type="number"
+                                      min={0}
+                                      value={rate}
+                                      onChange={(e) =>
+                                        updateRow(idx, {
+                                          baseRate: clampNumber(e.target.value),
+                                        })
+                                      }
+                                    />
+                                  )}
+                                </div>
+
+                                {/* Total Column */}
+                                <div className="text-right font-medium whitespace-nowrap">
+                                  {formatCurrency(lineTotal, currency)}
+                                </div>
+
+                                {/* Actions Column */}
+                                {!isReadonly && (
+                                  <div className="flex items-center justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => removeRow(idx)}
+                                      className="text-red-400 hover:bg-red-900/30 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                      title="Remove row"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                            ) : (
-                              <textarea
-                                className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 resize-vertical min-h-[40px]"
-                                value={row.description || ""}
-                                onChange={(e) =>
-                                  updateRow(idx, {
-                                    description: e.target.value,
-                                  })
-                                }
-                              />
                             )}
-                          </div>
-
-                          {/* Hours Column */}
-                          <div className="pr-3">
-                            {isReadonly ? (
-                              <span>{hours}</span>
-                            ) : (
-                              <input
-                                className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                                type="number"
-                                min={0}
-                                value={hours}
-                                onChange={(e) =>
-                                  updateRow(idx, {
-                                    hours: clampNumber(e.target.value),
-                                  })
-                                }
-                              />
-                            )}
-                          </div>
-
-                          {/* Rate Column */}
-                          <div className="pr-3">
-                            {isReadonly ? (
-                              <span>{formatCurrency(rate, currency)}</span>
-                            ) : (
-                              <input
-                                className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                                type="number"
-                                min={0}
-                                value={rate}
-                                onChange={(e) =>
-                                  updateRow(idx, {
-                                    baseRate: clampNumber(e.target.value),
-                                  })
-                                }
-                              />
-                            )}
-                          </div>
-
-                          {/* Total Column */}
-                          <div className="text-right font-medium whitespace-nowrap">
-                            {formatCurrency(lineTotal, currency)}
-                          </div>
-
-                          {/* Actions Column */}
-                          {!isReadonly && (
-                            <div className="flex items-center justify-end">
-                              <button
-                                type="button"
-                                onClick={() => removeRow(idx)}
-                                className="text-red-400 hover:bg-red-900/30 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Remove row"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </Draggable>
-                  );
-                })}
-                {droppableProvided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+                          </Draggable>
+                        );
+                      })}
+                      {droppableProvided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            </>
+          );
+        })()}
       </div>
 
       {!isReadonly && (

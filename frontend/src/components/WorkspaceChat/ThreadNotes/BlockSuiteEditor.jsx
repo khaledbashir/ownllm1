@@ -1828,14 +1828,16 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     loadBlockTemplate: async (templateId) => {
       try {
         const template = await BlockTemplate.get(templateId);
-        if (!template || !template.snapshot) throw new Error("Invalid template");
+        if (!template || !template.snapshot)
+          throw new Error("Invalid template");
 
         const job = new Job({ collection: collectionRef.current });
 
         // Parse snapshot if string
-        const snapshot = typeof template.snapshot === 'string'
-          ? JSON.parse(template.snapshot)
-          : template.snapshot;
+        const snapshot =
+          typeof template.snapshot === "string"
+            ? JSON.parse(template.snapshot)
+            : template.snapshot;
 
         const newDoc = await job.snapshotToDoc(snapshot);
         await newDoc.load();
@@ -2141,9 +2143,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             }
             .pricing-table-wrapper table {
                  width: 100% !important;
-                 table-layout: fixed !important;
-                 font-size: 10px !important; /* Force smaller font for PDF */
+                 table-layout: auto !important;
+                 font-size: 10pt !important;
             }
+            .pricing-table-wrapper th:nth-child(1),
+            .pricing-table-wrapper td:nth-child(1) { width: 15% !important; }
             .pricing-table-wrapper thead,
             .pricing-table-wrapper tbody,
             .pricing-table-wrapper tr {
@@ -2235,17 +2239,22 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         .pricing-table-wrapper td:nth-child(1) { width: 20%; } /* Role */
         .pricing-table-wrapper th:nth-child(2),
         .pricing-table-wrapper td:nth-child(2) { 
-            width: 45%; 
-            white-space: normal; 
+            white-space: pre-wrap; 
             overflow-wrap: break-word; 
             word-break: break-word; 
+            padding-right: 15px;
         } /* Description */
         .pricing-table-wrapper th:nth-child(3),
-        .pricing-table-wrapper td:nth-child(3) { width: 10%; text-align: right; } /* Hours */
+        .pricing-table-wrapper td:nth-child(3) { width: 60px; text-align: right; } /* Hours */
+        .pricing-table-wrapper th:nth-child(3) { width: 60px; text-align: right; } /* Hours */
         .pricing-table-wrapper th:nth-child(4),
-        .pricing-table-wrapper td:nth-child(4) { width: 10%; text-align: right; } /* Rate */
+        .pricing-table-wrapper td:nth-child(4) { width: 90px; text-align: right; } /* Rate */
+        .pricing-table-wrapper th:nth-child(4) { width: 90px; text-align: right; } /* Rate */
         .pricing-table-wrapper th:nth-child(5),
-        .pricing-table-wrapper td:nth-child(5) { width: 15%; text-align: right; font-weight: 600; } /* Total */
+        .pricing-table-wrapper td:nth-child(5) { width: 110px; text-align: right; font-weight: 600; } /* Total */
+        .pricing-table-wrapper th:nth-child(5) { width: 110px; text-align: right; font-weight: 600; } /* Total */
+
+        .pricing-table-wrapper table { table-layout: auto !important; }
 
         /* Tabular nums for price alignment */
         .pricing-table-wrapper td {
@@ -2490,7 +2499,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-          "Doc embedded successfully! AI can now retrieve this content."
+            "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -2747,7 +2756,7 @@ ${activeTemplateFooter}
                   style={{
                     height: selectedBrandTemplate.cssOverrides
                       ? JSON.parse(selectedBrandTemplate.cssOverrides)
-                        .logoHeight || 40
+                          .logoHeight || 40
                       : 40,
                   }}
                 />
@@ -3063,7 +3072,7 @@ const serializeDocToHtml = async (doc) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch { }
+          } catch {}
           return value;
         };
 
@@ -3364,7 +3373,10 @@ const serializeDocToHtml = async (doc) => {
         // Calculate column widths - first column (Role/Description) gets more space
         const colCount = headers.length;
         const firstColWidth = colCount > 3 ? "30%" : "40%";
-        const otherColWidth = colCount > 3 ? `${Math.floor(70 / (colCount - 1))}%` : `${Math.floor(60 / (colCount - 1))}%`;
+        const otherColWidth =
+          colCount > 3
+            ? `${Math.floor(70 / (colCount - 1))}%`
+            : `${Math.floor(60 / (colCount - 1))}%`;
 
         let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed;">
@@ -3442,7 +3454,10 @@ const serializeDocToHtml = async (doc) => {
         // Calculate column widths
         const colCount = headers.length;
         const firstColWidth = colCount > 3 ? "30%" : "40%";
-        const otherColWidth = colCount > 3 ? `${Math.floor(70 / (colCount - 1))}%` : `${Math.floor(60 / (colCount - 1))}%`;
+        const otherColWidth =
+          colCount > 3
+            ? `${Math.floor(70 / (colCount - 1))}%`
+            : `${Math.floor(60 / (colCount - 1))}%`;
 
         let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed;">
