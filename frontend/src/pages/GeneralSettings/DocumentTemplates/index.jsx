@@ -82,8 +82,8 @@ function TemplatePreview({ template }) {
                   LOGO
                 </div>
               )}
-              <span className="text-sm font-semibold mt-1">
-                {template.name || ""}
+              <span className="text-sm font-semibold mt-1" style={{ color: primaryColor }}>
+                {headerText || ""}
               </span>
             </>
           ) : (
@@ -116,11 +116,10 @@ function TemplatePreview({ template }) {
                     LOGO
                   </div>
                 )}
-                <span className="text-sm font-semibold">
-                  {template.name || ""}
+                <span className="text-sm font-semibold" style={{ color: primaryColor }}>
+                  {headerText || ""}
                 </span>
               </div>
-              <div className="text-gray-500 text-xs">{headerText}</div>
             </>
           )}
         </div>
