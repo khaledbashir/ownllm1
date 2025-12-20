@@ -95,7 +95,7 @@ const calcTotals = ({ rows, discountPercent, gstPercent }) => {
 };
 
 // This is the block model (holds props) for BlockSuite.
-export class PricingTableModel extends defineEmbedModel(BlockModel) {}
+export class PricingTableModel extends defineEmbedModel(BlockModel) { }
 
 // We implement as an embed block so affine:note allows it.
 export const PricingTableBlockSchema = createEmbedBlockSchema({
@@ -300,85 +300,103 @@ const PricingTableWidget = ({ model }) => {
         </div>
       </div>
 
+      {/* Using CSS Grid instead of HTML table for react-beautiful-dnd compatibility */}
       <div className="overflow-x-auto overflow-y-visible">
-        <table className="min-w-full text-sm text-white/80">
-          <thead>
-            <tr className="text-left text-xs text-white/60 border-b border-white/10">
-              <th className="py-2 pr-3">Role</th>
-              <th className="py-2 pr-3">Description</th>
-              <th className="py-2 pr-3">Hours</th>
-              <th className="py-2 pr-3">Rate</th>
-              <th className="py-2">Total</th>
-              {!isReadonly && <th className="py-2 w-14"></th>}
-            </tr>
-          </thead>
-          <DragDropContext
-            onDragEnd={(result) => {
-              if (isReadonly) return;
-              const destinationIndex = result?.destination?.index;
-              if (destinationIndex === undefined || destinationIndex === null)
-                return;
-              moveRow({
-                fromIndex: result.source.index,
-                toIndex: destinationIndex,
-              });
-            }}
-          >
-            <Droppable droppableId="pricing-table-rows">
-              {(droppableProvided) => (
-                <tbody
-                  ref={droppableProvided.innerRef}
-                  {...droppableProvided.droppableProps}
-                >
-                  {(rows.length === 0 ? [] : rows).map((row, idx) => {
-                    const hours = clampNumber(row.hours);
-                    const rate = clampNumber(row.baseRate);
-                    const lineTotal = hours * rate;
-                    const roleQuery = (row.role || "").trim().toLowerCase();
+        {/* Header row */}
+        <div
+          className="grid text-left text-xs text-white/60 border-b border-white/10 py-2"
+          style={{ gridTemplateColumns: !isReadonly ? '1fr 2fr 80px 100px 100px 60px' : '1fr 2fr 80px 100px 100px' }}
+        >
+          <div className="pr-3">Role</div>
+          <div className="pr-3">Description</div>
+          <div className="pr-3">Hours</div>
+          <div className="pr-3">Rate</div>
+          <div className="text-right">Total</div>
+          {!isReadonly && <div></div>}
+        </div>
 
-                    const filteredRoles = (availableRoles || [])
-                      .filter((r) => {
-                        const name = (r?.name || "").toLowerCase();
-                        if (!roleQuery) return true;
-                        return name.includes(roleQuery);
-                      })
-                      .sort((a, b) => {
-                        const an = (a?.name || "").toLowerCase();
-                        const bn = (b?.name || "").toLowerCase();
-                        const aStarts = roleQuery && an.startsWith(roleQuery);
-                        const bStarts = roleQuery && bn.startsWith(roleQuery);
-                        if (aStarts && !bStarts) return -1;
-                        if (!aStarts && bStarts) return 1;
-                        return an.localeCompare(bn);
-                      })
-                      .slice(0, 50);
+        <DragDropContext
+          onDragEnd={(result) => {
+            if (isReadonly) return;
+            const destinationIndex = result?.destination?.index;
+            if (destinationIndex === undefined || destinationIndex === null)
+              return;
+            moveRow({
+              fromIndex: result.source.index,
+              toIndex: destinationIndex,
+            });
+          }}
+        >
+          <Droppable droppableId="pricing-table-rows">
+            {(droppableProvided) => (
+              <div
+                ref={droppableProvided.innerRef}
+                {...droppableProvided.droppableProps}
+              >
+                {(rows.length === 0 ? [] : rows).map((row, idx) => {
+                  const hours = clampNumber(row.hours);
+                  const rate = clampNumber(row.baseRate);
+                  const lineTotal = hours * rate;
+                  const roleQuery = (row.role || "").trim().toLowerCase();
 
-                    const selectRole = (role) => {
-                      if (!role?.name) return;
-                      updateRow(idx, {
-                        role: role.name,
-                        baseRate:
-                          role?.rate !== undefined
-                            ? clampNumber(role.rate)
-                            : clampNumber(row.baseRate),
-                      });
-                      setRolePickerOpenIndex(null);
-                    };
+                  const filteredRoles = (availableRoles || [])
+                    .filter((r) => {
+                      const name = (r?.name || "").toLowerCase();
+                      if (!roleQuery) return true;
+                      return name.includes(roleQuery);
+                    })
+                    .sort((a, b) => {
+                      const an = (a?.name || "").toLowerCase();
+                      const bn = (b?.name || "").toLowerCase();
+                      const aStarts = roleQuery && an.startsWith(roleQuery);
+                      const bStarts = roleQuery && bn.startsWith(roleQuery);
+                      if (aStarts && !bStarts) return -1;
+                      if (!aStarts && bStarts) return 1;
+                      return an.localeCompare(bn);
+                    })
+                    .slice(0, 50);
 
-                    return (
-                      <Draggable
-                        key={row.id || `row-${idx}`}
-                        draggableId={String(row.id || `row-${idx}`)}
-                        index={idx}
-                        isDragDisabled={isReadonly}
-                      >
-                        {(draggableProvided, snapshot) => (
-                          <tr
-                            ref={draggableProvided.innerRef}
-                            {...draggableProvided.draggableProps}
-                            className={`border-b border-white/5 align-top group ${snapshot.isDragging ? "opacity-60 bg-white/5" : ""}`}
-                          >
-                            <td className="py-2 pr-3 w-56">
+                  const selectRole = (role) => {
+                    if (!role?.name) return;
+                    updateRow(idx, {
+                      role: role.name,
+                      baseRate:
+                        role?.rate !== undefined
+                          ? clampNumber(role.rate)
+                          : clampNumber(row.baseRate),
+                    });
+                    setRolePickerOpenIndex(null);
+                  };
+
+                  return (
+                    <Draggable
+                      key={row.id || `row-${idx}`}
+                      draggableId={String(row.id || `row-${idx}`)}
+                      index={idx}
+                      isDragDisabled={isReadonly}
+                    >
+                      {(draggableProvided, snapshot) => (
+                        <div
+                          ref={draggableProvided.innerRef}
+                          {...draggableProvided.draggableProps}
+                          className={`grid items-start border-b border-white/5 py-2 text-sm text-white/80 group ${snapshot.isDragging ? "opacity-60 bg-white/10 rounded" : ""}`}
+                          style={{
+                            gridTemplateColumns: !isReadonly ? '1fr 2fr 80px 100px 100px 60px' : '1fr 2fr 80px 100px 100px',
+                            ...draggableProvided.draggableProps.style
+                          }}
+                        >
+                          {/* Role Column with Drag Handle */}
+                          <div className="pr-3 flex items-start gap-2">
+                            {!isReadonly && (
+                              <div
+                                {...draggableProvided.dragHandleProps}
+                                className="cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 select-none mt-1"
+                                title="Drag to reorder"
+                              >
+                                ⋮⋮
+                              </div>
+                            )}
+                            <div className="flex-1">
                               {isReadonly ? (
                                 <span className="font-medium">{row.role}</span>
                               ) : (
@@ -466,96 +484,96 @@ const PricingTableWidget = ({ model }) => {
                                     )}
                                 </div>
                               )}
-                            </td>
-                            <td className="py-2 pr-3">
-                              {isReadonly ? (
-                                <div className="prose prose-invert prose-sm max-w-none">
-                                  <ReactMarkdown>
-                                    {row.description || ""}
-                                  </ReactMarkdown>
-                                </div>
-                              ) : (
-                                <textarea
-                                  className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 resize-vertical min-h-[40px]"
-                                  value={row.description || ""}
-                                  onChange={(e) =>
-                                    updateRow(idx, {
-                                      description: e.target.value,
-                                    })
-                                  }
-                                />
-                              )}
-                            </td>
-                            <td className="py-2 pr-3 w-24">
-                              {isReadonly ? (
-                                <span>{hours}</span>
-                              ) : (
-                                <input
-                                  className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                                  type="number"
-                                  min={0}
-                                  value={hours}
-                                  onChange={(e) =>
-                                    updateRow(idx, {
-                                      hours: clampNumber(e.target.value),
-                                    })
-                                  }
-                                />
-                              )}
-                            </td>
-                            <td className="py-2 pr-3 w-28">
-                              {isReadonly ? (
-                                <span>{formatCurrency(rate, currency)}</span>
-                              ) : (
-                                <input
-                                  className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                                  type="number"
-                                  min={0}
-                                  value={rate}
-                                  onChange={(e) =>
-                                    updateRow(idx, {
-                                      baseRate: clampNumber(e.target.value),
-                                    })
-                                  }
-                                />
-                              )}
-                            </td>
-                            <td className="py-2 text-right font-medium whitespace-nowrap">
-                              {formatCurrency(lineTotal, currency)}
-                            </td>
-                            {!isReadonly && (
-                              <td className="py-2 text-right">
-                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button
-                                    type="button"
-                                    {...draggableProvided.dragHandleProps}
-                                    className="text-white/30 hover:text-white/70 cursor-grab active:cursor-grabbing select-none px-1"
-                                    title="Drag to reorder"
-                                  >
-                                    ⋮⋮
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => removeRow(idx)}
-                                    className="text-red-400 hover:bg-red-900/30 p-1 rounded"
-                                    title="Remove row"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              </td>
+                            </div>
+                          </div>
+
+                          {/* Description Column */}
+                          <div className="pr-3">
+                            {isReadonly ? (
+                              <div className="prose prose-invert prose-sm max-w-none">
+                                <ReactMarkdown>
+                                  {row.description || ""}
+                                </ReactMarkdown>
+                              </div>
+                            ) : (
+                              <textarea
+                                className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 resize-vertical min-h-[40px]"
+                                value={row.description || ""}
+                                onChange={(e) =>
+                                  updateRow(idx, {
+                                    description: e.target.value,
+                                  })
+                                }
+                              />
                             )}
-                          </tr>
-                        )}
-                      </Draggable>
-                    );
-                  })}
-                  {droppableProvided.placeholder}
-                </tbody>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </table>
+                          </div>
+
+                          {/* Hours Column */}
+                          <div className="pr-3">
+                            {isReadonly ? (
+                              <span>{hours}</span>
+                            ) : (
+                              <input
+                                className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                                type="number"
+                                min={0}
+                                value={hours}
+                                onChange={(e) =>
+                                  updateRow(idx, {
+                                    hours: clampNumber(e.target.value),
+                                  })
+                                }
+                              />
+                            )}
+                          </div>
+
+                          {/* Rate Column */}
+                          <div className="pr-3">
+                            {isReadonly ? (
+                              <span>{formatCurrency(rate, currency)}</span>
+                            ) : (
+                              <input
+                                className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                                type="number"
+                                min={0}
+                                value={rate}
+                                onChange={(e) =>
+                                  updateRow(idx, {
+                                    baseRate: clampNumber(e.target.value),
+                                  })
+                                }
+                              />
+                            )}
+                          </div>
+
+                          {/* Total Column */}
+                          <div className="text-right font-medium whitespace-nowrap">
+                            {formatCurrency(lineTotal, currency)}
+                          </div>
+
+                          {/* Actions Column */}
+                          {!isReadonly && (
+                            <div className="flex items-center justify-end">
+                              <button
+                                type="button"
+                                onClick={() => removeRow(idx)}
+                                className="text-red-400 hover:bg-red-900/30 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remove row"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Draggable>
+                  );
+                })}
+                {droppableProvided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
 
       {!isReadonly && (
