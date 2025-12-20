@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   SandpackProvider,
   SandpackLayout,
@@ -136,10 +136,9 @@ export default function SandpackRenderer({ code, language, workspace }) {
   );
 
   const segmentedButtonClass = (active) =>
-    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
-      active
-        ? "bg-white/10 text-theme-text-primary border-white/10"
-        : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
+    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${active
+      ? "bg-white/10 text-theme-text-primary border-white/10"
+      : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
     }`;
 
   const actionButtonClass =
@@ -340,6 +339,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
                   : viewMode === "code"
                     ? 100
                     : splitPct,
+              editorHeight: "100%",
             }}
             customSetup={{
               dependencies: {
@@ -349,7 +349,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
               },
             }}
           >
-            <div className="flex-1 min-h-0 [&_.sp-layout]:h-full [&_.sp-layout]:min-h-0 [&_.sp-preview-container]:h-full [&_.sp-preview-container]:min-h-0 [&_.sp-preview]:h-full [&_.sp-preview]:min-h-0 [&_.sp-code-editor]:h-full [&_.sp-code-editor]:min-h-0 [&_.sp-stack]:h-full [&_.sp-stack]:min-h-0">
+            <div className="flex-1 min-h-0 [&_.sp-wrapper]:h-full [&_.sp-layout]:h-full [&_.sp-layout]:min-h-0 [&_.sp-preview-container]:h-full [&_.sp-preview-container]:min-h-0 [&_.sp-preview-container]:flex [&_.sp-preview-container]:flex-col [&_.sp-preview]:h-full [&_.sp-preview]:min-h-0 [&_.sp-code-editor]:h-full [&_.sp-code-editor]:min-h-0 [&_.sp-stack]:h-full [&_.sp-stack]:min-h-0">
               <SandpackLayout style={{ height: "100%" }}>
                 <SandpackCodeEditor
                   showTabs={false}
