@@ -33,6 +33,14 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "/landing-gemini",
+        lazy: async () => {
+          const { default: LandingGemini } =
+            await import("@/pages/LandingGemini");
+          return { element: <LandingGemini /> };
+        },
+      },
+      {
         path: "/landingclaude",
         lazy: async () => {
           const { default: LandingClaude } =

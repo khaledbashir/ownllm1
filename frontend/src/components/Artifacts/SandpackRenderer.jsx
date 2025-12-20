@@ -171,6 +171,91 @@ export default function SandpackRenderer({ code, language, workspace }) {
     );
   }
 
+  // For static HTML, use a simpler direct iframe approach (no Sandpack overhead)
+  // This gives us full control over scrolling and sizing
+  if (isStatic && viewMode === "preview") {
+    // Wrap the HTML with basic viewport and scrolling styles
+    const wrappedHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { 
+      margin: 0; 
+      padding: 0; 
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body { padding: 16px; }
+  </style>
+</head>
+<body>
+${code}
+</body>
+</html>`;
+
+    return (
+      <div className={shellClass}>
+        <div className={frameClass}>
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between px-3 py-2 border-b border-theme-border bg-theme-bg-secondary/80">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-theme-bg-primary border border-white/10 flex items-center justify-center">
+                  <Eye size={16} className="text-theme-text-secondary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-theme-text-primary truncate">
+                    HTML Preview
+                  </div>
+                  <div className="text-[11px] text-theme-text-secondary truncate">
+                    /index.html
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("code")}
+                  className={actionButtonClass}
+                >
+                  <Code size={14} />
+                  View Code
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className={actionButtonClass}
+                >
+                  {isFullscreen ? <X size={14} /> : <ArrowsOut size={14} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Direct iframe with srcDoc - no Sandpack */}
+            <div className="flex-1 bg-white overflow-hidden">
+              <iframe
+                srcDoc={wrappedHtml}
+                title="HTML Preview"
+                sandbox="allow-scripts allow-same-origin"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  border: "none",
+                  display: "block",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   useLayoutEffect(() => {
     const el = sandpackContainerRef.current;
     if (!el) return;
