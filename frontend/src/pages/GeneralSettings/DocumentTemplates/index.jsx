@@ -31,76 +31,94 @@ function TemplatePreview({ template }) {
   const logoHeight = overrides.logoHeight || 40;
   const logoAlignment = overrides.logoAlignment || "flex-start";
 
-  // Alignment styles for the header container
-  const headerStyle = {
-    fontFamily,
-    flexDirection: "row", // Default
-  };
-
-  // If center aligned, we change layout strategy slightly for preview
-  // Note: In PDF Flexbox works well, but we need to match the logic
-  let logoContainerStyle = {};
-  if (logoAlignment === "center") {
-    headerStyle.justifyContent = "center";
-    headerStyle.position = "relative"; // so we can absolute position other items if needed?
-    // Actually for a simple center logo, often the text is also centered or logo is alone?
-    // Let's assume standard "Logo left, Text right" but if Center, maybe Logo is middle?
-    // User asked for "Logo adjustable in places".
-    // Let's implement: Left (Default), Center (Logo in middle, text below?), Right (Logo on right)
-  }
-
-  // Simplification for the user request "Logo adjustable in places" & "Bigger/Smaller"
-  // We will stick to the existing "Row" layout but allow growing the logo
-  // and flipping the order if "Right" is selected?
-  // Or just alignment of the whole block?
-  // Let's do: Logo Size (height) and Logo Position (Left, Right) in the flex row.
-
   const isRightAligned = logoAlignment === "flex-end";
+  const isCenterAligned = logoAlignment === "center";
+
+  // Compute header height
+  const headerHeight = isCenterAligned
+    ? Math.max(80, Number(logoHeight) + 40)
+    : Math.max(60, Number(logoHeight) + 20);
 
   return (
     <div className="w-full h-full bg-gray-500/10 rounded-xl overflow-hidden flex flex-col items-center justify-center p-8">
       <div className="bg-white text-gray-900 w-full max-w-[500px] aspect-[1/1.414] shadow-2xl rounded-sm flex flex-col relative overflow-hidden transition-all duration-300 transform hover:scale-[1.02]">
         {/* PDF Header Simulation */}
         <div
-          className={`w-full h-[${Math.max(60, logoHeight + 20)}px] flex items-center px-5 border-b border-gray-200`}
+          className="w-full flex items-center px-5"
           style={{
             fontFamily,
-            justifyContent: "space-between",
-            flexDirection: isRightAligned ? "row-reverse" : "row",
-            height: Math.max(60, Number(logoHeight) + 20) + "px",
+            height: headerHeight + "px",
+            justifyContent: isCenterAligned ? "center" : "space-between",
+            flexDirection: isCenterAligned ? "column" : (isRightAligned ? "row-reverse" : "row"),
+            borderBottom: `2px solid ${primaryColor}`,
+            paddingTop: isCenterAligned ? "10px" : "0",
+            paddingBottom: isCenterAligned ? "10px" : "0",
           }}
         >
-          <div className="flex items-center">
-            {logoPath ? (
-              <img
-                src={logoPath}
-                alt="Logo"
-                className="object-contain transition-all duration-200"
-                style={{
-                  height: logoHeight + "px",
-                  marginRight: isRightAligned ? "0" : "10px",
-                  marginLeft: isRightAligned ? "10px" : "0",
-                }}
-              />
-            ) : (
-              <div
-                className="bg-gray-100 rounded flex items-center justify-center text-xs font-bold transition-all duration-200"
-                style={{
-                  color: primaryColor,
-                  height: logoHeight + "px",
-                  width: logoHeight + "px",
-                  marginRight: isRightAligned ? "0" : "10px",
-                  marginLeft: isRightAligned ? "10px" : "0",
-                }}
-              >
-                LOGO
+          {isCenterAligned ? (
+            // CENTER: Logo above, name below
+            <>
+              {logoPath ? (
+                <img
+                  src={logoPath}
+                  alt="Logo"
+                  className="object-contain"
+                  style={{ height: logoHeight + "px" }}
+                />
+              ) : (
+                <div
+                  className="rounded flex items-center justify-center text-xs font-bold"
+                  style={{
+                    backgroundColor: primaryColor,
+                    color: "#fff",
+                    height: logoHeight + "px",
+                    width: logoHeight + "px",
+                  }}
+                >
+                  LOGO
+                </div>
+              )}
+              <span className="text-sm font-semibold mt-1">
+                {template.name || ""}
+              </span>
+            </>
+          ) : (
+            // LEFT or RIGHT: Logo + name side by side
+            <>
+              <div className="flex items-center">
+                {logoPath ? (
+                  <img
+                    src={logoPath}
+                    alt="Logo"
+                    className="object-contain"
+                    style={{
+                      height: logoHeight + "px",
+                      marginRight: isRightAligned ? "0" : "10px",
+                      marginLeft: isRightAligned ? "10px" : "0",
+                    }}
+                  />
+                ) : (
+                  <div
+                    className="rounded flex items-center justify-center text-xs font-bold"
+                    style={{
+                      backgroundColor: primaryColor,
+                      color: "#fff",
+                      height: logoHeight + "px",
+                      width: logoHeight + "px",
+                      marginRight: isRightAligned ? "0" : "10px",
+                      marginLeft: isRightAligned ? "10px" : "0",
+                    }}
+                  >
+                    LOGO
+                  </div>
+                )}
+                <span className="text-sm font-semibold">
+                  {template.name || ""}
+                </span>
               </div>
-            )}
-            <span className="text-sm font-semibold">
-              {template.name || ""}
-            </span>
-          </div>
-          <div className="text-gray-500 text-xs">{headerText}</div>
+              <div className="text-gray-500 text-xs">{headerText}</div>
+            </>
+          )}
         </div>
 
         {/* Mock Content */}
@@ -402,20 +420,26 @@ function TemplateEditor({ template: initialTemplate, onSave, onCancel }) {
               </div>
               <div>
                 <label className="text-xs font-bold text-white/60 uppercase tracking-wide block mb-2">
-                  Header Layout
+                  Logo Position
                 </label>
-                <div className="flex bg-black/20 p-1 rounded-lg">
+                <div className="flex bg-black/20 p-1 rounded-lg gap-1">
                   <button
                     onClick={() => setLogoAlignment("flex-start")}
                     className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors ${logoAlignment === "flex-start" ? "bg-blue-600 text-white" : "text-white/50 hover:text-white"}`}
                   >
-                    Standard
+                    Left
+                  </button>
+                  <button
+                    onClick={() => setLogoAlignment("center")}
+                    className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors ${logoAlignment === "center" ? "bg-blue-600 text-white" : "text-white/50 hover:text-white"}`}
+                  >
+                    Center
                   </button>
                   <button
                     onClick={() => setLogoAlignment("flex-end")}
                     className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors ${logoAlignment === "flex-end" ? "bg-blue-600 text-white" : "text-white/50 hover:text-white"}`}
                   >
-                    Reversed
+                    Right
                   </button>
                 </div>
               </div>

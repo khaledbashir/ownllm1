@@ -1520,6 +1520,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         ? `https://fonts.googleapis.com/css2?family=${fontUrlParam}&family=JetBrains+Mono&display=swap`
         : `https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap`;
 
+      // Get brand color from template, fallback to default blue
+      const brandColor = selectedTemplate?.primaryColor || "#2563eb";
+
       const editorHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1535,9 +1538,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             --text-color: #1a1a1a;
             --heading-color: #111827;
             --border-color: #e5e7eb;
-            --accent-color: #2563eb;
+            --brand-color: ${brandColor};
+            --accent-color: ${brandColor};
             --code-bg: #f3f4f6;
-            --quote-border: #3b82f6;
+            --quote-border: ${brandColor};
         }
         
         * { box-sizing: border-box; }
@@ -1571,8 +1575,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         }
 
         /* Typography */
-        h1 { font-size: 2.2em; font-weight: 700; border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; color: var(--heading-color); }
-        h2 { font-size: 1.8em; font-weight: 600; margin-top: 1.4em; margin-bottom: 0.5em; color: var(--heading-color); }
+        h1 { font-size: 2.2em; font-weight: 700; border-bottom: 3px solid var(--brand-color); padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 0.5em; color: var(--heading-color); }
+        h2 { font-size: 1.8em; font-weight: 600; margin-top: 1.4em; margin-bottom: 0.5em; color: var(--heading-color); border-bottom: 2px solid var(--brand-color); padding-bottom: 0.2em; }
         h3 { font-size: 1.4em; font-weight: 600; margin-top: 1.3em; margin-bottom: 0.5em; color: var(--heading-color); }
         h4, h5, h6 { font-size: 1.1em; font-weight: 600; margin-top: 1.2em; margin-bottom: 0.5em; }
         
@@ -1612,6 +1616,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             font-style: italic;
             background: #f9fafb;
             padding: 0.8em;
+        }
+
+        /* Pricing Table Brand Accent */
+        .pricing-table-wrapper {
+            border-left: 4px solid var(--brand-color) !important;
         }
 
         /* Tables */
