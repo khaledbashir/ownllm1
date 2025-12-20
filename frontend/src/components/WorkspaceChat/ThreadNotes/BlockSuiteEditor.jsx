@@ -1556,6 +1556,18 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important; 
             }
+            /* Prevent pricing tables from splitting across pages */
+            .pricing-table-wrapper {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            .pricing-table-wrapper table,
+            .pricing-table-wrapper thead,
+            .pricing-table-wrapper tbody,
+            .pricing-table-wrapper tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
         }
 
         /* Typography */
@@ -2466,14 +2478,14 @@ const serializeDocToHtml = async (doc) => {
         const rawTotal = afterDiscount + gst;
         const total = Math.round(rawTotal / 100) * 100;
 
-        let tableHtml = `<div style="margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
+        let tableHtml = `<div class="pricing-table-wrapper" style="margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; page-break-inside: avoid; break-inside: avoid;">
                     <div style="padding: 0.75rem 1rem; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
                         <div style="font-weight: 700; color: #111827;">${escapeHtml(title)}</div>
                         <div style="font-size: 0.75rem; color: #6b7280;">${escapeHtml(currency)}</div>
                     </div>
                     <div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                        <thead style="background: #fafafa; border-bottom: 1px solid #e5e7eb;">
+                    <table class="pricing-table" style="width: 100%; border-collapse: collapse; font-size: 0.9rem; page-break-inside: avoid; break-inside: avoid;">
+                        <thead style="background: #fafafa; border-bottom: 1px solid #e5e7eb; page-break-inside: avoid; break-inside: avoid;">
                             <tr>
                                 <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">Role</th>
                                 <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">Description</th>
@@ -2485,7 +2497,7 @@ const serializeDocToHtml = async (doc) => {
                         <tbody>`;
 
         if (!rows.length) {
-          tableHtml += `<tr><td colspan="5" style="padding: 1rem; text-align: center; color: #9ca3af;">No rows</td></tr>`;
+          tableHtml += `<tr style="page-break-inside: avoid; break-inside: avoid;"><td colspan="5" style="padding: 1rem; text-align: center; color: #9ca3af;">No rows</td></tr>`;
         } else {
           rows.forEach((row) => {
             const hours = toNumber(row?.hours, 0);
@@ -2495,7 +2507,7 @@ const serializeDocToHtml = async (doc) => {
               renderMarkdown(String(row?.description || "")),
               { USE_PROFILES: { html: true } }
             );
-            tableHtml += `<tr style="border-bottom: 1px solid #f3f4f6;">
+            tableHtml += `<tr style="border-bottom: 1px solid #f3f4f6; page-break-inside: avoid; break-inside: avoid;">
                             <td style="padding: 0.75rem 1rem; color: #111827;">${escapeHtml(row?.role || "")}</td>
                             <td style="padding: 0.75rem 1rem; color: #4b5563;">${descHtml}</td>
                             <td style="padding: 0.75rem 1rem; text-align: right; color: #111827;">${hours}</td>
