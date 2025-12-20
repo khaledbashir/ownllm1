@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
-import { X, SpinnerGap, Sparkle } from "@phosphor-icons/react";
+import { X, PaperPlaneTilt, Sparkle, SpinnerGap } from "@phosphor-icons/react";
 
 /**
- * Custom AI Input Modal - Replaces ugly window.prompt()
- * A sleek, dark-themed modal for AI queries
+ * AI Input Modal - Elegant inline-style prompt bar like Affine's design
  */
 export default function AIInputModal({
   isOpen,
   onClose,
   onSubmit,
   loading = false,
+  placeholder = "What are your thoughts?",
 }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef(null);
@@ -51,76 +51,78 @@ export default function AIInputModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in-0 duration-200"
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-[20vh] bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-lg mx-4 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg">
-              <Sparkle size={22} weight="fill" className="text-white" />
+      <div className="w-full max-w-2xl mx-4 animate-in slide-in-from-top-4 zoom-in-95 duration-200">
+        {/* Main Input Card */}
+        <div className="bg-zinc-900/95 border border-zinc-700/50 rounded-2xl shadow-2xl shadow-black/40 backdrop-blur-xl overflow-hidden">
+          {/* Header Label */}
+          <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600">
+              <Sparkle size={14} weight="fill" className="text-white" />
             </div>
-            <div>
-              <h3 className="text-white font-semibold">Ask AI</h3>
-              <p className="text-zinc-400 text-xs">
-                Type anything you want to generate
-              </p>
-            </div>
+            <span className="text-sm font-medium text-white/80">Ask AI</span>
+            <span className="text-xs text-zinc-500 ml-auto">Press Enter to send</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
-          >
-            <X size={20} />
-          </button>
+
+          {/* Input Field */}
+          <form onSubmit={handleSubmit} className="px-4 pb-4">
+            <div className="relative flex items-center gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+                disabled={loading}
+                className="flex-1 bg-zinc-800/80 border border-zinc-700/50 rounded-xl px-4 py-3.5 pr-12 text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={!query.trim() || loading}
+                className="absolute right-2 p-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-violet-500/20"
+              >
+                {loading ? (
+                  <SpinnerGap size={18} className="animate-spin" />
+                ) : (
+                  <PaperPlaneTilt size={18} weight="fill" />
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Quick Suggestions */}
+          <div className="px-4 pb-4 flex flex-wrap gap-2">
+            {[
+              "Summarize this document",
+              "Generate ideas for...",
+              "Explain this concept",
+              "Write a draft about...",
+            ].map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => setQuery(suggestion)}
+                className="px-3 py-1.5 text-xs text-zinc-400 bg-zinc-800/50 hover:bg-zinc-700/50 hover:text-white rounded-full border border-zinc-700/50 transition-all"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Input */}
-        <form onSubmit={handleSubmit} className="p-5">
-          <textarea
-            ref={inputRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Write a blog post about AI automation..."
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-500 resize-none focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all min-h-[100px]"
-            rows={4}
-            disabled={loading}
-          />
-
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3 mt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 text-sm font-medium transition-colors"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!query.trim() || loading}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white text-sm font-medium transition-all shadow-lg shadow-violet-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <SpinnerGap size={16} className="animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkle size={16} weight="fill" />
-                  Generate
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+        {/* Close hint */}
+        <div className="text-center mt-3">
+          <span className="text-xs text-zinc-500">
+            Press <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-400">Esc</kbd> to close
+          </span>
+        </div>
       </div>
     </div>
   );
 }
+
