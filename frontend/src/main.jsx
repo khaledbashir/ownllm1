@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ConfirmProvider } from "@/components/Modals/ConfirmModal";
 import DocumentTemplates from "@/pages/GeneralSettings/DocumentTemplates";
 import App from "@/App.jsx";
 import PrivateRoute, {
@@ -417,6 +418,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <REACTWRAP>
-    <RouterProvider router={router} />
+    <ConfirmProvider>
+      <RouterProvider router={router} />
+    </ConfirmProvider>
   </REACTWRAP>
 );

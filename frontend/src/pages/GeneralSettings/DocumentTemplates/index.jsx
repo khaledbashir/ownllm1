@@ -12,6 +12,7 @@ import {
   Eye,
 } from "@phosphor-icons/react";
 import showToast from "@/utils/toast";
+import { useConfirm } from "@/components/Modals/ConfirmModal";
 
 // --- LIVE PREVIEW COMPONENT ---
 // This mimics the structure of the exported PDF to give a 1:1 preview
@@ -328,7 +329,7 @@ function TemplateEditor({ template: initialTemplate, onSave, onCancel }) {
                   if (file) {
                     if (file.size > 2 * 1024 * 1024) {
                       // 2MB limit
-                      alert("File too large. Please use an image under 2MB.");
+                      showToast("File too large. Please use an image under 2MB.", "error");
                       return;
                     }
                     const reader = new FileReader();
@@ -463,6 +464,7 @@ export default function DocumentTemplates() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null = list, {} = new, {id} = edit
+  const confirm = useConfirm();
 
   useEffect(() => {
     loadTemplates();
@@ -490,7 +492,14 @@ export default function DocumentTemplates() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this template?")) return;
+    const confirmed = await confirm({
+      title: "Delete Template?",
+      message: "This will permanently delete this template. This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     const result = await PdfTemplates.delete(id);
     if (result?.success) {
       showToast("Template deleted", "success");
