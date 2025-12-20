@@ -33,6 +33,14 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "/landingclaude",
+        lazy: async () => {
+          const { default: LandingClaude } =
+            await import("@/pages/LandingClaude");
+          return { element: <LandingClaude /> };
+        },
+      },
+      {
         path: "/app",
         lazy: async () => {
           const { default: Main } = await import("@/pages/Main");
