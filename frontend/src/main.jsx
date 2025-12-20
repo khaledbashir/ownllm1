@@ -41,6 +41,14 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "features",
+        lazy: async () => {
+          const { default: FeaturesDetail } =
+            await import("@/pages/FeaturesDetail");
+          return { element: <FeaturesDetail /> };
+        },
+      },
+      {
         path: "landingclaude",
         lazy: async () => {
           const { default: LandingClaude } =

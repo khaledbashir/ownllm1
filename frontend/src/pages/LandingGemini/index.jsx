@@ -52,7 +52,7 @@ export default function LandingGemini() {
           </Link>
           
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-theme-text-secondary">
-            <a href="#features" className="hover:text-theme-text-primary transition-colors">Features</a>
+            <Link to="/features" className="hover:text-theme-text-primary transition-colors">Features</Link>
             <a href="#workflow" className="hover:text-theme-text-primary transition-colors">Workflow</a>
             <a href="#pricing" className="hover:text-theme-text-primary transition-colors">Pricing</a>
           </div>
@@ -178,7 +178,10 @@ export default function LandingGemini() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-20">
             <h2 className="text-4xl font-black mb-4">Everything you need to scale.</h2>
-            <p className="text-theme-text-secondary">Stop cobbling together AI tools. OwnLLM is a complete operating system for document-heavy businesses.</p>
+            <p className="text-theme-text-secondary mb-6">Stop cobbling together AI tools. OwnLLM is a complete operating system for document-heavy businesses.</p>
+            <Link to="/features" className="text-primary-button font-bold flex items-center justify-center gap-2 hover:underline">
+              View All Feature Details <ArrowRight weight="bold" />
+            </Link>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
