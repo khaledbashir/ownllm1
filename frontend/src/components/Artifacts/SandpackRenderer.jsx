@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   SandpackProvider,
   SandpackLayout,
@@ -136,9 +136,10 @@ export default function SandpackRenderer({ code, language, workspace }) {
   );
 
   const segmentedButtonClass = (active) =>
-    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${active
-      ? "bg-white/10 text-theme-text-primary border-white/10"
-      : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
+    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
+      active
+        ? "bg-white/10 text-theme-text-primary border-white/10"
+        : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
     }`;
 
   const actionButtonClass =
@@ -324,55 +325,58 @@ export default function SandpackRenderer({ code, language, workspace }) {
           )}
 
           {/* Sandpack */}
-          <SandpackProvider
-            template={template}
-            theme={sandpackTheme}
-            files={{
-              [primaryFile]: code,
-            }}
-            options={{
-              activeFile: primaryFile,
-              visibleFiles: [primaryFile],
-              editorWidthPercentage:
-                viewMode === "preview"
-                  ? 0
-                  : viewMode === "code"
-                    ? 100
-                    : splitPct,
-              editorHeight: "100%",
-            }}
-            customSetup={{
-              dependencies: {
-                recharts: "2.12.7",
-                clsx: "2.1.1",
-                "tailwind-merge": "1.14.0",
-              },
-            }}
-          >
-            <div className="flex-1 min-h-0 [&_.sp-wrapper]:h-full [&_.sp-layout]:h-full [&_.sp-layout]:min-h-0 [&_.sp-preview-container]:h-full [&_.sp-preview-container]:min-h-0 [&_.sp-preview-container]:flex [&_.sp-preview-container]:flex-col [&_.sp-preview]:h-full [&_.sp-preview]:min-h-0 [&_.sp-code-editor]:h-full [&_.sp-code-editor]:min-h-0 [&_.sp-stack]:h-full [&_.sp-stack]:min-h-0">
-              <SandpackLayout style={{ height: "100%" }}>
-                <SandpackCodeEditor
-                  showTabs={false}
-                  showLineNumbers={true}
-                  showInlineErrors={true}
-                  wrapContent={true}
-                  style={{
-                    height: "100%",
-                    display: viewMode === "preview" ? "none" : "block",
-                  }}
-                />
-                <SandpackPreview
-                  showNavigator={false}
-                  showRefreshButton={true}
-                  showOpenInCodeSandbox={false}
-                  style={{
-                    height: "100%",
-                    display: viewMode === "code" ? "none" : "block",
-                  }}
-                />
-              </SandpackLayout>
-            </div>
-          </SandpackProvider>
+          <div className="flex-1 min-h-0 h-full">
+            <SandpackProvider
+              template={template}
+              theme={sandpackTheme}
+              files={{
+                [primaryFile]: code,
+              }}
+              options={{
+                activeFile: primaryFile,
+                visibleFiles: [primaryFile],
+                editorWidthPercentage:
+                  viewMode === "preview"
+                    ? 0
+                    : viewMode === "code"
+                      ? 100
+                      : splitPct,
+                editorHeight: "100%",
+              }}
+              customSetup={{
+                dependencies: {
+                  recharts: "2.12.7",
+                  clsx: "2.1.1",
+                  "tailwind-merge": "1.14.0",
+                },
+              }}
+            >
+              <div className="h-full min-h-0 [&_.sp-wrapper]:h-full [&_.sp-wrapper]:flex [&_.sp-wrapper]:flex-col [&_.sp-wrapper]:min-h-0 [&_.sp-layout]:h-full [&_.sp-layout]:flex-1 [&_.sp-layout]:min-h-0 [&_.sp-preview-container]:h-full [&_.sp-preview-container]:flex-1 [&_.sp-preview-container]:min-h-0 [&_.sp-preview-container]:flex [&_.sp-preview-container]:flex-col [&_.sp-preview]:h-full [&_.sp-preview]:flex-1 [&_.sp-preview]:min-h-0 [&_.sp-code-editor]:h-full [&_.sp-code-editor]:flex-1 [&_.sp-code-editor]:min-h-0 [&_.sp-stack]:h-full [&_.sp-stack]:min-h-0">
+                <SandpackLayout
+                  className="h-full min-h-0"
+                  style={{ height: "100%" }}
+                >
+                  {viewMode !== "preview" && (
+                    <SandpackCodeEditor
+                      showTabs={false}
+                      showLineNumbers={true}
+                      showInlineErrors={true}
+                      wrapContent={true}
+                      style={{ height: "100%" }}
+                    />
+                  )}
+                  {viewMode !== "code" && (
+                    <SandpackPreview
+                      showNavigator={false}
+                      showRefreshButton={true}
+                      showOpenInCodeSandbox={false}
+                      style={{ height: "100%" }}
+                    />
+                  )}
+                </SandpackLayout>
+              </div>
+            </SandpackProvider>
+          </div>
         </div>
       </div>
     </div>
