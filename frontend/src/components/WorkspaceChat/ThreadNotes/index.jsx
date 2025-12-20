@@ -121,7 +121,7 @@ export default function ThreadNotes({
     async (action, options = {}) => {
       if (!workspace?.slug || !threadSlug) return;
       if (!editorRef.current) {
-        showToast("Notes editor is not ready yet.", "error");
+        showToast("Editor is still loading, please wait a moment...", "info");
         return;
       }
 

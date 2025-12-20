@@ -192,44 +192,65 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
     if (!pendingNoteInsert) return;
 
     let cancelled = false;
-    let attempts = 0;
 
-    const tryInsert = async () => {
-      if (cancelled) return;
-      const target = notesEditorRef.current;
+    const waitForEditorAndInsert = () => {
+      return new Promise((resolve, reject) => {
+        let attempts = 0;
 
-      const canInsert =
-        target &&
-        typeof target.insertMarkdown === "function" &&
-        (typeof target.isReady !== "function" || target.isReady() === true);
-
-      if (canInsert) {
-        try {
-          const ok = await target.insertMarkdown(pendingNoteInsert);
-          if (ok) {
-            toast.success("Content added to your Notes!");
-          } else {
-            toast.error("Could not insert into Notes.");
+        const tryInsert = async () => {
+          if (cancelled) {
+            reject(new Error("Cancelled"));
+            return;
           }
-        } catch (e) {
-          toast.error(e?.message || "Could not insert into Notes.");
-        } finally {
-          setPendingNoteInsert(null);
-        }
-        return;
-      }
 
-      attempts += 1;
-      if (attempts >= 60) {
-        toast.error("Notes editor is not ready yet.");
-        setPendingNoteInsert(null);
-        return;
-      }
+          const target = notesEditorRef.current;
+          const canInsert =
+            target &&
+            typeof target.insertMarkdown === "function" &&
+            (typeof target.isReady !== "function" || target.isReady() === true);
 
-      setTimeout(tryInsert, 100);
+          if (canInsert) {
+            try {
+              const ok = await target.insertMarkdown(pendingNoteInsert);
+              if (ok) {
+                resolve();
+              } else {
+                reject(new Error("Could not insert into Notes."));
+              }
+            } catch (e) {
+              reject(e);
+            }
+            return;
+          }
+
+          attempts += 1;
+          if (attempts >= 100) { // 10 seconds max
+            reject(new Error("Editor took too long to initialize. Please try again."));
+            return;
+          }
+
+          setTimeout(tryInsert, 100);
+        };
+
+        tryInsert();
+      });
     };
 
-    tryInsert();
+    toast.promise(
+      waitForEditorAndInsert(),
+      {
+        pending: "Waiting for editor...",
+        success: "Content added to your Notes!",
+        error: {
+          render({ data }) {
+            return data?.message || "Could not insert into Notes.";
+          }
+        }
+      }
+    ).finally(() => {
+      setPendingNoteInsert(null);
+    });
+
     return () => {
       cancelled = true;
     };
@@ -514,22 +535,20 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
-              activeTab === "chat"
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
                 ? "border-theme-text-primary text-theme-text-primary"
                 : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-            }`}
+              }`}
           >
             <ChatText size={18} />
             Chat
           </button>
           <button
             onClick={() => setActiveTab("notes")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
-              activeTab === "notes"
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
                 ? "border-theme-text-primary text-theme-text-primary"
                 : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-            }`}
+              }`}
           >
             <FileText size={18} />
             Doc
