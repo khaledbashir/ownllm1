@@ -1523,6 +1523,85 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       // Get brand color from template, fallback to default blue
       const brandColor = selectedTemplate?.primaryColor || "#2563eb";
 
+      // Build Header HTML (injected directly into body for WeasyPrint compatibility)
+      let activeTemplateHeader = "";
+      let activeTemplateFooter = "";
+
+      if (selectedTemplate) {
+        const overrides = selectedTemplate.cssOverrides
+          ? JSON.parse(selectedTemplate.cssOverrides)
+          : {};
+        const logoHeight = overrides.logoHeight || 40;
+        const logoAlignment = overrides.logoAlignment || "flex-start";
+        const isRightAligned = logoAlignment === "flex-end";
+        const isCenterAligned = logoAlignment === "center";
+
+        // Build logo HTML
+        const logoHtml = selectedTemplate.logoPath
+          ? `<img src="${selectedTemplate.logoPath}" style="height: ${logoHeight}px; object-fit: contain;" />`
+          : "";
+
+        // Header styles based on alignment
+        let headerContainerStyle = "";
+        let headerContent = "";
+
+        if (isCenterAligned) {
+          // Center: Logo stacked above, no company name in header (template name is internal only)
+          headerContainerStyle = `
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-bottom: 2px solid ${brandColor};
+            margin-bottom: 20px;
+          `.replace(/\\s+/g, " ");
+          headerContent = logoHtml;
+        } else {
+          // Left or Right: Logo + headerText in row
+          headerContainerStyle = `
+            display: flex;
+            flex-direction: ${isRightAligned ? "row-reverse" : "row"};
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            border-bottom: 2px solid ${brandColor};
+            margin-bottom: 20px;
+          `.replace(/\\s+/g, " ");
+          headerContent = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+              ${logoHtml}
+            </div>
+            <div style="color: #6b7280; font-size: 12px; font-family: '${templateFont}', sans-serif;">
+              ${selectedTemplate.headerText || ""}
+            </div>
+          `;
+        }
+
+        activeTemplateHeader = `
+          <div style="${headerContainerStyle}">
+            ${headerContent}
+          </div>
+        `;
+
+        // Footer HTML (simple - WeasyPrint doesn't do running footers well, so this is just page-end)
+        if (selectedTemplate.footerText) {
+          activeTemplateFooter = `
+            <div style="
+              margin-top: 40px;
+              padding-top: 15px;
+              border-top: 1px solid #e5e7eb;
+              font-size: 10px;
+              color: #9ca3af;
+              font-family: '${templateFont}', sans-serif;
+              text-align: center;
+            ">
+              ${selectedTemplate.footerText}
+            </div>
+          `;
+        }
+      }
+
       const editorHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1643,72 +1722,16 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     </style>
 </head>
 <body>
+${activeTemplateHeader}
     ${bodyHtml}
+${activeTemplateFooter}
 </body>
 </html>`;
-
-      // Use the selected template passed from modal
-      // If null/undefined, activeTemplate will be null, disabling headers/footers
-      const activeTemplate = selectedTemplate;
-
-      // Construct Header/Footer Templates
-      // Playwright requires explicit font-size in the template inline style
-      let headerTemplate = undefined;
-      let footerTemplate = undefined;
-
-      if (activeTemplate) {
-        // Parse CSS Overrides for Logo Customization
-        const overrides = activeTemplate.cssOverrides
-          ? JSON.parse(activeTemplate.cssOverrides)
-          : {};
-        const logoHeight = overrides.logoHeight || 40;
-        const logoAlignment = overrides.logoAlignment || "flex-start";
-        const isRightAligned = logoAlignment === "flex-end";
-
-        // We use flex-direction to handle "Reversed" layout (Logo on right)
-        // and standard margins for spacing.
-        const logoHtml = activeTemplate.logoPath
-          ? `<img src="${activeTemplate.logoPath}" style="height: ${logoHeight}px; margin-right: ${isRightAligned ? "0" : "10px"}; margin-left: ${isRightAligned ? "10px" : "0"};" />`
-          : "";
-
-        // Flex container style
-        const containerStyle = `
-                    font-size: 10px; 
-                    width: 100%; 
-                    height: ${Math.max(60, logoHeight + 20)}px; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: space-between; 
-                    margin: 0 20px; 
-                    border-bottom: 1px solid #e5e7eb;
-                    flex-direction: ${isRightAligned ? "row-reverse" : "row"};
-                `.replace(/\s+/g, " "); // Minify slightly for cleanliness
-
-        headerTemplate = `
-                <div style="${containerStyle}">
-                    <div style="display: flex; align-items: center;">
-                        ${logoHtml}
-                        <span style="font-size: 14px; font-weight: 600; font-family: sans-serif;">${activeTemplate.name || "Company Name"}</span>
-                    </div>
-                    <div style="color: #6b7280; font-family: sans-serif;">${activeTemplate.headerText || ""}</div>
-                </div>`;
-
-        footerTemplate = `
-                <div style="font-size: 10px; width: 100%; display: flex; justify-content: space-between; margin: 0 20px; color: #9ca3af; font-family: sans-serif;">
-                    <span>${activeTemplate.footerText || ""}</span>
-                    <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
-                </div>`;
-      }
-      // When activeTemplate is null, headerTemplate and footerTemplate stay undefined
-      // This ensures displayHeaderFooter stays false in Playwright (no header/footer at all)
 
       const result = await WorkspaceThread.exportPdf(
         workspaceSlug,
         editorHtml,
-        {
-          headerTemplate,
-          footerTemplate,
-        }
+        {} // No separate header/footer templates - they're in body
       );
 
       // Check if result is an error object
