@@ -278,22 +278,66 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
   // Helper to save the full document snapshot
   const saveDocSnapshot = useMemo(() => {
-    return debounce(async (doc) => {
-      const collection = collectionRef.current;
-      if (!collection) return;
-      try {
-        const job = new Job({ collection });
-        const snapshot = await job.docToSnapshot(doc);
-        const saveData = JSON.stringify({
-          type: "blocksuite-snapshot",
-          version: 1,
-          snapshot: snapshot,
-        });
-        onSave(saveData);
-      } catch (error) {
-        console.error("[BlockSuiteEditor] Failed to save snapshot:", error);
+    let scheduledId = null;
+    let latestDoc = null;
+
+    const cancelScheduled = () => {
+      if (scheduledId === null) return;
+      if (typeof cancelIdleCallback === "function") {
+        cancelIdleCallback(scheduledId);
+      } else {
+        clearTimeout(scheduledId);
       }
+      scheduledId = null;
+    };
+
+    const scheduleSnapshot = () => {
+      cancelScheduled();
+
+      const run = async () => {
+        const doc = latestDoc;
+        latestDoc = null;
+        if (!doc) return;
+
+        const collection = collectionRef.current;
+        if (!collection) return;
+
+        try {
+          const job = new Job({ collection });
+          const snapshot = await job.docToSnapshot(doc);
+          const saveData = JSON.stringify({
+            type: "blocksuite-snapshot",
+            version: 1,
+            snapshot: snapshot,
+          });
+          onSave(saveData);
+        } catch (error) {
+          console.error("[BlockSuiteEditor] Failed to save snapshot:", error);
+        } finally {
+          scheduledId = null;
+        }
+      };
+
+      if (typeof requestIdleCallback === "function") {
+        scheduledId = requestIdleCallback(() => run(), { timeout: 2000 });
+      } else {
+        scheduledId = setTimeout(() => run(), 0);
+      }
+    };
+
+    const debounced = debounce((doc) => {
+      latestDoc = doc;
+      scheduleSnapshot();
     }, 1000);
+
+    const originalCancel = debounced.cancel.bind(debounced);
+    debounced.cancel = () => {
+      originalCancel();
+      cancelScheduled();
+      latestDoc = null;
+    };
+
+    return debounced;
   }, [onSave]);
 
   // Initialize BlockSuite editor
@@ -2127,7 +2171,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-          "Doc embedded successfully! AI can now retrieve this content."
+            "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -2368,7 +2412,7 @@ ${activeTemplateFooter}
                   style={{
                     height: selectedBrandTemplate.cssOverrides
                       ? JSON.parse(selectedBrandTemplate.cssOverrides)
-                        .logoHeight || 40
+                          .logoHeight || 40
                       : 40,
                   }}
                 />
@@ -2674,7 +2718,7 @@ const serializeDocToHtml = async (doc) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch { }
+          } catch {}
           return value;
         };
 
