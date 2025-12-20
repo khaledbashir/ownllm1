@@ -97,7 +97,7 @@ function TemplatePreview({ template }) {
               </div>
             )}
             <span className="text-sm font-semibold">
-              {template.name || "Your Company"}
+              {template.name || ""}
             </span>
           </div>
           <div className="text-gray-500 text-xs">{headerText}</div>
@@ -304,11 +304,18 @@ function TemplateEditor({ template: initialTemplate, onSave, onCancel }) {
                   }
                   className="w-full mt-2 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-white h-[42px]"
                 >
-                  <option value="Inter">Inter</option>
-                  <option value="Roboto">Roboto</option>
-                  <option value="Times New Roman">Times New Roman</option>
-                  <option value="Georgia">Georgia</option>
-                  <option value="Arial">Arial</option>
+                  <optgroup label="Google Fonts">
+                    <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                    <option value="Inter">Inter</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Open Sans">Open Sans</option>
+                    <option value="Poppins">Poppins</option>
+                  </optgroup>
+                  <optgroup label="System Fonts">
+                    <option value="Arial">Arial</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
