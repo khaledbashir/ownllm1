@@ -214,13 +214,59 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
       case "selection":
         // AI action from format bar (text selection)
-        const { selectedText } = context;
-        if (selectedText) {
-          toast.info(
-            `🤖 AI processing selected text: "${selectedText.slice(0, 30)}..."`
-          );
+        const { selectedText, actionType: selectionAction } = context;
+        if (!selectedText) break;
+
+        // Build prompt based on action type
+        const prompts = {
+          improve: `Improve this text for clarity and flow. Keep the same meaning. Return ONLY the improved text, no explanations:\n\n${selectedText}`,
+          simplify: `Simplify this text to be easier to understand. Use simpler words and shorter sentences. Return ONLY the simplified text:\n\n${selectedText}`,
+          formal: `Rewrite this text in a formal, professional tone. Return ONLY the rewritten text:\n\n${selectedText}`,
+          casual: `Rewrite this text in a casual, conversational tone. Return ONLY the rewritten text:\n\n${selectedText}`,
+          summarize: `Summarize this text into key points. Be concise. Return ONLY the summary:\n\n${selectedText}`,
+          expand: `Expand this text with more detail and explanation. Return ONLY the expanded text:\n\n${selectedText}`,
+        };
+
+        if (selectionAction === 'custom') {
+          // Open modal for custom prompt
           setShowAIModal(true);
+          break;
         }
+
+        const prompt = prompts[selectionAction];
+        if (!prompt) {
+          toast.error(`Unknown action: ${selectionAction}`);
+          break;
+        }
+
+        // Call AI and replace text
+        toast.promise(
+          (async () => {
+            const result = await InlineAI.generate("ask", {
+              query: prompt,
+              context: "",
+              workspaceSlug,
+            });
+
+            if (result?.response) {
+              // Replace the selected text in the editor
+              const selection = window.getSelection();
+              if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(result.response.trim()));
+                selection.removeAllRanges();
+              }
+              return result.response;
+            }
+            throw new Error("No response from AI");
+          })(),
+          {
+            pending: `✨ AI ${selectionAction}ing text...`,
+            success: `✅ Text ${selectionAction === 'expand' ? 'expanded' : selectionAction + 'd'}!`,
+            error: "❌ AI failed to process text",
+          }
+        );
         break;
 
       default:
