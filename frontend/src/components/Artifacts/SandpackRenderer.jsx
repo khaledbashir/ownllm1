@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   SandpackProvider,
   SandpackLayout,
@@ -28,7 +28,9 @@ export default function SandpackRenderer({ code, language, workspace }) {
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("preview");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sandpackHeight, setSandpackHeight] = useState(null);
   const splitPct = 52;
+  const sandpackContainerRef = useRef(null);
 
   // Get editor context for inserting into Doc editor
   const editorContext = useEditorContext();
@@ -169,6 +171,22 @@ export default function SandpackRenderer({ code, language, workspace }) {
       </div>
     );
   }
+
+  useLayoutEffect(() => {
+    const el = sandpackContainerRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const next = Math.max(0, Math.round(el.getBoundingClientRect().height));
+      setSandpackHeight((prev) => (prev === next ? prev : next));
+    };
+
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => update());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isFullscreen, viewMode]);
 
   return (
     <div className={shellClass}>
@@ -325,7 +343,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
           )}
 
           {/* Sandpack */}
-          <div className="flex-1 min-h-0 h-full">
+          <div ref={sandpackContainerRef} className="flex-1 min-h-0 h-full">
             <SandpackProvider
               template={template}
               theme={sandpackTheme}
@@ -341,7 +359,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
                     : viewMode === "code"
                       ? 100
                       : splitPct,
-                editorHeight: "100%",
+                editorHeight: sandpackHeight ?? 300,
               }}
               customSetup={{
                 dependencies: {
