@@ -1498,6 +1498,28 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       }
 
       // 2. Build the Full HTML Wrapper with Styles and Google Fonts
+      // Determine which font to use - from template or default
+      const templateFont = selectedTemplate?.fontFamily || "Inter";
+
+      // Build Google Fonts URL based on selected font
+      // System fonts (Arial, Georgia, Times New Roman) don't need loading
+      const systemFonts = ["Arial", "Georgia", "Times New Roman"];
+      const isGoogleFont = !systemFonts.includes(templateFont);
+
+      // Map font names to Google Fonts URL format
+      const googleFontMap = {
+        "Plus Jakarta Sans": "Plus+Jakarta+Sans:wght@400;500;600;700",
+        "Inter": "Inter:wght@400;500;600;700",
+        "Roboto": "Roboto:wght@400;500;700",
+        "Open Sans": "Open+Sans:wght@400;500;600;700",
+        "Poppins": "Poppins:wght@400;500;600;700",
+      };
+
+      const fontUrlParam = googleFontMap[templateFont] || "Inter:wght@400;500;600;700";
+      const googleFontsUrl = isGoogleFont
+        ? `https://fonts.googleapis.com/css2?family=${fontUrlParam}&family=JetBrains+Mono&display=swap`
+        : `https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap`;
+
       const editorHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1506,7 +1528,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="${googleFontsUrl}" rel="stylesheet">
     <style>
         :root {
             --bg-color: #ffffff;
@@ -1521,7 +1543,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         * { box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: '${templateFont}', sans-serif;
             color: var(--text-color);
             line-height: 1.6;
             padding: 40px;
