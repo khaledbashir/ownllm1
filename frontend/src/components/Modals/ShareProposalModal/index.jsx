@@ -165,10 +165,11 @@ export default function ShareProposalModal({
                 />
                 <button
                   onClick={handleCopy}
-                  className={`p-2 rounded-md transition-all ${copied
+                  className={`p-2 rounded-md transition-all ${
+                    copied
                       ? "bg-green-500/20 text-green-400"
                       : "bg-white/10 hover:bg-white/20 text-white"
-                    }`}
+                  }`}
                   title="Copy to clipboard"
                 >
                   {copied ? <Check size={18} /> : <Copy size={18} />}

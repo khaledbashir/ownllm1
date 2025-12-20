@@ -20,9 +20,7 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
       <Icon size={24} weight="duotone" className="text-primary-button" />
     </div>
     <h3 className="text-xl font-bold mb-3">{title}</h3>
-    <p className="text-theme-text-secondary leading-relaxed">
-      {description}
-    </p>
+    <p className="text-theme-text-secondary leading-relaxed">{description}</p>
   </div>
 );
 
@@ -104,15 +102,22 @@ export default function LandingGemini() {
             </h1>
 
             <p className="text-xl text-theme-text-secondary leading-relaxed mb-10 max-w-2xl">
-              P.A.I.D. Platform turns your raw conversations and data into professional,
-              ready-to-send proposals, contracts, and quotes. Fully private. Fully branded. Fully automated.
+              P.A.I.D. Platform turns your raw conversations and data into
+              professional, ready-to-send proposals, contracts, and quotes.
+              Fully private. Fully branded. Fully automated.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to={paths.login()} className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-primary-button text-black font-bold text-lg hover:scale-[1.02] transition-transform shadow-xl shadow-primary-button/20">
+              <Link
+                to={paths.login()}
+                className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-primary-button text-black font-bold text-lg hover:scale-[1.02] transition-transform shadow-xl shadow-primary-button/20"
+              >
                 Get Started Free <ArrowRight weight="bold" />
               </Link>
-              <a href="#workflow" className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-theme-bg-secondary border border-theme-sidebar-border font-bold text-lg hover:bg-theme-sidebar-item-hover transition-colors">
+              <a
+                href="#workflow"
+                className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-theme-bg-secondary border border-theme-sidebar-border font-bold text-lg hover:bg-theme-sidebar-item-hover transition-colors"
+              >
                 See How It Works
               </a>
             </div>
@@ -124,10 +129,18 @@ export default function LandingGemini() {
       <section className="py-12 border-y border-theme-sidebar-border bg-theme-bg-secondary/30">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap justify-between items-center gap-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-            <div className="flex items-center gap-2 font-bold text-xl"><HardDrive size={24} /> Self-Hosted</div>
-            <div className="flex items-center gap-2 font-bold text-xl"><ShieldCheck size={24} /> Privacy First</div>
-            <div className="flex items-center gap-2 font-bold text-xl"><Buildings size={24} /> White-Label</div>
-            <div className="flex items-center gap-2 font-bold text-xl"><Users size={24} /> Multi-Tenant</div>
+            <div className="flex items-center gap-2 font-bold text-xl">
+              <HardDrive size={24} /> Self-Hosted
+            </div>
+            <div className="flex items-center gap-2 font-bold text-xl">
+              <ShieldCheck size={24} /> Privacy First
+            </div>
+            <div className="flex items-center gap-2 font-bold text-xl">
+              <Buildings size={24} /> White-Label
+            </div>
+            <div className="flex items-center gap-2 font-bold text-xl">
+              <Users size={24} /> Multi-Tenant
+            </div>
           </div>
         </div>
       </section>
@@ -191,9 +204,17 @@ export default function LandingGemini() {
       <section id="features" className="py-24 bg-theme-bg-secondary/20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-20">
-            <h2 className="text-4xl font-black mb-4">Everything you need to scale.</h2>
-            <p className="text-theme-text-secondary mb-6">Stop cobbling together AI tools. P.A.I.D. Platform is a complete operating system for document-heavy businesses.</p>
-            <Link to="/features" className="text-primary-button font-bold flex items-center justify-center gap-2 hover:underline">
+            <h2 className="text-4xl font-black mb-4">
+              Everything you need to scale.
+            </h2>
+            <p className="text-theme-text-secondary mb-6">
+              Stop cobbling together AI tools. P.A.I.D. Platform is a complete
+              operating system for document-heavy businesses.
+            </p>
+            <Link
+              to="/features"
+              className="text-primary-button font-bold flex items-center justify-center gap-2 hover:underline"
+            >
               View All Feature Details <ArrowRight weight="bold" />
             </Link>
           </div>
@@ -241,9 +262,12 @@ export default function LandingGemini() {
 
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
-                <h2 className="text-4xl md:text-5xl font-black mb-6">Built for growth.</h2>
+                <h2 className="text-4xl md:text-5xl font-black mb-6">
+                  Built for growth.
+                </h2>
                 <p className="text-xl text-theme-text-secondary mb-8">
-                  Start for free, then upgrade as your team scales. No hidden fees, no per-document tax.
+                  Start for free, then upgrade as your team scales. No hidden
+                  fees, no per-document tax.
                 </p>
                 <div className="space-y-4">
                   {[
@@ -252,8 +276,14 @@ export default function LandingGemini() {
                     "API Access & Webhooks",
                     "Dedicated Support",
                   ].map((item) => (
-                    <div key={item} className="flex items-center gap-3 text-lg font-medium">
-                      <CheckCircle weight="fill" className="text-primary-button" />
+                    <div
+                      key={item}
+                      className="flex items-center gap-3 text-lg font-medium"
+                    >
+                      <CheckCircle
+                        weight="fill"
+                        className="text-primary-button"
+                      />
                       {item}
                     </div>
                   ))}
@@ -262,14 +292,21 @@ export default function LandingGemini() {
 
               <div className="bg-theme-bg-primary rounded-3xl p-8 border border-theme-sidebar-border shadow-2xl">
                 <div className="mb-8">
-                  <span className="text-theme-text-secondary font-bold uppercase tracking-widest text-xs">The Professional Tier</span>
+                  <span className="text-theme-text-secondary font-bold uppercase tracking-widest text-xs">
+                    The Professional Tier
+                  </span>
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-5xl font-black">$29</span>
-                    <span className="text-theme-text-secondary font-medium">/month</span>
+                    <span className="text-theme-text-secondary font-medium">
+                      /month
+                    </span>
                   </div>
                 </div>
 
-                <Link to={paths.login()} className="block w-full text-center py-4 rounded-2xl bg-primary-button text-black font-bold text-lg hover:scale-[1.02] transition-transform mb-6">
+                <Link
+                  to={paths.login()}
+                  className="block w-full text-center py-4 rounded-2xl bg-primary-button text-black font-bold text-lg hover:scale-[1.02] transition-transform mb-6"
+                >
                   Get Started with Pro
                 </Link>
 
@@ -285,8 +322,13 @@ export default function LandingGemini() {
       {/* Final CTA */}
       <section className="py-24 text-center">
         <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-5xl md:text-6xl font-black mb-8">Stop chatting. Start shipping.</h2>
-          <Link to={paths.login()} className="inline-flex items-center gap-3 px-12 py-6 rounded-2xl bg-primary-button text-black font-black text-2xl hover:scale-105 transition-transform shadow-2xl shadow-primary-button/30">
+          <h2 className="text-5xl md:text-6xl font-black mb-8">
+            Stop chatting. Start shipping.
+          </h2>
+          <Link
+            to={paths.login()}
+            className="inline-flex items-center gap-3 px-12 py-6 rounded-2xl bg-primary-button text-black font-black text-2xl hover:scale-105 transition-transform shadow-2xl shadow-primary-button/30"
+          >
             Deploy P.A.I.D. Platform Now <ArrowRight weight="bold" />
           </Link>
         </div>
@@ -304,9 +346,15 @@ export default function LandingGemini() {
             </span>
           </div>
           <div className="flex gap-8 text-white/20 text-xs uppercase tracking-widest font-bold">
-            <a href="#" className="hover:text-emerald-500 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-emerald-500 transition-colors">Terms</a>
-            <a href="#" className="hover:text-emerald-500 transition-colors">Enterprise</a>
+            <a href="#" className="hover:text-emerald-500 transition-colors">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-emerald-500 transition-colors">
+              Terms
+            </a>
+            <a href="#" className="hover:text-emerald-500 transition-colors">
+              Enterprise
+            </a>
           </div>
         </div>
       </footer>

@@ -20,7 +20,7 @@ import {
   Palette,
   Layers,
   Move,
-  MousePointer
+  MousePointer,
 } from "lucide-react";
 
 /**
@@ -103,7 +103,7 @@ export default function LandingKimi() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Update nodes
-      nodes.forEach(node => {
+      nodes.forEach((node) => {
         node.x += node.vx;
         node.y += node.vy;
         node.pulse += 0.02;
@@ -118,7 +118,7 @@ export default function LandingKimi() {
       });
 
       // Draw connections
-      connections.forEach(conn => {
+      connections.forEach((conn) => {
         const fromNode = nodes[conn.from];
         const toNode = nodes[conn.to];
         const opacity = conn.strength * 0.3;
@@ -132,11 +132,15 @@ export default function LandingKimi() {
       });
 
       // Draw nodes
-      nodes.forEach(node => {
+      nodes.forEach((node) => {
         const pulseSize = node.size + Math.sin(node.pulse) * 0.5;
         const gradient = ctx.createRadialGradient(
-          node.x, node.y, 0,
-          node.x, node.y, pulseSize * 3
+          node.x,
+          node.y,
+          0,
+          node.x,
+          node.y,
+          pulseSize * 3
         );
         gradient.addColorStop(0, "rgba(168, 85, 247, 0.8)");
         gradient.addColorStop(1, "rgba(168, 85, 247, 0)");
@@ -170,38 +174,42 @@ export default function LandingKimi() {
     {
       icon: <Brain className="w-8 h-8" />,
       title: "Neural Architecture",
-      description: "Quantum-enhanced AI that learns from every interaction. Not basic ML - we're talking next-gen intelligence.",
+      description:
+        "Quantum-enhanced AI that learns from every interaction. Not basic ML - we're talking next-gen intelligence.",
       gradient: "from-purple-500 to-pink-500",
-      glow: "shadow-purple-500/50"
+      glow: "shadow-purple-500/50",
     },
     {
       icon: <Code className="w-8 h-8" />,
       title: "Code Alchemy",
-      description: "Turn ideas into production-ready code. From concept to deployment in minutes, not hours.",
+      description:
+        "Turn ideas into production-ready code. From concept to deployment in minutes, not hours.",
       gradient: "from-cyan-500 to-blue-500",
-      glow: "shadow-cyan-500/50"
+      glow: "shadow-cyan-500/50",
     },
     {
       icon: <Globe className="w-8 h-8" />,
       title: "Digital Sovereignty",
-      description: "Deploy anywhere. Keep your data local or go global. Your rules, your infrastructure.",
+      description:
+        "Deploy anywhere. Keep your data local or go global. Your rules, your infrastructure.",
       gradient: "from-green-500 to-emerald-500",
-      glow: "shadow-green-500/50"
+      glow: "shadow-green-500/50",
     },
     {
       icon: <Cpu className="w-8 h-8" />,
       title: "Infinite Scale",
-      description: "From side project to enterprise. Auto-scaling that doesn't break the bank.",
+      description:
+        "From side project to enterprise. Auto-scaling that doesn't break the bank.",
       gradient: "from-orange-500 to-red-500",
-      glow: "shadow-orange-500/50"
-    }
+      glow: "shadow-orange-500/50",
+    },
   ];
 
   const stats = [
     { value: "∞", label: "Possibilities" },
     { value: "0ms", label: "Latency" },
     { value: "100%", label: "Uptime" },
-    { value: "⚡", label: "Speed" }
+    { value: "⚡", label: "Speed" },
   ];
 
   if (isLoading) {
@@ -238,7 +246,7 @@ export default function LandingKimi() {
             background: `radial-gradient(circle, rgba(168, 85, 247, 0.8) 0%, transparent 70%)`,
             left: `${mousePos.x - 30}%`,
             top: `${mousePos.y - 30}%`,
-            transform: `translateY(${scrollY * 0.5}px)`
+            transform: `translateY(${scrollY * 0.5}px)`,
           }}
         />
         <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] rounded-full opacity-5 blur-[150px] bg-gradient-to-br from-cyan-500 to-blue-600 animate-pulse" />
@@ -264,16 +272,28 @@ export default function LandingKimi() {
           </div>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-semibold">
-            <Link to="/features" className="text-white/60 hover:text-purple-400 transition-colors">
+            <Link
+              to="/features"
+              className="text-white/60 hover:text-purple-400 transition-colors"
+            >
               Features
             </Link>
-            <a href="#quantum" className="text-white/60 hover:text-purple-400 transition-colors">
+            <a
+              href="#quantum"
+              className="text-white/60 hover:text-purple-400 transition-colors"
+            >
               Core
             </a>
-            <a href="#sovereignty" className="text-white/60 hover:text-purple-400 transition-colors">
+            <a
+              href="#sovereignty"
+              className="text-white/60 hover:text-purple-400 transition-colors"
+            >
               Security
             </a>
-            <Link to={paths.login()} className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all hover:scale-105">
+            <Link
+              to={paths.login()}
+              className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all hover:scale-105"
+            >
               Launch Platform
             </Link>
           </div>
@@ -314,12 +334,15 @@ export default function LandingKimi() {
           <p className="text-xl md:text-2xl text-white/60 max-w-3xl mx-auto mb-12 leading-relaxed">
             We don't do "basic." We architect quantum-enhanced AI platforms that
             <span className="text-purple-400"> break barriers</span>, then
-            <span className="text-cyan-400"> deliver results</span>.
-            Welcome to the future of P.A.I.D.
+            <span className="text-cyan-400"> deliver results</span>. Welcome to
+            the future of P.A.I.D.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link to={paths.login()} className="group flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold hover:shadow-xl hover:shadow-purple-500/50 transition-all hover:scale-105">
+            <Link
+              to={paths.login()}
+              className="group flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold hover:shadow-xl hover:shadow-purple-500/50 transition-all hover:scale-105"
+            >
               <Rocket className="w-5 h-5 group-hover:rotate-45 transition-transform" />
               Launch P.A.I.D. Platform
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -376,7 +399,9 @@ export default function LandingKimi() {
                 key={feature.title}
                 className="group relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-8 hover:border-purple-500/50 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20"
               >
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6 shadow-lg ${feature.glow} group-hover:scale-110 transition-transform`}>
+                <div
+                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6 shadow-lg ${feature.glow} group-hover:scale-110 transition-transform`}
+                >
                   {feature.icon}
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4">
@@ -395,7 +420,10 @@ export default function LandingKimi() {
       </section>
 
       {/* Code Preview Section */}
-      <section id="alchemy" className="py-32 px-8 relative z-20 bg-gradient-to-b from-transparent to-purple-900/10">
+      <section
+        id="alchemy"
+        className="py-32 px-8 relative z-20 bg-gradient-to-b from-transparent to-purple-900/10"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-black mb-6">
@@ -430,9 +458,13 @@ export default function LandingKimi() {
                 <div className="text-purple-400">$</div>
                 <div className="text-cyan-400">✓ P.A.I.D. core initialized</div>
                 <div className="text-cyan-400">✓ Proposal engines deployed</div>
-                <div className="text-cyan-400">✓ Production environment ready</div>
+                <div className="text-cyan-400">
+                  ✓ Production environment ready
+                </div>
                 <div className="text-purple-400">$</div>
-                <div className="animate-pulse text-yellow-400">▶ Delivering documents...</div>
+                <div className="animate-pulse text-yellow-400">
+                  ▶ Delivering documents...
+                </div>
               </div>
             </div>
           </div>
@@ -451,12 +483,15 @@ export default function LandingKimi() {
                 Ready to build the impossible?
               </h2>
               <p className="text-white/60 mb-8 text-lg">
-                Join the rebellion. Push boundaries. Create the future.
-                No corporate fluff, just pure innovation.
+                Join the rebellion. Push boundaries. Create the future. No
+                corporate fluff, just pure innovation.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                <Link to={paths.login()} className="px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg hover:shadow-xl hover:shadow-purple-500/50 transition-all hover:scale-105">
+                <Link
+                  to={paths.login()}
+                  className="px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg hover:shadow-xl hover:shadow-purple-500/50 transition-all hover:scale-105"
+                >
                   Start Delivering Now
                 </Link>
                 <button className="px-8 py-4 rounded-full border border-white/20 text-white font-medium hover:bg-white/10 transition-all">
@@ -465,7 +500,8 @@ export default function LandingKimi() {
               </div>
 
               <p className="text-white/40 text-sm">
-                ⚡ Deploys in seconds • 🔒 Your data stays yours • 🚀 Scales to infinity
+                ⚡ Deploys in seconds • 🔒 Your data stays yours • 🚀 Scales to
+                infinity
               </p>
             </div>
           </div>

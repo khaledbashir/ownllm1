@@ -138,9 +138,10 @@ export default function SandpackRenderer({ code, language, workspace }) {
   );
 
   const segmentedButtonClass = (active) =>
-    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${active
-      ? "bg-white/10 text-theme-text-primary border-white/10"
-      : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
+    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
+      active
+        ? "bg-white/10 text-theme-text-primary border-white/10"
+        : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
     }`;
 
   const actionButtonClass =

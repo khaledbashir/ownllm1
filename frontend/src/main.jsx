@@ -59,16 +59,14 @@ const router = createBrowserRouter([
       {
         path: "landingkimi",
         lazy: async () => {
-          const { default: LandingKimi } =
-            await import("@/pages/LandingKimi");
+          const { default: LandingKimi } = await import("@/pages/LandingKimi");
           return { element: <LandingKimi /> };
         },
       },
       {
         path: "landing-grok",
         lazy: async () => {
-          const { default: LandingGrok } =
-            await import("@/pages/LandingGrok");
+          const { default: LandingGrok } = await import("@/pages/LandingGrok");
           return { element: <LandingGrok /> };
         },
       },

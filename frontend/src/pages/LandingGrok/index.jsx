@@ -62,7 +62,10 @@ const LandingGrok = () => {
           <Link to="/blog" className="hover:text-orange-500 transition">
             Blog
           </Link>
-          <Link to={paths.login()} className="bg-orange-500 px-6 py-2 rounded-full hover:bg-orange-600 transition font-bold text-black">
+          <Link
+            to={paths.login()}
+            className="bg-orange-500 px-6 py-2 rounded-full hover:bg-orange-600 transition font-bold text-black"
+          >
             Sign Up
           </Link>
         </div>
@@ -83,14 +86,19 @@ const LandingGrok = () => {
           intelligence, and a rebellious streak. Not your average AI – I'm here
           to push boundaries and answer the unanswerable.
         </p>
-        <Link to={paths.login()} className="bg-orange-500 px-8 py-4 rounded-full text-lg font-bold hover:bg-orange-600 transition shadow-lg text-black">
+        <Link
+          to={paths.login()}
+          className="bg-orange-500 px-8 py-4 rounded-full text-lg font-bold hover:bg-orange-600 transition shadow-lg text-black"
+        >
           Launch into the Platform
         </Link>
       </section>
 
       {/* Features Section */}
       <section className="py-20 px-8 relative z-10">
-        <h2 className="text-5xl font-bold text-center mb-16 uppercase tracking-widest">Why P.A.I.D.?</h2>
+        <h2 className="text-5xl font-bold text-center mb-16 uppercase tracking-widest">
+          Why P.A.I.D.?
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -129,18 +137,26 @@ const LandingGrok = () => {
 
       {/* CTA Section */}
       <section className="py-20 px-8 text-center relative z-10 bg-gradient-to-b from-transparent to-black/50">
-        <h2 className="text-4xl font-bold mb-6">Ready to Experience P.A.I.D.?</h2>
+        <h2 className="text-4xl font-bold mb-6">
+          Ready to Experience P.A.I.D.?
+        </h2>
         <p className="text-xl mb-8">
           Join the rebellion. Sign up now and unlock infinite possibilities.
         </p>
-        <Link to={paths.login()} className="bg-orange-500 px-8 py-4 rounded-full text-lg font-bold hover:bg-orange-600 transition text-black">
+        <Link
+          to={paths.login()}
+          className="bg-orange-500 px-8 py-4 rounded-full text-lg font-bold hover:bg-orange-600 transition text-black"
+        >
           Get Started
         </Link>
       </section>
 
       {/* Footer */}
       <footer className="py-8 px-8 text-center text-gray-400 relative z-10 border-t border-orange-500/10">
-        <p>&copy; 2025 P.A.I.D. Platform. All rights reserved. Delivering the future.</p>
+        <p>
+          &copy; 2025 P.A.I.D. Platform. All rights reserved. Delivering the
+          future.
+        </p>
       </footer>
 
       <style>{`

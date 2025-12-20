@@ -191,7 +191,7 @@ export default function ThreadNotes({
           const doc = editorRef.current.doc;
           if (doc.meta) {
             // BlockSuite doc.meta can be updated directly or via setDocMeta
-            if (typeof doc.meta.setTitle === 'function') {
+            if (typeof doc.meta.setTitle === "function") {
               doc.meta.setTitle(extractedTitle);
             } else {
               // Fallback for direct property access if method doesn't exist
@@ -204,20 +204,31 @@ export default function ThreadNotes({
           }
 
           // Remove the title from the markdown so it's not duplicated in the body
-          markdown = markdown.replace(/^#\s+.+$/m, '').trim();
+          markdown = markdown.replace(/^#\s+.+$/m, "").trim();
         }
 
         // 2. Auto-Tagging
         if (editorRef.current?.doc) {
           const doc = editorRef.current.doc;
           const keywords = [
-            "HubSpot", "Salesforce", "Integration", "SOW", "Proposal",
-            "Design", "Development", "Strategy", "Automation", "Migrate",
-            "Training", "Retainer", "Marketing", "NIDA"
+            "HubSpot",
+            "Salesforce",
+            "Integration",
+            "SOW",
+            "Proposal",
+            "Design",
+            "Development",
+            "Strategy",
+            "Automation",
+            "Migrate",
+            "Training",
+            "Retainer",
+            "Marketing",
+            "NIDA",
           ];
 
-          const contentTags = keywords.filter(keyword =>
-            new RegExp(keyword, 'i').test(markdown)
+          const contentTags = keywords.filter((keyword) =>
+            new RegExp(keyword, "i").test(markdown)
           );
 
           if (contentTags.length > 0) {

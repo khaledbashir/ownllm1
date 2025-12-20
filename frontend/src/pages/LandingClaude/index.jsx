@@ -119,10 +119,16 @@ export default function LandingClaude() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link to={paths.login()} className="text-white/70 hover:text-white text-sm font-medium transition-colors">
+          <Link
+            to={paths.login()}
+            className="text-white/70 hover:text-white text-sm font-medium transition-colors"
+          >
             Sign In
           </Link>
-          <Link to={paths.login()} className="px-5 py-2.5 rounded-full bg-primary-button text-black text-sm font-bold hover:opacity-90 transition-all hover:scale-105 shadow-lg shadow-primary-button/20">
+          <Link
+            to={paths.login()}
+            className="px-5 py-2.5 rounded-full bg-primary-button text-black text-sm font-bold hover:opacity-90 transition-all hover:scale-105 shadow-lg shadow-primary-button/20"
+          >
             Get Started
           </Link>
         </div>
@@ -166,7 +172,10 @@ export default function LandingClaude() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Link to={paths.login()} className="group flex items-center gap-3 px-8 py-4 rounded-full bg-primary-button text-black font-bold text-lg hover:shadow-xl hover:shadow-primary-button/30 transition-all hover:scale-105">
+            <Link
+              to={paths.login()}
+              className="group flex items-center gap-3 px-8 py-4 rounded-full bg-primary-button text-black font-bold text-lg hover:shadow-xl hover:shadow-primary-button/30 transition-all hover:scale-105"
+            >
               Start Free Trial
               <ArrowRight
                 size={20}
