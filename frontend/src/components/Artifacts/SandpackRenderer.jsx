@@ -93,12 +93,12 @@ export default function SandpackRenderer({ code, language, workspace }) {
   };
 
   const shellClass = isFullscreen
-    ? "fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm p-4"
+    ? "fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm p-4 flex items-center justify-center"
     : "my-4";
 
   const frameClass = isFullscreen
-    ? "h-[calc(100vh-2rem)] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-2xl flex flex-col"
-    : "h-[700px] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-xl flex flex-col";
+    ? "w-full h-full max-w-6xl max-h-[90vh] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-2xl flex flex-col"
+    : "w-full max-w-4xl mx-auto h-[500px] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-xl flex flex-col";
 
   const primaryFile = isReact ? "/App.js" : "/index.html";
 
