@@ -2134,20 +2134,36 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important; 
                 width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 10pt !important;
             }
             /* Prevent pricing tables from splitting across pages */
             .pricing-table-wrapper {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
                 width: 100% !important;
+                overflow: visible !important;
+                border-radius: 0 !important;
             }
             .pricing-table-wrapper table {
                  width: 100% !important;
-                 table-layout: auto !important;
+                 table-layout: fixed !important;
                  font-size: 10pt !important;
             }
+            .pricing-table-wrapper th,
+            .pricing-table-wrapper td { padding: 4px !important; }
             .pricing-table-wrapper th:nth-child(1),
             .pricing-table-wrapper td:nth-child(1) { width: 15% !important; }
+            .pricing-table-wrapper th:nth-child(3),
+            .pricing-table-wrapper td:nth-child(3) { width: 80px !important; }
+            .pricing-table-wrapper th:nth-child(4),
+            .pricing-table-wrapper td:nth-child(4) { width: 100px !important; }
+            .pricing-table-wrapper th:nth-child(5),
+            .pricing-table-wrapper td:nth-child(5) { width: 15% !important; }
+            .pricing-table-wrapper th:nth-child(5) { width: 15% !important; }
+            .drag-handle { display: none !important; }
             .pricing-table-wrapper thead,
             .pricing-table-wrapper tbody,
             .pricing-table-wrapper tr {
@@ -2241,20 +2257,18 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         .pricing-table-wrapper td:nth-child(2) { 
             white-space: pre-wrap; 
             overflow-wrap: break-word; 
-            word-break: break-word; 
+            word-wrap: break-word; 
             padding-right: 15px;
         } /* Description */
         .pricing-table-wrapper th:nth-child(3),
-        .pricing-table-wrapper td:nth-child(3) { width: 60px; text-align: right; } /* Hours */
-        .pricing-table-wrapper th:nth-child(3) { width: 60px; text-align: right; } /* Hours */
+        .pricing-table-wrapper td:nth-child(3) { width: 80px; text-align: right; } /* Hours */
+        .pricing-table-wrapper th:nth-child(3) { width: 80px; text-align: right; } /* Hours */
         .pricing-table-wrapper th:nth-child(4),
-        .pricing-table-wrapper td:nth-child(4) { width: 90px; text-align: right; } /* Rate */
-        .pricing-table-wrapper th:nth-child(4) { width: 90px; text-align: right; } /* Rate */
+        .pricing-table-wrapper td:nth-child(4) { width: 100px; text-align: right; } /* Rate */
+        .pricing-table-wrapper th:nth-child(4) { width: 100px; text-align: right; } /* Rate */
         .pricing-table-wrapper th:nth-child(5),
-        .pricing-table-wrapper td:nth-child(5) { width: 110px; text-align: right; font-weight: 600; } /* Total */
-        .pricing-table-wrapper th:nth-child(5) { width: 110px; text-align: right; font-weight: 600; } /* Total */
-
-        .pricing-table-wrapper table { table-layout: auto !important; }
+        .pricing-table-wrapper td:nth-child(5) { width: 120px; text-align: right; font-weight: 600; } /* Total */
+        .pricing-table-wrapper th:nth-child(5) { width: 120px; text-align: right; font-weight: 600; } /* Total */
 
         /* Tabular nums for price alignment */
         .pricing-table-wrapper td {
@@ -2290,9 +2304,14 @@ ${activeTemplateFooter}
 </body>
 </html>`;
 
+      const sanitizedEditorHtml = editorHtml.replace(
+        /[^\x09\x0A\x0D\x20-\x7E]/g,
+        ""
+      );
+
       const result = await WorkspaceThread.exportPdf(
         workspaceSlug,
-        editorHtml,
+        sanitizedEditorHtml,
         {} // No separate header/footer templates - they're in body
       );
 

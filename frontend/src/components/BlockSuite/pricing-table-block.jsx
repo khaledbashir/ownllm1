@@ -303,16 +303,16 @@ const PricingTableWidget = ({ model }) => {
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="text-lg font-semibold text-white/90">{title}</div>
         <div className="flex items-center gap-3">
-          {!isReadonly && (
-            <button
-              onClick={downloadCSV}
-              className="text-white/40 hover:text-white/80 transition-colors"
-              title="Download CSV"
-              contentEditable={false} // Ensure button doesn't trigger edit mode
-            >
-              <FileCsv size={18} weight="bold" />
-            </button>
-          )}
+          <button
+            onClick={downloadCSV}
+            className="inline-flex items-center gap-1.5 text-white/50 hover:text-white/90 transition-colors text-xs font-medium"
+            title="Download CSV"
+            contentEditable={false}
+            type="button"
+          >
+            <FileCsv size={16} weight="bold" />
+            <span>CSV</span>
+          </button>
 
           {!isReadonly && (
             <button
@@ -354,8 +354,8 @@ const PricingTableWidget = ({ model }) => {
       {/* Using CSS Grid instead of HTML table for react-beautiful-dnd compatibility */}
       <div className="overflow-x-auto overflow-y-visible">
         {(() => {
-          const readonlyColumns = "20% minmax(0, 1fr) 60px 90px 110px";
-          const editColumns = "20% minmax(0, 1fr) 60px 90px 110px 44px";
+          const readonlyColumns = "180px minmax(0, 1fr) 80px 100px 120px";
+          const editColumns = "180px minmax(0, 1fr) 80px 100px 120px 44px";
 
           return (
             <>
@@ -470,7 +470,7 @@ const PricingTableWidget = ({ model }) => {
                                   {!isReadonly && (
                                     <div
                                       {...draggableProvided.dragHandleProps}
-                                      className="cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 select-none mt-1"
+                                      className="drag-handle cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 select-none mt-1"
                                       title="Drag to reorder"
                                     >
                                       ⋮⋮
