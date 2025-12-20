@@ -65,6 +65,14 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "landing-grok",
+        lazy: async () => {
+          const { default: LandingGrok } =
+            await import("@/pages/LandingGrok");
+          return { element: <LandingGrok /> };
+        },
+      },
+      {
         path: "p/:id",
         lazy: async () => {
           const { default: PublicProposal } =

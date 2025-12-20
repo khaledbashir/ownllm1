@@ -42,27 +42,40 @@ export default function LandingGemini() {
   return (
     <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-sans selection:bg-primary-button/30">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-primary/80 backdrop-blur-xl border-b border-theme-sidebar-border">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-button to-purple-600 flex items-center justify-center shadow-lg shadow-primary-button/20">
-              <FileText size={24} weight="bold" className="text-white" />
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/5 py-4">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-theme-bg-secondary border border-theme-sidebar-border flex items-center justify-center">
+              <span className="font-bold text-primary-button">P</span>
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase">OwnLLM</span>
-          </Link>
-          
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-theme-text-secondary">
-            <Link to="/features" className="hover:text-theme-text-primary transition-colors">Features</Link>
-            <a href="#workflow" className="hover:text-theme-text-primary transition-colors">Workflow</a>
-            <a href="#pricing" className="hover:text-theme-text-primary transition-colors">Pricing</a>
+            <span className="text-xl font-bold tracking-tight text-white uppercase">
+              P.A.I.D. <span className="text-emerald-500">Platform</span>
+            </span>
           </div>
-
-          <div className="flex items-center gap-4">
-            <Link to={paths.login()} className="px-6 py-2.5 rounded-xl bg-theme-bg-secondary border border-theme-sidebar-border text-sm font-bold hover:bg-theme-sidebar-item-hover transition-colors">
-              Log In
+          <div className="hidden md:flex items-center gap-8">
+            <Link
+              to="/features"
+              className="text-white/60 hover:text-white transition-colors text-sm font-medium"
+            >
+              Features
             </Link>
-            <Link to={paths.login()} className="px-6 py-2.5 rounded-xl bg-primary-button text-black text-sm font-bold hover:opacity-90 transition-opacity shadow-lg shadow-primary-button/20">
-              Start Building
+            <a
+              href="#templates"
+              className="text-white/60 hover:text-white transition-colors text-sm font-medium"
+            >
+              Templates
+            </a>
+            <a
+              href="#security"
+              className="text-white/60 hover:text-white transition-colors text-sm font-medium"
+            >
+              Security
+            </a>
+            <Link
+              to={paths.login()}
+              className="px-6 py-2 rounded-lg bg-primary-button text-black font-bold text-sm hover:scale-105 transition-all shadow-lg shadow-emerald-500/20"
+            >
+              Get Started
             </Link>
           </div>
         </div>
@@ -77,21 +90,21 @@ export default function LandingGemini() {
 
         <div className="max-w-7xl mx-auto px-6 relative">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-theme-bg-secondary border border-theme-sidebar-border text-[11px] font-bold uppercase tracking-widest text-primary-button mb-8">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-button opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-button"></span>
-              </span>
-              Next-Gen Document Intelligence
+            <div className="flex gap-3 mb-6">
+              <div className="w-3 h-3 rounded-full bg-red-500/50" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+              <div className="w-3 h-3 rounded-full bg-green-500/50" />
             </div>
-            
-            <h1 className="text-5xl md:text-7xl font-black leading-[1.1] mb-8 tracking-tight">
-              Don't just chat.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-button to-purple-400">Ship the document.</span>
+
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tight">
+              The Enterprise OS for <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
+                P.A.I.D. Automation
+              </span>
             </h1>
-            
+
             <p className="text-xl text-theme-text-secondary leading-relaxed mb-10 max-w-2xl">
-              OwnLLM turns your raw conversations and data into professional, 
+              P.A.I.D. Platform turns your raw conversations and data into professional,
               ready-to-send proposals, contracts, and quotes. Fully private. Fully branded. Fully automated.
             </p>
 
@@ -127,10 +140,11 @@ export default function LandingGemini() {
               <div className="aspect-square rounded-3xl bg-gradient-to-br from-theme-bg-secondary to-theme-bg-primary border border-theme-sidebar-border p-1">
                 <div className="h-full w-full rounded-[1.4rem] bg-theme-bg-primary overflow-hidden flex flex-col p-6">
                   {/* Mock UI */}
-                  <div className="flex gap-3 mb-6">
-                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-8">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-sm font-medium text-emerald-400">
+                      P.A.I.D. Platform v2.0 is live
+                    </span>
                   </div>
                   <div className="space-y-4">
                     <div className="h-4 w-3/4 bg-theme-bg-secondary rounded animate-pulse" />
@@ -152,17 +166,17 @@ export default function LandingGemini() {
             <div>
               <h2 className="text-4xl font-black mb-12">The Path to Done.</h2>
               <div className="space-y-12">
-                <Step 
+                <Step
                   number="1"
                   title="Ingest Your Context"
-                  description="Upload PDFs, docs, or sync with your CRM. OwnLLM understands your business data deeply and privately."
+                  description="Upload PDFs, docs, or sync with your CRM. P.A.I.D. Platform understands your business data deeply and privately."
                 />
-                <Step 
+                <Step
                   number="2"
                   title="Intelligent Collaboration"
                   description="Chat with your documents to refine the scope, define rates, and structure the narrative."
                 />
-                <Step 
+                <Step
                   number="3"
                   title="Export Branded Assets"
                   description="One click to generate a professional, branded PDF proposal or contract ready for your client's inbox."
@@ -178,39 +192,39 @@ export default function LandingGemini() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-20">
             <h2 className="text-4xl font-black mb-4">Everything you need to scale.</h2>
-            <p className="text-theme-text-secondary mb-6">Stop cobbling together AI tools. OwnLLM is a complete operating system for document-heavy businesses.</p>
+            <p className="text-theme-text-secondary mb-6">Stop cobbling together AI tools. P.A.I.D. Platform is a complete operating system for document-heavy businesses.</p>
             <Link to="/features" className="text-primary-button font-bold flex items-center justify-center gap-2 hover:underline">
               View All Feature Details <ArrowRight weight="bold" />
             </Link>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard 
+            <FeatureCard
               icon={Browser}
               title="Template Builder"
               description="Create reusable AI-powered templates for any document type. Standardize your output across the entire team."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={Lightning}
               title="Artifact Library"
               description="Keep a persistent history of every generated proposal and contract. Never lose a draft or a version again."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={Buildings}
               title="White-Label Ready"
               description="Your logo, your colors, your domain. To your clients, it looks like a proprietary tool you built yourself."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={ShieldCheck}
               title="True Privacy"
               description="Run on your own infrastructure. Your sensitive business data never leaves your control."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={Users}
               title="Multi-Workspace"
               description="Organize clients or departments into isolated workspaces with granular permission controls."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={Briefcase}
               title="CRM Integration"
               description="Connect directly to your existing sales pipeline to pull products, rates, and lead information automatically."
@@ -224,7 +238,7 @@ export default function LandingGemini() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="rounded-[3rem] bg-gradient-to-br from-theme-bg-secondary to-theme-bg-primary border border-theme-sidebar-border p-12 md:p-20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-primary-button/10 rounded-full blur-[100px] -z-10" />
-            
+
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
                 <h2 className="text-4xl md:text-5xl font-black mb-6">Built for growth.</h2>
@@ -245,7 +259,7 @@ export default function LandingGemini() {
                   ))}
                 </div>
               </div>
-              
+
               <div className="bg-theme-bg-primary rounded-3xl p-8 border border-theme-sidebar-border shadow-2xl">
                 <div className="mb-8">
                   <span className="text-theme-text-secondary font-bold uppercase tracking-widest text-xs">The Professional Tier</span>
@@ -254,11 +268,11 @@ export default function LandingGemini() {
                     <span className="text-theme-text-secondary font-medium">/month</span>
                   </div>
                 </div>
-                
+
                 <Link to={paths.login()} className="block w-full text-center py-4 rounded-2xl bg-primary-button text-black font-bold text-lg hover:scale-[1.02] transition-transform mb-6">
                   Get Started with Pro
                 </Link>
-                
+
                 <p className="text-center text-sm text-theme-text-secondary">
                   Join 500+ businesses shipping better documents today.
                 </p>
@@ -273,22 +287,26 @@ export default function LandingGemini() {
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-5xl md:text-6xl font-black mb-8">Stop chatting. Start shipping.</h2>
           <Link to={paths.login()} className="inline-flex items-center gap-3 px-12 py-6 rounded-2xl bg-primary-button text-black font-black text-2xl hover:scale-105 transition-transform shadow-2xl shadow-primary-button/30">
-            Deploy OwnLLM Now <ArrowRight weight="bold" />
+            Deploy P.A.I.D. Platform Now <ArrowRight weight="bold" />
           </Link>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="py-12 border-t border-theme-sidebar-border">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-theme-text-secondary text-sm">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-theme-text-primary">OwnLLM</span>
-            <span>&copy; 2025. All rights reserved.</span>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-theme-bg-secondary border border-theme-sidebar-border flex items-center justify-center">
+              <span className="font-bold text-primary-button">P</span>
+            </div>
+            <span className="text-white/40 text-sm">
+              © 2025 P.A.I.D. Platform. All rights reserved.
+            </span>
           </div>
-          <div className="flex gap-8">
-            <a href="#" className="hover:text-theme-text-primary transition-colors">Privacy</a>
-            <a href="#" className="hover:text-theme-text-primary transition-colors">Terms</a>
-            <a href="#" className="hover:text-theme-text-primary transition-colors">Documentation</a>
+          <div className="flex gap-8 text-white/20 text-xs uppercase tracking-widest font-bold">
+            <a href="#" className="hover:text-emerald-500 transition-colors">Privacy</a>
+            <a href="#" className="hover:text-emerald-500 transition-colors">Terms</a>
+            <a href="#" className="hover:text-emerald-500 transition-colors">Enterprise</a>
           </div>
         </div>
       </footer>

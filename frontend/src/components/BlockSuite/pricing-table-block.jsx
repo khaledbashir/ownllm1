@@ -6,6 +6,7 @@ import { BlockElement } from "@blocksuite/block-std";
 import { html } from "lit";
 import { literal } from "lit/static-html.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { FileCsv } from "@phosphor-icons/react"; // Import CSV Icon
 
 import Workspace from "@/models/workspace";
 import ReactMarkdown from "react-markdown";
@@ -95,7 +96,7 @@ const calcTotals = ({ rows, discountPercent, gstPercent }) => {
 };
 
 // This is the block model (holds props) for BlockSuite.
-export class PricingTableModel extends defineEmbedModel(BlockModel) {}
+export class PricingTableModel extends defineEmbedModel(BlockModel) { }
 
 // We implement as an embed block so affine:note allows it.
 export const PricingTableBlockSchema = createEmbedBlockSchema({
@@ -240,6 +241,38 @@ const PricingTableWidget = ({ model }) => {
     updateModel({ rows: sorted });
   };
 
+  const downloadCSV = () => {
+    const headers = ["Role", "Description", "Hours", "Rate", "Line Total"];
+    const csvRows = [headers.join(",")];
+
+    rows.forEach(row => {
+      const lineTotal = clampNumber(row.hours) * clampNumber(row.baseRate);
+      const clean = (text) => `"${String(text || "").replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+      csvRows.push([
+        clean(row.role),
+        clean(row.description),
+        row.hours,
+        row.baseRate,
+        lineTotal.toFixed(2)
+      ].join(","));
+    });
+
+    // Add totals
+    csvRows.push(",,,,");
+    csvRows.push(`,,,"Subtotal",${totals.subtotal.toFixed(2)}`);
+    csvRows.push(`,,,"Discount (-${discountPercent}%)",-${totals.discount.toFixed(2)}`);
+    csvRows.push(`,,,"GST (${gstPercent}%)",${totals.gst.toFixed(2)}`);
+    csvRows.push(`,,,"Total",${totals.total.toFixed(2)}`);
+
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pricing-table-${Date.now()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   if (error) {
     return (
       <div className="p-4 text-red-400 bg-red-900/20 rounded">
@@ -263,6 +296,17 @@ const PricingTableWidget = ({ model }) => {
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="text-lg font-semibold text-white/90">{title}</div>
         <div className="flex items-center gap-3">
+          {!isReadonly && (
+            <button
+              onClick={downloadCSV}
+              className="text-white/40 hover:text-white/80 transition-colors"
+              title="Download CSV"
+              contentEditable={false} // Ensure button doesn't trigger edit mode
+            >
+              <FileCsv size={18} weight="bold" />
+            </button>
+          )}
+
           {!isReadonly && (
             <button
               onClick={() => updateModel({ showTotals: !showTotals })}
@@ -306,9 +350,11 @@ const PricingTableWidget = ({ model }) => {
         <div
           className="grid text-left text-xs text-white/60 border-b border-white/10 py-2"
           style={{
+            display: "grid",
             gridTemplateColumns: !isReadonly
-              ? "1fr 2fr 80px 100px 100px 60px"
-              : "1fr 2fr 80px 100px 100px",
+              ? "20% 35% 10% 10% 15% 10%" // Edit Mode: Steal 10% from desc for actions
+              : "20% 45% 10% 10% 15%",    // ReadOnly Mode: Strict adherence
+            width: "100%",
           }}
         >
           <div className="pr-3">Role</div>
@@ -385,10 +431,14 @@ const PricingTableWidget = ({ model }) => {
                           {...draggableProvided.draggableProps}
                           className={`grid items-start border-b border-white/5 py-2 text-sm text-white/80 group ${snapshot.isDragging ? "opacity-60 bg-white/10 rounded" : ""}`}
                           style={{
+                            display: "grid",
                             gridTemplateColumns: !isReadonly
-                              ? "1fr 2fr 80px 100px 100px 60px"
-                              : "1fr 2fr 80px 100px 100px",
+                              ? "20% 35% 10% 10% 15% 10%"
+                              : "20% 45% 10% 10% 15%",
+                            width: "100%",
                             ...draggableProvided.draggableProps.style,
+                            // Ensure layout holds during drag
+                            ...(snapshot.isDragging ? { display: "grid", background: "#252525", opacity: 0.9 } : {})
                           }}
                         >
                           {/* Role Column with Drag Handle */}
@@ -493,8 +543,8 @@ const PricingTableWidget = ({ model }) => {
                             </div>
                           </div>
 
-                          {/* Description Column */}
-                          <div className="pr-3">
+                          {/* Description Column - Fixed Wrapping */}
+                          <div className="pr-3" style={{ whiteSpace: "normal", overflowWrap: "break-word", minWidth: 0 }}>
                             {isReadonly ? (
                               <div className="prose prose-invert prose-sm max-w-none">
                                 <ReactMarkdown>

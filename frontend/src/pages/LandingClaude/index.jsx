@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import paths from "@/utils/paths";
 import {
   ArrowRight,
   Lightning,
@@ -83,24 +85,24 @@ export default function LandingClaude() {
       {/* Navigation */}
       <nav className="relative z-50 flex items-center justify-between max-w-7xl mx-auto px-6 py-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <Sparkle size={24} weight="fill" className="text-white" />
+          <div className="w-10 h-10 rounded-xl bg-theme-bg-secondary border border-theme-sidebar-border flex items-center justify-center shadow-lg shadow-primary-button/10">
+            <span className="font-bold text-primary-button text-xl">P</span>
           </div>
           <span className="text-xl font-bold tracking-tight">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
-              Nexus
+              P.A.I.D.
             </span>
-            <span className="text-violet-400">AI</span>
+            <span className="text-emerald-400 font-black"> Platform</span>
           </span>
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          <a
-            href="#features"
+          <Link
+            to="/features"
             className="text-white/60 hover:text-white transition-colors text-sm"
           >
             Features
-          </a>
+          </Link>
           <a
             href="#pricing"
             className="text-white/60 hover:text-white transition-colors text-sm"
@@ -108,7 +110,8 @@ export default function LandingClaude() {
             Pricing
           </a>
           <a
-            href="#docs"
+            href="https://docs.anythingllm.com"
+            target="_blank"
             className="text-white/60 hover:text-white transition-colors text-sm"
           >
             Documentation
@@ -116,12 +119,12 @@ export default function LandingClaude() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="text-white/70 hover:text-white text-sm font-medium transition-colors">
+          <Link to={paths.login()} className="text-white/70 hover:text-white text-sm font-medium transition-colors">
             Sign In
-          </button>
-          <button className="px-4 py-2 rounded-full bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all hover:scale-105 shadow-lg shadow-white/20">
+          </Link>
+          <Link to={paths.login()} className="px-5 py-2.5 rounded-full bg-primary-button text-black text-sm font-bold hover:opacity-90 transition-all hover:scale-105 shadow-lg shadow-primary-button/20">
             Get Started
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -132,25 +135,25 @@ export default function LandingClaude() {
       >
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8 group hover:border-violet-500/50 transition-colors cursor-pointer">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8 group hover:border-emerald-500/50 transition-colors cursor-pointer">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-sm text-white/70">
-              Now with GPT-4 Turbo Integration
+              New: P.A.I.D. Advanced Template Studio
             </span>
             <ArrowRight
               size={14}
-              className="text-white/40 group-hover:text-violet-400 group-hover:translate-x-1 transition-all"
+              className="text-white/40 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all"
             />
           </div>
 
           {/* Headline */}
-          <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] mb-6">
+          <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] mb-6 text-white">
             <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40">
               Your Business,
             </span>
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400">
-              Supercharged by AI
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-primary-button to-emerald-600">
+              Supercharged by P.A.I.D.
             </span>
           </h1>
 
@@ -163,15 +166,15 @@ export default function LandingClaude() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <button className="group flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-105">
+            <Link to={paths.login()} className="group flex items-center gap-3 px-8 py-4 rounded-full bg-primary-button text-black font-bold text-lg hover:shadow-xl hover:shadow-primary-button/30 transition-all hover:scale-105">
               Start Free Trial
               <ArrowRight
                 size={20}
                 className="group-hover:translate-x-1 transition-transform"
               />
-            </button>
+            </Link>
             <button className="group flex items-center gap-3 px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-all">
-              <Play size={20} weight="fill" className="text-violet-400" />
+              <Play size={20} weight="fill" className="text-emerald-400" />
               Watch Demo
             </button>
           </div>
@@ -216,7 +219,7 @@ export default function LandingClaude() {
               </div>
               <div className="flex-1 flex justify-center">
                 <div className="px-4 py-1 rounded-full bg-white/5 text-xs text-white/40">
-                  app.nexusai.io
+                  app.paid.ai
                 </div>
               </div>
             </div>
@@ -372,11 +375,11 @@ export default function LandingClaude() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                <Sparkle size={18} weight="fill" className="text-white" />
+              <div className="w-8 h-8 rounded-lg bg-theme-bg-secondary border border-theme-sidebar-border flex items-center justify-center">
+                <span className="font-bold text-primary-button">P</span>
               </div>
               <span className="text-white/60 text-sm">
-                © 2024 NexusAI. All rights reserved.
+                © 2025 P.A.I.D. Platform. All rights reserved.
               </span>
             </div>
             <div className="flex items-center gap-6 text-white/40 text-sm">

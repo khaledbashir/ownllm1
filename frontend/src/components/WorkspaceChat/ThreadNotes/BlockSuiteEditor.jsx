@@ -39,6 +39,7 @@ import AIInputModal from "@/components/AIInputModal";
 import InlineAI from "@/models/inlineAI";
 import DOMPurify from "@/utils/chat/purify";
 import renderMarkdown from "@/utils/chat/markdown";
+import BlockTemplate from "@/models/blockTemplate";
 import "./editor.css";
 
 // Pre-made document templates
@@ -1811,6 +1812,44 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     },
 
     getEditor: () => editorRef.current,
+
+    saveAsTemplate: async (name, description) => {
+      if (!editorRef.current || !editorRef.current.doc)
+        throw new Error("Editor not ready");
+      const job = new Job({ collection: collectionRef.current });
+      const snapshot = await job.docToSnapshot(editorRef.current.doc);
+      return await BlockTemplate.create(workspaceSlug, {
+        name,
+        description,
+        snapshot,
+      });
+    },
+
+    loadBlockTemplate: async (templateId) => {
+      try {
+        const template = await BlockTemplate.get(templateId);
+        if (!template || !template.snapshot) throw new Error("Invalid template");
+
+        const job = new Job({ collection: collectionRef.current });
+
+        // Parse snapshot if string
+        const snapshot = typeof template.snapshot === 'string'
+          ? JSON.parse(template.snapshot)
+          : template.snapshot;
+
+        const newDoc = await job.snapshotToDoc(snapshot);
+        await newDoc.load();
+
+        // Switch functionality
+        editorRef.current.doc = newDoc;
+        toast.success(`Loaded template: ${template.name}`);
+        return true;
+      } catch (e) {
+        console.error("Failed to load block template", e);
+        toast.error("Failed to load template");
+        return false;
+      }
+    },
   }));
 
   /**
@@ -2092,13 +2131,19 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             body { 
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important; 
+                width: 100% !important;
             }
             /* Prevent pricing tables from splitting across pages */
             .pricing-table-wrapper {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
+                width: 100% !important;
             }
-            .pricing-table-wrapper table,
+            .pricing-table-wrapper table {
+                 width: 100% !important;
+                 table-layout: fixed !important;
+                 font-size: 10px !important; /* Force smaller font for PDF */
+            }
             .pricing-table-wrapper thead,
             .pricing-table-wrapper tbody,
             .pricing-table-wrapper tr {
@@ -2189,13 +2234,18 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         .pricing-table-wrapper th:nth-child(1),
         .pricing-table-wrapper td:nth-child(1) { width: 20%; } /* Role */
         .pricing-table-wrapper th:nth-child(2),
-        .pricing-table-wrapper td:nth-child(2) { width: 45%; } /* Description */
+        .pricing-table-wrapper td:nth-child(2) { 
+            width: 45%; 
+            white-space: normal; 
+            overflow-wrap: break-word; 
+            word-break: break-word; 
+        } /* Description */
         .pricing-table-wrapper th:nth-child(3),
         .pricing-table-wrapper td:nth-child(3) { width: 10%; text-align: right; } /* Hours */
         .pricing-table-wrapper th:nth-child(4),
-        .pricing-table-wrapper td:nth-child(4) { width: 12%; text-align: right; } /* Rate */
+        .pricing-table-wrapper td:nth-child(4) { width: 10%; text-align: right; } /* Rate */
         .pricing-table-wrapper th:nth-child(5),
-        .pricing-table-wrapper td:nth-child(5) { width: 13%; text-align: right; font-weight: 600; } /* Total */
+        .pricing-table-wrapper td:nth-child(5) { width: 15%; text-align: right; font-weight: 600; } /* Total */
 
         /* Tabular nums for price alignment */
         .pricing-table-wrapper td {

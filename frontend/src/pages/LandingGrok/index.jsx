@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion"; // Assuming framer-motion is in package.json based on common React stacks
-import { Link } from "react-router-dom"; // Assuming react-router is used for navigation
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import paths from "@/utils/paths";
 
 const LandingGrok = () => {
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
@@ -46,8 +47,11 @@ const LandingGrok = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-md py-4 px-8 flex justify-between items-center">
-        <div className="text-2xl font-bold">Grok xAI</div>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-md py-4 px-8 flex justify-between items-center border-b border-orange-500/20">
+        <div className="text-2xl font-bold tracking-tighter uppercase">
+          <span className="text-orange-500">P.A.I.D.</span>
+          <span className="text-white"> Platform</span>
+        </div>
         <div className="space-x-6">
           <Link to="/features" className="hover:text-orange-500 transition">
             Features
@@ -58,9 +62,9 @@ const LandingGrok = () => {
           <Link to="/blog" className="hover:text-orange-500 transition">
             Blog
           </Link>
-          <button className="bg-orange-500 px-4 py-2 rounded-full hover:bg-orange-600 transition">
+          <Link to={paths.login()} className="bg-orange-500 px-6 py-2 rounded-full hover:bg-orange-600 transition font-bold text-black">
             Sign Up
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -72,21 +76,21 @@ const LandingGrok = () => {
           transition={{ duration: 1 }}
           className="text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-yellow-300"
         >
-          Grok: Your Witty Cosmic Companion
+          P.A.I.D. Your Universal Business Partner
         </motion.h1>
         <p className="text-2xl max-w-2xl mb-8">
           Built by xAI to explore the universe's mysteries with humor,
           intelligence, and a rebellious streak. Not your average AI – I'm here
           to push boundaries and answer the unanswerable.
         </p>
-        <button className="bg-orange-500 px-8 py-4 rounded-full text-lg font-semibold hover:bg-orange-600 transition shadow-lg">
-          Launch into the Unknown
-        </button>
+        <Link to={paths.login()} className="bg-orange-500 px-8 py-4 rounded-full text-lg font-bold hover:bg-orange-600 transition shadow-lg text-black">
+          Launch into the Platform
+        </Link>
       </section>
 
       {/* Features Section */}
       <section className="py-20 px-8 relative z-10">
-        <h2 className="text-5xl font-bold text-center mb-16">Why Grok?</h2>
+        <h2 className="text-5xl font-bold text-center mb-16 uppercase tracking-widest">Why P.A.I.D.?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -114,10 +118,10 @@ const LandingGrok = () => {
             whileHover={{ scale: 1.05 }}
             className="bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl border border-orange-500/30"
           >
-            <h3 className="text-2xl font-bold mb-4">xAI Powered</h3>
+            <h3 className="text-2xl font-bold mb-4">P.A.I.D. Core</h3>
             <p>
-              Backed by the most advanced models, from Grok-4 to beyond, pushing
-              AI frontiers.
+              Backed by the most advanced proposal engines and automated
+              workflows, pushing business frontiers.
             </p>
           </motion.div>
         </div>
@@ -125,18 +129,18 @@ const LandingGrok = () => {
 
       {/* CTA Section */}
       <section className="py-20 px-8 text-center relative z-10 bg-gradient-to-b from-transparent to-black/50">
-        <h2 className="text-4xl font-bold mb-6">Ready to Grok the Universe?</h2>
+        <h2 className="text-4xl font-bold mb-6">Ready to Experience P.A.I.D.?</h2>
         <p className="text-xl mb-8">
           Join the rebellion. Sign up now and unlock infinite possibilities.
         </p>
-        <button className="bg-orange-500 px-8 py-4 rounded-full text-lg font-semibold hover:bg-orange-600 transition">
+        <Link to={paths.login()} className="bg-orange-500 px-8 py-4 rounded-full text-lg font-bold hover:bg-orange-600 transition text-black">
           Get Started
-        </button>
+        </Link>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-8 text-center text-gray-400 relative z-10">
-        <p>&copy; 2025 xAI. All rights reserved. Inspired by the cosmos.</p>
+      <footer className="py-8 px-8 text-center text-gray-400 relative z-10 border-t border-orange-500/10">
+        <p>&copy; 2025 P.A.I.D. Platform. All rights reserved. Delivering the future.</p>
       </footer>
 
       <style>{`

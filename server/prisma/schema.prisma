@@ -90,6 +90,7 @@ model users {
   crm_pipelines               crm_pipelines[]
   crm_cards                   crm_cards[]
   integration_vault           integration_vault[]
+  block_templates             block_templates[]
 }
 
 model recovery_codes {
@@ -169,6 +170,7 @@ model workspaces {
   smart_plugins                smart_plugins[]
   crm_pipelines                crm_pipelines[]
   public_proposals             public_proposals[]
+  block_templates              block_templates[]
 }
 
 model workspace_threads {
@@ -582,4 +584,22 @@ model public_proposals {
 
   @@index([workspaceId])
   @@index([status])
+}
+
+model block_templates {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  snapshot    String   // JSON serialized block tree
+  workspaceId Int
+  isGlobal    Boolean  @default(false)
+  createdBy   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        users?     @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@unique([workspaceId, name])
 }

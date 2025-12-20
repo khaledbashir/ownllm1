@@ -37,6 +37,7 @@ const { mobileEndpoints } = require("./endpoints/mobile");
 const { agentTestLabEndpoints } = require("./endpoints/agentTestLab");
 const { inlineAIEndpoints } = require("./endpoints/inlineAI");
 const { templatesEndpoints } = require("./endpoints/templates");
+const { blockTemplatesEndpoints } = require("./endpoints/blockTemplates");
 const { publicProposalsEndpoints } = require("./endpoints/publicProposals");
 const { httpLogger } = require("./middleware/httpLogger");
 const app = express();
@@ -113,6 +114,7 @@ mobileEndpoints(apiRouter);
 agentTestLabEndpoints(apiRouter);
 inlineAIEndpoints(apiRouter);
 templatesEndpoints(apiRouter);
+blockTemplatesEndpoints(apiRouter);
 publicProposalsEndpoints(apiRouter);
 
 // Externally facing embedder endpoints

@@ -9,12 +9,15 @@ import { useParams } from "react-router-dom";
 import WorkspaceThread from "@/models/workspaceThread";
 import AICommandModal from "./AICommandModal";
 import MultiScopeSowModal from "./MultiScopeSowModal";
+import SaveTemplateModal from "./SaveTemplateModal";
+import BlockTemplate from "@/models/blockTemplate";
 import {
   NotePencil,
   WarningCircle,
   CaretDown,
   FileText,
   MagicWand,
+  Plus,
 } from "@phosphor-icons/react";
 import showToast from "@/utils/toast";
 import { EditorProvider, useEditorContext } from "./EditorContext";
@@ -80,6 +83,34 @@ export default function ThreadNotes({
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   const templateMenuRef = useRef(null);
 
+  // Template Management
+  const [blockTemplates, setBlockTemplates] = useState([]);
+  const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (workspace?.slug) {
+      BlockTemplate.list(workspace.slug)
+        .then(setBlockTemplates)
+        .catch((e) => console.error("Failed to load templates", e));
+    }
+  }, [workspace?.slug]);
+
+  const handleSaveTemplate = useCallback(
+    async (name, description) => {
+      try {
+        await editorRef.current.saveAsTemplate(name, description);
+        showToast("Template saved!", "success");
+        // Refresh list
+        const list = await BlockTemplate.list(workspace.slug);
+        setBlockTemplates(list);
+      } catch (e) {
+        showToast("Failed to save template", "error");
+        console.error(e);
+      }
+    },
+    [workspace?.slug, editorRef]
+  );
+
   // Close template menu on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -96,15 +127,22 @@ export default function ThreadNotes({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showTemplateMenu]);
 
-  const handleLoadTemplate = useCallback(
-    (templateKey) => {
-      if (editorRef.current?.loadTemplate) {
+  (templateKey) => {
+    if (!editorRef.current) return;
+
+    // Check if it's a standard template or custom ID
+    if (DOC_TEMPLATES[templateKey]) {
+      if (editorRef.current.loadTemplate) {
         editorRef.current.loadTemplate(templateKey);
-      } else {
-        showToast("Editor not ready", "error");
       }
-      setShowTemplateMenu(false);
-    },
+    } else {
+      // Assume it's a block template ID
+      if (editorRef.current.loadBlockTemplate) {
+        editorRef.current.loadBlockTemplate(templateKey);
+      }
+    }
+    setShowTemplateMenu(false);
+  },
     [editorRef]
   );
 
@@ -138,10 +176,59 @@ export default function ThreadNotes({
           return;
         }
 
-        const markdown = String(res?.markdown || "").trim();
+        let markdown = String(res?.markdown || "").trim();
         if (!markdown) {
           showToast("Smart action returned empty output.", "error");
           return;
+        }
+
+        // 1. Title Extraction & Assignment
+        const titleMatch = markdown.match(/^#\s+(.+)$/m);
+        if (titleMatch && editorRef.current?.doc) {
+          const extractedTitle = titleMatch[1].trim();
+          // Update document title metadata
+          const doc = editorRef.current.doc;
+          if (doc.meta) {
+            // BlockSuite doc.meta can be updated directly or via setDocMeta
+            if (typeof doc.meta.setTitle === 'function') {
+              doc.meta.setTitle(extractedTitle);
+            } else {
+              // Fallback for direct property access if method doesn't exist
+              // check if collection is available to properly update meta
+              const collection = doc.collection;
+              if (collection && collection.meta) {
+                collection.meta.setDocMeta(doc.id, { title: extractedTitle });
+              }
+            }
+          }
+
+          // Remove the title from the markdown so it's not duplicated in the body
+          markdown = markdown.replace(/^#\s+.+$/m, '').trim();
+        }
+
+        // 2. Auto-Tagging
+        if (editorRef.current?.doc) {
+          const doc = editorRef.current.doc;
+          const keywords = [
+            "HubSpot", "Salesforce", "Integration", "SOW", "Proposal",
+            "Design", "Development", "Strategy", "Automation", "Migrate",
+            "Training", "Retainer", "Marketing", "NIDA"
+          ];
+
+          const contentTags = keywords.filter(keyword =>
+            new RegExp(keyword, 'i').test(markdown)
+          );
+
+          if (contentTags.length > 0) {
+            const collection = doc.collection;
+            if (collection && collection.meta) {
+              const currentMeta = collection.meta.getDocMeta(doc.id);
+              const currentTags = currentMeta?.tags || [];
+              // Merge new tags avoiding duplicates
+              const uniqueTags = [...new Set([...currentTags, ...contentTags])];
+              collection.meta.setDocMeta(doc.id, { tags: uniqueTags });
+            }
+          }
         }
 
         editorRef.current.insertMarkdown(`\n\n${markdown}\n`);
@@ -297,17 +384,62 @@ export default function ThreadNotes({
                 />
               </button>
               {showTemplateMenu && (
-                <div className="absolute left-0 top-full mt-1 w-48 bg-theme-bg-secondary border border-theme-sidebar-border rounded-lg shadow-xl z-50 overflow-hidden">
-                  {Object.entries(DOC_TEMPLATES).map(([key, template]) => (
+                <div className="absolute left-0 top-full mt-1 w-64 bg-theme-bg-secondary border border-theme-sidebar-border rounded-lg shadow-xl z-50 overflow-hidden max-h-[400px] flex flex-col">
+                  <div className="overflow-y-auto flex-1">
+                    <div className="px-3 py-2 text-[10px] font-bold text-theme-text-secondary uppercase tracking-wider bg-theme-bg-primary/50">
+                      Standard
+                    </div>
+                    {Object.entries(DOC_TEMPLATES).map(([key, template]) => (
+                      <button
+                        key={key}
+                        onClick={() => handleLoadTemplate(key)}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-theme-bg-container transition-colors text-left border-l-2 border-transparent hover:border-theme-primary"
+                      >
+                        <span className="text-base">{template.icon}</span>
+                        <span>{template.name}</span>
+                      </button>
+                    ))}
+
+                    {blockTemplates.length > 0 && (
+                      <>
+                        <div className="px-3 py-2 mt-2 text-[10px] font-bold text-theme-text-secondary uppercase tracking-wider bg-theme-bg-primary/50 border-t border-theme-sidebar-border">
+                          My Templates
+                        </div>
+                        {blockTemplates.map((template) => (
+                          <button
+                            key={template.id}
+                            onClick={() => handleLoadTemplate(template.id)}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-theme-bg-container transition-colors text-left border-l-2 border-transparent hover:border-theme-primary group"
+                          >
+                            <span className="text-base group-hover:scale-110 transition-transform">
+                              📄
+                            </span>
+                            <div className="flex flex-col">
+                              <span>{template.name}</span>
+                              {template.description && (
+                                <span className="text-[10px] text-theme-text-secondary line-clamp-1">
+                                  {template.description}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="p-2 border-t border-theme-sidebar-border bg-theme-bg-secondary">
                     <button
-                      key={key}
-                      onClick={() => handleLoadTemplate(key)}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white hover:bg-theme-bg-container transition-colors text-left"
+                      onClick={() => {
+                        setShowTemplateMenu(false);
+                        setIsSaveTemplateModalOpen(true);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-theme-bg-primary hover:bg-theme-bg-hover text-theme-text-primary text-xs font-medium rounded border border-theme-sidebar-border transition-colors hover:text-white"
                     >
-                      <span>{template.icon}</span>
-                      <span>{template.name}</span>
+                      <Plus size={14} weight="bold" />
+                      Save Current as Template
                     </button>
-                  ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -344,8 +476,14 @@ export default function ThreadNotes({
           onClose={() => setIsMultiScopeModalOpen(false)}
           onSubmit={runMultiScopeSow}
           loading={smartActionLoading === "multi_scope_sow"}
-          defaultBudget="22000"
+          defaultPrice="22000"
           defaultDiscountPercent="5"
+        />
+
+        <SaveTemplateModal
+          isOpen={isSaveTemplateModalOpen}
+          onClose={() => setIsSaveTemplateModalOpen(false)}
+          onSave={handleSaveTemplate}
         />
       </div>
     </EditorProvider>

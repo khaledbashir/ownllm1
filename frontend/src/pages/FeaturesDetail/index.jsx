@@ -24,26 +24,26 @@ const FEATURES = [
     icon: Lightning,
     title: "Document Intelligence",
     subtitle: "Beyond simple OCR",
-    description: "OwnLLM doesn't just read text; it understands structure, intent, and context within your business documents.",
+    description: "P.A.I.D. doesn't just read text; it understands structure, intent, and context within your business documents.",
     content: (
       <div className="space-y-6">
         <div className="aspect-video rounded-2xl bg-gradient-to-br from-primary-button/20 to-purple-600/20 border border-primary-button/30 flex items-center justify-center relative overflow-hidden">
-           <div className="absolute inset-0 flex flex-col p-8 space-y-4">
-              <div className="h-4 w-1/3 bg-primary-button/40 rounded animate-pulse" />
-              <div className="h-4 w-2/3 bg-white/10 rounded" />
-              <div className="h-4 w-1/2 bg-white/10 rounded" />
-              <div className="mt-auto h-32 w-full bg-theme-bg-primary/50 rounded-xl border border-white/10 p-4">
-                 <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <span className="text-[10px] uppercase tracking-widest opacity-50">Analysis Complete</span>
-                 </div>
-                 <div className="text-sm font-mono text-primary-button">
-                    > Extracted 14 line items<br/>
-                    > Identified $4,200 in recurring value<br/>
-                    > Risk factor: Low
-                 </div>
+          <div className="absolute inset-0 flex flex-col p-8 space-y-4">
+            <div className="h-4 w-1/3 bg-primary-button/40 rounded animate-pulse" />
+            <div className="h-4 w-2/3 bg-white/10 rounded" />
+            <div className="h-4 w-1/2 bg-white/10 rounded" />
+            <div className="mt-auto h-32 w-full bg-theme-bg-primary/50 rounded-xl border border-white/10 p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-[10px] uppercase tracking-widest opacity-50">Analysis Complete</span>
               </div>
-           </div>
+              <div className="text-sm font-mono text-primary-button">
+                    > Extracted 14 line items<br />
+                    > Identified $4,200 in recurring value<br />
+                    > Risk factor: Low
+              </div>
+            </div>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-sidebar-border">
@@ -63,45 +63,39 @@ const FEATURES = [
     icon: ShieldCheck,
     title: "Sovereign Privacy",
     subtitle: "Your data, your rules",
-    description: "Built for industries where data leaks aren't an option. OwnLLM runs entirely within your perimeter.",
+    description: "Built for industries where data leaks aren't an option. P.A.I.D. runs entirely within your perimeter.",
     content: (
       <div className="space-y-6">
         <div className="p-8 rounded-2xl bg-theme-bg-secondary border border-theme-sidebar-border relative">
           <div className="flex items-center justify-between mb-12">
             <div className="flex items-center gap-4">
-               <div className="p-3 rounded-xl bg-theme-bg-primary border border-theme-sidebar-border">
-                  <HardDrive size={32} className="text-primary-button" />
-               </div>
-               <div>
-                  <div className="font-bold">Private Node</div>
-                  <div className="text-xs text-green-500 flex items-center gap-1">
-                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Encrypted & Active
-                  </div>
-               </div>
+              <div className="p-3 rounded-xl bg-theme-bg-primary border border-theme-sidebar-border">
+                <HardDrive size={32} className="text-primary-button" />
+              </div>
+              <div>
+                <div className="font-bold">Private Node</div>
+                <div className="text-xs text-green-500 flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Encrypted & Active
+                </div>
+              </div>
             </div>
             <div className="h-px flex-1 mx-8 bg-gradient-to-r from-primary-button/50 to-transparent" />
             <div className="opacity-20 grayscale">
-               <Fingerprint size={48} />
+              <Fingerprint size={48} />
             </div>
           </div>
           <ul className="space-y-4">
             <li className="flex items-center gap-3 text-sm">
-               <div className="w-5 h-5 rounded-md bg-primary-button/10 flex items-center justify-center text-primary-button">
-                  <CheckCircle size={14} weight="bold" />
-               </div>
-               No training on customer data. Ever.
+              <div className="w-5 h-5 rounded-md bg-primary-button/10 flex items-center justify-center text-primary-button">
+                <CheckCircle size={14} weight="bold" />
+              </div>
+              SOC2 & GDPR compliance ready architecture.
             </li>
             <li className="flex items-center gap-3 text-sm">
-               <div className="w-5 h-5 rounded-md bg-primary-button/10 flex items-center justify-center text-primary-button">
-                  <CheckCircle size={14} weight="bold" />
-               </div>
-               SOC2 & GDPR compliance ready architecture.
-            </li>
-            <li className="flex items-center gap-3 text-sm">
-               <div className="w-5 h-5 rounded-md bg-primary-button/10 flex items-center justify-center text-primary-button">
-                  <CheckCircle size={14} weight="bold" />
-               </div>
-               Air-gapped deployment support.
+              <div className="w-5 h-5 rounded-md bg-primary-button/10 flex items-center justify-center text-primary-button">
+                <CheckCircle size={14} weight="bold" />
+              </div>
+              Air-gapped deployment support.
             </li>
           </ul>
         </div>
@@ -117,30 +111,30 @@ const FEATURES = [
     content: (
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-4">
-           <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-sidebar-border group hover:border-primary-button/50 transition-colors">
-              <div className="flex items-center justify-between mb-4">
-                 <div className="flex items-center gap-3">
-                    <Users size={24} className="text-primary-button" />
-                    <span className="font-bold">Workspace Isolation</span>
-                 </div>
-                 <span className="px-2 py-0.5 rounded bg-primary-button/10 text-primary-button text-[10px] font-bold uppercase">Active</span>
+          <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-sidebar-border group hover:border-primary-button/50 transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Users size={24} className="text-primary-button" />
+                <span className="font-bold">Workspace Isolation</span>
               </div>
-              <p className="text-sm text-theme-text-secondary leading-relaxed">
-                 Keep client data strictly separated with dedicated vector databases and encryption keys for every workspace.
-              </p>
-           </div>
-           <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-sidebar-border group hover:border-primary-button/50 transition-colors">
-              <div className="flex items-center justify-between mb-4">
-                 <div className="flex items-center gap-3">
-                    <Briefcase size={24} className="text-primary-button" />
-                    <span className="font-bold">Custom Branding</span>
-                 </div>
-                 <span className="px-2 py-0.5 rounded bg-primary-button/10 text-primary-button text-[10px] font-bold uppercase">Pro</span>
+              <span className="px-2 py-0.5 rounded bg-primary-button/10 text-primary-button text-[10px] font-bold uppercase">Active</span>
+            </div>
+            <p className="text-sm text-theme-text-secondary leading-relaxed">
+              Keep client data strictly separated with dedicated vector databases and encryption keys for every workspace.
+            </p>
+          </div>
+          <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-sidebar-border group hover:border-primary-button/50 transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Briefcase size={24} className="text-primary-button" />
+                <span className="font-bold">Custom Branding</span>
               </div>
-              <p className="text-sm text-theme-text-secondary leading-relaxed">
-                 Inject your brand into every touchpoint—from the dashboard colors to the final exported PDF proposal.
-              </p>
-           </div>
+              <span className="px-2 py-0.5 rounded bg-primary-button/10 text-primary-button text-[10px] font-bold uppercase">Pro</span>
+            </div>
+            <p className="text-sm text-theme-text-secondary leading-relaxed">
+              Inject your brand into every touchpoint—from the dashboard colors to the final exported PDF proposal.
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -154,26 +148,58 @@ export default function FeaturesDetail() {
   return (
     <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-sans selection:bg-primary-button/30">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-theme-bg-primary/80 backdrop-blur-xl border-b border-theme-sidebar-border">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/landing-gemini" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-button to-purple-600 flex items-center justify-center shadow-lg shadow-primary-button/20">
-              <FileText size={24} weight="bold" className="text-white" />
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/5 py-4">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-theme-bg-secondary border border-theme-sidebar-border flex items-center justify-center">
+              <span className="font-bold text-primary-button">P</span>
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase">OwnLLM</span>
+            <span className="text-xl font-bold tracking-tight text-white uppercase">
+              P.A.I.D. <span className="text-emerald-500">Platform</span>
+            </span>
           </Link>
-          
-          <Link to={paths.login()} className="px-6 py-2.5 rounded-xl bg-primary-button text-black text-sm font-bold hover:opacity-90 transition-opacity shadow-lg shadow-primary-button/20">
-            Get Started
-          </Link>
+          <div className="hidden md:flex items-center gap-8">
+            <Link
+              to="/features"
+              className="text-white transition-colors text-sm font-bold"
+            >
+              Features
+            </Link>
+            <Link
+              to={paths.login()}
+              className="text-white/60 hover:text-white transition-colors text-sm font-medium"
+            >
+              Log In
+            </Link>
+            <Link
+              to={paths.login()}
+              className="px-6 py-2 rounded-lg bg-primary-button text-black font-bold text-sm hover:scale-105 transition-all shadow-lg shadow-emerald-500/20"
+            >
+              Get Started
+            </Link>
+          </div>
         </div>
       </nav>
 
       <main className="pt-40 pb-24 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-16">
-            <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Powerful by default.<br/><span className="text-theme-text-secondary">Tailored by you.</span></h1>
-            <p className="text-xl text-theme-text-secondary max-w-2xl">Explore the core engine that powers OwnLLM. Built for performance, designed for privacy.</p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-8">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-sm font-medium text-emerald-400">
+                The P.A.I.D. Platform Ecosystem
+              </span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tight">
+              Powerful by default.<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
+                Tailored by you.
+              </span>
+            </h1>
+            <p className="text-xl text-theme-text-secondary max-w-2xl">
+              Explore the core engine that powers P.A.I.D. Platform. Built for
+              performance, designed for privacy.
+            </p>
           </div>
 
           <div className="grid lg:grid-cols-[380px_1fr] gap-12 items-start">
@@ -183,25 +209,23 @@ export default function FeaturesDetail() {
                 <button
                   key={feature.id}
                   onClick={() => setActiveTab(feature.id)}
-                  className={`w-full text-left p-6 rounded-2xl border transition-all duration-300 group ${
-                    activeTab === feature.id 
-                      ? "bg-theme-bg-secondary border-primary-button shadow-xl shadow-primary-button/5 scale-[1.02]" 
-                      : "bg-transparent border-theme-sidebar-border hover:border-theme-text-secondary/30"
-                  }`}
+                  className={`w-full text-left p-6 rounded-2xl border transition-all duration-300 group ${activeTab === feature.id
+                    ? "bg-theme-bg-secondary border-primary-button shadow-xl shadow-primary-button/5 scale-[1.02]"
+                    : "bg-transparent border-theme-sidebar-border hover:border-theme-text-secondary/30"
+                    }`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-xl transition-colors ${
-                      activeTab === feature.id ? "bg-primary-button text-black" : "bg-theme-bg-secondary text-primary-button group-hover:bg-primary-button/10"
-                    }`}>
+                    <div className={`p-3 rounded-xl transition-colors ${activeTab === feature.id ? "bg-primary-button text-black" : "bg-theme-bg-secondary text-primary-button group-hover:bg-primary-button/10"
+                      }`}>
                       <feature.icon size={24} weight={activeTab === feature.id ? "fill" : "duotone"} />
                     </div>
                     <div>
                       <h3 className="font-bold text-lg">{feature.title}</h3>
                       <p className="text-xs text-theme-text-secondary uppercase tracking-widest mt-0.5">{feature.subtitle}</p>
                     </div>
-                    <CaretRight 
-                      size={20} 
-                      className={`ml-auto transition-transform duration-300 ${activeTab === feature.id ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"}`} 
+                    <CaretRight
+                      size={20}
+                      className={`ml-auto transition-transform duration-300 ${activeTab === feature.id ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"}`}
                     />
                   </div>
                 </button>
@@ -218,28 +242,37 @@ export default function FeaturesDetail() {
 
             {/* Content Display */}
             <div className="min-h-[600px] rounded-[2.5rem] bg-theme-bg-secondary/50 border border-theme-sidebar-border p-8 md:p-12 relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-64 h-64 bg-primary-button/5 rounded-full blur-3xl -z-10" />
-               
-               <div key={activeTab} className="animate-in fade-in slide-in-from-right-4 duration-500">
-                  <div className="max-w-2xl">
-                    <h2 className="text-3xl font-black mb-4">{currentFeature.title}</h2>
-                    <p className="text-lg text-theme-text-secondary mb-12 leading-relaxed">
-                      {currentFeature.description}
-                    </p>
-                    
-                    {currentFeature.content}
-                  </div>
-               </div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary-button/5 rounded-full blur-3xl -z-10" />
+
+              <div key={activeTab} className="animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="max-w-2xl">
+                  <h2 className="text-3xl font-black mb-4">{currentFeature.title}</h2>
+                  <p className="text-lg text-theme-text-secondary mb-12 leading-relaxed">
+                    {currentFeature.description}
+                  </p>
+
+                  {currentFeature.content}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </main>
 
       <footer className="py-12 border-t border-theme-sidebar-border">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-theme-text-secondary text-sm">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-theme-text-primary">OwnLLM</span>
-            <span>&copy; 2025. All rights reserved.</span>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-theme-bg-secondary border border-theme-sidebar-border flex items-center justify-center">
+              <span className="font-bold text-primary-button">P</span>
+            </div>
+            <span className="text-white/40 text-sm">
+              © 2025 P.A.I.D. Platform. All rights reserved.
+            </span>
+          </div>
+          <div className="flex gap-8 text-white/20 text-xs uppercase tracking-widest font-bold">
+            <a href="#" className="hover:text-emerald-500 transition-colors">Privacy</a>
+            <a href="#" className="hover:text-emerald-500 transition-colors">Terms</a>
+            <a href="#" className="hover:text-emerald-500 transition-colors">Enterprise</a>
           </div>
         </div>
       </footer>

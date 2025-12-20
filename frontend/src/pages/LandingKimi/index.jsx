@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import paths from "@/utils/paths";
 import {
   Rocket,
   Zap,
@@ -53,7 +54,7 @@ export default function LandingKimi() {
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("scroll", handleScroll);
-    
+
     // Simulate loading
     setTimeout(() => setIsLoading(false), 1500);
 
@@ -66,7 +67,7 @@ export default function LandingKimi() {
   // Canvas neural network animation
   useEffect(() => {
     if (!canvasRef.current) return;
-    
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
@@ -74,7 +75,7 @@ export default function LandingKimi() {
 
     const nodes = [];
     const connections = [];
-    
+
     // Create neural network nodes
     for (let i = 0; i < 80; i++) {
       nodes.push({
@@ -101,17 +102,17 @@ export default function LandingKimi() {
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       // Update nodes
       nodes.forEach(node => {
         node.x += node.vx;
         node.y += node.vy;
         node.pulse += 0.02;
-        
+
         // Bounce off edges
         if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
         if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
-        
+
         // Keep in bounds
         node.x = Math.max(0, Math.min(canvas.width, node.x));
         node.y = Math.max(0, Math.min(canvas.height, node.y));
@@ -122,7 +123,7 @@ export default function LandingKimi() {
         const fromNode = nodes[conn.from];
         const toNode = nodes[conn.to];
         const opacity = conn.strength * 0.3;
-        
+
         ctx.beginPath();
         ctx.moveTo(fromNode.x, fromNode.y);
         ctx.lineTo(toNode.x, toNode.y);
@@ -140,12 +141,12 @@ export default function LandingKimi() {
         );
         gradient.addColorStop(0, "rgba(168, 85, 247, 0.8)");
         gradient.addColorStop(1, "rgba(168, 85, 247, 0)");
-        
+
         ctx.beginPath();
         ctx.arc(node.x, node.y, pulseSize, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
-        
+
         ctx.beginPath();
         ctx.arc(node.x, node.y, pulseSize * 0.5, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(168, 85, 247, 1)";
@@ -214,7 +215,7 @@ export default function LandingKimi() {
             <div className="absolute inset-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-spin" />
           </div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Initializing Quantum Core...
+            Initializing P.A.I.D. Core...
           </h2>
         </div>
       </div>
@@ -232,7 +233,7 @@ export default function LandingKimi() {
 
       {/* Holographic Background */}
       <div className="fixed inset-0 pointer-events-none z-10">
-        <div 
+        <div
           className="absolute w-[1000px] h-[1000px] rounded-full opacity-10 blur-[200px] transition-all duration-1000"
           style={{
             background: `radial-gradient(circle, rgba(168, 85, 247, 0.8) 0%, transparent 70%)`,
@@ -255,27 +256,27 @@ export default function LandingKimi() {
                 <Sparkles className="w-5 h-5 text-purple-400" />
               </div>
             </div>
-            <div className="font-bold text-xl">
+            <div className="font-bold text-xl uppercase tracking-tighter">
               <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                KIMI
+                P.A.I.D.
               </span>
-              <span className="text-white">AI</span>
+              <span className="text-white"> Platform</span>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-8 text-sm">
+          <div className="hidden md:flex items-center gap-8 text-sm font-semibold">
+            <Link to="/features" className="text-white/60 hover:text-purple-400 transition-colors">
+              Features
+            </Link>
             <a href="#quantum" className="text-white/60 hover:text-purple-400 transition-colors">
-              Quantum Core
-            </a>
-            <a href="#alchemy" className="text-white/60 hover:text-purple-400 transition-colors">
-              Code Alchemy
+              Core
             </a>
             <a href="#sovereignty" className="text-white/60 hover:text-purple-400 transition-colors">
-              Sovereignty
+              Security
             </a>
-            <button className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all hover:scale-105">
-              Enter the Void
-            </button>
+            <Link to={paths.login()} className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all hover:scale-105">
+              Launch Platform
+            </Link>
           </div>
         </div>
       </nav>
@@ -312,18 +313,18 @@ export default function LandingKimi() {
           </h1>
 
           <p className="text-xl md:text-2xl text-white/60 max-w-3xl mx-auto mb-12 leading-relaxed">
-            We don't do "basic." We architect quantum-enhanced AI platforms that 
-            <span className="text-purple-400">break production</span>, then 
-            <span className="text-cyan-400">fix it better</span>. 
-            Welcome to the future of building.
+            We don't do "basic." We architect quantum-enhanced AI platforms that
+            <span className="text-purple-400"> break barriers</span>, then
+            <span className="text-cyan-400"> deliver results</span>.
+            Welcome to the future of P.A.I.D.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <button className="group flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold hover:shadow-xl hover:shadow-purple-500/50 transition-all hover:scale-105">
+            <Link to={paths.login()} className="group flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold hover:shadow-xl hover:shadow-purple-500/50 transition-all hover:scale-105">
               <Rocket className="w-5 h-5 group-hover:rotate-45 transition-transform" />
-              Launch Quantum Core
+              Launch P.A.I.D. Platform
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
             <button className="group flex items-center gap-3 px-8 py-4 rounded-full bg-white/5 border border-white/20 text-white hover:bg-white/10 transition-all">
               <Terminal className="w-5 h-5 text-purple-400" />
               View Source Code
@@ -365,7 +366,7 @@ export default function LandingKimi() {
               </span>
             </h2>
             <p className="text-xl text-white/60 max-w-2xl mx-auto">
-              Neural networks that evolve. Code that writes itself. 
+              Neural networks that evolve. Code that writes itself.
               Infrastructure that scales to infinity and beyond.
             </p>
           </div>
@@ -428,11 +429,11 @@ export default function LandingKimi() {
                 <div className="text-purple-400">$</div>
                 <div className="text-green-400">npm run build:impossible</div>
                 <div className="text-purple-400">$</div>
-                <div className="text-cyan-400">✓ Quantum consciousness initialized</div>
-                <div className="text-cyan-400">✓ Neural networks deployed</div>
+                <div className="text-cyan-400">✓ P.A.I.D. core initialized</div>
+                <div className="text-cyan-400">✓ Proposal engines deployed</div>
                 <div className="text-cyan-400">✓ Production environment ready</div>
                 <div className="text-purple-400">$</div>
-                <div className="animate-pulse text-yellow-400">▶ Deploying to infinity...</div>
+                <div className="animate-pulse text-yellow-400">▶ Delivering documents...</div>
               </div>
             </div>
           </div>
@@ -445,7 +446,7 @@ export default function LandingKimi() {
           <div className="relative bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-sm border border-purple-500/30 rounded-3xl p-12 overflow-hidden">
             {/* Glow effect */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
-            
+
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl font-black mb-6">
                 Ready to build the impossible?
@@ -454,11 +455,11 @@ export default function LandingKimi() {
                 Join the rebellion. Push boundaries. Create the future.
                 No corporate fluff, just pure innovation.
               </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                <button className="px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg hover:shadow-xl hover:shadow-purple-500/50 transition-all hover:scale-105">
-                  Start Building Now
-                </button>
+                <Link to={paths.login()} className="px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-lg hover:shadow-xl hover:shadow-purple-500/50 transition-all hover:scale-105">
+                  Start Delivering Now
+                </Link>
                 <button className="px-8 py-4 rounded-full border border-white/20 text-white font-medium hover:bg-white/10 transition-all">
                   View Documentation
                 </button>
@@ -484,10 +485,10 @@ export default function LandingKimi() {
                 </div>
               </div>
               <span className="text-white/60 text-sm">
-                © 2025 KIMI AI. Built by vibe coders, for vibe coders.
+                © 2025 P.A.I.D. Platform. Built for the future of business.
               </span>
             </div>
-            
+
             <div className="flex items-center gap-6 text-white/40 text-sm">
               <a href="#" className="hover:text-purple-400 transition-colors">
                 Quantum Core

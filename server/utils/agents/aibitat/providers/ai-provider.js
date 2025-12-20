@@ -146,10 +146,9 @@ class Provider {
             baseURL: process.env.GENERIC_OPEN_AI_BASE_PATH,
           },
           apiKey: process.env.GENERIC_OPEN_AI_API_KEY,
-          maxTokens: toValidNumber(
-            process.env.GENERIC_OPEN_AI_MAX_TOKENS,
-            1024
-          ),
+          maxTokens: process.env.GENERIC_OPEN_AI_MAX_TOKENS
+            ? toValidNumber(process.env.GENERIC_OPEN_AI_MAX_TOKENS)
+            : undefined,
           ...config,
         });
       case "bedrock":

@@ -45,7 +45,21 @@
 .blocksuite-editor-wrapper [data-placeholder]::before,
 .blocksuite-editor-wrapper .placeholder,
 .blocksuite-editor-wrapper [placeholder]::before {
-  color: var(--affine-placeholder-color, #3e3e3f) !important;
+  color: var(--affine-placeholder-color, #666) !important;
+  opacity: 1 !important;
+}
+
+/* Document Info & Tag Inputs visibility fix */
+.blocksuite-editor-wrapper input,
+.blocksuite-editor-wrapper textarea,
+.blocksuite-editor-wrapper [contenteditable="true"] {
+  color: var(--affine-text-primary-color, #eaeaea) !important;
+  caret-color: var(--affine-text-primary-color, #eaeaea) !important;
+}
+
+.blocksuite-editor-wrapper ::placeholder,
+.blocksuite-editor-wrapper input::placeholder {
+  color: #888 !important;
   opacity: 1 !important;
 }
 
