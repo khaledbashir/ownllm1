@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   SandpackProvider,
   SandpackLayout,
@@ -27,8 +27,11 @@ export default function SandpackRenderer({ code, language, workspace }) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [artifactName, setArtifactName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showCode, setShowCode] = useState(true);
+  const [viewMode, setViewMode] = useState("split");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [splitPct, setSplitPct] = useState(52);
+  const isDraggingRef = useRef(false);
+  const splitContainerRef = useRef(null);
 
   // Get editor context for inserting into Doc editor
   const editorContext = useEditorContext();
@@ -90,9 +93,84 @@ export default function SandpackRenderer({ code, language, workspace }) {
     }
   };
 
-  const containerClass = isFullscreen
-    ? "fixed inset-0 z-[200] bg-theme-bg-primary p-4"
-    : "my-4 rounded-lg overflow-hidden border border-theme-border relative group";
+  const shellClass = isFullscreen
+    ? "fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm p-4"
+    : "my-4";
+
+  const frameClass = isFullscreen
+    ? "h-[calc(100vh-2rem)] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-2xl"
+    : "h-[520px] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-xl";
+
+  const primaryFile = isReact ? "/App.js" : "/index.html";
+
+  const sandpackTheme = useMemo(
+    () => ({
+      colors: {
+        surface1: "var(--theme-bg-secondary)",
+        surface2: "var(--theme-bg-primary)",
+        surface3: "rgba(255,255,255,0.06)",
+        clickable: "rgba(255,255,255,0.55)",
+        base: "var(--theme-text-primary)",
+        disabled: "rgba(255,255,255,0.35)",
+        hover: "rgba(255,255,255,0.8)",
+        accent: "#60a5fa",
+        error: "#ef4444",
+        errorSurface: "rgba(239,68,68,0.18)",
+      },
+      syntax: {
+        plain: "rgba(255,255,255,0.92)",
+        comment: { color: "rgba(255,255,255,0.35)", fontStyle: "italic" },
+        keyword: "#60a5fa",
+        tag: "#f472b6",
+        punctuation: "rgba(255,255,255,0.55)",
+        definition: "#a78bfa",
+        property: "#93c5fd",
+        static: "#f59e0b",
+        string: "#34d399",
+      },
+      font: {
+        body: 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+        size: "13px",
+        lineHeight: "20px",
+      },
+    }),
+    []
+  );
+
+  const segmentedButtonClass = (active) =>
+    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
+      active
+        ? "bg-white/10 text-theme-text-primary border-white/10"
+        : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
+    }`;
+
+  const actionButtonClass =
+    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border border-white/10 bg-white/5 hover:bg-white/10 text-theme-text-primary transition-colors";
+
+  const handlePointerDown = (e) => {
+    isDraggingRef.current = true;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDraggingRef.current) return;
+    const container = splitContainerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const nextPct = ((e.clientX - rect.left) / rect.width) * 100;
+    const clamped = Math.min(72, Math.max(28, nextPct));
+    setSplitPct(clamped);
+  };
+
+  const handlePointerUp = (e) => {
+    isDraggingRef.current = false;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
 
   if (!supported) {
     return (
@@ -120,49 +198,101 @@ export default function SandpackRenderer({ code, language, workspace }) {
   }
 
   return (
-    <div className={containerClass}>
-      {/* Control Bar */}
-      <div className="absolute top-2 right-2 z-50 flex gap-2">
-        {/* Toggle Code Button */}
-        <button
-          onClick={() => setShowCode(!showCode)}
-          className="flex items-center gap-1 bg-theme-bg-secondary hover:bg-theme-bg-primary text-theme-text-primary px-2 py-1 rounded text-xs border border-theme-border shadow-sm transition-all"
-          title={showCode ? "Hide Code" : "Show Code"}
-        >
-          {showCode ? <Eye size={14} /> : <Code size={14} />}
-          {showCode ? "Preview" : "Code"}
-        </button>
+    <div className={shellClass}>
+      <div className={frameClass}>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-theme-border bg-theme-bg-secondary/80">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-theme-bg-primary border border-white/10 flex items-center justify-center">
+                {viewMode === "preview" ? (
+                  <Eye size={16} className="text-theme-text-secondary" />
+                ) : (
+                  <Code size={16} className="text-theme-text-secondary" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-theme-text-primary truncate">
+                  Live Sandbox
+                </div>
+                <div className="text-[11px] text-theme-text-secondary truncate">
+                  {primaryFile}
+                </div>
+              </div>
+            </div>
 
-        {/* Fullscreen Button */}
-        <button
-          onClick={() => setIsFullscreen(!isFullscreen)}
-          className="flex items-center gap-1 bg-theme-bg-secondary hover:bg-theme-bg-primary text-theme-text-primary px-2 py-1 rounded text-xs border border-theme-border shadow-sm transition-all"
-          title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-        >
-          {isFullscreen ? <X size={14} /> : <ArrowsOut size={14} />}
-        </button>
+            <div className="hidden sm:flex items-center gap-1.5 bg-black/20 border border-white/10 rounded-lg p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode("split")}
+                className={segmentedButtonClass(viewMode === "split")}
+              >
+                Split
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("code")}
+                className={segmentedButtonClass(viewMode === "code")}
+              >
+                Code
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("preview")}
+                className={segmentedButtonClass(viewMode === "preview")}
+              >
+                Preview
+              </button>
+            </div>
 
-        {/* Insert to Editor Button */}
-        <button
-          onClick={handleInsertToEditor}
-          className="flex items-center gap-1 bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs shadow-sm transition-all"
-          title="Insert code into Doc editor"
-        >
-          <FileArrowUp size={14} />
-          Insert
-        </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setViewMode((v) => (v === "preview" ? "code" : "preview"))
+                }
+                className="sm:hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border border-white/10 bg-white/5 hover:bg-white/10 text-theme-text-primary transition-colors"
+                title={viewMode === "preview" ? "Show code" : "Show preview"}
+              >
+                {viewMode === "preview" ? (
+                  <Code size={14} />
+                ) : (
+                  <Eye size={14} />
+                )}
+                {viewMode === "preview" ? "Code" : "Preview"}
+              </button>
 
-        {/* Save Button */}
-        {workspace && (
-          <button
-            onClick={() => setShowSaveModal(true)}
-            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs shadow-sm transition-all"
-          >
-            <FloppyDisk size={14} />
-            Save
-          </button>
-        )}
-      </div>
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className={actionButtonClass}
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              >
+                {isFullscreen ? <X size={14} /> : <ArrowsOut size={14} />}
+                {isFullscreen ? "Exit" : "Fullscreen"}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleInsertToEditor}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+                title="Insert code into Doc editor"
+              >
+                <FileArrowUp size={14} />
+                Insert
+              </button>
+
+              {workspace && (
+                <button
+                  type="button"
+                  onClick={() => setShowSaveModal(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+                >
+                  <FloppyDisk size={14} />
+                  Save
+                </button>
+              )}
+            </div>
+          </div>
 
       {/* Save Modal */}
       {showSaveModal && (
@@ -224,9 +354,13 @@ export default function SandpackRenderer({ code, language, workspace }) {
       {/* Sandpack */}
       <SandpackProvider
         template={template}
-        theme="dark"
+        theme={sandpackTheme}
         files={{
-          [isReact ? "/App.js" : "/index.html"]: code,
+          [primaryFile]: code,
+        }}
+        options={{
+          activeFile: primaryFile,
+          visibleFiles: [primaryFile],
         }}
         customSetup={{
           dependencies: {
@@ -236,14 +370,11 @@ export default function SandpackRenderer({ code, language, workspace }) {
           },
         }}
       >
-        <SandpackLayout>
-          <div
-            className={`flex flex-col w-full ${isFullscreen ? "h-[calc(100vh-2rem)]" : "h-[500px]"}`}
-          >
-            <div className="flex h-full">
-              {/* Code Editor - conditionally shown */}
-              {showCode && (
-                <div className="w-1/2 h-full border-r border-theme-border">
+        <div className="flex-1 min-h-0">
+          <SandpackLayout style={{ height: "100%" }}>
+            <div className="h-full min-h-0">
+              {viewMode === "code" && (
+                <div className="h-full border-t border-white/5">
                   <SandpackCodeEditor
                     showTabs={false}
                     showLineNumbers={true}
@@ -253,17 +384,66 @@ export default function SandpackRenderer({ code, language, workspace }) {
                   />
                 </div>
               )}
-              {/* Preview - full width when code hidden */}
-              <div className={`${showCode ? "w-1/2" : "w-full"} h-full`}>
-                <SandpackPreview
-                  showNavigator={true}
-                  style={{ height: "100%" }}
-                />
-              </div>
+
+              {viewMode === "preview" && (
+                <div className="h-full border-t border-white/5">
+                  <SandpackPreview
+                    showNavigator={false}
+                    showRefreshButton={true}
+                    style={{ height: "100%" }}
+                  />
+                </div>
+              )}
+
+              {viewMode === "split" && (
+                <div
+                  ref={splitContainerRef}
+                  className="h-full min-h-0 flex flex-col md:flex-row border-t border-white/5"
+                >
+                  <div
+                    className="h-1/2 md:h-full md:min-w-[320px] border-b md:border-b-0 md:border-r border-theme-border"
+                    style={{
+                      flexBasis: `${splitPct}%`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <SandpackCodeEditor
+                      showTabs={false}
+                      showLineNumbers={true}
+                      showInlineErrors={true}
+                      wrapContent={true}
+                      style={{ height: "100%" }}
+                    />
+                  </div>
+
+                  <div className="hidden md:flex w-3 items-stretch justify-center bg-theme-bg-secondary">
+                    <div
+                      onPointerDown={handlePointerDown}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      onPointerCancel={handlePointerUp}
+                      className="w-3 cursor-col-resize flex items-center justify-center group"
+                      role="separator"
+                      aria-orientation="vertical"
+                    >
+                      <div className="w-px h-10 bg-white/15 group-hover:bg-blue-400/60 transition-colors" />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0 h-1/2 md:h-full">
+                    <SandpackPreview
+                      showNavigator={false}
+                      showRefreshButton={true}
+                      style={{ height: "100%" }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        </SandpackLayout>
+          </SandpackLayout>
+        </div>
       </SandpackProvider>
+      </div>
     </div>
   );
 }

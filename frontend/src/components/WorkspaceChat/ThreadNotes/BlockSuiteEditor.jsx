@@ -1747,22 +1747,70 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         /* Pricing Table Brand Accent */
         .pricing-table-wrapper {
             border-left: 4px solid var(--brand-color) !important;
+            break-before: auto;
+            page-break-before: auto;
         }
 
-        /* Tables */
+        /* Force pricing section to new page if it would split */
+        .pricing-table-wrapper {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+
+        /* Tables - Professional Alignment */
         table {
             width: 100%;
+            table-layout: fixed; /* Fixed column widths */
             border-collapse: collapse;
             margin: 2em 0;
             font-size: 0.9em;
         }
         th, td {
             border: 1px solid var(--border-color);
-            padding: 10px;
+            padding: 12px 10px; /* More whitespace = luxury feel */
             text-align: left;
             vertical-align: top;
         }
-        th { background: #f3f4f6; font-weight: 600; color: #111827; }
+        th { 
+            background: #f3f4f6; 
+            font-weight: 600; 
+            color: #111827;
+            border-bottom: 2px solid #000; /* Strong header anchor */
+        }
+        
+        /* Fixed column widths for pricing tables */
+        .pricing-table-wrapper th:nth-child(1),
+        .pricing-table-wrapper td:nth-child(1) { width: 20%; } /* Role */
+        .pricing-table-wrapper th:nth-child(2),
+        .pricing-table-wrapper td:nth-child(2) { width: 45%; } /* Description */
+        .pricing-table-wrapper th:nth-child(3),
+        .pricing-table-wrapper td:nth-child(3) { width: 10%; text-align: right; } /* Hours */
+        .pricing-table-wrapper th:nth-child(4),
+        .pricing-table-wrapper td:nth-child(4) { width: 12%; text-align: right; } /* Rate */
+        .pricing-table-wrapper th:nth-child(5),
+        .pricing-table-wrapper td:nth-child(5) { width: 13%; text-align: right; font-weight: 600; } /* Total */
+
+        /* Tabular nums for price alignment */
+        .pricing-table-wrapper td {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Summary totals styling */
+        .pricing-table-wrapper .total-row td,
+        .pricing-table-wrapper tr.total-row td {
+            font-weight: 700;
+            border-top: 2px solid #000;
+            background: #f9fafb;
+        }
+
+        /* Paged.js / WeasyPrint page rules */
+        @page {
+            size: A4;
+            margin: 25mm 20mm 30mm 20mm;
+        }
+        @page:first {
+            margin-top: 15mm; /* Less margin on first page for header */
+        }
         
         /* Images */
         img { max-width: 100%; height: auto; display: block; margin: 1em 0; border-radius: 4px; }
