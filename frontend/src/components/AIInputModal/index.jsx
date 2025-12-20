@@ -65,7 +65,9 @@ export default function AIInputModal({
               <Sparkle size={14} weight="fill" className="text-white" />
             </div>
             <span className="text-sm font-medium text-white/80">Ask AI</span>
-            <span className="text-xs text-zinc-500 ml-auto">Press Enter to send</span>
+            <span className="text-xs text-zinc-500 ml-auto">
+              Press Enter to send
+            </span>
           </div>
 
           {/* Input Field */}
@@ -118,11 +120,14 @@ export default function AIInputModal({
         {/* Close hint */}
         <div className="text-center mt-3">
           <span className="text-xs text-zinc-500">
-            Press <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-400">Esc</kbd> to close
+            Press{" "}
+            <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-400">
+              Esc
+            </kbd>{" "}
+            to close
           </span>
         </div>
       </div>
     </div>
   );
 }
-

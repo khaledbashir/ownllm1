@@ -138,9 +138,10 @@ export default function SandpackRenderer({ code, language, workspace }) {
   );
 
   const segmentedButtonClass = (active) =>
-    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${active
-      ? "bg-white/10 text-theme-text-primary border-white/10"
-      : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
+    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
+      active
+        ? "bg-white/10 text-theme-text-primary border-white/10"
+        : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
     }`;
 
   const actionButtonClass =
@@ -342,7 +343,10 @@ export default function SandpackRenderer({ code, language, workspace }) {
           )}
 
           {/* Sandpack */}
-          <div ref={sandpackContainerRef} className="flex-1 min-h-0 overflow-hidden">
+          <div
+            ref={sandpackContainerRef}
+            className="flex-1 min-h-0 overflow-hidden"
+          >
             <SandpackProvider
               template={template}
               theme={sandpackTheme}
@@ -371,15 +375,15 @@ export default function SandpackRenderer({ code, language, workspace }) {
               <div
                 className="h-full"
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
                 <SandpackLayout
                   style={{
                     flex: 1,
-                    height: '100%',
-                    display: 'flex',
+                    height: "100%",
+                    display: "flex",
                   }}
                 >
                   {viewMode !== "preview" && (
@@ -399,7 +403,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
                       style={{
                         height: "100%",
                         flex: 1,
-                        overflow: 'auto',
+                        overflow: "auto",
                       }}
                     />
                   )}

@@ -210,7 +210,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           toast.warning("No content to continue from. Write something first!");
           break;
         }
-        console.log("[AI Action] Continue writing with context:", contextText.slice(-500));
+        console.log(
+          "[AI Action] Continue writing with context:",
+          contextText.slice(-500)
+        );
 
         // Helper to insert text at cursor in BlockSuite
         const insertTextAtCursor = (text) => {
@@ -219,10 +222,16 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             if (!doc) return false;
 
             // Find the last note block and add a paragraph
-            const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+            const noteBlocks = doc
+              .getBlocks()
+              .filter((b) => b.flavour === "affine:note");
             if (noteBlocks.length > 0) {
               const noteBlock = noteBlocks[noteBlocks.length - 1];
-              doc.addBlock("affine:paragraph", { text: new Text(text) }, noteBlock.id);
+              doc.addBlock(
+                "affine:paragraph",
+                { text: new Text(text) },
+                noteBlock.id
+              );
               return true;
             }
             return false;
@@ -272,12 +281,26 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
               // Insert summary below current content
               const doc = editorRef.current?.doc;
               if (doc) {
-                const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+                const noteBlocks = doc
+                  .getBlocks()
+                  .filter((b) => b.flavour === "affine:note");
                 if (noteBlocks.length > 0) {
                   const noteBlock = noteBlocks[noteBlocks.length - 1];
-                  doc.addBlock("affine:paragraph", { text: new Text("---") }, noteBlock.id);
-                  doc.addBlock("affine:paragraph", { text: new Text("📋 Summary:") }, noteBlock.id);
-                  doc.addBlock("affine:paragraph", { text: new Text(result.response.trim()) }, noteBlock.id);
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text("---") },
+                    noteBlock.id
+                  );
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text("📋 Summary:") },
+                    noteBlock.id
+                  );
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text(result.response.trim()) },
+                    noteBlock.id
+                  );
                 }
               }
               return result.response;
@@ -311,12 +334,26 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
               // Insert improved version below
               const doc = editorRef.current?.doc;
               if (doc) {
-                const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+                const noteBlocks = doc
+                  .getBlocks()
+                  .filter((b) => b.flavour === "affine:note");
                 if (noteBlocks.length > 0) {
                   const noteBlock = noteBlocks[noteBlocks.length - 1];
-                  doc.addBlock("affine:paragraph", { text: new Text("---") }, noteBlock.id);
-                  doc.addBlock("affine:paragraph", { text: new Text("✨ Improved version:") }, noteBlock.id);
-                  doc.addBlock("affine:paragraph", { text: new Text(result.response.trim()) }, noteBlock.id);
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text("---") },
+                    noteBlock.id
+                  );
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text("✨ Improved version:") },
+                    noteBlock.id
+                  );
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text(result.response.trim()) },
+                    noteBlock.id
+                  );
                 }
               }
               return result.response;
@@ -350,12 +387,26 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
               // Insert fixed version below
               const doc = editorRef.current?.doc;
               if (doc) {
-                const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+                const noteBlocks = doc
+                  .getBlocks()
+                  .filter((b) => b.flavour === "affine:note");
                 if (noteBlocks.length > 0) {
                   const noteBlock = noteBlocks[noteBlocks.length - 1];
-                  doc.addBlock("affine:paragraph", { text: new Text("---") }, noteBlock.id);
-                  doc.addBlock("affine:paragraph", { text: new Text("✅ Grammar fixed:") }, noteBlock.id);
-                  doc.addBlock("affine:paragraph", { text: new Text(result.response.trim()) }, noteBlock.id);
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text("---") },
+                    noteBlock.id
+                  );
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text("✅ Grammar fixed:") },
+                    noteBlock.id
+                  );
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text(result.response.trim()) },
+                    noteBlock.id
+                  );
                 }
               }
               return result.response;
@@ -390,12 +441,28 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
               // Insert translation below
               const doc = editorRef.current?.doc;
               if (doc) {
-                const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+                const noteBlocks = doc
+                  .getBlocks()
+                  .filter((b) => b.flavour === "affine:note");
                 if (noteBlocks.length > 0) {
                   const noteBlock = noteBlocks[noteBlocks.length - 1];
-                  doc.addBlock("affine:paragraph", { text: new Text("---") }, noteBlock.id);
-                  doc.addBlock("affine:paragraph", { text: new Text(`🌐 Translation (${lang || "Spanish"}):`) }, noteBlock.id);
-                  doc.addBlock("affine:paragraph", { text: new Text(result.response.trim()) }, noteBlock.id);
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text("---") },
+                    noteBlock.id
+                  );
+                  doc.addBlock(
+                    "affine:paragraph",
+                    {
+                      text: new Text(`🌐 Translation (${lang || "Spanish"}):`),
+                    },
+                    noteBlock.id
+                  );
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text(result.response.trim()) },
+                    noteBlock.id
+                  );
                 }
               }
               return result.response;
@@ -2370,7 +2437,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-          "Doc embedded successfully! AI can now retrieve this content."
+            "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -2611,7 +2678,7 @@ ${activeTemplateFooter}
                   style={{
                     height: selectedBrandTemplate.cssOverrides
                       ? JSON.parse(selectedBrandTemplate.cssOverrides)
-                        .logoHeight || 40
+                          .logoHeight || 40
                       : 40,
                   }}
                 />
@@ -2917,7 +2984,7 @@ const serializeDocToHtml = async (doc) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch { }
+          } catch {}
           return value;
         };
 

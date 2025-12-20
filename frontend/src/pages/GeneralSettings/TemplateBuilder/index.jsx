@@ -393,10 +393,11 @@ export default function TemplateBuilder() {
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[85%] px-4 py-3 rounded-2xl ${msg.role === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-theme-bg-primary text-theme-text-primary"
-                      }`}
+                    className={`max-w-[85%] px-4 py-3 rounded-2xl ${
+                      msg.role === "user"
+                        ? "bg-blue-600 text-white"
+                        : "bg-theme-bg-primary text-theme-text-primary"
+                    }`}
                   >
                     <MessageContent content={msg.content} role={msg.role} />
                   </div>
@@ -458,11 +459,11 @@ export default function TemplateBuilder() {
                   "/index.html": templateHtml,
                 }}
               >
-                <SandpackLayout className="h-full" style={{ height: '100%' }}>
+                <SandpackLayout className="h-full" style={{ height: "100%" }}>
                   <SandpackPreview
                     showNavigator={false}
                     showRefreshButton={true}
-                    style={{ height: '100%' }}
+                    style={{ height: "100%" }}
                   />
                 </SandpackLayout>
               </SandpackProvider>
@@ -530,8 +531,9 @@ function MessageContent({ content, role }) {
             />
           </button>
           <div
-            className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-              }`}
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+            }`}
           >
             <div className="px-3 pb-3 text-sm text-theme-text-secondary prose prose-invert prose-sm max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>

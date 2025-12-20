@@ -95,12 +95,8 @@ export default function ChatSettings({ workspace }) {
           workspace={workspace}
           setHasChanges={setHasChanges}
         />
-        <DocAISettings
-          workspace={workspace}
-          setHasChanges={setHasChanges}
-        />
+        <DocAISettings workspace={workspace} setHasChanges={setHasChanges} />
       </form>
     </div>
   );
 }
-

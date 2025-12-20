@@ -53,7 +53,7 @@ export function createAIFormatBarItems(onAIAction, customActions = []) {
     // Add divider if there are custom actions
     ...(customActions.length > 0 ? [{ id: "_divider", isDivider: true }] : []),
     // Add custom actions with their icon/name
-    ...customActions.map(action => ({
+    ...customActions.map((action) => ({
       id: action.id || action.name,
       label: `${action.icon || "⚡"} ${action.name}`,
       description: action.prompt?.slice(0, 50) + "...",
@@ -85,21 +85,21 @@ export function createAIFormatBarItems(onAIAction, customActions = []) {
                 user-select: none;
               "
               @click=${(e) => {
-            const dropdown = e.target.closest(".ai-format-dropdown");
-            const menu = dropdown.querySelector(".ai-dropdown-menu");
-            if (menu) {
-              menu.style.display =
-                menu.style.display === "block" ? "none" : "block";
-            }
-          }}
+                const dropdown = e.target.closest(".ai-format-dropdown");
+                const menu = dropdown.querySelector(".ai-dropdown-menu");
+                if (menu) {
+                  menu.style.display =
+                    menu.style.display === "block" ? "none" : "block";
+                }
+              }}
               @mouseenter=${(e) => {
-            const btn = e.target.closest(".ai-format-button");
-            if (btn) btn.style.background = "rgba(167, 139, 250, 0.15)";
-          }}
+                const btn = e.target.closest(".ai-format-button");
+                if (btn) btn.style.background = "rgba(167, 139, 250, 0.15)";
+              }}
               @mouseleave=${(e) => {
-            const btn = e.target.closest(".ai-format-button");
-            if (btn) btn.style.background = "transparent";
-          }}
+                const btn = e.target.closest(".ai-format-button");
+                if (btn) btn.style.background = "transparent";
+              }}
             >
               <span .innerHTML=${AIStarIconSvg}></span>
               <span style="font-size: 12px; font-weight: 500;">AI</span>
@@ -126,21 +126,22 @@ export function createAIFormatBarItems(onAIAction, customActions = []) {
                 overflow: hidden;
               "
             >
-              ${allActions.map(
-            (action) => {
-              // Render divider
-              if (action.isDivider) {
-                return html`
-                      <div style="
+              ${allActions.map((action) => {
+                // Render divider
+                if (action.isDivider) {
+                  return html`
+                    <div
+                      style="
                         height: 1px;
                         background: rgba(255,255,255,0.1);
                         margin: 4px 0;
-                      "></div>
-                    `;
-              }
+                      "
+                    ></div>
+                  `;
+                }
 
-              // Render action item
-              return html`
+                // Render action item
+                return html`
                   <div
                     class="ai-action-item"
                     style="
@@ -150,38 +151,38 @@ export function createAIFormatBarItems(onAIAction, customActions = []) {
                     align-items: center;
                     gap: 10px;
                     transition: background 0.15s;
-                    color: ${action.isCustom ? '#a78bfa' : '#e0e0e0'};
+                    color: ${action.isCustom ? "#a78bfa" : "#e0e0e0"};
                   "
                     @click=${() => {
-                  console.log("[AI Format Bar] Action clicked:", action.id);
-                  const selection = window.getSelection();
-                  const selectedText = selection?.toString() || "";
+                      console.log("[AI Format Bar] Action clicked:", action.id);
+                      const selection = window.getSelection();
+                      const selectedText = selection?.toString() || "";
 
-                  if (onAIAction && selectedText) {
-                    onAIAction("selection", {
-                      actionType: action.id,
-                      selectedText,
-                      host: formatBar.host,
-                      // Pass custom prompt if available
-                      customPrompt: action.prompt || null,
-                    });
-                  }
+                      if (onAIAction && selectedText) {
+                        onAIAction("selection", {
+                          actionType: action.id,
+                          selectedText,
+                          host: formatBar.host,
+                          // Pass custom prompt if available
+                          customPrompt: action.prompt || null,
+                        });
+                      }
 
-                  // Hide dropdown after click
-                  const menu = document.querySelector(".ai-dropdown-menu");
-                  if (menu) menu.style.display = "none";
-                }}
+                      // Hide dropdown after click
+                      const menu = document.querySelector(".ai-dropdown-menu");
+                      if (menu) menu.style.display = "none";
+                    }}
                     @mouseenter=${(e) => {
-                  e.target.style.background = "rgba(167, 139, 250, 0.2)";
-                }}
+                      e.target.style.background = "rgba(167, 139, 250, 0.2)";
+                    }}
                     @mouseleave=${(e) => {
-                  e.target.style.background = "transparent";
-                }}
+                      e.target.style.background = "transparent";
+                    }}
                   >
                     <span style="font-size: 14px;">${action.label}</span>
                   </div>
-                `}
-          )}
+                `;
+              })}
             </div>
           </div>
         `;
@@ -198,7 +199,11 @@ export function createAIFormatBarItems(onAIAction, customActions = []) {
  * @param {Function} onAIAction - Callback for AI action
  * @param {Array} customActions - Custom actions from workspace settings
  */
-export function setupAIFormatBar(formatBarWidget, onAIAction, customActions = []) {
+export function setupAIFormatBar(
+  formatBarWidget,
+  onAIAction,
+  customActions = []
+) {
   console.log("[AI Format Bar] Setup called with widget:", formatBarWidget);
   console.log("[AI Format Bar] Custom actions:", customActions);
 
@@ -230,4 +235,3 @@ export function setupAIFormatBar(formatBarWidget, onAIAction, customActions = []
     }
   });
 }
-
