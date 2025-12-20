@@ -342,7 +342,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
           )}
 
           {/* Sandpack */}
-          <div ref={sandpackContainerRef} className="flex-1 min-h-0 h-full">
+          <div ref={sandpackContainerRef} className="flex-1 min-h-0 overflow-hidden">
             <SandpackProvider
               template={template}
               theme={sandpackTheme}
@@ -358,7 +358,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
                     : viewMode === "code"
                       ? 100
                       : splitPct,
-                editorHeight: sandpackHeight ?? 300,
+                editorHeight: sandpackHeight ?? 400,
               }}
               customSetup={{
                 dependencies: {
@@ -368,10 +368,19 @@ export default function SandpackRenderer({ code, language, workspace }) {
                 },
               }}
             >
-              <div className="h-full min-h-0 [&_.sp-wrapper]:h-full [&_.sp-wrapper]:flex [&_.sp-wrapper]:flex-col [&_.sp-wrapper]:min-h-0 [&_.sp-layout]:h-full [&_.sp-layout]:flex-1 [&_.sp-layout]:min-h-0 [&_.sp-preview-container]:h-full [&_.sp-preview-container]:flex-1 [&_.sp-preview-container]:min-h-0 [&_.sp-preview-container]:flex [&_.sp-preview-container]:flex-col [&_.sp-preview]:h-full [&_.sp-preview]:flex-1 [&_.sp-preview]:min-h-0 [&_.sp-code-editor]:h-full [&_.sp-code-editor]:flex-1 [&_.sp-code-editor]:min-h-0 [&_.sp-stack]:h-full [&_.sp-stack]:min-h-0">
+              <div
+                className="h-full"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
                 <SandpackLayout
-                  className="h-full min-h-0"
-                  style={{ height: "100%" }}
+                  style={{
+                    flex: 1,
+                    height: '100%',
+                    display: 'flex',
+                  }}
                 >
                   {viewMode !== "preview" && (
                     <SandpackCodeEditor
@@ -379,7 +388,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
                       showLineNumbers={true}
                       showInlineErrors={true}
                       wrapContent={true}
-                      style={{ height: "100%" }}
+                      style={{ height: "100%", flex: 1 }}
                     />
                   )}
                   {viewMode !== "code" && (
@@ -387,7 +396,11 @@ export default function SandpackRenderer({ code, language, workspace }) {
                       showNavigator={false}
                       showRefreshButton={true}
                       showOpenInCodeSandbox={false}
-                      style={{ height: "100%" }}
+                      style={{
+                        height: "100%",
+                        flex: 1,
+                        overflow: 'auto',
+                      }}
                     />
                   )}
                 </SandpackLayout>
