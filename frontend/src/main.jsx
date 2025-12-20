@@ -25,7 +25,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "/",
+        index: true,
         lazy: async () => {
           const { default: MarketingHome } =
             await import("@/pages/MarketingHome");
@@ -33,7 +33,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "/landing-gemini",
+        path: "landing-gemini",
         lazy: async () => {
           const { default: LandingGemini } =
             await import("@/pages/LandingGemini");
@@ -41,7 +41,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "/landingclaude",
+        path: "landingclaude",
         lazy: async () => {
           const { default: LandingClaude } =
             await import("@/pages/LandingClaude");
@@ -49,7 +49,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "/landingkimi",
+        path: "landingkimi",
         lazy: async () => {
           const { default: LandingKimi } =
             await import("@/pages/LandingKimi");
@@ -57,7 +57,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "/p/:id",
+        path: "p/:id",
         lazy: async () => {
           const { default: PublicProposal } =
             await import("@/pages/PublicProposal");
@@ -65,22 +65,22 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "/app",
+        path: "app",
         lazy: async () => {
           const { default: Main } = await import("@/pages/Main");
           return { element: <PrivateRoute Component={Main} /> };
         },
       },
       {
-        path: "/login",
+        path: "login",
         element: <Login />,
       },
       {
-        path: "/sso/simple",
+        path: "sso/simple",
         element: <SimpleSSOPassthrough />,
       },
       {
-        path: "/workspace/:slug/settings/:tab",
+        path: "workspace/:slug/settings/:tab",
         lazy: async () => {
           const { default: WorkspaceSettings } =
             await import("@/pages/WorkspaceSettings");
@@ -88,7 +88,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "/workspace/:slug",
+        path: "workspace/:slug",
         lazy: async () => {
           const { default: WorkspaceChat } =
             await import("@/pages/WorkspaceChat");
@@ -96,7 +96,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "/workspace/:slug/t/:threadSlug",
+        path: "workspace/:slug/t/:threadSlug",
         lazy: async () => {
           const { default: WorkspaceChat } =
             await import("@/pages/WorkspaceChat");

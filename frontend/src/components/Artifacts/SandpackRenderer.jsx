@@ -97,8 +97,8 @@ export default function SandpackRenderer({ code, language, workspace }) {
     : "my-4";
 
   const frameClass = isFullscreen
-    ? "w-full h-full max-w-6xl max-h-[90vh] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-2xl flex flex-col"
-    : "w-full max-w-4xl mx-auto h-[500px] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-xl flex flex-col";
+    ? "w-full h-full rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-2xl flex flex-col"
+    : "w-full h-[600px] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-xl flex flex-col";
 
   const primaryFile = isReact ? "/App.js" : "/index.html";
 
