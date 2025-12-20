@@ -2437,7 +2437,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-            "Doc embedded successfully! AI can now retrieve this content."
+          "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -2678,7 +2678,7 @@ ${activeTemplateFooter}
                   style={{
                     height: selectedBrandTemplate.cssOverrides
                       ? JSON.parse(selectedBrandTemplate.cssOverrides)
-                          .logoHeight || 40
+                        .logoHeight || 40
                       : 40,
                   }}
                 />
@@ -2984,7 +2984,7 @@ const serializeDocToHtml = async (doc) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch {}
+          } catch { }
           return value;
         };
 
@@ -3282,13 +3282,20 @@ const serializeDocToHtml = async (doc) => {
           `[PDF Export] Database found. Headers: ${headers.length}, Children: ${children.length}`
         );
 
+        // Calculate column widths - first column (Role/Description) gets more space
+        const colCount = headers.length;
+        const firstColWidth = colCount > 3 ? "30%" : "40%";
+        const otherColWidth = colCount > 3 ? `${Math.floor(70 / (colCount - 1))}%` : `${Math.floor(60 / (colCount - 1))}%`;
+
         let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed;">
                     <thead style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
                         <tr>`;
 
-        headers.forEach((h) => {
-          tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">${h}</th>`;
+        headers.forEach((h, idx) => {
+          const width = idx === 0 ? firstColWidth : otherColWidth;
+          const align = idx === 0 ? "left" : "right"; // Numbers right-aligned
+          tableHtml += `<th style="padding: 0.75rem 1rem; text-align: ${align}; font-weight: 600; color: #111827; width: ${width}; white-space: nowrap;">${h}</th>`;
         });
         tableHtml += `</tr></thead><tbody>`;
 
@@ -3310,10 +3317,10 @@ const serializeDocToHtml = async (doc) => {
             const firstColText = getText(rowBlock);
 
             tableHtml += `<tr style="border-bottom: 1px solid #e5e7eb;">`;
-            tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151;">${firstColText}</td>`;
+            tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151; word-wrap: break-word;">${firstColText}</td>`;
 
             const rowCells = cells[rowId] || {};
-            columns.slice(1).forEach((col) => {
+            columns.slice(1).forEach((col, idx) => {
               const cell = rowCells[col.id];
               let cellVal = "";
               if (cell) {
@@ -3321,7 +3328,8 @@ const serializeDocToHtml = async (doc) => {
                 else if (typeof cell.value === "string") cellVal = cell.value;
                 else if (cell.value?.text) cellVal = cell.value.text;
               }
-              tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280;">${cellVal}</td>`;
+              // Right-align numeric columns and prevent wrap
+              tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280; text-align: right; white-space: nowrap;">${cellVal}</td>`;
             });
 
             tableHtml += "</tr>";
@@ -3352,13 +3360,20 @@ const serializeDocToHtml = async (doc) => {
           )
           .filter(Boolean);
 
+        // Calculate column widths
+        const colCount = headers.length;
+        const firstColWidth = colCount > 3 ? "30%" : "40%";
+        const otherColWidth = colCount > 3 ? `${Math.floor(70 / (colCount - 1))}%` : `${Math.floor(60 / (colCount - 1))}%`;
+
         let tableHtml = `<div style="overflow-x: auto; margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 8px;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed;">
                     <thead style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
                         <tr>`;
 
-        headers.forEach((h) => {
-          tableHtml += `<th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">${h}</th>`;
+        headers.forEach((h, idx) => {
+          const width = idx === 0 ? firstColWidth : otherColWidth;
+          const align = idx === 0 ? "left" : "right";
+          tableHtml += `<th style="padding: 0.75rem 1rem; text-align: ${align}; font-weight: 600; color: #111827; width: ${width}; white-space: nowrap;">${h}</th>`;
         });
         tableHtml += `</tr></thead><tbody>`;
 
@@ -3370,7 +3385,7 @@ const serializeDocToHtml = async (doc) => {
             const firstColText = getText(rowBlock);
 
             tableHtml += `<tr style="border-bottom: 1px solid #e5e7eb;">`;
-            tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151;">${firstColText}</td>`;
+            tableHtml += `<td style="padding: 0.75rem 1rem; color: #374151; word-wrap: break-word;">${firstColText}</td>`;
 
             const rowCells = cells[rowId] || {};
             columns.slice(1).forEach((col) => {
@@ -3381,7 +3396,7 @@ const serializeDocToHtml = async (doc) => {
                 else if (typeof cell.value === "string") cellVal = cell.value;
                 else if (cell.value?.text) cellVal = cell.value.text;
               }
-              tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280;">${cellVal}</td>`;
+              tableHtml += `<td style="padding: 0.75rem 1rem; color: #6b7280; text-align: right; white-space: nowrap;">${cellVal}</td>`;
             });
 
             tableHtml += "</tr>";
