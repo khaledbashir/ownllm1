@@ -41,6 +41,13 @@ const InlineAI = {
       }),
     })
       .then((res) => res.json())
+      .then((data) => {
+        // Normalize response: backend returns 'content', frontend expects 'response'
+        if (data.success && data.content) {
+          return { ...data, response: data.content };
+        }
+        return data;
+      })
       .catch((e) => {
         console.error("[InlineAI] Error:", e);
         return { success: false, error: e.message };

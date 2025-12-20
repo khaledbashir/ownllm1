@@ -182,35 +182,212 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         setShowAIModal(true);
         break;
 
-      case "continue":
+      case "continue": {
         const contextText = getContextText();
-        toast.info("🤖 AI continuing your writing...");
-        console.log(
-          "[AI Action] Continue writing with context:",
-          contextText.slice(-500)
+        if (!contextText.trim()) {
+          toast.warning("No content to continue from. Write something first!");
+          break;
+        }
+        console.log("[AI Action] Continue writing with context:", contextText.slice(-500));
+
+        // Helper to insert text at cursor in BlockSuite
+        const insertTextAtCursor = (text) => {
+          try {
+            const doc = editorRef.current?.doc;
+            if (!doc) return false;
+
+            // Find the last note block and add a paragraph
+            const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+            if (noteBlocks.length > 0) {
+              const noteBlock = noteBlocks[noteBlocks.length - 1];
+              doc.addBlock("affine:paragraph", { text: new Text(text) }, noteBlock.id);
+              return true;
+            }
+            return false;
+          } catch (e) {
+            console.error("[AI Action] Failed to insert text:", e);
+            return false;
+          }
+        };
+
+        toast.promise(
+          (async () => {
+            const result = await InlineAI.generate("continue", {
+              context: contextText,
+              workspaceSlug,
+            });
+
+            if (result?.response) {
+              insertTextAtCursor(result.response.trim());
+              return result.response;
+            }
+            throw new Error(result?.error || "No response from AI");
+          })(),
+          {
+            pending: "🤖 AI continuing your writing...",
+            success: "✅ Content added!",
+            error: "❌ Failed to continue writing",
+          }
         );
-        // TODO: Call AI with context and stream response
         break;
+      }
 
-      case "summarize":
-        toast.info("🤖 AI summarizing content...");
-        // TODO: Get content above, summarize, insert
-        break;
+      case "summarize": {
+        const contentToSummarize = getContextText();
+        if (!contentToSummarize.trim()) {
+          toast.warning("No content to summarize!");
+          break;
+        }
 
-      case "improve":
-        toast.info("🤖 AI improving writing...");
-        // TODO: Get selected text or paragraph, improve, replace
-        break;
+        toast.promise(
+          (async () => {
+            const result = await InlineAI.generate("summarize", {
+              context: contentToSummarize,
+              workspaceSlug,
+            });
 
-      case "grammar":
-        toast.info("🤖 AI fixing grammar...");
-        // TODO: Get text, fix grammar, replace
+            if (result?.response) {
+              // Insert summary below current content
+              const doc = editorRef.current?.doc;
+              if (doc) {
+                const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+                if (noteBlocks.length > 0) {
+                  const noteBlock = noteBlocks[noteBlocks.length - 1];
+                  doc.addBlock("affine:paragraph", { text: new Text("---") }, noteBlock.id);
+                  doc.addBlock("affine:paragraph", { text: new Text("📋 Summary:") }, noteBlock.id);
+                  doc.addBlock("affine:paragraph", { text: new Text(result.response.trim()) }, noteBlock.id);
+                }
+              }
+              return result.response;
+            }
+            throw new Error(result?.error || "No response from AI");
+          })(),
+          {
+            pending: "🤖 AI summarizing content...",
+            success: "✅ Summary added!",
+            error: "❌ Failed to summarize",
+          }
+        );
         break;
+      }
 
-      case "translate":
-        toast.info(`🤖 AI translating to ${lang}...`);
-        // TODO: Get text, translate, replace
+      case "improve": {
+        const contentToImprove = getContextText();
+        if (!contentToImprove.trim()) {
+          toast.warning("No content to improve!");
+          break;
+        }
+
+        toast.promise(
+          (async () => {
+            const result = await InlineAI.generate("improve", {
+              selectedText: contentToImprove,
+              workspaceSlug,
+            });
+
+            if (result?.response) {
+              // Insert improved version below
+              const doc = editorRef.current?.doc;
+              if (doc) {
+                const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+                if (noteBlocks.length > 0) {
+                  const noteBlock = noteBlocks[noteBlocks.length - 1];
+                  doc.addBlock("affine:paragraph", { text: new Text("---") }, noteBlock.id);
+                  doc.addBlock("affine:paragraph", { text: new Text("✨ Improved version:") }, noteBlock.id);
+                  doc.addBlock("affine:paragraph", { text: new Text(result.response.trim()) }, noteBlock.id);
+                }
+              }
+              return result.response;
+            }
+            throw new Error(result?.error || "No response from AI");
+          })(),
+          {
+            pending: "🤖 AI improving writing...",
+            success: "✅ Improved version added!",
+            error: "❌ Failed to improve writing",
+          }
+        );
         break;
+      }
+
+      case "grammar": {
+        const contentToFix = getContextText();
+        if (!contentToFix.trim()) {
+          toast.warning("No content to fix!");
+          break;
+        }
+
+        toast.promise(
+          (async () => {
+            const result = await InlineAI.generate("grammar", {
+              selectedText: contentToFix,
+              workspaceSlug,
+            });
+
+            if (result?.response) {
+              // Insert fixed version below
+              const doc = editorRef.current?.doc;
+              if (doc) {
+                const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+                if (noteBlocks.length > 0) {
+                  const noteBlock = noteBlocks[noteBlocks.length - 1];
+                  doc.addBlock("affine:paragraph", { text: new Text("---") }, noteBlock.id);
+                  doc.addBlock("affine:paragraph", { text: new Text("✅ Grammar fixed:") }, noteBlock.id);
+                  doc.addBlock("affine:paragraph", { text: new Text(result.response.trim()) }, noteBlock.id);
+                }
+              }
+              return result.response;
+            }
+            throw new Error(result?.error || "No response from AI");
+          })(),
+          {
+            pending: "🤖 AI fixing grammar...",
+            success: "✅ Grammar corrections added!",
+            error: "❌ Failed to fix grammar",
+          }
+        );
+        break;
+      }
+
+      case "translate": {
+        const contentToTranslate = getContextText();
+        if (!contentToTranslate.trim()) {
+          toast.warning("No content to translate!");
+          break;
+        }
+
+        toast.promise(
+          (async () => {
+            const result = await InlineAI.generate("translate", {
+              selectedText: contentToTranslate,
+              language: lang || "Spanish",
+              workspaceSlug,
+            });
+
+            if (result?.response) {
+              // Insert translation below
+              const doc = editorRef.current?.doc;
+              if (doc) {
+                const noteBlocks = doc.getBlocks().filter(b => b.flavour === "affine:note");
+                if (noteBlocks.length > 0) {
+                  const noteBlock = noteBlocks[noteBlocks.length - 1];
+                  doc.addBlock("affine:paragraph", { text: new Text("---") }, noteBlock.id);
+                  doc.addBlock("affine:paragraph", { text: new Text(`🌐 Translation (${lang || "Spanish"}):`) }, noteBlock.id);
+                  doc.addBlock("affine:paragraph", { text: new Text(result.response.trim()) }, noteBlock.id);
+                }
+              }
+              return result.response;
+            }
+            throw new Error(result?.error || "No response from AI");
+          })(),
+          {
+            pending: `🤖 AI translating to ${lang || "Spanish"}...`,
+            success: "✅ Translation added!",
+            error: "❌ Failed to translate",
+          }
+        );
+        break;
+      }
 
       case "selection":
         // AI action from format bar (text selection)
@@ -2171,7 +2348,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-            "Doc embedded successfully! AI can now retrieve this content."
+          "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -2412,7 +2589,7 @@ ${activeTemplateFooter}
                   style={{
                     height: selectedBrandTemplate.cssOverrides
                       ? JSON.parse(selectedBrandTemplate.cssOverrides)
-                          .logoHeight || 40
+                        .logoHeight || 40
                       : 40,
                   }}
                 />
@@ -2718,7 +2895,7 @@ const serializeDocToHtml = async (doc) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch {}
+          } catch { }
           return value;
         };
 

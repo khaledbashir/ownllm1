@@ -187,10 +187,10 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
     const handleInsertChoice = (mode) => {
       if (!pendingContent) return;
 
-      if (mode === 'replace') {
+      if (mode === "replace") {
         // Clear first, then insert
         const target = notesEditorRef.current;
-        if (target && typeof target.clearDocument === 'function') {
+        if (target && typeof target.clearDocument === "function") {
           target.clearDocument();
         }
       }
@@ -235,7 +235,7 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
           if (canInsert) {
             try {
               // If Replace was chosen, clear doc first
-              if (shouldReplace && typeof target.clearDocument === 'function') {
+              if (shouldReplace && typeof target.clearDocument === "function") {
                 target.clearDocument();
                 setShouldReplace(false); // Reset flag
               }
@@ -565,20 +565,22 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
-              ? "border-theme-text-primary text-theme-text-primary"
-              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-              }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+              activeTab === "chat"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+            }`}
           >
             <ChatText size={18} />
             Chat
           </button>
           <button
             onClick={() => setActiveTab("notes")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
-              ? "border-theme-text-primary text-theme-text-primary"
-              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-              }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+              activeTab === "notes"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+            }`}
           >
             <FileText size={18} />
             Doc

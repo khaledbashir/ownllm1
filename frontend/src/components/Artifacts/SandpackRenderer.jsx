@@ -97,8 +97,8 @@ export default function SandpackRenderer({ code, language, workspace }) {
     : "my-4";
 
   const frameClass = isFullscreen
-    ? "h-[calc(100vh-2rem)] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-2xl"
-    : "h-[520px] rounded-xl overflow-hidden border border-theme-border bg-theme-bg-secondary shadow-xl";
+    ? "min-h-[calc(100vh-2rem)] rounded-xl overflow-auto border border-theme-border bg-theme-bg-secondary shadow-2xl flex flex-col"
+    : "min-h-[520px] rounded-xl overflow-auto border border-theme-border bg-theme-bg-secondary shadow-xl flex flex-col";
 
   const primaryFile = isReact ? "/App.js" : "/index.html";
 
@@ -138,10 +138,9 @@ export default function SandpackRenderer({ code, language, workspace }) {
   );
 
   const segmentedButtonClass = (active) =>
-    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
-      active
-        ? "bg-white/10 text-theme-text-primary border-white/10"
-        : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
+    `px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${active
+      ? "bg-white/10 text-theme-text-primary border-white/10"
+      : "bg-transparent text-theme-text-secondary border-transparent hover:text-theme-text-primary hover:bg-white/5"
     }`;
 
   const actionButtonClass =
