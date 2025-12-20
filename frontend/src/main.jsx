@@ -49,6 +49,14 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "/p/:id",
+        lazy: async () => {
+          const { default: PublicProposal } =
+            await import("@/pages/PublicProposal");
+          return { element: <PublicProposal /> };
+        },
+      },
+      {
         path: "/app",
         lazy: async () => {
           const { default: Main } = await import("@/pages/Main");

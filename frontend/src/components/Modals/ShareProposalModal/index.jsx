@@ -7,7 +7,7 @@ export default function ShareProposalModal({
   show,
   onClose,
   workspaceSlug,
-  htmlContent,
+  getHtmlContent, // Now a function that returns Promise<string>
 }) {
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
@@ -19,13 +19,18 @@ export default function ShareProposalModal({
 
   const handleGenerateValues = async (e) => {
     e.preventDefault();
-    if (!htmlContent) {
-      showToast("Document content is empty", "error");
-      return;
-    }
 
     setLoading(true);
     try {
+      // Get HTML content on-demand
+      const htmlContent = getHtmlContent ? await getHtmlContent() : null;
+
+      if (!htmlContent) {
+        showToast("Document content is empty", "error");
+        setLoading(false);
+        return;
+      }
+
       const { url, error } = await Workspace.createPublicProposal(
         workspaceSlug,
         htmlContent,
@@ -160,11 +165,10 @@ export default function ShareProposalModal({
                 />
                 <button
                   onClick={handleCopy}
-                  className={`p-2 rounded-md transition-all ${
-                    copied
+                  className={`p-2 rounded-md transition-all ${copied
                       ? "bg-green-500/20 text-green-400"
                       : "bg-white/10 hover:bg-white/20 text-white"
-                  }`}
+                    }`}
                   title="Copy to clipboard"
                 >
                   {copied ? <Check size={18} /> : <Copy size={18} />}

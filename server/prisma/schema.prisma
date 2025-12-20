@@ -168,6 +168,7 @@ model workspaces {
   artifacts                    artifacts[]
   smart_plugins                smart_plugins[]
   crm_pipelines                crm_pipelines[]
+  public_proposals             public_proposals[]
 }
 
 model workspace_threads {
@@ -562,4 +563,23 @@ model public_api_registry {
 
   @@unique([category, name])
   @@index([category])
+}
+
+// Public proposals for client portal - shareable read-only snapshots
+model public_proposals {
+  id          String    @id @default(uuid())
+  workspaceId Int
+  htmlContent String    // HTML snapshot of the proposal
+  status      String    @default("active") // active, signed, expired, revoked
+  password    String?   // Optional password protection 
+  expiresAt   DateTime? // Optional expiry date
+  signatures  String?   // JSON: { name, ip, date, signatureImage }
+  viewCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspace   workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([status])
 }

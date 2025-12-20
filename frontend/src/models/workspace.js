@@ -200,7 +200,7 @@ const Workspace = {
         try {
           const chatResult = JSON.parse(msg.data);
           handleChat(chatResult);
-        } catch {}
+        } catch { }
       },
       onerror(err) {
         handleChat({
@@ -602,6 +602,32 @@ const Workspace = {
         return { products: [], error: e.message };
       });
     return { products, error };
+  },
+
+  /**
+   * Creates a public proposal link for client sharing
+   * @param {string} slug - workspace slug
+   * @param {string} htmlContent - HTML snapshot of the proposal
+   * @param {object} options - { password?: string, expiresAt?: string }
+   * @returns {Promise<{url: string|null, error: string|null}>}
+   */
+  createPublicProposal: async function (slug, htmlContent, options = {}) {
+    return await fetch(`${API_BASE}/workspace/${slug}/proposals`, {
+      method: "POST",
+      headers: baseHeaders(),
+      body: JSON.stringify({ htmlContent, options }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          return { url: data.url, error: null };
+        }
+        return { url: null, error: data.error || "Failed to create proposal" };
+      })
+      .catch((e) => {
+        console.error("createPublicProposal error:", e);
+        return { url: null, error: e.message };
+      });
   },
 
   threads: WorkspaceThread,

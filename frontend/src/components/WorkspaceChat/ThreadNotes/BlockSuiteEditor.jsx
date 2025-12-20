@@ -23,10 +23,12 @@ import {
   Database,
   FileDoc,
   CaretDown,
+  ShareNetwork,
 } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 import debounce from "lodash.debounce";
 import ExportPdfModal from "./ExportPdfModal";
+import ShareProposalModal from "@/components/Modals/ShareProposalModal";
 import WorkspaceThread from "@/models/workspaceThread";
 import Workspace from "@/models/workspace";
 import PdfTemplates from "@/models/pdfTemplates";
@@ -141,6 +143,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
   const [exporting, setExporting] = useState(false);
   const [embedding, setEmbedding] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -2657,6 +2660,15 @@ ${activeTemplateFooter}
             )}
             {exporting ? "Exporting..." : "Export PDF"}
           </button>
+          {/* Share button */}
+          <button
+            onClick={() => setShowShareModal(true)}
+            disabled={!isReady}
+            className="flex items-center gap-x-2 px-4 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-sm font-medium rounded-full border border-emerald-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            <ShareNetwork className="w-4 h-4" />
+            Share
+          </button>
         </div>
 
         {/* Document Preview Area - Header + Editor + Footer */}
@@ -2720,6 +2732,16 @@ ${activeTemplateFooter}
         onClose={() => setShowExportModal(false)}
         onExport={handleExport}
         exporting={exporting}
+      />
+
+      <ShareProposalModal
+        show={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        workspaceSlug={workspaceSlug}
+        getHtmlContent={async () => {
+          if (!editorRef.current?.doc) return null;
+          return await serializeDocToHtml(editorRef.current.doc);
+        }}
       />
 
       <AIInputModal
