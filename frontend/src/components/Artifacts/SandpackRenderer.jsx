@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   SandpackProvider,
   SandpackLayout,
@@ -28,9 +28,7 @@ export default function SandpackRenderer({ code, language, workspace }) {
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("preview");
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [splitPct, setSplitPct] = useState(52);
-  const isDraggingRef = useRef(false);
-  const splitContainerRef = useRef(null);
+  const splitPct = 52;
 
   // Get editor context for inserting into Doc editor
   const editorContext = useEditorContext();
@@ -146,30 +144,6 @@ export default function SandpackRenderer({ code, language, workspace }) {
 
   const actionButtonClass =
     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border border-white/10 bg-white/5 hover:bg-white/10 text-theme-text-primary transition-colors";
-
-  const handlePointerDown = (e) => {
-    isDraggingRef.current = true;
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {}
-  };
-
-  const handlePointerMove = (e) => {
-    if (!isDraggingRef.current) return;
-    const container = splitContainerRef.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const nextPct = ((e.clientX - rect.left) / rect.width) * 100;
-    const clamped = Math.min(72, Math.max(28, nextPct));
-    setSplitPct(clamped);
-  };
-
-  const handlePointerUp = (e) => {
-    isDraggingRef.current = false;
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {}
-  };
 
   if (!supported) {
     return (
@@ -360,6 +334,12 @@ export default function SandpackRenderer({ code, language, workspace }) {
             options={{
               activeFile: primaryFile,
               visibleFiles: [primaryFile],
+              editorWidthPercentage:
+                viewMode === "preview"
+                  ? 0
+                  : viewMode === "code"
+                    ? 100
+                    : splitPct,
             }}
             customSetup={{
               dependencies: {
@@ -369,76 +349,27 @@ export default function SandpackRenderer({ code, language, workspace }) {
               },
             }}
           >
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 [&_.sp-layout]:h-full [&_.sp-layout]:min-h-0 [&_.sp-preview-container]:h-full [&_.sp-preview-container]:min-h-0 [&_.sp-preview]:h-full [&_.sp-preview]:min-h-0 [&_.sp-code-editor]:h-full [&_.sp-code-editor]:min-h-0 [&_.sp-stack]:h-full [&_.sp-stack]:min-h-0">
               <SandpackLayout style={{ height: "100%" }}>
-                <div className="h-full min-h-0">
-                  {viewMode === "code" && (
-                    <div className="h-full border-t border-white/5">
-                      <SandpackCodeEditor
-                        showTabs={false}
-                        showLineNumbers={true}
-                        showInlineErrors={true}
-                        wrapContent={true}
-                        style={{ height: "100%" }}
-                      />
-                    </div>
-                  )}
-
-                  {viewMode === "preview" && (
-                    <div className="h-full border-t border-white/5">
-                      <SandpackPreview
-                        showNavigator={false}
-                        showRefreshButton={true}
-                        style={{ height: "100%" }}
-                      />
-                    </div>
-                  )}
-
-                  {viewMode === "split" && (
-                    <div
-                      ref={splitContainerRef}
-                      className="h-full min-h-0 flex flex-col md:flex-row border-t border-white/5"
-                    >
-                      <div
-                        className="h-1/2 md:h-full md:min-w-[320px] border-b md:border-b-0 md:border-r border-theme-border"
-                        style={{
-                          flexBasis: `${splitPct}%`,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <SandpackCodeEditor
-                          showTabs={false}
-                          showLineNumbers={true}
-                          showInlineErrors={true}
-                          wrapContent={true}
-                          style={{ height: "100%" }}
-                        />
-                      </div>
-
-                      <div className="hidden md:flex w-3 items-stretch justify-center bg-theme-bg-secondary">
-                        <div
-                          onPointerDown={handlePointerDown}
-                          onPointerMove={handlePointerMove}
-                          onPointerUp={handlePointerUp}
-                          onPointerCancel={handlePointerUp}
-                          className="w-3 cursor-col-resize flex items-center justify-center group"
-                          role="separator"
-                          aria-orientation="vertical"
-                        >
-                          <div className="w-px h-10 bg-white/15 group-hover:bg-blue-400/60 transition-colors" />
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0 h-1/2 md:h-full">
-                        <SandpackPreview
-                          showNavigator={false}
-                          showRefreshButton={true}
-                          style={{ height: "100%" }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <SandpackCodeEditor
+                  showTabs={false}
+                  showLineNumbers={true}
+                  showInlineErrors={true}
+                  wrapContent={true}
+                  style={{
+                    height: "100%",
+                    display: viewMode === "preview" ? "none" : "block",
+                  }}
+                />
+                <SandpackPreview
+                  showNavigator={false}
+                  showRefreshButton={true}
+                  showOpenInCodeSandbox={false}
+                  style={{
+                    height: "100%",
+                    display: viewMode === "code" ? "none" : "block",
+                  }}
+                />
               </SandpackLayout>
             </div>
           </SandpackProvider>
