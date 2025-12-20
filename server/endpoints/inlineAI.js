@@ -141,7 +141,7 @@ function inlineAIEndpoints(app) {
           temperature: workspace?.openAiTemp ?? 0.7,
         });
 
-        if (!result) {
+        if (!result || !result.textResponse) {
           return response.status(500).json({
             success: false,
             error: "Failed to get AI response",
@@ -150,7 +150,7 @@ function inlineAIEndpoints(app) {
 
         return response.json({
           success: true,
-          content: result,
+          content: result.textResponse,
           action,
         });
       } catch (error) {
@@ -263,11 +263,12 @@ function inlineAIEndpoints(app) {
           const result = await LLMConnector.getChatCompletion(chatHistory, {
             temperature: 0.7,
           });
+          const textContent = result?.textResponse || "";
           response.write(
-            `data: ${JSON.stringify({ type: "chunk", content: result })}\n\n`
+            `data: ${JSON.stringify({ type: "chunk", content: textContent })}\n\n`
           );
           response.write(
-            `data: ${JSON.stringify({ type: "complete", fullContent: result })}\n\n`
+            `data: ${JSON.stringify({ type: "complete", fullContent: textContent })}\n\n`
           );
           response.end();
         }
