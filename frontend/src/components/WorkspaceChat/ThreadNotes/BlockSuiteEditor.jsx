@@ -1871,7 +1871,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       if (result.success) {
         toast.success(
           result.message ||
-            "Doc embedded successfully! AI can now retrieve this content."
+          "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -2303,25 +2303,59 @@ const serializeDocToHtml = async (doc) => {
         break;
 
       case "affine:embed-pricing-table": {
-        const readProp = (obj, key) => {
+        // CRITICAL: BlockSuite embed blocks can store props on block, block.model, or block.props
+        // We need to check all locations to find the rows data
+        const readProp = (key) => {
           try {
-            if (!obj) return undefined;
-            if (obj[key] !== undefined) return obj[key];
-            const props = obj.props;
-            if (!props) return undefined;
-            if (props[key] !== undefined) return props[key];
-            if (typeof props.get === "function") return props.get(key);
+            // Check direct block property first (most common for custom embeds)
+            if (block[key] !== undefined) return block[key];
+            // Check model (if it exists)
+            if (model && model[key] !== undefined) return model[key];
+            // Check block.props
+            if (block.props && block.props[key] !== undefined) return block.props[key];
+            // Check model.props
+            if (model && model.props) {
+              if (model.props[key] !== undefined) return model.props[key];
+              if (typeof model.props.get === "function") return model.props.get(key);
+            }
+            // Check block.yBlock (Yjs-backed properties)
+            if (block.yBlock) {
+              const yProps = block.yBlock.get("prop:props") || block.yBlock.get("props");
+              if (yProps && typeof yProps.get === "function") {
+                return yProps.get(key);
+              }
+              // Direct key on yBlock
+              const yVal = block.yBlock.get(`prop:${key}`) || block.yBlock.get(key);
+              if (yVal !== undefined) return yVal;
+            }
             return undefined;
-          } catch {
+          } catch (e) {
+            console.warn(`[PDF Export] Error reading prop '${key}':`, e);
             return undefined;
           }
         };
 
         const toPlain = (value) => {
           try {
-            if (value && typeof value.toJSON === "function")
-              return value.toJSON();
-          } catch {}
+            if (value === null || value === undefined) return value;
+            // Y.Array or Y.Map
+            if (typeof value.toJSON === "function") return value.toJSON();
+            // Proxy objects - try to spread
+            if (typeof value === "object" && !Array.isArray(value)) {
+              // Check if it looks like a reactive/proxy wrapper
+              const keys = Object.keys(value);
+              if (keys.length > 0) {
+                const plain = {};
+                for (const k of keys) {
+                  plain[k] = toPlain(value[k]);
+                }
+                return plain;
+              }
+            }
+            if (Array.isArray(value)) {
+              return value.map(toPlain);
+            }
+          } catch { }
           return value;
         };
 
@@ -2340,11 +2374,11 @@ const serializeDocToHtml = async (doc) => {
           return fallback;
         };
 
-        const titleVal = readProp(model, "title");
-        const currency = readProp(model, "currency") || "AUD";
-        const discountPercent = toNumber(readProp(model, "discountPercent"), 0);
-        const gstPercent = toNumber(readProp(model, "gstPercent"), 10);
-        const showTotalsRaw = readProp(model, "showTotals");
+        const titleVal = readProp("title");
+        const currency = readProp("currency") || "AUD";
+        const discountPercent = toNumber(readProp("discountPercent"), 0);
+        const gstPercent = toNumber(readProp("gstPercent"), 10);
+        const showTotalsRaw = readProp("showTotals");
         const showTotals =
           showTotalsRaw === undefined ? true : Boolean(toPlain(showTotalsRaw));
 
@@ -2353,7 +2387,9 @@ const serializeDocToHtml = async (doc) => {
           (typeof titleVal === "string" ? titleVal : "") ||
           "Project Pricing";
 
-        let rawRows = readProp(model, "rows");
+        let rawRows = readProp("rows");
+        console.log("[PDF Export] Pricing table raw rows:", rawRows, "block:", block.id);
+
         rawRows = toPlain(rawRows);
         if (typeof rawRows === "string") {
           try {
@@ -2363,11 +2399,13 @@ const serializeDocToHtml = async (doc) => {
           }
         }
         const rows = Array.isArray(rawRows) ? rawRows.map(toPlain) : [];
+        console.log("[PDF Export] Pricing table parsed rows:", rows.length, "rows");
 
         const clamp = (n, { min = 0, max = 100 } = {}) => {
           const v = Number(n);
           if (!Number.isFinite(v)) return min;
           return Math.max(min, Math.min(max, v));
+
         };
 
         const escapeHtml = (unsafe) => {

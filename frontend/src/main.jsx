@@ -12,8 +12,13 @@ import SimpleSSOPassthrough from "@/pages/Login/SSO/simple";
 import OnboardingFlow from "@/pages/OnboardingFlow";
 import "@/index.css";
 
+
 const isDev = process.env.NODE_ENV !== "production";
-const REACTWRAP = isDev ? React.StrictMode : React.Fragment;
+// NOTE: React 18 StrictMode is incompatible with react-beautiful-dnd v13
+// StrictMode runs effects twice (mount→unmount→remount), corrupting DragDropContext state
+// See: https://github.com/atlassian/react-beautiful-dnd/issues/2350
+const REACTWRAP = React.Fragment;
+
 
 const router = createBrowserRouter([
   {
