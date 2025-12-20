@@ -13,7 +13,7 @@ import OnboardingFlow from "@/pages/OnboardingFlow";
 import "@/index.css";
 
 const isDev = process.env.NODE_ENV !== "production";
-const REACTWRAP = isDev ? React.Fragment : React.StrictMode;
+const REACTWRAP = isDev ? React.StrictMode : React.Fragment;
 
 const router = createBrowserRouter([
   {

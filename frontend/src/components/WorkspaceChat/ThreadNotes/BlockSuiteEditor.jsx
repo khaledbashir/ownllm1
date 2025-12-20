@@ -34,6 +34,8 @@ import { setupAISlashMenu } from "@/utils/aiSlashMenu";
 import { setupAIFormatBar } from "@/utils/aiFormatBar";
 import AIInputModal from "@/components/AIInputModal";
 import InlineAI from "@/models/inlineAI";
+import DOMPurify from "@/utils/chat/purify";
+import renderMarkdown from "@/utils/chat/markdown";
 import "./editor.css";
 
 // Pre-made document templates
@@ -2342,6 +2344,9 @@ const serializeDocToHtml = async (doc) => {
         const currency = readProp(model, "currency") || "AUD";
         const discountPercent = toNumber(readProp(model, "discountPercent"), 0);
         const gstPercent = toNumber(readProp(model, "gstPercent"), 10);
+        const showTotalsRaw = readProp(model, "showTotals");
+        const showTotals =
+          showTotalsRaw === undefined ? true : Boolean(toPlain(showTotalsRaw));
 
         const title =
           titleVal?.toString?.() ||
@@ -2365,17 +2370,27 @@ const serializeDocToHtml = async (doc) => {
           return Math.max(min, Math.min(max, v));
         };
 
+        const escapeHtml = (unsafe) => {
+          return String(unsafe ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+        };
+
         const formatCurrency = (value) => {
           const n = Number(value);
-          if (!Number.isFinite(n)) return "$0";
+          if (!Number.isFinite(n)) return "$0+GST";
           try {
-            return n.toLocaleString(undefined, {
+            const formatted = n.toLocaleString(undefined, {
               style: "currency",
               currency,
               maximumFractionDigits: 0,
             });
+            return `${formatted}+GST`;
           } catch {
-            return `$${Math.round(n)}`;
+            return `$${Math.round(n)}+GST`;
           }
         };
 
@@ -2388,12 +2403,13 @@ const serializeDocToHtml = async (doc) => {
         const discount = subtotal * (clamp(discountPercent) / 100);
         const afterDiscount = subtotal - discount;
         const gst = afterDiscount * (clamp(gstPercent) / 100);
-        const total = afterDiscount + gst;
+        const rawTotal = afterDiscount + gst;
+        const total = Math.round(rawTotal / 100) * 100;
 
         let tableHtml = `<div style="margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
                     <div style="padding: 0.75rem 1rem; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                        <div style="font-weight: 700; color: #111827;">${title}</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">${currency}</div>
+                        <div style="font-weight: 700; color: #111827;">${escapeHtml(title)}</div>
+                        <div style="font-size: 0.75rem; color: #6b7280;">${escapeHtml(currency)}</div>
                     </div>
                     <div>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
@@ -2415,9 +2431,13 @@ const serializeDocToHtml = async (doc) => {
             const hours = toNumber(row?.hours, 0);
             const rate = toNumber(row?.baseRate, 0);
             const lineTotal = hours * rate;
+            const descHtml = DOMPurify.sanitize(
+              renderMarkdown(String(row?.description || "")),
+              { USE_PROFILES: { html: true } }
+            );
             tableHtml += `<tr style="border-bottom: 1px solid #f3f4f6;">
-                            <td style="padding: 0.75rem 1rem; color: #111827;">${row?.role || ""}</td>
-                            <td style="padding: 0.75rem 1rem; color: #4b5563;">${row?.description || ""}</td>
+                            <td style="padding: 0.75rem 1rem; color: #111827;">${escapeHtml(row?.role || "")}</td>
+                            <td style="padding: 0.75rem 1rem; color: #4b5563;">${descHtml}</td>
                             <td style="padding: 0.75rem 1rem; text-align: right; color: #111827;">${hours}</td>
                             <td style="padding: 0.75rem 1rem; text-align: right; color: #111827;">${formatCurrency(rate)}</td>
                             <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827;">${formatCurrency(lineTotal)}</td>
@@ -2425,15 +2445,22 @@ const serializeDocToHtml = async (doc) => {
           });
         }
 
-        tableHtml += `</tbody></table></div>
-                    <div style="padding: 0.75rem 1rem; display: flex; justify-content: flex-end;">
+        tableHtml += `</tbody></table></div>`;
+
+        if (showTotals) {
+          const discountLabel =
+            clamp(discountPercent) > 0 ? ` (${clamp(discountPercent)}%)` : "";
+          const gstLabel =
+            clamp(gstPercent) > 0 ? ` (${clamp(gstPercent)}%)` : "";
+
+          tableHtml += `<div style="padding: 0.75rem 1rem; display: flex; justify-content: flex-end;">
                         <div style="width: 320px; font-size: 0.9rem;">
                             <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
                                 <span style="color: #6b7280;">Subtotal</span>
                                 <span style="color: #111827; font-weight: 600;">${formatCurrency(subtotal)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
-                                <span style="color: #6b7280;">Discount (${clamp(discountPercent)}%)</span>
+                                <span style="color: #6b7280;">Discount${discountLabel}</span>
                                 <span style="color: #111827; font-weight: 600;">-${formatCurrency(discount)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
@@ -2441,16 +2468,22 @@ const serializeDocToHtml = async (doc) => {
                                 <span style="color: #111827; font-weight: 600;">${formatCurrency(afterDiscount)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
-                                <span style="color: #6b7280;">GST (${clamp(gstPercent)}%)</span>
+                                <span style="color: #6b7280;">GST${gstLabel}</span>
                                 <span style="color: #111827; font-weight: 600;">${formatCurrency(gst)}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; margin-top: 0.25rem; border-top: 1px solid #e5e7eb;">
-                                <span style="color: #111827; font-weight: 700;">Total</span>
+                                <span style="color: #111827; font-weight: 700;">Total (Commercial Rounding)</span>
                                 <span style="color: #111827; font-weight: 700;">${formatCurrency(total)}</span>
                             </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0; opacity: 0.65; font-size: 0.75rem;">
+                                <span style="color: #6b7280;">Exact</span>
+                                <span style="color: #111827;">${formatCurrency(rawTotal)}</span>
+                            </div>
                         </div>
-                    </div>
-                </div>`;
+                    </div>`;
+        }
+
+        tableHtml += `</div>`;
 
         html = tableHtml;
         break;
