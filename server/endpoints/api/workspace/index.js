@@ -389,7 +389,8 @@ function apiWorkspaceEndpoints(app) {
       */
       try {
         const { url } = reqBody(request);
-        if (!url) return response.status(400).json({ error: "URL is required" });
+        if (!url)
+          return response.status(400).json({ error: "URL is required" });
 
         const products = await importProductsFromUrl(url);
         response.status(200).json({ products });
@@ -433,12 +434,16 @@ function apiWorkspaceEndpoints(app) {
       */
       try {
         const { html } = reqBody(request);
-        if (!html) return response.status(400).json({ error: "HTML content required" });
+        if (!html)
+          return response.status(400).json({ error: "HTML content required" });
 
         const pdfBuffer = await generatePdf(html);
 
-        response.setHeader('Content-Type', 'application/pdf');
-        response.setHeader('Content-Disposition', 'attachment; filename="export.pdf"');
+        response.setHeader("Content-Type", "application/pdf");
+        response.setHeader(
+          "Content-Disposition",
+          'attachment; filename="export.pdf"'
+        );
         response.send(pdfBuffer);
       } catch (e) {
         console.error(e.message, e);
@@ -446,8 +451,6 @@ function apiWorkspaceEndpoints(app) {
       }
     }
   );
-
-
 
   app.get(
     "/v1/workspace/:slug/chats",
@@ -530,14 +533,14 @@ function apiWorkspaceEndpoints(app) {
 
         const history = apiSessionId
           ? await WorkspaceChats.forWorkspaceByApiSessionId(
-            workspace.id,
-            apiSessionId,
-            validLimit,
-            { createdAt: validOrderBy }
-          )
+              workspace.id,
+              apiSessionId,
+              validLimit,
+              { createdAt: validOrderBy }
+            )
           : await WorkspaceChats.forWorkspace(workspace.id, validLimit, {
-            createdAt: validOrderBy,
-          });
+              createdAt: validOrderBy,
+            });
         response.status(200).json({ history: convertToChatHistory(history) });
       } catch (e) {
         console.error(e.message, e);

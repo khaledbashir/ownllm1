@@ -43,7 +43,11 @@ function buildRateCardIndex(rateCardEntries = []) {
   return { byKey, normalizedToOriginal };
 }
 
-function chooseBestRateCardMatch(inputRole, rateCardIndex, { maxDistance = 4 } = {}) {
+function chooseBestRateCardMatch(
+  inputRole,
+  rateCardIndex,
+  { maxDistance = 4 } = {}
+) {
   const key = normalizeRoleKey(inputRole);
   if (!key) return null;
 
@@ -87,7 +91,11 @@ function chooseBestRateCardMatch(inputRole, rateCardIndex, { maxDistance = 4 } =
 
 function roleRank(roleName) {
   const r = normalizeRoleKey(roleName);
-  if (r.includes("tech") && r.includes("head") && r.includes("senior project management")) {
+  if (
+    r.includes("tech") &&
+    r.includes("head") &&
+    r.includes("senior project management")
+  ) {
     return 0;
   }
   if (r.includes("project coordination")) return 1;
@@ -233,7 +241,9 @@ function ensureMandatoryRoles(
     });
   }
 
-  return [...rows, ...injected].sort((a, b) => roleRank(a.role) - roleRank(b.role));
+  return [...rows, ...injected].sort(
+    (a, b) => roleRank(a.role) - roleRank(b.role)
+  );
 }
 
 function normalizePricingTablePayload(
@@ -248,11 +258,13 @@ function normalizePricingTablePayload(
 ) {
   const warnings = [];
 
-  const payload = rawPayload && typeof rawPayload === "object" ? rawPayload : {};
+  const payload =
+    rawPayload && typeof rawPayload === "object" ? rawPayload : {};
   const rateCardIndex = buildRateCardIndex(rateCardEntries);
 
   const normalized = {
-    title: typeof payload.title === "string" ? payload.title : "Project Pricing",
+    title:
+      typeof payload.title === "string" ? payload.title : "Project Pricing",
     currency,
     discountPercent: clampPercent(payload.discountPercent, 0),
     gstPercent: clampPercent(payload.gstPercent, defaultGstPercent),
@@ -262,10 +274,15 @@ function normalizePricingTablePayload(
   normalized.rows = normalizeRows(payload.rows, rateCardIndex, warnings);
 
   if (injectMandatoryRoles) {
-    normalized.rows = ensureMandatoryRoles(normalized.rows, rateCardIndex, warnings, {
-      mandatoryRoleNames,
-      hoursStrategy: "estimate",
-    });
+    normalized.rows = ensureMandatoryRoles(
+      normalized.rows,
+      rateCardIndex,
+      warnings,
+      {
+        mandatoryRoleNames,
+        hoursStrategy: "estimate",
+      }
+    );
   }
 
   return { pricingTable: normalized, warnings };

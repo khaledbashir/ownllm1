@@ -39,5 +39,3 @@ module.exports = {
   [apiTester.name]: apiTester,
   [browserQA.name]: browserQA,
 };
-
-

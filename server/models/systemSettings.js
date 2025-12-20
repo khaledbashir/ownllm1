@@ -702,7 +702,7 @@ const SystemSettings = {
       try {
         let url = new URL(process.env.SIMPLE_SSO_NO_LOGIN_REDIRECT);
         return url.toString();
-      } catch { }
+      } catch {}
 
       // if the no login redirect is not a valid URL or is not set, return null
       return null;

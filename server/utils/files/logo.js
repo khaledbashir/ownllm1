@@ -41,7 +41,10 @@ async function determineLogoFilepath(defaultFilename = LOGO_FILENAME) {
   const defaultFilepath = path.join(publicPath, "paid-logo.svg");
 
   if (currentLogoFilename && validFilename(currentLogoFilename)) {
-    const customLogoPath = path.join(basePath, normalizePath(currentLogoFilename));
+    const customLogoPath = path.join(
+      basePath,
+      normalizePath(currentLogoFilename)
+    );
     if (!isWithin(path.resolve(basePath), path.resolve(customLogoPath)))
       return defaultFilepath;
     return fs.existsSync(customLogoPath) ? customLogoPath : defaultFilepath;

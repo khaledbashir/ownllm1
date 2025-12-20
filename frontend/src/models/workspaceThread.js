@@ -90,7 +90,10 @@ const WorkspaceThread = {
     // Some LLMs return {textResponse, metrics} instead of a string
     return history.map((msg) => {
       if (msg.content && typeof msg.content !== "string") {
-        console.warn("[ThreadChatHistory] Fixing corrupted content:", msg.content);
+        console.warn(
+          "[ThreadChatHistory] Fixing corrupted content:",
+          msg.content
+        );
         if (msg.content.textResponse) {
           return { ...msg, content: msg.content.textResponse };
         }
@@ -159,7 +162,7 @@ const WorkspaceThread = {
           try {
             const chatResult = JSON.parse(msg.data);
             handleChat(chatResult);
-          } catch { }
+          } catch {}
         },
         onerror(err) {
           handleChat({
@@ -251,7 +254,12 @@ const WorkspaceThread = {
     return { thread, message };
   },
 
-  smartAction: async function (workspaceSlug, threadSlug, action, options = {}) {
+  smartAction: async function (
+    workspaceSlug,
+    threadSlug,
+    action,
+    options = {}
+  ) {
     const res = await fetch(
       `${API_BASE}/workspace/${workspaceSlug}/thread/${threadSlug}/smart-action`,
       {
@@ -333,4 +341,3 @@ const WorkspaceThread = {
 };
 
 export default WorkspaceThread;
-

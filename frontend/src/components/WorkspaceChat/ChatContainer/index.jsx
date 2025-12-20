@@ -47,37 +47,51 @@ function sanitizeNotesMarkdown(raw) {
   }
 
   // Remove any dangling think-like tags
-  text = text.replace(/<\/?(?:think|thinking|thought|reasoning|reflection)\b[^>]*>/gi, "");
+  text = text.replace(
+    /<\/?(?:think|thinking|thought|reasoning|reflection)\b[^>]*>/gi,
+    ""
+  );
 
   // Also handle escaped tags like &lt;think&gt; ... &lt;/think&gt;
-  text = text.replace(/&lt;(?:think|thinking|thought|reasoning|reflection)\b[^&]*&gt;[\s\S]*?&lt;\/(?:think|thinking|thought|reasoning|reflection)&gt;/gi, "");
-  text = text.replace(/&lt;\/?(?:think|thinking|thought|reasoning|reflection)\b[^&]*&gt;/gi, "");
+  text = text.replace(
+    /&lt;(?:think|thinking|thought|reasoning|reflection)\b[^&]*&gt;[\s\S]*?&lt;\/(?:think|thinking|thought|reasoning|reflection)&gt;/gi,
+    ""
+  );
+  text = text.replace(
+    /&lt;\/?(?:think|thinking|thought|reasoning|reflection)\b[^&]*&gt;/gi,
+    ""
+  );
 
   // Remove fenced code blocks that are JSON (explicit lang or JSON-parsable body)
-  text = text.replace(/```([\w/+.-]+)?\s*\n([\s\S]*?)```/g, (match, lang, body) => {
-    const normalizedLang = String(lang || "").trim().toLowerCase();
-    const trimmedBody = String(body || "").trim();
+  text = text.replace(
+    /```([\w/+.-]+)?\s*\n([\s\S]*?)```/g,
+    (match, lang, body) => {
+      const normalizedLang = String(lang || "")
+        .trim()
+        .toLowerCase();
+      const trimmedBody = String(body || "").trim();
 
-    if (normalizedLang === "json" || normalizedLang === "application/json") {
-      return "";
-    }
-
-    // If the fenced block is valid JSON, drop it.
-    const looksLikeJson =
-      (trimmedBody.startsWith("{") && trimmedBody.endsWith("}")) ||
-      (trimmedBody.startsWith("[") && trimmedBody.endsWith("]"));
-
-    if (looksLikeJson) {
-      try {
-        JSON.parse(trimmedBody);
+      if (normalizedLang === "json" || normalizedLang === "application/json") {
         return "";
-      } catch {
-        // Keep non-JSON code blocks.
       }
-    }
 
-    return match;
-  });
+      // If the fenced block is valid JSON, drop it.
+      const looksLikeJson =
+        (trimmedBody.startsWith("{") && trimmedBody.endsWith("}")) ||
+        (trimmedBody.startsWith("[") && trimmedBody.endsWith("]"));
+
+      if (looksLikeJson) {
+        try {
+          JSON.parse(trimmedBody);
+          return "";
+        } catch {
+          // Keep non-JSON code blocks.
+        }
+      }
+
+      return match;
+    }
+  );
 
   // NEW: Remove raw JSON objects that span multiple lines (Flow builder configs, transcripts, etc.)
   // This matches { ... } that contain JSON-like content at the start of message or on their own line
@@ -98,8 +112,8 @@ function sanitizeNotesMarkdown(raw) {
     let depth = 1;
     let i = offset + match.length;
     while (i < text.length && depth > 0) {
-      if (text[i] === '{') depth++;
-      if (text[i] === '}') depth--;
+      if (text[i] === "{") depth++;
+      if (text[i] === "}") depth--;
       i++;
     }
     const jsonCandidate = text.substring(offset, i);
@@ -114,7 +128,8 @@ function sanitizeNotesMarkdown(raw) {
 
   // Final pass: Try to detect and remove standalone JSON that looks like a flow config or transcript
   // Match patterns like: {"name":"...", "blocks":...} or {"transcript":"..."}
-  const flowJsonPattern = /\{[^{}]*"(?:name|blocks|config|transcript|arguments|steps|flow)"[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g;
+  const flowJsonPattern =
+    /\{[^{}]*"(?:name|blocks|config|transcript|arguments|steps|flow)"[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g;
   text = text.replace(flowJsonPattern, (match) => {
     try {
       JSON.parse(match);
@@ -128,7 +143,6 @@ function sanitizeNotesMarkdown(raw) {
   text = text.replace(/\n{3,}/g, "\n\n").trim();
   return text;
 }
-
 
 export default function ChatContainer({ workspace, knownHistory = [] }) {
   const { threadSlug = null } = useParams();
@@ -169,7 +183,8 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
     };
 
     window.addEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
-    return () => window.removeEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
+    return () =>
+      window.removeEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
   }, []);
 
   // When switching to Notes, insert any queued content once the editor is ready.
@@ -499,20 +514,22 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
-              ? "border-theme-text-primary text-theme-text-primary"
-              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-              }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+              activeTab === "chat"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+            }`}
           >
             <ChatText size={18} />
             Chat
           </button>
           <button
             onClick={() => setActiveTab("notes")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
-              ? "border-theme-text-primary text-theme-text-primary"
-              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-              }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+              activeTab === "notes"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+            }`}
           >
             <FileText size={18} />
             Doc
@@ -551,4 +568,3 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
     </div>
   );
 }
-

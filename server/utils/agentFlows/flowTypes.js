@@ -90,7 +90,8 @@ const FLOW_TYPES = {
       },
       workspaceId: {
         type: "string",
-        description: "Optional: ID of the workspace to use (defaults to current)",
+        description:
+          "Optional: ID of the workspace to use (defaults to current)",
       },
       resultVariable: {
         type: "string",

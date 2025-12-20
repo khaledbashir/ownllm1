@@ -34,9 +34,11 @@ async function maybeCreateCrmCardForSession(embed, sessionId, firstMessage) {
     });
 
     // If no workspace-specific pipeline, try finding any pipeline
-    const targetPipeline = pipeline || await prisma.crm_pipelines.findFirst({
-      orderBy: { createdAt: "asc" },
-    });
+    const targetPipeline =
+      pipeline ||
+      (await prisma.crm_pipelines.findFirst({
+        orderBy: { createdAt: "asc" },
+      }));
 
     if (!targetPipeline) return; // No pipelines configured yet
 
@@ -63,7 +65,10 @@ async function maybeCreateCrmCardForSession(embed, sessionId, firstMessage) {
     });
   } catch (err) {
     // Don't fail the chat if CRM creation fails - just log it
-    console.error("[CRM] Failed to create card for embed session:", err.message);
+    console.error(
+      "[CRM] Failed to create card for embed session:",
+      err.message
+    );
   }
 }
 

@@ -25,7 +25,9 @@ function smartPluginsEndpoints(app) {
         response.status(200).json({ success: true, plugins });
       } catch (e) {
         console.error(e);
-        response.status(500).json({ success: false, error: "Could not fetch plugins" });
+        response
+          .status(500)
+          .json({ success: false, error: "Could not fetch plugins" });
       }
     }
   );
@@ -33,7 +35,11 @@ function smartPluginsEndpoints(app) {
   // Create plugin
   app.post(
     "/workspace/:slug/smart-plugins",
-    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager]), validWorkspaceSlug],
+    [
+      validatedRequest,
+      flexUserRoleValid([ROLES.admin, ROLES.manager]),
+      validWorkspaceSlug,
+    ],
     async (request, response) => {
       try {
         const workspace = response.locals.workspace;
@@ -52,7 +58,9 @@ function smartPluginsEndpoints(app) {
         response.status(200).json({ success: true, plugin: result.plugin });
       } catch (e) {
         console.error(e);
-        response.status(500).json({ success: false, error: "Could not create plugin" });
+        response
+          .status(500)
+          .json({ success: false, error: "Could not create plugin" });
       }
     }
   );
@@ -60,13 +68,19 @@ function smartPluginsEndpoints(app) {
   // Update plugin
   app.put(
     "/workspace/:slug/smart-plugins/:id",
-    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager]), validWorkspaceSlug],
+    [
+      validatedRequest,
+      flexUserRoleValid([ROLES.admin, ROLES.manager]),
+      validWorkspaceSlug,
+    ],
     async (request, response) => {
       try {
         const workspace = response.locals.workspace;
         const id = coerceId(request.params.id);
         if (!id) {
-          response.status(400).json({ success: false, error: "Invalid plugin id" });
+          response
+            .status(400)
+            .json({ success: false, error: "Invalid plugin id" });
           return;
         }
 
@@ -77,16 +91,20 @@ function smartPluginsEndpoints(app) {
         });
 
         if (!result.ok) {
-          response.status(result.error === "Plugin not found" ? 404 : 400).json({
-            success: false,
-            error: result.error,
-          });
+          response
+            .status(result.error === "Plugin not found" ? 404 : 400)
+            .json({
+              success: false,
+              error: result.error,
+            });
           return;
         }
         response.status(200).json({ success: true, plugin: result.plugin });
       } catch (e) {
         console.error(e);
-        response.status(500).json({ success: false, error: "Could not update plugin" });
+        response
+          .status(500)
+          .json({ success: false, error: "Could not update plugin" });
       }
     }
   );
@@ -94,17 +112,26 @@ function smartPluginsEndpoints(app) {
   // Delete plugin
   app.delete(
     "/workspace/:slug/smart-plugins/:id",
-    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager]), validWorkspaceSlug],
+    [
+      validatedRequest,
+      flexUserRoleValid([ROLES.admin, ROLES.manager]),
+      validWorkspaceSlug,
+    ],
     async (request, response) => {
       try {
         const workspace = response.locals.workspace;
         const id = coerceId(request.params.id);
         if (!id) {
-          response.status(400).json({ success: false, error: "Invalid plugin id" });
+          response
+            .status(400)
+            .json({ success: false, error: "Invalid plugin id" });
           return;
         }
 
-        const result = await SmartPlugins.deleteInWorkspace({ workspaceId: workspace.id, id });
+        const result = await SmartPlugins.deleteInWorkspace({
+          workspaceId: workspace.id,
+          id,
+        });
         if (!result.ok) {
           response.status(404).json({ success: false, error: result.error });
           return;
@@ -112,7 +139,9 @@ function smartPluginsEndpoints(app) {
         response.status(200).json({ success: true });
       } catch (e) {
         console.error(e);
-        response.status(500).json({ success: false, error: "Could not delete plugin" });
+        response
+          .status(500)
+          .json({ success: false, error: "Could not delete plugin" });
       }
     }
   );

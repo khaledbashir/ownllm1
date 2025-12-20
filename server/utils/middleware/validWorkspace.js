@@ -11,7 +11,9 @@ async function validWorkspaceSlug(request, response, next) {
     : await Workspace.get({ slug });
 
   if (!workspace) {
-    response.status(404).json({ success: false, error: "Workspace does not exist." });
+    response
+      .status(404)
+      .json({ success: false, error: "Workspace does not exist." });
     return;
   }
 
@@ -28,7 +30,9 @@ async function validWorkspaceAndThreadSlug(request, response, next) {
     : await Workspace.get({ slug });
 
   if (!workspace) {
-    response.status(404).json({ success: false, error: "Workspace does not exist." });
+    response
+      .status(404)
+      .json({ success: false, error: "Workspace does not exist." });
     return;
   }
 

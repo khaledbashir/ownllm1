@@ -44,8 +44,11 @@ function scalePricingTableToTarget(
   } = {}
 ) {
   const warnings = [];
-  const table = pricingTable && typeof pricingTable === "object" ? pricingTable : {};
-  const rows = Array.isArray(table.rows) ? table.rows.map((r) => ({ ...r })) : [];
+  const table =
+    pricingTable && typeof pricingTable === "object" ? pricingTable : {};
+  const rows = Array.isArray(table.rows)
+    ? table.rows.map((r) => ({ ...r }))
+    : [];
 
   const targetAfter = toNumber(targetAfterDiscountExGst, NaN);
   if (!Number.isFinite(targetAfter) || targetAfter <= 0) {
@@ -55,7 +58,10 @@ function scalePricingTableToTarget(
   const discountPercent = clampPercent(table.discountPercent, 0);
   const denom = 1 - discountPercent / 100;
   if (denom <= 0) {
-    warnings.push({ type: "discount_makes_budget_unscalable", discountPercent });
+    warnings.push({
+      type: "discount_makes_budget_unscalable",
+      discountPercent,
+    });
     return { pricingTable: { ...table, rows }, warnings };
   }
 
@@ -81,7 +87,8 @@ function scalePricingTableToTarget(
   const fixedSubtotal = subtotalExGstFromRows(fixedRows);
   const adjustableSubtotal = subtotalExGstFromRows(adjustableRows);
 
-  const makeAllAdjustable = adjustableRows.length === 0 || adjustableSubtotal === 0;
+  const makeAllAdjustable =
+    adjustableRows.length === 0 || adjustableSubtotal === 0;
 
   let factor = 1;
   if (makeAllAdjustable) {
@@ -117,18 +124,28 @@ function scalePricingTableToTarget(
   });
 
   // Ensure mandatory roles never disappear when we had to scale everything.
-  const finalRows = clampMandatoryMinimumHours(scaledRows, mandatoryRoleKeySet, inc);
+  const finalRows = clampMandatoryMinimumHours(
+    scaledRows,
+    mandatoryRoleKeySet,
+    inc
+  );
 
   // Small heuristic to tweak hours to better hit the target.
   const adjustableForTweaks = finalRows.filter(
-    (row) => makeAllAdjustable || !mandatoryRoleKeySet.has(normalizeRoleKey(row?.role))
+    (row) =>
+      makeAllAdjustable || !mandatoryRoleKeySet.has(normalizeRoleKey(row?.role))
   );
 
-  const effectiveAdjustable = adjustableForTweaks.length ? adjustableForTweaks : finalRows;
+  const effectiveAdjustable = adjustableForTweaks.length
+    ? adjustableForTweaks
+    : finalRows;
   const minRate = Math.min(
-    ...effectiveAdjustable.map((r) => Math.max(0, toNumber(r?.baseRate, 0))).filter((r) => r > 0)
+    ...effectiveAdjustable
+      .map((r) => Math.max(0, toNumber(r?.baseRate, 0)))
+      .filter((r) => r > 0)
   );
-  const tolerance = Number.isFinite(minRate) && minRate > 0 ? minRate * inc * 0.5 : 50;
+  const tolerance =
+    Number.isFinite(minRate) && minRate > 0 ? minRate * inc * 0.5 : 50;
 
   let iter = 0;
   while (iter < maxIterations) {
@@ -139,17 +156,27 @@ function scalePricingTableToTarget(
     if (delta > 0) {
       // Need to add cost: bump the row with largest hours.
       const candidate = effectiveAdjustable
-        .filter((r) => Number.isFinite(toNumber(r?.baseRate, NaN)) && toNumber(r?.baseRate, 0) > 0)
+        .filter(
+          (r) =>
+            Number.isFinite(toNumber(r?.baseRate, NaN)) &&
+            toNumber(r?.baseRate, 0) > 0
+        )
         .sort((a, b) => toNumber(b.hours, 0) - toNumber(a.hours, 0))[0];
       if (!candidate) break;
-      candidate.hours = roundToIncrement(toNumber(candidate.hours, 0) + inc, inc);
+      candidate.hours = roundToIncrement(
+        toNumber(candidate.hours, 0) + inc,
+        inc
+      );
     } else {
       // Need to reduce cost: reduce the row with the largest hours.
       const candidate = effectiveAdjustable
         .filter((r) => toNumber(r?.hours, 0) > inc)
         .sort((a, b) => toNumber(b.hours, 0) - toNumber(a.hours, 0))[0];
       if (!candidate) break;
-      candidate.hours = roundToIncrement(Math.max(0, toNumber(candidate.hours, 0) - inc), inc);
+      candidate.hours = roundToIncrement(
+        Math.max(0, toNumber(candidate.hours, 0) - inc),
+        inc
+      );
       // If it's mandatory, don't go below minimum.
       const roleKey = normalizeRoleKey(candidate?.role);
       if (mandatoryRoleKeySet.has(roleKey)) {

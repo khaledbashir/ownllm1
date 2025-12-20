@@ -71,7 +71,10 @@
 
 .blocksuite-editor-wrapper td,
 .blocksuite-editor-wrapper th {
-  background-color: var(--affine-background-secondary-color, #252525) !important;
+  background-color: var(
+    --affine-background-secondary-color,
+    #252525
+  ) !important;
 }
 
 /* Code blocks */
@@ -91,7 +94,7 @@
 
 /* Links */
 .blocksuite-editor-wrapper a {
-  color: var(--affine-link-color, #78BEFF) !important;
+  color: var(--affine-link-color, #78beff) !important;
 }
 
 /* Menus and popups - ensure they inherit dark mode */
@@ -100,7 +103,10 @@
 .affine-format-bar-widget,
 .affine-toolbar,
 .blocksuite-overlay {
-  background-color: var(--affine-background-overlay-panel-color, #1e1e1e) !important;
+  background-color: var(
+    --affine-background-overlay-panel-color,
+    #1e1e1e
+  ) !important;
   border-color: var(--affine-border-color, #2e2e2e) !important;
   box-shadow: var(--affine-menu-shadow) !important;
 }
@@ -131,7 +137,10 @@
 .blocksuite-editor-wrapper .affine-database-title,
 .blocksuite-editor-wrapper .affine-kanban,
 .blocksuite-editor-wrapper .affine-database {
-  background-color: var(--affine-background-secondary-color, #252525) !important;
+  background-color: var(
+    --affine-background-secondary-color,
+    #252525
+  ) !important;
 }
 
 .blocksuite-editor-wrapper .affine-database-block-tag {
@@ -236,7 +245,7 @@ body {
   --affine-placeholder-color: #3e3e3f;
   --affine-hover-color: rgba(255, 255, 255, 0.1);
   --affine-hover-color-filled: #2a2a2a;
-  --affine-link-color: #78BEFF;
+  --affine-link-color: #78beff;
   --affine-icon-color: #a8a8a0;
   /* Keep semantic colors correct; used by icons/controls in portals */
   --affine-white: #ffffff;
@@ -334,7 +343,7 @@ affine-overlay-root {
 .affine-modal input:focus,
 .affine-dialog input:focus,
 [role="dialog"] input:focus {
-  border-color: #1E96EB !important;
+  border-color: #1e96eb !important;
   outline: none !important;
 }
 
@@ -367,9 +376,9 @@ affine-overlay-root {
 .affine-dialog button[class*="confirm"],
 [role="dialog"] button[class*="primary"],
 [role="dialog"] button[class*="confirm"] {
-  background-color: #1E96EB !important;
+  background-color: #1e96eb !important;
   color: #ffffff !important;
-  border-color: #1E96EB !important;
+  border-color: #1e96eb !important;
 }
 
 /* Slash menu specific */

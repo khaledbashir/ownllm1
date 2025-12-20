@@ -1,371 +1,422 @@
 const prisma = require("../utils/prisma");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
-const { flexUserRoleValid, ROLES } = require("../utils/middleware/multiUserProtected");
+const {
+  flexUserRoleValid,
+  ROLES,
+} = require("../utils/middleware/multiUserProtected");
 
 function crmEndpoints(app) {
-    if (!app) return;
+  if (!app) return;
 
-    // ============================================
-    // PIPELINES
-    // ============================================
+  // ============================================
+  // PIPELINES
+  // ============================================
 
-    // List all pipelines for current user
-    app.get(
-        "/crm/pipelines",
-        [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
-        async (request, response) => {
-            try {
-                const user = response.locals.user;
-                const pipelines = await prisma.crm_pipelines.findMany({
-                    where: { userId: user?.id || null },
-                    orderBy: { createdAt: "desc" },
-                    include: {
-                        _count: { select: { cards: true } },
-                    },
-                });
+  // List all pipelines for current user
+  app.get(
+    "/crm/pipelines",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const user = response.locals.user;
+        const pipelines = await prisma.crm_pipelines.findMany({
+          where: { userId: user?.id || null },
+          orderBy: { createdAt: "desc" },
+          include: {
+            _count: { select: { cards: true } },
+          },
+        });
 
-                return response.status(200).json({
-                    success: true,
-                    pipelines: pipelines.map((p) => ({
-                        ...p,
-                        stages: JSON.parse(p.stages || "[]"),
-                        cardCount: p._count.cards,
-                    })),
-                });
-            } catch (error) {
-                console.error("Error listing pipelines:", error);
-                return response.status(500).json({ success: false, error: error.message });
-            }
+        return response.status(200).json({
+          success: true,
+          pipelines: pipelines.map((p) => ({
+            ...p,
+            stages: JSON.parse(p.stages || "[]"),
+            cardCount: p._count.cards,
+          })),
+        });
+      } catch (error) {
+        console.error("Error listing pipelines:", error);
+        return response
+          .status(500)
+          .json({ success: false, error: error.message });
+      }
+    }
+  );
+
+  // Create a new pipeline
+  app.post(
+    "/crm/pipelines",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const user = response.locals.user;
+        const { name, description, type, stages, color, workspaceId } =
+          request.body;
+
+        if (!name) {
+          return response
+            .status(400)
+            .json({ success: false, error: "Pipeline name is required" });
         }
-    );
 
-    // Create a new pipeline
-    app.post(
-        "/crm/pipelines",
-        [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
-        async (request, response) => {
-            try {
-                const user = response.locals.user;
-                const { name, description, type, stages, color, workspaceId } = request.body;
+        const defaultStages = [
+          "New",
+          "Contacted",
+          "Qualified",
+          "Proposal",
+          "Won",
+          "Lost",
+        ];
 
-                if (!name) {
-                    return response.status(400).json({ success: false, error: "Pipeline name is required" });
-                }
+        const pipeline = await prisma.crm_pipelines.create({
+          data: {
+            name,
+            description: description || null,
+            type: type || "custom",
+            stages: JSON.stringify(stages || defaultStages),
+            color: color || "#3b82f6",
+            userId: user?.id || null,
+            workspaceId: workspaceId || null,
+          },
+        });
 
-                const defaultStages = ["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"];
+        return response.status(200).json({
+          success: true,
+          pipeline: {
+            ...pipeline,
+            stages: JSON.parse(pipeline.stages),
+          },
+        });
+      } catch (error) {
+        console.error("Error creating pipeline:", error);
+        return response
+          .status(500)
+          .json({ success: false, error: error.message });
+      }
+    }
+  );
 
-                const pipeline = await prisma.crm_pipelines.create({
-                    data: {
-                        name,
-                        description: description || null,
-                        type: type || "custom",
-                        stages: JSON.stringify(stages || defaultStages),
-                        color: color || "#3b82f6",
-                        userId: user?.id || null,
-                        workspaceId: workspaceId || null,
-                    },
-                });
+  // Update a pipeline
+  app.put(
+    "/crm/pipelines/:id",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const user = response.locals.user;
+        const { id } = request.params;
+        const { name, description, stages, color } = request.body;
 
-                return response.status(200).json({
-                    success: true,
-                    pipeline: {
-                        ...pipeline,
-                        stages: JSON.parse(pipeline.stages),
-                    },
-                });
-            } catch (error) {
-                console.error("Error creating pipeline:", error);
-                return response.status(500).json({ success: false, error: error.message });
-            }
+        const existing = await prisma.crm_pipelines.findFirst({
+          where: { id: Number(id), userId: user?.id || null },
+        });
+
+        if (!existing) {
+          return response
+            .status(404)
+            .json({ success: false, error: "Pipeline not found" });
         }
-    );
 
-    // Update a pipeline
-    app.put(
-        "/crm/pipelines/:id",
-        [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
-        async (request, response) => {
-            try {
-                const user = response.locals.user;
-                const { id } = request.params;
-                const { name, description, stages, color } = request.body;
+        const pipeline = await prisma.crm_pipelines.update({
+          where: { id: Number(id) },
+          data: {
+            name: name || existing.name,
+            description:
+              description !== undefined ? description : existing.description,
+            stages: stages ? JSON.stringify(stages) : existing.stages,
+            color: color || existing.color,
+          },
+        });
 
-                const existing = await prisma.crm_pipelines.findFirst({
-                    where: { id: Number(id), userId: user?.id || null },
-                });
+        return response.status(200).json({
+          success: true,
+          pipeline: {
+            ...pipeline,
+            stages: JSON.parse(pipeline.stages),
+          },
+        });
+      } catch (error) {
+        console.error("Error updating pipeline:", error);
+        return response
+          .status(500)
+          .json({ success: false, error: error.message });
+      }
+    }
+  );
 
-                if (!existing) {
-                    return response.status(404).json({ success: false, error: "Pipeline not found" });
-                }
+  // Delete a pipeline
+  app.delete(
+    "/crm/pipelines/:id",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      try {
+        const user = response.locals.user;
+        const { id } = request.params;
 
-                const pipeline = await prisma.crm_pipelines.update({
-                    where: { id: Number(id) },
-                    data: {
-                        name: name || existing.name,
-                        description: description !== undefined ? description : existing.description,
-                        stages: stages ? JSON.stringify(stages) : existing.stages,
-                        color: color || existing.color,
-                    },
-                });
+        const existing = await prisma.crm_pipelines.findFirst({
+          where: { id: Number(id), userId: user?.id || null },
+        });
 
-                return response.status(200).json({
-                    success: true,
-                    pipeline: {
-                        ...pipeline,
-                        stages: JSON.parse(pipeline.stages),
-                    },
-                });
-            } catch (error) {
-                console.error("Error updating pipeline:", error);
-                return response.status(500).json({ success: false, error: error.message });
-            }
+        if (!existing) {
+          return response
+            .status(404)
+            .json({ success: false, error: "Pipeline not found" });
         }
-    );
 
-    // Delete a pipeline
-    app.delete(
-        "/crm/pipelines/:id",
-        [validatedRequest, flexUserRoleValid([ROLES.admin])],
-        async (request, response) => {
-            try {
-                const user = response.locals.user;
-                const { id } = request.params;
+        await prisma.crm_pipelines.delete({
+          where: { id: Number(id) },
+        });
 
-                const existing = await prisma.crm_pipelines.findFirst({
-                    where: { id: Number(id), userId: user?.id || null },
-                });
+        return response.status(200).json({ success: true });
+      } catch (error) {
+        console.error("Error deleting pipeline:", error);
+        return response
+          .status(500)
+          .json({ success: false, error: error.message });
+      }
+    }
+  );
 
-                if (!existing) {
-                    return response.status(404).json({ success: false, error: "Pipeline not found" });
-                }
+  // ============================================
+  // CARDS
+  // ============================================
 
-                await prisma.crm_pipelines.delete({
-                    where: { id: Number(id) },
-                });
+  // List all cards in a pipeline
+  app.get(
+    "/crm/cards",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const { pipelineId } = request.query;
 
-                return response.status(200).json({ success: true });
-            } catch (error) {
-                console.error("Error deleting pipeline:", error);
-                return response.status(500).json({ success: false, error: error.message });
-            }
+        if (!pipelineId) {
+          return response
+            .status(400)
+            .json({ success: false, error: "pipelineId is required" });
         }
-    );
 
-    // ============================================
-    // CARDS
-    // ============================================
+        const cards = await prisma.crm_cards.findMany({
+          where: { pipelineId: Number(pipelineId) },
+          orderBy: [{ stage: "asc" }, { position: "asc" }],
+        });
 
-    // List all cards in a pipeline
-    app.get(
-        "/crm/cards",
-        [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
-        async (request, response) => {
-            try {
-                const { pipelineId } = request.query;
+        return response.status(200).json({
+          success: true,
+          cards: cards.map((c) => ({
+            ...c,
+            metadata: c.metadata ? JSON.parse(c.metadata) : null,
+          })),
+        });
+      } catch (error) {
+        console.error("Error listing cards:", error);
+        return response
+          .status(500)
+          .json({ success: false, error: error.message });
+      }
+    }
+  );
 
-                if (!pipelineId) {
-                    return response.status(400).json({ success: false, error: "pipelineId is required" });
-                }
+  // Create a new card
+  app.post(
+    "/crm/cards",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const user = response.locals.user;
+        const {
+          pipelineId,
+          stage,
+          title,
+          name,
+          email,
+          phone,
+          company,
+          notes,
+          value,
+          embedSessionId,
+          threadId,
+          metadata,
+        } = request.body;
 
-                const cards = await prisma.crm_cards.findMany({
-                    where: { pipelineId: Number(pipelineId) },
-                    orderBy: [{ stage: "asc" }, { position: "asc" }],
-                });
-
-                return response.status(200).json({
-                    success: true,
-                    cards: cards.map((c) => ({
-                        ...c,
-                        metadata: c.metadata ? JSON.parse(c.metadata) : null,
-                    })),
-                });
-            } catch (error) {
-                console.error("Error listing cards:", error);
-                return response.status(500).json({ success: false, error: error.message });
-            }
+        if (!pipelineId || !title) {
+          return response.status(400).json({
+            success: false,
+            error: "pipelineId and title are required",
+          });
         }
-    );
 
-    // Create a new card
-    app.post(
-        "/crm/cards",
-        [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
-        async (request, response) => {
-            try {
-                const user = response.locals.user;
-                const {
-                    pipelineId,
-                    stage,
-                    title,
-                    name,
-                    email,
-                    phone,
-                    company,
-                    notes,
-                    value,
-                    embedSessionId,
-                    threadId,
-                    metadata,
-                } = request.body;
+        // Verify pipeline exists
+        const pipeline = await prisma.crm_pipelines.findUnique({
+          where: { id: Number(pipelineId) },
+        });
 
-                if (!pipelineId || !title) {
-                    return response.status(400).json({
-                        success: false,
-                        error: "pipelineId and title are required",
-                    });
-                }
-
-                // Verify pipeline exists
-                const pipeline = await prisma.crm_pipelines.findUnique({
-                    where: { id: Number(pipelineId) },
-                });
-
-                if (!pipeline) {
-                    return response.status(404).json({ success: false, error: "Pipeline not found" });
-                }
-
-                const stages = JSON.parse(pipeline.stages);
-                const defaultStage = stage || stages[0] || "New";
-
-                // Get max position for the stage
-                const maxPos = await prisma.crm_cards.aggregate({
-                    where: { pipelineId: Number(pipelineId), stage: defaultStage },
-                    _max: { position: true },
-                });
-
-                const card = await prisma.crm_cards.create({
-                    data: {
-                        pipelineId: Number(pipelineId),
-                        stage: defaultStage,
-                        position: (maxPos._max.position || 0) + 1,
-                        title,
-                        name: name || null,
-                        email: email || null,
-                        phone: phone || null,
-                        company: company || null,
-                        notes: notes || null,
-                        value: value ? parseFloat(value) : null,
-                        embedSessionId: embedSessionId || null,
-                        threadId: threadId ? Number(threadId) : null,
-                        metadata: metadata ? JSON.stringify(metadata) : null,
-                        userId: user?.id || null,
-                    },
-                });
-
-                return response.status(200).json({ success: true, card });
-            } catch (error) {
-                console.error("Error creating card:", error);
-                return response.status(500).json({ success: false, error: error.message });
-            }
+        if (!pipeline) {
+          return response
+            .status(404)
+            .json({ success: false, error: "Pipeline not found" });
         }
-    );
 
-    // Update a card
-    app.put(
-        "/crm/cards/:id",
-        [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
-        async (request, response) => {
-            try {
-                const { id } = request.params;
-                const updates = request.body;
+        const stages = JSON.parse(pipeline.stages);
+        const defaultStage = stage || stages[0] || "New";
 
-                const existing = await prisma.crm_cards.findUnique({
-                    where: { id: Number(id) },
-                });
+        // Get max position for the stage
+        const maxPos = await prisma.crm_cards.aggregate({
+          where: { pipelineId: Number(pipelineId), stage: defaultStage },
+          _max: { position: true },
+        });
 
-                if (!existing) {
-                    return response.status(404).json({ success: false, error: "Card not found" });
-                }
+        const card = await prisma.crm_cards.create({
+          data: {
+            pipelineId: Number(pipelineId),
+            stage: defaultStage,
+            position: (maxPos._max.position || 0) + 1,
+            title,
+            name: name || null,
+            email: email || null,
+            phone: phone || null,
+            company: company || null,
+            notes: notes || null,
+            value: value ? parseFloat(value) : null,
+            embedSessionId: embedSessionId || null,
+            threadId: threadId ? Number(threadId) : null,
+            metadata: metadata ? JSON.stringify(metadata) : null,
+            userId: user?.id || null,
+          },
+        });
 
-                // Build update data
-                const updateData = {};
-                if (updates.title !== undefined) updateData.title = updates.title;
-                if (updates.name !== undefined) updateData.name = updates.name;
-                if (updates.email !== undefined) updateData.email = updates.email;
-                if (updates.phone !== undefined) updateData.phone = updates.phone;
-                if (updates.company !== undefined) updateData.company = updates.company;
-                if (updates.notes !== undefined) updateData.notes = updates.notes;
-                if (updates.value !== undefined) updateData.value = updates.value ? parseFloat(updates.value) : null;
-                if (updates.metadata !== undefined) updateData.metadata = JSON.stringify(updates.metadata);
+        return response.status(200).json({ success: true, card });
+      } catch (error) {
+        console.error("Error creating card:", error);
+        return response
+          .status(500)
+          .json({ success: false, error: error.message });
+      }
+    }
+  );
 
-                const card = await prisma.crm_cards.update({
-                    where: { id: Number(id) },
-                    data: updateData,
-                });
+  // Update a card
+  app.put(
+    "/crm/cards/:id",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const { id } = request.params;
+        const updates = request.body;
 
-                return response.status(200).json({ success: true, card });
-            } catch (error) {
-                console.error("Error updating card:", error);
-                return response.status(500).json({ success: false, error: error.message });
-            }
+        const existing = await prisma.crm_cards.findUnique({
+          where: { id: Number(id) },
+        });
+
+        if (!existing) {
+          return response
+            .status(404)
+            .json({ success: false, error: "Card not found" });
         }
-    );
 
-    // Move a card to a different stage
-    app.put(
-        "/crm/cards/:id/move",
-        [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
-        async (request, response) => {
-            try {
-                const { id } = request.params;
-                const { stage, position } = request.body;
+        // Build update data
+        const updateData = {};
+        if (updates.title !== undefined) updateData.title = updates.title;
+        if (updates.name !== undefined) updateData.name = updates.name;
+        if (updates.email !== undefined) updateData.email = updates.email;
+        if (updates.phone !== undefined) updateData.phone = updates.phone;
+        if (updates.company !== undefined) updateData.company = updates.company;
+        if (updates.notes !== undefined) updateData.notes = updates.notes;
+        if (updates.value !== undefined)
+          updateData.value = updates.value ? parseFloat(updates.value) : null;
+        if (updates.metadata !== undefined)
+          updateData.metadata = JSON.stringify(updates.metadata);
 
-                if (!stage) {
-                    return response.status(400).json({ success: false, error: "stage is required" });
-                }
+        const card = await prisma.crm_cards.update({
+          where: { id: Number(id) },
+          data: updateData,
+        });
 
-                const existing = await prisma.crm_cards.findUnique({
-                    where: { id: Number(id) },
-                });
+        return response.status(200).json({ success: true, card });
+      } catch (error) {
+        console.error("Error updating card:", error);
+        return response
+          .status(500)
+          .json({ success: false, error: error.message });
+      }
+    }
+  );
 
-                if (!existing) {
-                    return response.status(404).json({ success: false, error: "Card not found" });
-                }
+  // Move a card to a different stage
+  app.put(
+    "/crm/cards/:id/move",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const { id } = request.params;
+        const { stage, position } = request.body;
 
-                // Update the card's stage and position
-                const card = await prisma.crm_cards.update({
-                    where: { id: Number(id) },
-                    data: {
-                        stage,
-                        position: position !== undefined ? Number(position) : existing.position,
-                    },
-                });
-
-                return response.status(200).json({ success: true, card });
-            } catch (error) {
-                console.error("Error moving card:", error);
-                return response.status(500).json({ success: false, error: error.message });
-            }
+        if (!stage) {
+          return response
+            .status(400)
+            .json({ success: false, error: "stage is required" });
         }
-    );
 
-    // Delete a card
-    app.delete(
-        "/crm/cards/:id",
-        [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
-        async (request, response) => {
-            try {
-                const { id } = request.params;
+        const existing = await prisma.crm_cards.findUnique({
+          where: { id: Number(id) },
+        });
 
-                const existing = await prisma.crm_cards.findUnique({
-                    where: { id: Number(id) },
-                });
-
-                if (!existing) {
-                    return response.status(404).json({ success: false, error: "Card not found" });
-                }
-
-                await prisma.crm_cards.delete({
-                    where: { id: Number(id) },
-                });
-
-                return response.status(200).json({ success: true });
-            } catch (error) {
-                console.error("Error deleting card:", error);
-                return response.status(500).json({ success: false, error: error.message });
-            }
+        if (!existing) {
+          return response
+            .status(404)
+            .json({ success: false, error: "Card not found" });
         }
-    );
+
+        // Update the card's stage and position
+        const card = await prisma.crm_cards.update({
+          where: { id: Number(id) },
+          data: {
+            stage,
+            position:
+              position !== undefined ? Number(position) : existing.position,
+          },
+        });
+
+        return response.status(200).json({ success: true, card });
+      } catch (error) {
+        console.error("Error moving card:", error);
+        return response
+          .status(500)
+          .json({ success: false, error: error.message });
+      }
+    }
+  );
+
+  // Delete a card
+  app.delete(
+    "/crm/cards/:id",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const { id } = request.params;
+
+        const existing = await prisma.crm_cards.findUnique({
+          where: { id: Number(id) },
+        });
+
+        if (!existing) {
+          return response
+            .status(404)
+            .json({ success: false, error: "Card not found" });
+        }
+
+        await prisma.crm_cards.delete({
+          where: { id: Number(id) },
+        });
+
+        return response.status(200).json({ success: true });
+      } catch (error) {
+        console.error("Error deleting card:", error);
+        return response
+          .status(500)
+          .json({ success: false, error: error.message });
+      }
+    }
+  );
 }
 
 module.exports = { crmEndpoints };

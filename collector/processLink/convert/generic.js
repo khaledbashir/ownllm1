@@ -205,7 +205,7 @@ async function getPageContent({ link, captureAs = "text", headers = {} }) {
           : await page.evaluate(() => document.body.innerHTML);
 
         // Important: For remote browser, we usually want to close the page but maybe not the browser?
-        // But PuppeteerWebBaseLoader logic usually closes browser. 
+        // But PuppeteerWebBaseLoader logic usually closes browser.
         // With connect(), closing browser disconnects. That is fine.
         await browser.close();
         return bodyHTML;

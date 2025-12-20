@@ -8,7 +8,6 @@ const {
   documentsPath,
 } = require(".");
 
-
 async function purgeDocument(filename = null) {
   if (!filename || !normalizePath(filename)) return;
 

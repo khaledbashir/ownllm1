@@ -1,10 +1,11 @@
-import { ShadowlessElement } from '@blocksuite/block-std';
-import { html } from 'lit';
+import { ShadowlessElement } from "@blocksuite/block-std";
+import { html } from "lit";
 
 export class HeaderBlock extends ShadowlessElement {
   render() {
     return html`
-      <div style="
+      <div
+        style="
         padding: 24px 0;
         border-bottom: 2px solid #e5e7eb;
         margin-bottom: 24px;
@@ -13,9 +14,12 @@ export class HeaderBlock extends ShadowlessElement {
         align-items: center;
         width: 100%;
         user-select: none;
-      " contenteditable="false">
+      "
+        contenteditable="false"
+      >
         <div style="display: flex; align-items: center; gap: 16px;">
-          <div style="
+          <div
+            style="
             width: 48px;
             height: 48px;
             background-color: #3b82f6;
@@ -25,12 +29,17 @@ export class HeaderBlock extends ShadowlessElement {
             justify-content: center;
             color: white;
             font-weight: bold;
-          ">
+          "
+          >
             LOGO
           </div>
           <div style="display: flex; flex-direction: column;">
-            <span style="font-weight: bold; font-size: 18px; color: #111827;">Company Name</span>
-            <span style="font-size: 12px; color: #6b7280;">123 Business Rd, Tech City</span>
+            <span style="font-weight: bold; font-size: 18px; color: #111827;"
+              >Company Name</span
+            >
+            <span style="font-size: 12px; color: #6b7280;"
+              >123 Business Rd, Tech City</span
+            >
           </div>
         </div>
         <div style="text-align: right; font-size: 12px; color: #6b7280;">
@@ -42,17 +51,17 @@ export class HeaderBlock extends ShadowlessElement {
   }
 }
 
-if (!window.customElements.get('header-block')) {
-  window.customElements.define('header-block', HeaderBlock);
+if (!window.customElements.get("header-block")) {
+  window.customElements.define("header-block", HeaderBlock);
 }
 
 export const HeaderBlockSchema = {
-  flavour: 'custom:header',
+  flavour: "custom:header",
   metadata: {
     version: 1,
-    role: 'content',
+    role: "content",
   },
   view: {
-    component: 'header-block'
-  }
+    component: "header-block",
+  },
 };

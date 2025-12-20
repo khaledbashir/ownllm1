@@ -140,7 +140,7 @@ async function bulkScrapePages(links, outFolderPath) {
           const result = await page.evaluate(() => document.body.innerText);
           await browser.close();
           return result;
-        }
+        };
       } else {
         loader = new PuppeteerWebBaseLoader(link, {
           launchOptions: { headless: "new" },
@@ -202,9 +202,9 @@ async function websiteScraper(startUrl, depth = 1, maxLinks = 20) {
   const outFolderPath =
     process.env.NODE_ENV === "development"
       ? path.resolve(
-        __dirname,
-        `../../../../server/storage/documents/${outFolder}`
-      )
+          __dirname,
+          `../../../../server/storage/documents/${outFolder}`
+        )
       : path.resolve(process.env.STORAGE_DIR, `documents/${outFolder}`);
 
   console.log("Discovering links...");

@@ -2,18 +2,27 @@ const { SystemSettings } = require("../models/systemSettings");
 
 const { handleGenericImageUpload } = require("../utils/files/multer");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
-const { flexUserRoleValid, ROLES } = require("../utils/middleware/multiUserProtected");
+const {
+  flexUserRoleValid,
+  ROLES,
+} = require("../utils/middleware/multiUserProtected");
 
 function utilEndpoints(app) {
   if (!app) return;
 
   app.post(
     "/utils/upload-image",
-    [validatedRequest, flexUserRoleValid([ROLES.all]), handleGenericImageUpload],
+    [
+      validatedRequest,
+      flexUserRoleValid([ROLES.all]),
+      handleGenericImageUpload,
+    ],
     async (request, response) => {
       try {
         if (!request.randomFileName) {
-          return response.status(400).json({ success: false, message: "No file uploaded" });
+          return response
+            .status(400)
+            .json({ success: false, message: "No file uploaded" });
         }
 
         // We'll serve these from /api/assets/images/<filename> or similar.

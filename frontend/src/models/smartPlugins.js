@@ -61,14 +61,17 @@ export default class SmartPlugins {
   static async update(workspaceSlug, id, data) {
     if (!workspaceSlug || !id)
       return { success: false, error: "Missing workspace or plugin id" };
-    return await fetch(`${API_BASE}/workspace/${workspaceSlug}/smart-plugins/${id}`, {
-      method: "PUT",
-      headers: {
-        ...baseHeaders(),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
+    return await fetch(
+      `${API_BASE}/workspace/${workspaceSlug}/smart-plugins/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          ...baseHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    )
       .then(async (res) => {
         const payload = await readJsonOrText(res);
         if (res.ok) return payload;
@@ -83,10 +86,13 @@ export default class SmartPlugins {
   static async delete(workspaceSlug, id) {
     if (!workspaceSlug || !id)
       return { success: false, error: "Missing workspace or plugin id" };
-    return await fetch(`${API_BASE}/workspace/${workspaceSlug}/smart-plugins/${id}`, {
-      method: "DELETE",
-      headers: baseHeaders(),
-    })
+    return await fetch(
+      `${API_BASE}/workspace/${workspaceSlug}/smart-plugins/${id}`,
+      {
+        method: "DELETE",
+        headers: baseHeaders(),
+      }
+    )
       .then(async (res) => {
         const payload = await readJsonOrText(res);
         if (res.ok) return payload;

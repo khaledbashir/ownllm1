@@ -4,31 +4,31 @@ const Provider = require("./agents/aibitat/providers/ai-provider");
 const { SystemSettings } = require("../models/systemSettings");
 
 async function importProductsFromUrl(url) {
-    // 1. Scrape Content
-    const { success, content } = await new CollectorApi().getLinkContent(url);
+  // 1. Scrape Content
+  const { success, content } = await new CollectorApi().getLinkContent(url);
 
-    if (!success || !content || content.length === 0) {
-        throw new Error(`Could not scrape content from ${url}`);
-    }
+  if (!success || !content || content.length === 0) {
+    throw new Error(`Could not scrape content from ${url}`);
+  }
 
-    // 2. Prepare LLM
-    // We need to get the default system LLM configuration since we are not in a workspace chat context fully
-    // But we can fallback to defaults.
-    // Actually, we should probably prefer the system default or just generic OpenAI if configured.
-    // Let's rely on Provider default handling.
+  // 2. Prepare LLM
+  // We need to get the default system LLM configuration since we are not in a workspace chat context fully
+  // But we can fallback to defaults.
+  // Actually, we should probably prefer the system default or just generic OpenAI if configured.
+  // Let's rely on Provider default handling.
 
-    const provider = process.env.LLM_PROVIDER || "openai";
-    const model = process.env.LLM_MODEL || "gpt-3.5-turbo"; // Fallback
+  const provider = process.env.LLM_PROVIDER || "openai";
+  const model = process.env.LLM_MODEL || "gpt-3.5-turbo"; // Fallback
 
-    const llm = Provider.LangChainChatModel(provider, {
-        temperature: 0.7,
-        model: model,
-    });
+  const llm = Provider.LangChainChatModel(provider, {
+    temperature: 0.7,
+    model: model,
+  });
 
-    const truncatedContent = content.slice(0, 15000);
+  const truncatedContent = content.slice(0, 15000);
 
-    const promptTemplate = new PromptTemplate({
-        template: `
+  const promptTemplate = new PromptTemplate({
+    template: `
       You are an expert pricing analyst. 
       Analyze the following website content from {url}.
       
@@ -60,30 +60,33 @@ async function importProductsFromUrl(url) {
 
       JSON OUTPUT:
     `,
-        inputVariables: ["url", "content"],
-    });
+    inputVariables: ["url", "content"],
+  });
 
-    const formattedPrompt = await promptTemplate.format({
-        url: url,
-        content: truncatedContent
-    });
+  const formattedPrompt = await promptTemplate.format({
+    url: url,
+    content: truncatedContent,
+  });
 
-    const response = await llm.invoke(formattedPrompt);
+  const response = await llm.invoke(formattedPrompt);
 
-    let text = response.content || "";
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+  let text = response.content || "";
+  text = text
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
 
-    try {
-        const products = JSON.parse(text);
-        // Add UUIDs if missing
-        return products.map(p => ({
-            ...p,
-            id: p.id || Math.random().toString(36).substring(7),
-            isEstimated: p.isEstimated || false
-        }));
-    } catch (e) {
-        throw new Error("Failed to parse AI response into JSON products.");
-    }
+  try {
+    const products = JSON.parse(text);
+    // Add UUIDs if missing
+    return products.map((p) => ({
+      ...p,
+      id: p.id || Math.random().toString(36).substring(7),
+      isEstimated: p.isEstimated || false,
+    }));
+  } catch (e) {
+    throw new Error("Failed to parse AI response into JSON products.");
+  }
 }
 
 module.exports = { importProductsFromUrl };

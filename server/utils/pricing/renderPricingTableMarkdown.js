@@ -1,4 +1,8 @@
-const { computePricingSummary, roundMoney, toNumber } = require("./pricingMath");
+const {
+  computePricingSummary,
+  roundMoney,
+  toNumber,
+} = require("./pricingMath");
 
 function formatAud(amount) {
   const n = toNumber(amount, 0);
@@ -14,8 +18,12 @@ function formatAud(amount) {
   }
 }
 
-function renderPricingTableMarkdown(pricingTable, { targetAfterDiscountExGst = null } = {}) {
-  const table = pricingTable && typeof pricingTable === "object" ? pricingTable : {};
+function renderPricingTableMarkdown(
+  pricingTable,
+  { targetAfterDiscountExGst = null } = {}
+) {
+  const table =
+    pricingTable && typeof pricingTable === "object" ? pricingTable : {};
   const rows = Array.isArray(table.rows) ? table.rows : [];
 
   const summary = computePricingSummary(table);
@@ -54,7 +62,9 @@ function renderPricingTableMarkdown(pricingTable, { targetAfterDiscountExGst = n
     summary.discountedSubtotalExGst
   )}`;
   if (Number.isFinite(toNumber(targetAfterDiscountExGst, NaN))) {
-    lines.push(`${afterDiscountLine} (Target: ${formatAud(targetAfterDiscountExGst)})`);
+    lines.push(
+      `${afterDiscountLine} (Target: ${formatAud(targetAfterDiscountExGst)})`
+    );
   } else {
     lines.push(afterDiscountLine);
   }

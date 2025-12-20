@@ -53,8 +53,7 @@ const TRANSLATIONS = {
     },
     workspace: {
       title: "Create your first workspace",
-      description:
-        "Create your first workspace and get started with P.A.I.D..",
+      description: "Create your first workspace and get started with P.A.I.D..",
     },
   },
   common: {
@@ -117,7 +116,7 @@ const TRANSLATIONS = {
     "template-builder": "AI Template Builder",
     "smart-plugins": "Smart Plugins",
     "agent-test-lab": "Agent Test Lab",
-    "integrations": "Integrations",
+    integrations: "Integrations",
     "crm-pipeline": "CRM Pipeline",
     "community-hub": "Community Hub",
     "community-trending": "Explore Trending",
@@ -471,8 +470,7 @@ const TRANSLATIONS = {
     },
     branding: {
       title: "Branding & Whitelabeling",
-      description:
-        "White-label your P.A.I.D. instance with custom branding.",
+      description: "White-label your P.A.I.D. instance with custom branding.",
     },
     chat: {
       title: "Chat",

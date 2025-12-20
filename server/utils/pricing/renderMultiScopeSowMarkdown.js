@@ -1,7 +1,8 @@
 const { renderPricingTableMarkdown } = require("./renderPricingTableMarkdown");
 
 function asArray(value) {
-  if (Array.isArray(value)) return value.map((v) => String(v || "").trim()).filter(Boolean);
+  if (Array.isArray(value))
+    return value.map((v) => String(v || "").trim()).filter(Boolean);
   if (typeof value === "string") {
     return value
       .split("\n")
@@ -22,8 +23,13 @@ function renderParagraph(text) {
   return t ? t : "";
 }
 
-function renderOptionMarkdown(option, { pricingTable, targetAfterDiscountExGst } = {}) {
-  const label = String(option?.label || option?.name || option?.title || "Option").trim();
+function renderOptionMarkdown(
+  option,
+  { pricingTable, targetAfterDiscountExGst } = {}
+) {
+  const label = String(
+    option?.label || option?.name || option?.title || "Option"
+  ).trim();
 
   const lines = [];
   lines.push(`### ${label}`);
@@ -60,7 +66,9 @@ function renderOptionMarkdown(option, { pricingTable, targetAfterDiscountExGst }
     })
   );
   lines.push("");
-  lines.push("_All totals are in AUD. Rates and subtotals are ex GST; totals inc GST._");
+  lines.push(
+    "_All totals are in AUD. Rates and subtotals are ex GST; totals inc GST._"
+  );
 
   lines.push("#### Assumptions");
   lines.push(renderBullets(option?.assumptions));

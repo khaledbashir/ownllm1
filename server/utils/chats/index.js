@@ -40,7 +40,9 @@ function buildSmartPluginsAppendix(plugins = []) {
           const key = safeTrimTo(String(f?.key ?? ""), 64);
           const label = safeTrimTo(String(f?.label ?? ""), 80);
           const type = safeTrimTo(String(f?.type ?? ""), 32);
-          return key ? `${key}${label ? ` (${label})` : ""}${type ? `:${type}` : ""}` : null;
+          return key
+            ? `${key}${label ? ` (${label})` : ""}${type ? `:${type}` : ""}`
+            : null;
         })
         .filter(Boolean);
       if (fieldParts.length) lines.push(`Fields: ${fieldParts.join(", ")}`);
@@ -165,16 +167,18 @@ function buildProposalContext(workspace) {
     const asString = String(value).trim();
     if (!asString) return "Not Set";
     // Treat 0/"0" as not configured to avoid "$0" proposals.
-    if (asString === "0" || asString === "0.0" || asString === "0.00") return "Not Set";
+    if (asString === "0" || asString === "0.0" || asString === "0.00")
+      return "Not Set";
     return asString;
   };
 
   // Inject products/services if available
   if (workspace.products) {
     try {
-      const products = typeof workspace.products === "string"
-        ? JSON.parse(workspace.products)
-        : workspace.products;
+      const products =
+        typeof workspace.products === "string"
+          ? JSON.parse(workspace.products)
+          : workspace.products;
       if (Array.isArray(products) && products.length > 0) {
         const normalizedProducts = products.map((p) => {
           if (!p || typeof p !== "object") return p;
@@ -185,7 +189,8 @@ function buildProposalContext(workspace) {
         });
 
         context += "\n\n## AVAILABLE PRODUCTS & SERVICES\n";
-        context += "Use these exact prices when creating proposals. Do NOT invent or hallucinate prices.\n";
+        context +=
+          "Use these exact prices when creating proposals. Do NOT invent or hallucinate prices.\n";
         context += JSON.stringify(normalizedProducts, null, 2);
       }
     } catch (e) {
@@ -196,9 +201,10 @@ function buildProposalContext(workspace) {
   // Inject rate card if available
   if (workspace.rateCard) {
     try {
-      const rateCard = typeof workspace.rateCard === "string"
-        ? JSON.parse(workspace.rateCard)
-        : workspace.rateCard;
+      const rateCard =
+        typeof workspace.rateCard === "string"
+          ? JSON.parse(workspace.rateCard)
+          : workspace.rateCard;
       if (Array.isArray(rateCard) && rateCard.length > 0) {
         const normalizedRateCard = rateCard.map((r) => {
           if (!r || typeof r !== "object") return r;
@@ -212,8 +218,10 @@ function buildProposalContext(workspace) {
         });
 
         context += "\n\n## HOURLY RATE CARD\n";
-        context += "All rates are in AUD (ex GST) unless explicitly stated otherwise.\n";
-        context += "Use these exact role names and hourly rates for time & materials estimates. Do NOT invent, rename, or substitute roles/rates.\n";
+        context +=
+          "All rates are in AUD (ex GST) unless explicitly stated otherwise.\n";
+        context +=
+          "Use these exact role names and hourly rates for time & materials estimates. Do NOT invent, rename, or substitute roles/rates.\n";
         context += JSON.stringify(normalizedRateCard, null, 2);
       }
     } catch (e) {
@@ -226,9 +234,11 @@ function buildProposalContext(workspace) {
     context += "\n\n## PROPOSAL INSTRUCTIONS\n";
     context += "When asked to create a proposal, estimate, or quote:\n";
     context += "1. ONLY use the products, services, and rates listed above.\n";
-    context += "2. Calculate totals accurately (price × quantity or rate × hours).\n";
+    context +=
+      "2. Calculate totals accurately (price × quantity or rate × hours).\n";
     context += "3. Format pricing clearly in tables when appropriate.\n";
-    context += "4. If a requested service is not in the list, say so rather than inventing a price.\n";
+    context +=
+      "4. If a requested service is not in the list, say so rather than inventing a price.\n";
   }
 
   return context;

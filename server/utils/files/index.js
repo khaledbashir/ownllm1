@@ -407,7 +407,9 @@ async function fileToPickerData({
       ...metadata,
       cached: cachedStatus,
       canWatch: liveSyncAvailable
-        ? require("../../models/documentSyncQueue").DocumentSyncQueue.canWatch(metadata)
+        ? require("../../models/documentSyncQueue").DocumentSyncQueue.canWatch(
+            metadata
+          )
         : false,
       // pinnedWorkspaces: [], // This is the list of workspaceIds that have pinned this document
       // watched: false, // boolean to indicate if this document is watched in ANY workspace
@@ -457,7 +459,9 @@ async function fileToPickerData({
     ...metadata,
     cached: cachedStatus,
     canWatch: liveSyncAvailable
-      ? require("../../models/documentSyncQueue").DocumentSyncQueue.canWatch(metadata)
+      ? require("../../models/documentSyncQueue").DocumentSyncQueue.canWatch(
+          metadata
+        )
       : false,
   };
 }

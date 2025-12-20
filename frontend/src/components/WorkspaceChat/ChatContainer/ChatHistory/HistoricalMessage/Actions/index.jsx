@@ -1,6 +1,12 @@
 import React, { memo, useState } from "react";
 import useCopyText from "@/hooks/useCopyText";
-import { Check, ThumbsUp, ArrowsClockwise, Copy, NotePencil } from "@phosphor-icons/react";
+import {
+  Check,
+  ThumbsUp,
+  ArrowsClockwise,
+  Copy,
+  NotePencil,
+} from "@phosphor-icons/react";
 import Workspace from "@/models/workspace";
 import { EditMessageAction } from "./EditMessage";
 import RenderMetrics from "./RenderMetrics";
@@ -56,9 +62,7 @@ const Actions = ({
               IconComponent={ThumbsUp}
             />
           )}
-          {role !== "user" && !isEditing && (
-            <SaveToNotes message={message} />
-          )}
+          {role !== "user" && !isEditing && <SaveToNotes message={message} />}
           <ActionMenu
             chatId={chatId}
             forkThread={forkThread}
@@ -174,15 +178,10 @@ function SaveToNotes({ message }) {
         className="text-theme-text-primary hover:text-theme-text-primary"
         aria-label="Save to Notes"
       >
-        <NotePencil
-          color="currentColor"
-          size={20}
-          className="mb-1"
-        />
+        <NotePencil color="currentColor" size={20} className="mb-1" />
       </button>
     </div>
   );
 }
 
 export default memo(Actions);
-

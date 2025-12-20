@@ -306,7 +306,11 @@ function workspaceThreadEndpoints(app) {
     ],
     async (request, response) => {
       try {
-        const { action, targetAfterDiscountExGst = null, discountPercent = null } = reqBody(request);
+        const {
+          action,
+          targetAfterDiscountExGst = null,
+          discountPercent = null,
+        } = reqBody(request);
         if (!isValidSmartAction(action)) {
           return response
             .status(400)
@@ -328,9 +332,11 @@ function workspaceThreadEndpoints(app) {
         });
 
         if (result && typeof result === "object" && "markdown" in result) {
-          return response
-            .status(200)
-            .json({ success: true, markdown: result.markdown, pricingTable: result.pricingTable ?? null });
+          return response.status(200).json({
+            success: true,
+            markdown: result.markdown,
+            pricingTable: result.pricingTable ?? null,
+          });
         }
 
         return response.status(200).json({ success: true, markdown: result });

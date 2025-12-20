@@ -88,8 +88,9 @@ const HistoricalMessage = ({
     <div
       key={uuid}
       onAnimationEnd={onEndAnimation}
-      className={`${isDeleted ? "animate-remove" : ""
-        } flex justify-center items-end w-full group bg-theme-bg-chat`}
+      className={`${
+        isDeleted ? "animate-remove" : ""
+      } flex justify-center items-end w-full group bg-theme-bg-chat`}
     >
       <div className="py-8 px-4 w-full flex gap-x-5 md:max-w-[80%] flex-col">
         <div className={`flex gap-x-5 ${alignmentCls}`}>
@@ -282,31 +283,52 @@ const RenderChatContent = memo(
             remarkPlugins={[remarkGfm]}
             components={{
               // Preserve styling for standard elements
-              p: ({ node, ...props }) => <p className="mb-2 text-white" {...props} />,
-              a: ({ node, ...props }) => <a className="text-blue-400 hover:underline" target="_blank" {...props} />,
+              p: ({ node, ...props }) => (
+                <p className="mb-2 text-white" {...props} />
+              ),
+              a: ({ node, ...props }) => (
+                <a
+                  className="text-blue-400 hover:underline"
+                  target="_blank"
+                  {...props}
+                />
+              ),
               // The Sandpack Trigger
               code({ node, inline, className, children, ...props }) {
-                const match = /language-(\w+)/.exec(className || '');
-                const lang = match ? match[1].toLowerCase() : '';
+                const match = /language-(\w+)/.exec(className || "");
+                const lang = match ? match[1].toLowerCase() : "";
 
                 // Add robustness for React/HTML
-                const isReact = ['react', 'jsx', 'tsx', 'js', 'javascript'].includes(lang);
-                const isHTML = ['html', 'xml'].includes(lang);
+                const isReact = [
+                  "react",
+                  "jsx",
+                  "tsx",
+                  "js",
+                  "javascript",
+                ].includes(lang);
+                const isHTML = ["html", "xml"].includes(lang);
 
                 // Check if Sandpack rendering is enabled
-                const renderSandpack = Appearance.get('renderSandpack') ?? true;
+                const renderSandpack = Appearance.get("renderSandpack") ?? true;
 
                 if (!inline && (isReact || isHTML) && renderSandpack) {
                   return (
                     <SandpackRenderer
-                      code={String(children).replace(/\n$/, '')}
-                      language={isReact ? 'react' : 'html'}
+                      code={String(children).replace(/\n$/, "")}
+                      language={isReact ? "react" : "html"}
                       workspace={workspace}
                     />
                   );
                 }
-                return <code className={`bg-gray-800 rounded p-1 ${className || ''}`} {...props}>{children}</code>;
-              }
+                return (
+                  <code
+                    className={`bg-gray-800 rounded p-1 ${className || ""}`}
+                    {...props}
+                  >
+                    {children}
+                  </code>
+                );
+              },
             }}
           >
             {msgToRender}

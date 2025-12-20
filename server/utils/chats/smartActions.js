@@ -87,7 +87,7 @@ function smartActionUserPrompt(action) {
         "1) The SOW markdown document.",
         "2) A JSON object on the final line ONLY, prefixed with: __PRICING_TABLE_JSON__=",
         "   The JSON must be strict JSON (double quotes) and must include:",
-        "   {\"title\":string,\"currency\":\"AUD\",\"discountPercent\":number,\"gstPercent\":number,\"rows\":[{\"role\":string,\"description\":string,\"hours\":number,\"baseRate\":number}]}",
+        '   {"title":string,"currency":"AUD","discountPercent":number,"gstPercent":number,"rows":[{"role":string,"description":string,"hours":number,"baseRate":number}]}',
         "Ordering rule for pricing rows (if present):",
         "- Tech-Head Of Senior Project Management must be first",
         "- Project Coordination must be after the above",
@@ -104,7 +104,7 @@ function smartActionUserPrompt(action) {
         "Return STRICT JSON ONLY (no markdown, no code fences).",
         "The server will render final markdown for the user.",
         "Schema:",
-        "{\"title\":string,\"client\":string,\"project\":string,\"intro\":string,\"options\":[{\"label\":\"Lean\"|\"Standard\"|\"Premium\",\"overview\":string,\"scopeIn\":[string],\"scopeOut\":[string],\"deliverables\":[string],\"timeline\":[string],\"assumptions\":[string],\"risks\":[string],\"nextSteps\":[string],\"pricingTable\":{\"title\":string,\"currency\":\"AUD\",\"discountPercent\":number,\"gstPercent\":number,\"rows\":[{\"role\":string,\"description\":string,\"hours\":number,\"baseRate\":number}]}}]}.",
+        '{"title":string,"client":string,"project":string,"intro":string,"options":[{"label":"Lean"|"Standard"|"Premium","overview":string,"scopeIn":[string],"scopeOut":[string],"deliverables":[string],"timeline":[string],"assumptions":[string],"risks":[string],"nextSteps":[string],"pricingTable":{"title":string,"currency":"AUD","discountPercent":number,"gstPercent":number,"rows":[{"role":string,"description":string,"hours":number,"baseRate":number}]}}]}.',
         "Estimate realistic non-zero hours for delivery roles (do not use 0 hours).",
         "If a workspace HOURLY RATE CARD is provided in the system prompt, you MUST use those exact role names and hourly rates.",
         "Do NOT invent, rename, or substitute roles/rates.",
@@ -114,7 +114,6 @@ function smartActionUserPrompt(action) {
         "- Account Management - (Account Manager)",
         "Avoid citations or source tags.",
       ].join("\n");
-
 
     default:
       return "";

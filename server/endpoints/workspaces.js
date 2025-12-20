@@ -12,7 +12,10 @@ const { Document } = require("../models/documents");
 const { DocumentVectors } = require("../models/vectors");
 const { WorkspaceChats } = require("../models/workspaceChats");
 const { getVectorDbClass } = require("../utils/helpers");
-const { handleFileUpload, handleGenericImageUpload } = require("../utils/files/multer");
+const {
+  handleFileUpload,
+  handleGenericImageUpload,
+} = require("../utils/files/multer");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
 const { Telemetry } = require("../models/telemetry");
 const {
@@ -51,15 +54,19 @@ function workspaceEndpoints(app) {
     async (request, response) => {
       try {
         const { html, headerTemplate, footerTemplate } = reqBody(request);
-        if (!html) return response.status(400).json({ error: "HTML content required" });
+        if (!html)
+          return response.status(400).json({ error: "HTML content required" });
 
         const pdfBuffer = await generatePdf(html, {
           headerTemplate,
-          footerTemplate
+          footerTemplate,
         });
 
-        response.setHeader('Content-Type', 'application/pdf');
-        response.setHeader('Content-Disposition', 'attachment; filename="export.pdf"');
+        response.setHeader("Content-Type", "application/pdf");
+        response.setHeader(
+          "Content-Disposition",
+          'attachment; filename="export.pdf"'
+        );
         response.send(pdfBuffer);
       } catch (e) {
         console.error(e.message, e);
@@ -282,8 +289,8 @@ function workspaceEndpoints(app) {
           message:
             failedToEmbed.length > 0
               ? `${failedToEmbed.length} documents failed to add.\n\n${errors
-                .map((msg) => `${msg}`)
-                .join("\n\n")}`
+                  .map((msg) => `${msg}`)
+                  .join("\n\n")}`
               : null,
         });
       } catch (e) {
@@ -842,11 +849,11 @@ function workspaceEndpoints(app) {
         // and is a valid thread slug.
         const threadId = !!threadSlug
           ? (
-            await WorkspaceThread.get({
-              slug: String(threadSlug),
-              workspace_id: workspace.id,
-            })
-          )?.id ?? null
+              await WorkspaceThread.get({
+                slug: String(threadSlug),
+                workspace_id: workspace.id,
+              })
+            )?.id ?? null
           : null;
         const chatsToFork = await WorkspaceChats.where(
           {

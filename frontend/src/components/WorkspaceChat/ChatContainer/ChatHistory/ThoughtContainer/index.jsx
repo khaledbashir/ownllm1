@@ -110,7 +110,11 @@ export const ThoughtChainComponent = forwardRef(
                   {isThinking ? "Thinking..." : "Reasoning Process"}
                 </span>
                 <span className="text-xs text-theme-text-secondary/50">
-                  {isThinking ? "" : isExpanded ? "(Click to hide)" : "(Click to view)"}
+                  {isThinking
+                    ? ""
+                    : isExpanded
+                      ? "(Click to hide)"
+                      : "(Click to view)"}
                 </span>
               </div>
 
@@ -127,7 +131,9 @@ export const ThoughtChainComponent = forwardRef(
                 <div className="text-theme-text-primary text-sm leading-relaxed font-mono">
                   <div
                     dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(renderMarkdown(tagStrippedContent)),
+                      __html: DOMPurify.sanitize(
+                        renderMarkdown(tagStrippedContent)
+                      ),
                     }}
                   />
                 </div>

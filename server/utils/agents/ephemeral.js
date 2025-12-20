@@ -339,7 +339,10 @@ class EphemeralAgentHandler extends AgentHandler {
       ...(await agentSkillsFromSystemSettings()),
       ...ImportedPlugin.activeImportedPlugins(),
       // Lazy-load AgentFlows to avoid circular dependency
-      ...((() => { const { AgentFlows } = require("../agentFlows"); return AgentFlows?.activeFlowPlugins?.() || []; })()),
+      ...(() => {
+        const { AgentFlows } = require("../agentFlows");
+        return AgentFlows?.activeFlowPlugins?.() || [];
+      })(),
       ...(await new MCPCompatibilityLayer().activeMCPServers()),
     ];
   }

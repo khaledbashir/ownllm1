@@ -2,7 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { X, CircleNotch } from "@phosphor-icons/react";
 
 function toNumber(value, fallback = null) {
-  const n = Number(String(value ?? "").replace(/,/g, "").trim());
+  const n = Number(
+    String(value ?? "")
+      .replace(/,/g, "")
+      .trim()
+  );
   return Number.isFinite(n) ? n : fallback;
 }
 
@@ -16,7 +20,9 @@ export default function MultiScopeSowModal({
 }) {
   const inputRef = useRef(null);
   const [budget, setBudget] = useState(defaultBudget);
-  const [discountPercent, setDiscountPercent] = useState(defaultDiscountPercent);
+  const [discountPercent, setDiscountPercent] = useState(
+    defaultDiscountPercent
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -101,7 +107,8 @@ export default function MultiScopeSowModal({
           </div>
 
           <div className="text-xs text-theme-text-secondary">
-            This scales option hours to meet your budget while keeping mandatory roles.
+            This scales option hours to meet your budget while keeping mandatory
+            roles.
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-2">
@@ -118,7 +125,9 @@ export default function MultiScopeSowModal({
               disabled={!canSubmit}
               className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2"
             >
-              {loading ? <CircleNotch size={18} className="animate-spin" /> : null}
+              {loading ? (
+                <CircleNotch size={18} className="animate-spin" />
+              ) : null}
               Generate
             </button>
           </div>

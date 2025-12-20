@@ -13,9 +13,7 @@ const MCPCompatibilityLayer = require("../MCP");
 const { getVectorDbClass, getLLMProvider } = require("../helpers");
 const { DocumentManager } = require("../DocumentManager");
 const { WorkspaceParsedFiles } = require("../../models/workspaceParsedFiles");
-const {
-  sourceIdentifier,
-} = require("../chats");
+const { sourceIdentifier } = require("../chats");
 
 class AgentHandler {
   #invocationUUID;
@@ -410,7 +408,7 @@ class AgentHandler {
           LLMConnector,
           similarityThreshold: workspace.similarityThreshold,
           topN: workspace.topN,
-          filterString: null // Agents don't support filters yet
+          filterString: null, // Agents don't support filters yet
         });
 
         vectorSearchResults.forEach((result) => {
@@ -419,7 +417,6 @@ class AgentHandler {
       }
 
       return contextTexts;
-
     } catch (e) {
       this.log("Error fetching RAG context for agent", e.message);
       return [];
