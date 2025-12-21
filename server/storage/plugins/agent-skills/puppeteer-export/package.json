@@ -1,0 +1,9 @@
+{
+    "name": "puppeteer-export",
+    "version": "1.0.0",
+    "description": "High-fidelity PDF export using Puppeteer",
+    "main": "handler.js",
+    "dependencies": {
+        "puppeteer": "^23.0.0"
+    }
+}
