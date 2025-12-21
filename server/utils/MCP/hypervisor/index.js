@@ -398,18 +398,15 @@ class MCPHypervisor {
           },
         });
       default:
-        // SSE transport requires headers to be passed via eventSourceInit.fetch
-        // because the SDK ignores requestInit.headers for the SSE connection
+        // SSE transport requires headers to be passed via eventSourceInit
+        // because the SDK ignores requestInit.headers for the SSE connection.
+        // We pass headers directly to EventSource constructor instead of overriding fetch.
         const customHeaders = server.headers || {};
         return new SSEClientTransport(url, {
           eventSourceInit: {
-            fetch: (fetchUrl, init) => fetch(fetchUrl, {
-              ...init,
-              headers: {
-                ...customHeaders,
-                Accept: "text/event-stream",
-              },
-            }),
+            headers: {
+              ...customHeaders,
+            },
           },
           requestInit: {
             headers: customHeaders,
