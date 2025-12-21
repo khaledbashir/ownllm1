@@ -1,7 +1,8 @@
+```json
 {
   "name": "anything-llm-server",
-  "version": "1.9.1",
-  "description": "Server endpoints to process or create content for chatting",
+  "version": "1.9.2",
+  "description": "The server for the anything-llm application",
   "main": "index.js",
   "author": "Timothy Carambat (Mintplex Labs)",
   "license": "MIT",
