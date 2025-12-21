@@ -44,8 +44,14 @@ function inlineAIEndpoints(app) {
     [validatedRequest, flexUserRoleValid([ROLES.all])],
     async (request, response) => {
       try {
-        const { action, prompt, context, selectedText, language, workspaceSlug } =
-          request.body;
+        const {
+          action,
+          prompt,
+          context,
+          selectedText,
+          language,
+          workspaceSlug,
+        } = request.body;
 
         if (!action || !prompt) {
           return response.status(400).json({
@@ -89,7 +95,9 @@ function inlineAIEndpoints(app) {
         let userPrompt;
 
         // Check if this is a custom action
-        const customAction = customActions.find(a => a.name === action || a.id === action);
+        const customAction = customActions.find(
+          (a) => a.name === action || a.id === action
+        );
         if (customAction) {
           // Use custom action's prompt template
           userPrompt = customAction.prompt
@@ -104,7 +112,8 @@ function inlineAIEndpoints(app) {
               break;
             case "continue":
               userPrompt = ACTION_PROMPTS.continue(context || prompt);
-              systemPrompt = workspace?.inlineAiSystemPrompt ||
+              systemPrompt =
+                workspace?.inlineAiSystemPrompt ||
                 "You are a writing assistant. Continue the text naturally and seamlessly.";
               break;
             case "summarize":
@@ -115,7 +124,8 @@ function inlineAIEndpoints(app) {
               break;
             case "grammar":
               userPrompt = ACTION_PROMPTS.grammar(selectedText || prompt);
-              systemPrompt = workspace?.inlineAiSystemPrompt ||
+              systemPrompt =
+                workspace?.inlineAiSystemPrompt ||
                 "You are a proofreader. Only fix errors and return the corrected text.";
               break;
             case "translate":
@@ -123,7 +133,8 @@ function inlineAIEndpoints(app) {
                 selectedText || prompt,
                 language || "English"
               );
-              systemPrompt = workspace?.inlineAiSystemPrompt ||
+              systemPrompt =
+                workspace?.inlineAiSystemPrompt ||
                 "You are a translator. Only return the translation, nothing else.";
               break;
             default:

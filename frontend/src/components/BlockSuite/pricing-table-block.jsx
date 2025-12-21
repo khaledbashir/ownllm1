@@ -15,44 +15,50 @@ const defineOnce = (tag, ctor) => {
   if (!customElements.get(tag)) customElements.define(tag, ctor);
 };
 
+const DEFAULT_ROLES = [
+  { role: "Tech - Head Of- Senior Project Management", rate: 365 },
+  { role: "Tech - Delivery - Project Coordination", rate: 110 },
+  { role: "Account Management - (Account Manager)", rate: 180 },
+  { role: "Tech - Integrations", rate: 170 },
+  { role: "Strategy & Planning", rate: 250 },
+  { role: "UX/UI Design", rate: 180 },
+  { role: "Content & Copywriting", rate: 160 },
+  { role: "Development", rate: 190 },
+  { role: "QA & Testing", rate: 150 },
+  { role: "Data & Analytics", rate: 210 },
+];
+
 const DEFAULT_ROWS = [
   {
-    id: "project-setup",
-    role: "Project Setup and Management",
-    description:
-      "Dedicated project manager to oversee onboarding, milestones, delivery against project goals",
+    id: "header-1",
+    role: "Project Management",
+    isHeader: true,
+  },
+  {
+    id: "pm-1",
+    role: "Tech - Head Of- Senior Project Management",
+    description: "Senior oversight and strategic direction",
+    hours: 2,
+    baseRate: 365,
+  },
+  {
+    id: "pm-2",
+    role: "Tech - Delivery - Project Coordination",
+    description: "Daily coordination and status reporting",
     hours: 10,
-    baseRate: 80,
+    baseRate: 110,
   },
   {
-    id: "discovery",
-    role: "Discovery & Requirements Gathering",
-    description:
-      "Meetings and analysis to define scope, requirements, and solution design",
-    hours: 15,
-    baseRate: 80,
+    id: "header-2",
+    role: "Implementation",
+    isHeader: true,
   },
   {
-    id: "uiux",
-    role: "UI/UX Design",
-    description: "Wireframes, prototypes, concept design and iteration",
-    hours: 20,
-    baseRate: 80,
-  },
-  {
-    id: "web-dev",
-    role: "Web Application Development",
-    description:
-      "Frontend + backend development, integration, testing, deployment",
-    hours: 100,
-    baseRate: 80,
-  },
-  {
-    id: "maintenance",
-    role: "Maintenance & Support (3 Months)",
-    description: "Post-launch support, bug fixes and minor enhancements",
-    hours: 30,
-    baseRate: 80,
+    id: "dev-1",
+    role: "Development",
+    description: "Core platform development and configuration",
+    hours: 40,
+    baseRate: 190,
   },
 ];
 
@@ -60,39 +66,39 @@ const clampNumber = (
   input,
   { min = 0, max = Number.MAX_SAFE_INTEGER } = {}
 ) => {
-  const n = Number(input);
+  const n = Math.round(Number(input)); // Round all inputs to nearest dollar
   if (Number.isNaN(n)) return min;
   return Math.max(min, Math.min(max, n));
 };
 
 const formatCurrency = (value, currency = "AUD") => {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return "$0+GST";
-  const formatted = n.toLocaleString(undefined, {
+  const n = Math.round(Number(value)); // Round to nearest dollar
+  if (!Number.isFinite(n)) return "$0";
+  return n.toLocaleString(undefined, {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
   });
-  return `${formatted}+GST`;
 };
 
 const calcTotals = ({ rows, discountPercent, gstPercent }) => {
   const subtotal = (rows || []).reduce((sum, row) => {
-    const hours = clampNumber(row.hours);
-    const rate = clampNumber(row.baseRate);
-    return sum + hours * rate;
+    if (row.isHeader) return sum;
+    const hours = Number(row.hours) || 0;
+    const rate = Number(row.baseRate) || 0;
+    return sum + Math.round(hours * rate);
   }, 0);
 
-  const discount =
-    subtotal * (clampNumber(discountPercent, { max: 100 }) / 100);
+  const discount = Math.round(
+    subtotal * (clampNumber(discountPercent, { max: 100 }) / 100)
+  );
   const afterDiscount = subtotal - discount;
-  const gst = afterDiscount * (clampNumber(gstPercent, { max: 100 }) / 100);
-  const rawTotal = afterDiscount + gst;
+  const gst = Math.round(
+    afterDiscount * (clampNumber(gstPercent, { max: 100 }) / 100)
+  );
+  const total = afterDiscount + gst;
 
-  // Commercial Rounding: Nearest $100
-  const total = Math.round(rawTotal / 100) * 100;
-
-  return { subtotal, discount, afterDiscount, gst, total, rawTotal };
+  return { subtotal, discount, afterDiscount, gst, total };
 };
 
 // This is the block model (holds props) for BlockSuite.
@@ -191,6 +197,11 @@ const PricingTableWidget = ({ model }) => {
     [localTick, discountPercent, gstPercent, rows]
   );
 
+  const rolesToUse = useMemo(() => {
+    if (availableRoles && availableRoles.length > 0) return availableRoles;
+    return DEFAULT_ROLES.map((r) => ({ name: r.role, rate: r.rate }));
+  }, [availableRoles]);
+
   const updateModel = (partial) => {
     if (isReadonly) return;
     try {
@@ -209,13 +220,14 @@ const PricingTableWidget = ({ model }) => {
     updateModel({ rows: nextRows });
   };
 
-  const addRow = () => {
+  const addRow = (isHeader = false) => {
     const newRow = {
       id: `new-${Date.now()}`,
-      role: "",
+      role: isHeader ? "NEW SECTION" : "",
       description: "",
       hours: 0,
       baseRate: 0,
+      isHeader,
     };
     updateModel({ rows: [...rows, newRow] });
   };
@@ -246,6 +258,10 @@ const PricingTableWidget = ({ model }) => {
     const csvRows = [headers.join(",")];
 
     rows.forEach((row) => {
+      if (row.isHeader) {
+        csvRows.push(`${row.role.toUpperCase()},,,,`);
+        return;
+      }
       const lineTotal = clampNumber(row.hours) * clampNumber(row.baseRate);
       const clean = (text) =>
         `"${String(text || "")
@@ -265,11 +281,13 @@ const PricingTableWidget = ({ model }) => {
     // Add totals
     csvRows.push(",,,,");
     csvRows.push(`,,,"Subtotal",${totals.subtotal.toFixed(2)}`);
-    csvRows.push(
-      `,,,"Discount (-${discountPercent}%)",-${totals.discount.toFixed(2)}`
-    );
+    if (discountPercent > 0) {
+      csvRows.push(
+        `,,,"Discount (-${discountPercent}%)",-${totals.discount.toFixed(2)}`
+      );
+    }
     csvRows.push(`,,,"GST (${gstPercent}%)",${totals.gst.toFixed(2)}`);
-    csvRows.push(`,,,"Total",${totals.total.toFixed(2)}`);
+    csvRows.push(`,,,"Total Investment",${totals.total.toFixed(2)}`);
 
     const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
@@ -290,7 +308,7 @@ const PricingTableWidget = ({ model }) => {
 
   return (
     <div
-      className="pricing-table-widget"
+      className="pricing-table-wrapper pricing-table-widget"
       style={{
         border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 12,
@@ -400,12 +418,82 @@ const PricingTableWidget = ({ model }) => {
                       {...droppableProvided.droppableProps}
                     >
                       {(rows.length === 0 ? [] : rows).map((row, idx) => {
+                        const isHeader = !!row.isHeader;
+
+                        if (isHeader) {
+                          return (
+                            <Draggable
+                              key={row.id || `row-${idx}`}
+                              draggableId={String(row.id || `row-${idx}`)}
+                              index={idx}
+                              isDragDisabled={isReadonly}
+                            >
+                              {(draggableProvided, snapshot) => (
+                                <div
+                                  ref={draggableProvided.innerRef}
+                                  {...draggableProvided.draggableProps}
+                                  className={`flex items-center gap-2 py-4 px-2 border-b-2 border-white/10 group ${snapshot.isDragging ? "opacity-60 bg-white/5" : ""}`}
+                                  style={{
+                                    ...draggableProvided.draggableProps.style,
+                                    width: "100%",
+                                    background: snapshot.isDragging
+                                      ? "rgba(255,255,255,0.05)"
+                                      : "rgba(255,255,255,0.02)",
+                                    marginTop: idx === 0 ? 0 : 24,
+                                    marginBottom: 8,
+                                    borderRadius: "8px 8px 0 0",
+                                  }}
+                                >
+                                  {!isReadonly && (
+                                    <div
+                                      {...draggableProvided.dragHandleProps}
+                                      className="drag-handle cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 px-2 select-none"
+                                      title="Drag section"
+                                    >
+                                      ⋮⋮
+                                    </div>
+                                  )}
+                                  <div className="flex-1 flex items-center gap-3">
+                                    <div className="h-6 w-1 bg-purple-500 rounded-full" />
+                                    {isReadonly ? (
+                                      <span className="text-sm font-black tracking-[0.1em] uppercase text-white/95">
+                                        {row.role}
+                                      </span>
+                                    ) : (
+                                      <input
+                                        className="flex-1 bg-transparent border-none font-black tracking-[0.1em] uppercase text-white/95 focus:ring-0 p-0 placeholder:text-white/20"
+                                        type="text"
+                                        value={row.role || ""}
+                                        onChange={(e) =>
+                                          updateRow(idx, {
+                                            role: e.target.value,
+                                          })
+                                        }
+                                        placeholder="SECTION TITLE..."
+                                      />
+                                    )}
+                                  </div>
+                                  {!isReadonly && (
+                                    <button
+                                      onClick={() => removeRow(idx)}
+                                      className="text-red-400/40 hover:text-red-400 px-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      title="Remove section"
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </Draggable>
+                          );
+                        }
+
                         const hours = clampNumber(row.hours);
                         const rate = clampNumber(row.baseRate);
                         const lineTotal = hours * rate;
                         const roleQuery = (row.role || "").trim().toLowerCase();
 
-                        const filteredRoles = (availableRoles || [])
+                        const filteredRoles = (rolesToUse || [])
                           .filter((r) => {
                             const name = (r?.name || "").toLowerCase();
                             if (!roleQuery) return true;
@@ -679,10 +767,17 @@ const PricingTableWidget = ({ model }) => {
       {!isReadonly && (
         <div className="flex items-center gap-2 mt-2">
           <button
-            onClick={addRow}
+            onClick={() => addRow(false)}
             className="text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300"
           >
             + New Item
+          </button>
+          <span className="text-white/20 text-xs">|</span>
+          <button
+            onClick={() => addRow(true)}
+            className="text-xs flex items-center gap-1 text-purple-400 hover:text-purple-300"
+          >
+            + New Section
           </button>
           <span className="text-white/20 text-xs">|</span>
           <button
@@ -742,49 +837,74 @@ const PricingTableWidget = ({ model }) => {
       )}
 
       {showTotals && (
-        <div className="mt-4 flex justify-end">
-          <div className="w-full max-w-sm text-sm text-white/80">
-            <div className="flex justify-between py-1">
-              <span className="text-white/60">Subtotal</span>
-              <span className="font-medium">
-                {formatCurrency(totals.subtotal, currency)}
-              </span>
+        <div className="mt-12 flex justify-end" contentEditable={false}>
+          <div
+            className="w-full max-w-md border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+            style={{
+              background:
+                "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <div className="px-6 py-4 border-b border-white/10 bg-white/5">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/40">
+                Investment Summary
+              </h3>
             </div>
-            <div className="flex justify-between py-1">
-              <span className="text-white/60">
-                Discount {discountPercent > 0 && `(${discountPercent}%)`}
-              </span>
-              <span className="font-medium">
-                -{formatCurrency(totals.discount, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span className="text-white/60">After discount</span>
-              <span className="font-medium">
-                {formatCurrency(totals.afterDiscount, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span className="text-white/60">
-                GST {gstPercent > 0 && `(${gstPercent}%)`}
-              </span>
-              <span className="font-medium">
-                {formatCurrency(totals.gst, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between py-2 mt-2 border-t border-white/10">
-              <span className="text-white/80 font-semibold">
-                Total (Commercial Rounding)
-              </span>
-              <span className="text-white/90 font-semibold text-lg">
-                {formatCurrency(totals.total, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between py-0.5 opacity-50 text-xs">
-              <span className="text-white/60">Exact</span>
-              <span className="">
-                {formatCurrency(totals.rawTotal, currency)}
-              </span>
+
+            <div className="p-6 space-y-4 text-sm">
+              <div className="flex justify-between items-center text-white/50">
+                <span className="font-medium">Project Subtotal</span>
+                <span className="font-mono font-semibold text-white/80">
+                  {formatCurrency(totals.subtotal, currency)}
+                </span>
+              </div>
+
+              {discountPercent > 0 && (
+                <div className="flex justify-between items-center py-2 px-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                  <div className="flex flex-col">
+                    <span className="text-emerald-400 font-bold">
+                      Discount Applied ({discountPercent}%)
+                    </span>
+                    {!isReadonly && (
+                      <span className="text-[10px] text-emerald-400/50 italic">
+                        Social Garden Partner Rate
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-mono font-bold text-emerald-400">
+                    -{formatCurrency(totals.discount, currency)}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center text-white/50">
+                <span className="font-medium">GST ({gstPercent}%)</span>
+                <span className="font-mono font-semibold text-white/80">
+                  {formatCurrency(totals.gst, currency)}
+                </span>
+              </div>
+
+              <div className="pt-6 mt-4 border-t border-white/10">
+                <div className="flex justify-between items-end">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/30">
+                      Total Investment
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 rounded bg-white/10 text-[9px] font-bold text-white/50 uppercase">
+                        {currency}
+                      </span>
+                      <span className="text-[11px] text-white/30 italic">
+                        Inc. GST
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-4xl font-black text-white tracking-tighter">
+                    {formatCurrency(totals.total, currency)}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
