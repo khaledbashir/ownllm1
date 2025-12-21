@@ -2518,7 +2518,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-            "Doc embedded successfully! AI can now retrieve this content."
+          "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -2775,7 +2775,7 @@ ${activeTemplateFooter}
                   style={{
                     height: selectedBrandTemplate.cssOverrides
                       ? JSON.parse(selectedBrandTemplate.cssOverrides)
-                          .logoHeight || 40
+                        .logoHeight || 40
                       : 40,
                   }}
                 />
@@ -2900,10 +2900,18 @@ const serializeDocToHtml = async (doc) => {
 
   // Create job to access assets
   const job = new Job({ collection: doc.collection });
-  // Populate transformer context and allow asset reads
-  await job.docToSnapshot(doc);
-  const assetsManager = job.assetsManager;
-  const assets = assetsManager.getAssets(); // Map<string, Blob>
+
+  // Try to populate transformer context and access assets
+  // This may fail if the document references blobs that no longer exist in storage
+  let assets = new Map();
+  try {
+    await job.docToSnapshot(doc);
+    const assetsManager = job.assetsManager;
+    assets = assetsManager.getAssets(); // Map<string, Blob>
+  } catch (blobError) {
+    console.warn("[PDF Export] Could not load some assets (may have missing blobs):", blobError.message);
+    // Continue with empty assets map - images may not render but export won't fail
+  }
 
   const getText = (block) => {
     // Try various text access patterns
@@ -3091,7 +3099,7 @@ const serializeDocToHtml = async (doc) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch {}
+          } catch { }
           return value;
         };
 
