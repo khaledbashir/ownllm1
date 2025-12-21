@@ -413,7 +413,17 @@ class MCPHypervisor {
 
         return new SSEClientTransport(url, {
           eventSourceInit: {
-            headers: sseHeaders,
+            // Using the 'headers' property doesn't work with some EventSource implementations/versions
+            // especially for the initial handshake. We use a custom fetch implementation instead.
+            fetch: (input, init) => {
+              return fetch(input, {
+                ...init,
+                headers: {
+                  ...init.headers,
+                  ...sseHeaders
+                }
+              });
+            },
             https: { rejectUnauthorized: false }
           },
           requestInit: {
