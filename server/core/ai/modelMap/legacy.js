@@ -79,6 +79,13 @@ const LEGACY_MODEL_MAP = {
     "llama-3.1-70b-versatile": 8000,
     "llama-3.1-8b-instant": 8000,
     "mixtral-8x7b-32768": 32768,
+    "moonshotai/kimi-k2-instruct-0905": 128000,
+  },
+  moonshot: {
+    "kimi-k2-instruct-0905": 128000,
+    "moonshot-v1-8k": 8192,
+    "moonshot-v1-32k": 32768,
+    "moonshot-v1-128k": 128000,
   },
   openai: {
     "gpt-3.5-turbo": 16385,
