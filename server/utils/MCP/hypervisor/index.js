@@ -67,14 +67,14 @@ class MCPHypervisor {
     this.mcpServerJSONPath =
       process.env.NODE_ENV === "development"
         ? path.resolve(
-            __dirname,
-            `../../../storage/plugins/anythingllm_mcp_servers.json`
-          )
+          __dirname,
+          `../../../storage/plugins/anythingllm_mcp_servers.json`
+        )
         : path.resolve(
-            process.env.STORAGE_DIR ??
-              path.resolve(__dirname, `../../../storage`),
-            `plugins/anythingllm_mcp_servers.json`
-          );
+          process.env.STORAGE_DIR ??
+          path.resolve(__dirname, `../../../storage`),
+          `plugins/anythingllm_mcp_servers.json`
+        );
 
     if (!fs.existsSync(this.mcpServerJSONPath)) {
       fs.mkdirSync(path.dirname(this.mcpServerJSONPath), { recursive: true });
@@ -398,9 +398,21 @@ class MCPHypervisor {
           },
         });
       default:
+        // SSE transport requires headers to be passed via eventSourceInit.fetch
+        // because the SDK ignores requestInit.headers for the SSE connection
+        const customHeaders = server.headers || {};
         return new SSEClientTransport(url, {
+          eventSourceInit: {
+            fetch: (fetchUrl, init) => fetch(fetchUrl, {
+              ...init,
+              headers: {
+                ...customHeaders,
+                Accept: "text/event-stream",
+              },
+            }),
+          },
           requestInit: {
-            headers: server.headers,
+            headers: customHeaders,
           },
         });
     }
