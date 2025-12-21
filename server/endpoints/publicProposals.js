@@ -51,7 +51,7 @@ function publicProposalsEndpoints(app) {
   );
 
   // Get proposal content (Public)
-  app.get("/proposal/:id", [validatedRequest], async (request, response) => {
+  app.get("/proposal/:id", async (request, response) => {
     try {
       const { id } = request.params;
       const proposal = await PublicProposals.get(id);
@@ -81,7 +81,6 @@ function publicProposalsEndpoints(app) {
   // Sign proposal (Public)
   app.post(
     "/proposal/:id/sign",
-    [validatedRequest],
     async (request, response) => {
       try {
         const { id } = request.params;
