@@ -23,6 +23,7 @@ if [ -n "$MCP_SERVERS_JSON" ]; then
     mkdir -p "$MCP_DIR"
     echo "$MCP_SERVERS_JSON" > "$MCP_DIR/anythingllm_mcp_servers.json"
     echo "✅ MCP servers config written to $MCP_DIR/anythingllm_mcp_servers.json"
+    chown -R anythingllm:anythingllm "$MCP_DIR"
 fi
 
 {

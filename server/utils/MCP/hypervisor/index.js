@@ -400,13 +400,21 @@ class MCPHypervisor {
       default:
         // SSE transport requires headers to be passed via eventSourceInit
         // because the SDK ignores requestInit.headers for the SSE connection.
-        // We pass headers directly to EventSource constructor instead of overriding fetch.
         const customHeaders = server.headers || {};
+
+        // Construct standard headers for SSE
+        const sseHeaders = {
+          "Accept": "text/event-stream",
+          ...customHeaders
+        };
+
+        console.log(`[MCP] Initializing SSE connection to ${url}`);
+        console.log(`[MCP] Using Headers keys: ${Object.keys(sseHeaders).join(', ')}`);
+
         return new SSEClientTransport(url, {
           eventSourceInit: {
-            headers: {
-              ...customHeaders,
-            },
+            headers: sseHeaders,
+            https: { rejectUnauthorized: false }
           },
           requestInit: {
             headers: customHeaders,
