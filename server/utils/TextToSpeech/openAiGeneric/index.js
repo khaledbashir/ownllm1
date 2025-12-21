@@ -24,8 +24,12 @@ class GenericOpenAiTTS {
     });
     this.model = process.env.TTS_OPEN_AI_COMPATIBLE_MODEL ?? "tts-1";
     this.voice = process.env.TTS_OPEN_AI_COMPATIBLE_VOICE_MODEL ?? "alloy";
+    this.responseFormat =
+      process.env.TTS_OPEN_AI_COMPATIBLE_RESPONSE_FORMAT ??
+      process.env.TTS_RESPONSE_FORMAT ??
+      "mp3";
     this.#log(
-      `Service (${process.env.TTS_OPEN_AI_COMPATIBLE_ENDPOINT}) with model: ${this.model} and voice: ${this.voice}`
+      `Service (${process.env.TTS_OPEN_AI_COMPATIBLE_ENDPOINT}) with model: ${this.model}, voice: ${this.voice}, format: ${this.responseFormat}`
     );
   }
 
@@ -44,6 +48,7 @@ class GenericOpenAiTTS {
         model: this.model,
         voice: this.voice,
         input: textInput,
+        response_format: this.responseFormat,
       });
       return Buffer.from(await result.arrayBuffer());
     } catch (e) {

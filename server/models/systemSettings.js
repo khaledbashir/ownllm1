@@ -282,6 +282,9 @@ const SystemSettings = {
       TTSOpenAICompatibleVoiceModel:
         process.env.TTS_OPEN_AI_COMPATIBLE_VOICE_MODEL,
       TTSOpenAICompatibleEndpoint: process.env.TTS_OPEN_AI_COMPATIBLE_ENDPOINT,
+      TTSOpenAICompatibleResponseFormat:
+        process.env.TTS_OPEN_AI_COMPATIBLE_RESPONSE_FORMAT,
+      TTSResponseFormat: process.env.TTS_RESPONSE_FORMAT,
 
       // --------------------------------------------------------
       // Agent Settings & Configs

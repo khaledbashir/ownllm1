@@ -7,6 +7,7 @@ class OpenAiTTS {
       apiKey: process.env.TTS_OPEN_AI_KEY,
     });
     this.voice = process.env.TTS_OPEN_AI_VOICE_MODEL ?? "alloy";
+    this.responseFormat = process.env.TTS_RESPONSE_FORMAT ?? "mp3";
   }
 
   async ttsBuffer(textInput) {
@@ -15,6 +16,7 @@ class OpenAiTTS {
         model: "tts-1",
         voice: this.voice,
         input: textInput,
+        response_format: this.responseFormat,
       });
       return Buffer.from(await result.arrayBuffer());
     } catch (e) {

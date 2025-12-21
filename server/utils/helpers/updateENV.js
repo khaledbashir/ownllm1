@@ -654,6 +654,14 @@ const KEY_MAPPING = {
     envKey: "TTS_OPEN_AI_COMPATIBLE_ENDPOINT",
     checks: [isValidURL],
   },
+  TTSOpenAICompatibleResponseFormat: {
+    envKey: "TTS_OPEN_AI_COMPATIBLE_RESPONSE_FORMAT",
+    checks: [],
+  },
+  TTSResponseFormat: {
+    envKey: "TTS_RESPONSE_FORMAT",
+    checks: [],
+  },
 
   // DeepSeek Options
   DeepSeekApiKey: {
