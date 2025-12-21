@@ -16,6 +16,15 @@ if [ -z "$STORAGE_DIR" ]; then
     echo "================================================================"
 fi
 
+# Setup MCP servers from environment variable if provided
+if [ -n "$MCP_SERVERS_JSON" ]; then
+    echo "📦 Setting up MCP servers from MCP_SERVERS_JSON environment variable..."
+    MCP_DIR="${STORAGE_DIR:-/app/server/storage}/plugins"
+    mkdir -p "$MCP_DIR"
+    echo "$MCP_SERVERS_JSON" > "$MCP_DIR/anythingllm_mcp_servers.json"
+    echo "✅ MCP servers config written to $MCP_DIR/anythingllm_mcp_servers.json"
+fi
+
 {
   cd /app/server/ &&
     # Disable Prisma CLI telemetry (https://www.prisma.io/docs/orm/tools/prisma-cli#how-to-opt-out-of-data-collection)
