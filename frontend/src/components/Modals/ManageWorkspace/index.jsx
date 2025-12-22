@@ -8,7 +8,6 @@ import { isMobile } from "react-device-detect";
 import useUser from "../../../hooks/useUser";
 import DocumentSettings from "./Documents";
 import DataConnectors from "./DataConnectors";
-import ProductsManager from "./ProductsManager";
 import ModalWrapper from "@/components/ModalWrapper";
 
 const noop = () => {};
@@ -104,8 +103,6 @@ const ManageWorkspace = ({ hideModal = noop, providedSlug = null }) => {
 
           {selectedTab === "documents" ? (
             <DocumentSettings workspace={workspace} systemSettings={settings} />
-          ) : selectedTab === "products" ? (
-            <ProductsManager workspace={workspace} />
           ) : (
             <DataConnectors workspace={workspace} systemSettings={settings} />
           )}
@@ -141,16 +138,6 @@ const ModalTabSwitcher = ({ selectedTab, setSelectedTab }) => {
           }`}
         >
           {t("connectors.manage.data-connectors")}
-        </button>
-        <button
-          onClick={() => setSelectedTab("products")}
-          className={`border-none px-4 py-2 rounded-[8px] font-semibold hover:bg-theme-modal-border hover:bg-opacity-60 ${
-            selectedTab === "products"
-              ? "bg-theme-modal-border font-bold text-white light:bg-[#E0F2FE] light:text-[#026AA2]"
-              : "text-white/20 font-medium hover:text-white light:bg-white light:text-[#535862] light:hover:bg-[#E0F2FE]"
-          }`}
-        >
-          Products
         </button>
       </div>
     </div>
