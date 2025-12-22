@@ -106,7 +106,7 @@ export default function ThreadItem({
           </a>
         )}
         {!!thread.slug && !thread.deleted && (
-          <div ref={optionsContainer} className="flex items-center">
+          <div ref={optionsContainer} className="flex items-center mr-[4px]">
             {" "}
             {/* Added flex and items-center */}
             {ctrlPressed ? (
