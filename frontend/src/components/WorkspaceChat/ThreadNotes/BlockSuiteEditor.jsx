@@ -1926,7 +1926,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       }
 
       // 1. Serialize Doc to Standard HTML
-      const bodyHtml = await serializeDocToHtml(doc);
+      const bodyHtml = await serializeDocToHtml(doc, { brandColor });
       if (!bodyHtml || bodyHtml.includes("No content found")) {
         throw new Error(
           "Serialized document is empty. Please verify content exists."
@@ -2890,7 +2890,7 @@ ${activeTemplateFooter}
 
 // Helper to recursively serialize BlockSuite doc to HTML
 // Helper to recursively serialize BlockSuite doc to HTML
-const serializeDocToHtml = async (doc) => {
+const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
   if (!doc.root) {
     console.error("[PDF Export] Doc has no root!");
     return "<p>No content found (Empty Root)</p>";
@@ -3170,18 +3170,11 @@ const serializeDocToHtml = async (doc) => {
         };
 
         const formatCurrency = (value) => {
-          const n = Number(value);
-          if (!Number.isFinite(n)) return "$0+GST";
-          try {
-            const formatted = n.toLocaleString(undefined, {
-              style: "currency",
-              currency,
-              maximumFractionDigits: 0,
-            });
-            return `${formatted}+GST`;
-          } catch {
-            return `$${Math.round(n)}+GST`;
-          }
+          const n = Math.round(Number(value));
+          if (!Number.isFinite(n)) return "$0";
+          return "$" + n.toLocaleString(undefined, {
+            maximumFractionDigits: 0,
+          });
         };
 
         const subtotal = rows.reduce((sum, row) => {
@@ -3196,28 +3189,40 @@ const serializeDocToHtml = async (doc) => {
         const rawTotal = afterDiscount + gst;
         const total = Math.round(rawTotal / 100) * 100;
 
-        let tableHtml = `<div class="pricing-table-wrapper" style="margin: 1.5rem 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; page-break-inside: avoid; break-inside: avoid;">
-                    <div style="padding: 0.75rem 1rem; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                        <div style="font-weight: 700; color: #111827;">${escapeHtml(title)}</div>
-                        <div style="font-size: 0.75rem; color: #6b7280;">${escapeHtml(currency)}</div>
+        let tableHtml = `<div class="pricing-table-wrapper" style="margin: 2rem 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; page-break-inside: avoid; break-inside: avoid; border-left: 6px solid ${brandColor} !important;">
+                    <div style="padding: 1rem 1.25rem; background: #fafafa; border-bottom: 1px solid #e5e7eb;">
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #111827; letter-spacing: -0.025em; margin-bottom: 2px;">${escapeHtml(title)}</div>
+                        <div style="font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em;">All prices in ${escapeHtml(currency)}, excluding GST</div>
                     </div>
-                    <div>
-                    <table class="pricing-table" style="width: 100%; border-collapse: collapse; font-size: 0.9rem; page-break-inside: avoid; break-inside: avoid;">
-                        <thead style="background: #fafafa; border-bottom: 1px solid #e5e7eb; page-break-inside: avoid; break-inside: avoid;">
+                    <div style="padding: 0;">
+                    <table class="pricing-table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem; page-break-inside: avoid; break-inside: avoid;">
+                        <thead style="background: ${brandColor}; page-break-inside: avoid; break-inside: avoid;">
                             <tr>
-                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">Role</th>
-                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #111827;">Description</th>
-                                <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827;">Hours</th>
-                                <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827;">Rate</th>
-                                <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827;">Total</th>
+                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 700; color: #ffffff; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; border: none;">Role</th>
+                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 700; color: #ffffff; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; border: none;">Description</th>
+                                <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 700; color: #ffffff; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; border: none;">Hours</th>
+                                <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 700; color: #ffffff; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; border: none;">Rate</th>
+                                <th style="padding: 0.75rem 1rem; text-align: right; font-weight: 700; color: #ffffff; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; border: none;">Total</th>
                             </tr>
                         </thead>
-                        <tbody>`;
+                        <tbody style="background: #ffffff;">`;
 
         if (!rows.length) {
-          tableHtml += `<tr style="page-break-inside: avoid; break-inside: avoid;"><td colspan="5" style="padding: 1rem; text-align: center; color: #9ca3af;">No rows</td></tr>`;
+          tableHtml += `<tr style="page-break-inside: avoid; break-inside: avoid;"><td colspan="5" style="padding: 2rem; text-align: center; color: #9ca3af; font-style: italic;">No items added to pricing summary.</td></tr>`;
         } else {
           rows.forEach((row) => {
+            if (row?.isHeader) {
+              tableHtml += `<tr style="background: #f9fafb; page-break-inside: avoid; break-inside: avoid;">
+                              <td colspan="5" style="padding: 0.5rem 1rem; border: none; border-bottom: 1px solid #e5e7eb;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                  <div style="width: 3px; height: 12px; background: ${brandColor}; border-radius: 2px;"></div>
+                                  <span style="font-size: 11px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.05em;">${escapeHtml(row.role)}</span>
+                                </div>
+                              </td>
+                            </tr>`;
+              return;
+            }
+
             const hours = toNumber(row?.hours, 0);
             const rate = toNumber(row?.baseRate, 0);
             const lineTotal = hours * rate;
@@ -3226,11 +3231,11 @@ const serializeDocToHtml = async (doc) => {
               { USE_PROFILES: { html: true } }
             );
             tableHtml += `<tr style="border-bottom: 1px solid #f3f4f6; page-break-inside: avoid; break-inside: avoid;">
-                            <td style="padding: 0.75rem 1rem; color: #111827;">${escapeHtml(row?.role || "")}</td>
-                            <td style="padding: 0.75rem 1rem; color: #4b5563;">${descHtml}</td>
-                            <td style="padding: 0.75rem 1rem; text-align: right; color: #111827;">${hours}</td>
-                            <td style="padding: 0.75rem 1rem; text-align: right; color: #111827;">${formatCurrency(rate)}</td>
-                            <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827;">${formatCurrency(lineTotal)}</td>
+                            <td style="padding: 0.75rem 1rem; color: #111827; font-weight: 500; border: none; border-bottom: 1px solid #f3f4f6;">${escapeHtml(row?.role || "")}</td>
+                            <td style="padding: 0.75rem 1rem; color: #4b5563; font-size: 0.8rem; line-height: 1.4; border: none; border-bottom: 1px solid #f3f4f6;">${descHtml}</td>
+                            <td style="padding: 0.75rem 1rem; text-align: right; color: #111827; border: none; border-bottom: 1px solid #f3f4f6;">${hours}</td>
+                            <td style="padding: 0.75rem 1rem; text-align: right; color: #111827; border: none; border-bottom: 1px solid #f3f4f6;">${formatCurrency(rate)}</td>
+                            <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 600; color: #111827; border: none; border-bottom: 1px solid #f3f4f6;">${formatCurrency(lineTotal)}</td>
                         </tr>`;
           });
         }
@@ -3243,31 +3248,30 @@ const serializeDocToHtml = async (doc) => {
           const gstLabel =
             clamp(gstPercent) > 0 ? ` (${clamp(gstPercent)}%)` : "";
 
-          tableHtml += `<div style="padding: 0.75rem 1rem; display: flex; justify-content: flex-end;">
-                        <div style="width: 320px; font-size: 0.9rem;">
-                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
-                                <span style="color: #6b7280;">Subtotal</span>
+          tableHtml += `<div style="padding: 1.5rem; display: flex; justify-content: flex-end; background: #fafafa;">
+                        <div style="width: 320px; font-size: 0.85rem;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+                                <span style="color: #6b7280; font-weight: 500;">Subtotal</span>
                                 <span style="color: #111827; font-weight: 600;">${formatCurrency(subtotal)}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
-                                <span style="color: #6b7280;">Discount${discountLabel}</span>
-                                <span style="color: #111827; font-weight: 600;">-${formatCurrency(discount)}</span>
+                            <div style="display: flex; justify-content: space-between; padding: 0.25rem 0; color: #10b981;">
+                                <span style="font-weight: 500;">Discount${discountLabel}</span>
+                                <span style="font-weight: 700;">-${formatCurrency(discount)}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
-                                <span style="color: #6b7280;">After discount</span>
+                            <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+                                <span style="color: #6b7280; font-weight: 500;">After discount</span>
                                 <span style="color: #111827; font-weight: 600;">${formatCurrency(afterDiscount)}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0;">
-                                <span style="color: #6b7280;">GST${gstLabel}</span>
+                            <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+                                <span style="color: #6b7280; font-weight: 500;">GST${gstLabel}</span>
                                 <span style="color: #111827; font-weight: 600;">${formatCurrency(gst)}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; margin-top: 0.25rem; border-top: 1px solid #e5e7eb;">
-                                <span style="color: #111827; font-weight: 700;">Total (Commercial Rounding)</span>
-                                <span style="color: #111827; font-weight: 700;">${formatCurrency(total)}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.15rem 0; opacity: 0.65; font-size: 0.75rem;">
-                                <span style="color: #6b7280;">Exact</span>
-                                <span style="color: #111827;">${formatCurrency(rawTotal)}</span>
+                            <div style="display: flex; justify-content: space-between; padding: 1rem 0 0.5rem 0; margin-top: 0.75rem; border-top: 2px solid ${brandColor};">
+                                <div style="display: flex; flex-col; gap: 2px;">
+                                  <div style="color: #111827; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.025em;">Total Investment</div>
+                                  <div style="color: #9ca3af; font-size: 10px; font-style: italic;">Inc. GST & Commercial Rounding</div>
+                                </div>
+                                <span style="color: ${brandColor}; font-weight: 900; font-size: 1.75rem; letter-spacing: -0.05em;">${formatCurrency(total)}</span>
                             </div>
                         </div>
                     </div>`;
@@ -3543,7 +3547,7 @@ const serializeDocToHtml = async (doc) => {
     const styles = `
             <style>
                 :root {
-                    --primary-color: #3b82f6;
+                    --primary-color: ${brandColor};
                     --text-primary: #111827;
                     --text-secondary: #4b5563;
                     --border-color: #e5e7eb;

@@ -71,12 +71,10 @@ const clampNumber = (
   return Math.max(min, Math.min(max, n));
 };
 
-const formatCurrency = (value, currency = "AUD") => {
+const formatCurrency = (value) => {
   const n = Math.round(Number(value)); // Round to nearest dollar
   if (!Number.isFinite(n)) return "$0";
-  return n.toLocaleString(undefined, {
-    style: "currency",
-    currency,
+  return "$" + n.toLocaleString(undefined, {
     maximumFractionDigits: 0,
   });
 };
@@ -102,7 +100,7 @@ const calcTotals = ({ rows, discountPercent, gstPercent }) => {
 };
 
 // This is the block model (holds props) for BlockSuite.
-export class PricingTableModel extends defineEmbedModel(BlockModel) {}
+export class PricingTableModel extends defineEmbedModel(BlockModel) { }
 
 // We implement as an embed block so affine:note allows it.
 export const PricingTableBlockSchema = createEmbedBlockSchema({
@@ -318,54 +316,58 @@ const PricingTableWidget = ({ model }) => {
       }}
       contentEditable={false}
     >
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <div className="text-lg font-semibold text-white/90">{title}</div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={downloadCSV}
-            className="inline-flex items-center gap-1.5 text-white/50 hover:text-white/90 transition-colors text-xs font-medium"
-            title="Download CSV"
-            contentEditable={false}
-            type="button"
-          >
-            <FileCsv size={16} weight="bold" />
-            <span>CSV</span>
-          </button>
-
-          {!isReadonly && (
+      <div className="flex flex-col gap-1 mb-5">
+        <div className="flex items-center justify-between">
+          <div className="text-xl font-bold text-white/90 tracking-tight">{title}</div>
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => updateModel({ showTotals: !showTotals })}
-              className="text-white/40 hover:text-white/80 transition-colors"
-              title={showTotals ? "Hide Totals" : "Show Totals"}
+              onClick={downloadCSV}
+              className="inline-flex items-center gap-1.5 text-white/50 hover:text-white/90 transition-colors text-xs font-medium"
+              title="Download CSV"
+              contentEditable={false}
+              type="button"
             >
-              {showTotals ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 256 256"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M247.31 124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57 61.26 162.88 48 128 48S61.43 61.26 36.34 86.35C17.51 105.18 9 124 8.69 124.76a8 8 0 0 0 0 6.5c.35.79 8.82 19.57 27.65 38.4C61.43 194.74 93.12 208 128 208s66.57-13.26 91.66-38.34c18.83-18.83 27.3-37.61 27.65-38.4a8 8 0 0 0 0-6.5M128 192c-30.78 0-57.67-11.19-79.93-33.25A133.5 133.5 0 0 1 25 128a133.3 133.3 0 0 1 23.07-30.75C70.33 75.19 97.22 64 128 64s57.67 11.19 79.93 33.25A133.5 133.5 0 0 1 231 128c-7.21 13.46-38.62 64-103 64m0-112a48 48 0 1 0 48 48a48.05 48.05 0 0 0-48-48m0 80a32 32 0 1 1 32-32a32 32 0 0 1-32 32"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 256 256"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M53.92 34.62a8 8 0 1 0-11.84 10.76l34.86 38.35A132.8 132.8 0 0 0 25 128a133.5 133.5 0 0 0 79.93 33.25a137.6 137.6 0 0 0 28.59-1.93l69.1 76.02a8 8 0 0 0 11.84-.54a8 8 0 0 0-.54-11.3ZM128 192c-30.78 0-57.67-11.19-79.93-33.25A133.4 133.4 0 0 1 25 128a134.4 134.4 0 0 1 12.81-22.33l97.88 107.69A90 90 0 0 1 128 192m118.8-57.24C226 111.9 196.21 82.57 148.44 67.22a8 8 0 0 0-4.88 15.24c39.69 12.75 66.86 37.07 87.44 59.79a133.4 133.4 0 0 1-23.07 30.75a137 137 0 0 1-27.1 19.33a8 8 0 1 0 8.08 13.78a156 156 0 0 0 32-23.29C237.12 180.81 245.63 162 247.31 139.54a8 8 0 0 0-.51-4.78M99.63 84.9a48 48 0 0 1 65.58 72.15l-12.75-14A32 32 0 0 0 108 108.73Z"
-                  />
-                </svg>
-              )}
+              <FileCsv size={16} weight="bold" />
+              <span>CSV</span>
             </button>
-          )}
-          <div className="text-xs text-white/50">{currency}</div>
+
+            {!isReadonly && (
+              <button
+                onClick={() => updateModel({ showTotals: !showTotals })}
+                className="text-white/40 hover:text-white/80 transition-colors"
+                title={showTotals ? "Hide Totals" : "Show Totals"}
+              >
+                {showTotals ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 256 256"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M247.31 124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57 61.26 162.88 48 128 48S61.43 61.26 36.34 86.35C17.51 105.18 9 124 8.69 124.76a8 8 0 0 0 0 6.5c.35.79 8.82 19.57 27.65 38.4C61.43 194.74 93.12 208 128 208s66.57-13.26 91.66-38.34c18.83-18.83 27.3-37.61 27.65-38.4a8 8 0 0 0 0-6.5M128 192c-30.78 0-57.67-11.19-79.93-33.25A133.5 133.5 0 0 1 25 128a133.3 133.3 0 0 1 23.07-30.75C70.33 75.19 97.22 64 128 64s57.67 11.19 79.93 33.25A133.5 133.5 0 0 1 231 128c-7.21 13.46-38.62 64-103 64m0-112a48 48 0 1 0 48 48a48.05 48.05 0 0 0-48-48m0 80a32 32 0 1 1 32-32a32 32 0 0 1-32 32"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 256 256"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M53.92 34.62a8 8 0 1 0-11.84 10.76l34.86 38.35A132.8 132.8 0 0 0 25 128a133.5 133.5 0 0 0 79.93 33.25a137.6 137.6 0 0 0 28.59-1.93l69.1 76.02a8 8 0 0 0 11.84-.54a8 8 0 0 0-.54-11.3ZM128 192c-30.78 0-57.67-11.19-79.93-33.25A133.4 133.4 0 0 1 25 128a134.4 134.4 0 0 1 12.81-22.33l97.88 107.69A90 90 0 0 1 128 192m118.8-57.24C226 111.9 196.21 82.57 148.44 67.22a8 8 0 0 0-4.88 15.24c39.69 12.75 66.86 37.07 87.44 59.79a133.4 133.4 0 0 1-23.07 30.75a137 137 0 0 1-27.1 19.33a8 8 0 1 0 8.08 13.78a156 156 0 0 0 32-23.29C237.12 180.81 245.63 162 247.31 139.54a8 8 0 0 0-.51-4.78M99.63 84.9a48 48 0 0 1 65.58 72.15l-12.75-14A32 32 0 0 0 108 108.73Z"
+                    />
+                  </svg>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/30">
+          All prices in {currency}, excluding GST
         </div>
       </div>
 
@@ -377,9 +379,8 @@ const PricingTableWidget = ({ model }) => {
 
           return (
             <>
-              {/* Header row */}
               <div
-                className="grid text-left text-xs text-white/60 border-b border-white/10 py-2"
+                className="grid text-left text-[10px] text-white/40 border-b border-white/5 py-3"
                 style={{
                   display: "grid",
                   gridTemplateColumns: !isReadonly
@@ -388,11 +389,11 @@ const PricingTableWidget = ({ model }) => {
                   width: "100%",
                 }}
               >
-                <div className="pr-3">Role</div>
-                <div style={{ paddingRight: 15 }}>Description</div>
-                <div className="pr-3 text-right">Hours</div>
-                <div className="pr-3 text-right">Rate</div>
-                <div className="text-right">Total</div>
+                <div className="pr-3 font-bold uppercase tracking-wider">Role</div>
+                <div style={{ paddingRight: 15 }} className="font-bold uppercase tracking-wider">Description</div>
+                <div className="pr-3 text-right font-bold uppercase tracking-wider">Hours</div>
+                <div className="pr-3 text-right font-bold uppercase tracking-wider">Rate</div>
+                <div className="text-right font-bold uppercase tracking-wider">Total</div>
                 {!isReadonly && <div></div>}
               </div>
 
@@ -546,10 +547,10 @@ const PricingTableWidget = ({ model }) => {
                                   // Ensure layout holds during drag
                                   ...(snapshot.isDragging
                                     ? {
-                                        display: "grid",
-                                        background: "#252525",
-                                        opacity: 0.9,
-                                      }
+                                      display: "grid",
+                                      background: "#252525",
+                                      opacity: 0.9,
+                                    }
                                     : {}),
                                 }}
                               >
@@ -764,152 +765,145 @@ const PricingTableWidget = ({ model }) => {
         })()}
       </div>
 
-      {!isReadonly && (
-        <div className="flex items-center gap-2 mt-2">
-          <button
-            onClick={() => addRow(false)}
-            className="text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300"
-          >
-            + New Item
-          </button>
-          <span className="text-white/20 text-xs">|</span>
-          <button
-            onClick={() => addRow(true)}
-            className="text-xs flex items-center gap-1 text-purple-400 hover:text-purple-300"
-          >
-            + New Section
-          </button>
-          <span className="text-white/20 text-xs">|</span>
-          <button
-            onClick={sortRows}
-            className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300"
-            title="Sort Accountant Management to bottom"
-          >
-            Sort Roles
-          </button>
-        </div>
-      )}
+      {
+        !isReadonly && (
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              onClick={() => addRow(false)}
+              className="text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300"
+            >
+              + New Item
+            </button>
+            <span className="text-white/20 text-xs">|</span>
+            <button
+              onClick={() => addRow(true)}
+              className="text-xs flex items-center gap-1 text-purple-400 hover:text-purple-300"
+            >
+              + New Section
+            </button>
+            <span className="text-white/20 text-xs">|</span>
+            <button
+              onClick={sortRows}
+              className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300"
+              title="Sort Accountant Management to bottom"
+            >
+              Sort Roles
+            </button>
+          </div>
+        )
+      }
 
-      {!isReadonly && (
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-white/50">Discount %</span>
-            <input
-              className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-              type="number"
-              min={0}
-              max={100}
-              value={discountPercent}
-              onChange={(e) =>
-                updateModel({
-                  discountPercent: clampNumber(e.target.value, { max: 100 }),
-                })
-              }
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-white/50">GST %</span>
-            <input
-              className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-              type="number"
-              min={0}
-              max={100}
-              value={gstPercent}
-              onChange={(e) =>
-                updateModel({
-                  gstPercent: clampNumber(e.target.value, { max: 100 }),
-                })
-              }
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-white/50">Title</span>
-            <input
-              className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-              type="text"
-              value={title}
-              onChange={(e) =>
-                updateModel({ title: new Text(e.target.value || "") })
-              }
-            />
-          </label>
-        </div>
-      )}
+      {
+        !isReadonly && (
+          <div className="grid grid-cols-3 gap-3 mt-4">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-white/50">Discount %</span>
+              <input
+                className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                type="number"
+                min={0}
+                max={100}
+                value={discountPercent}
+                onChange={(e) =>
+                  updateModel({
+                    discountPercent: clampNumber(e.target.value, { max: 100 }),
+                  })
+                }
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-white/50">GST %</span>
+              <input
+                className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                type="number"
+                min={0}
+                max={100}
+                value={gstPercent}
+                onChange={(e) =>
+                  updateModel({
+                    gstPercent: clampNumber(e.target.value, { max: 100 }),
+                  })
+                }
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-white/50">Title</span>
+              <input
+                className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                type="text"
+                value={title}
+                onChange={(e) =>
+                  updateModel({ title: new Text(e.target.value || "") })
+                }
+              />
+            </label>
+          </div>
+        )
+      }
 
-      {showTotals && (
-        <div className="mt-12 flex justify-end" contentEditable={false}>
-          <div
-            className="w-full max-w-md border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
-            style={{
-              background:
-                "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)",
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <div className="px-6 py-4 border-b border-white/10 bg-white/5">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/40">
-                Investment Summary
-              </h3>
-            </div>
-
-            <div className="p-6 space-y-4 text-sm">
-              <div className="flex justify-between items-center text-white/50">
-                <span className="font-medium">Project Subtotal</span>
-                <span className="font-mono font-semibold text-white/80">
-                  {formatCurrency(totals.subtotal, currency)}
-                </span>
+      {
+        showTotals && (
+          <div className="mt-12 flex justify-end" contentEditable={false}>
+            <div
+              className="w-full max-w-md border border-white/10 rounded-2xl overflow-hidden shadow-2xl bg-black/20"
+              style={{
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              <div className="px-6 py-4 border-b border-white/10 bg-white/5">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/40">
+                  Investment Summary
+                </h3>
               </div>
 
-              {discountPercent > 0 && (
-                <div className="flex justify-between items-center py-2 px-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                  <div className="flex flex-col">
-                    <span className="text-emerald-400 font-bold">
-                      Discount Applied ({discountPercent}%)
-                    </span>
-                    {!isReadonly && (
-                      <span className="text-[10px] text-emerald-400/50 italic">
-                        Social Garden Partner Rate
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-mono font-bold text-emerald-400">
-                    -{formatCurrency(totals.discount, currency)}
+              <div className="p-6 space-y-3 text-sm">
+                <div className="flex justify-between items-center text-white/50">
+                  <span className="font-medium">Subtotal</span>
+                  <span className="font-mono font-semibold text-white/80">
+                    {formatCurrency(totals.subtotal)}
                   </span>
                 </div>
-              )}
 
-              <div className="flex justify-between items-center text-white/50">
-                <span className="font-medium">GST ({gstPercent}%)</span>
-                <span className="font-mono font-semibold text-white/80">
-                  {formatCurrency(totals.gst, currency)}
-                </span>
-              </div>
-
-              <div className="pt-6 mt-4 border-t border-white/10">
-                <div className="flex justify-between items-end">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/30">
-                      Total Investment
-                    </span>
+                {discountPercent > 0 && (
+                  <div className="flex justify-between items-center text-emerald-400 font-medium">
                     <div className="flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 rounded bg-white/10 text-[9px] font-bold text-white/50 uppercase">
-                        {currency}
+                      <span className="text-xs opacity-60">−</span>
+                      <span>Discount ({discountPercent}%)</span>
+                    </div>
+                    <span className="font-mono font-bold">
+                      -{formatCurrency(totals.discount)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center text-white/50">
+                  <span className="font-medium">GST ({gstPercent}%)</span>
+                  <span className="font-mono font-semibold text-white/80">
+                    {formatCurrency(totals.gst)}
+                  </span>
+                </div>
+
+                <div className="pt-4 mt-2 border-t-2 border-white/10">
+                  <div className="flex justify-between items-end">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/30">
+                        Total Investment
                       </span>
-                      <span className="text-[11px] text-white/30 italic">
-                        Inc. GST
+                      <span className="text-[9px] text-white/20 italic">
+                        Commercial Rounding Applied
                       </span>
                     </div>
-                  </div>
-                  <div className="text-4xl font-black text-white tracking-tighter">
-                    {formatCurrency(totals.total, currency)}
+                    <div className="text-3xl font-black text-white tracking-tighter decoration-purple-500/50 underline underline-offset-8 decoration-4">
+                      {formatCurrency(totals.total)}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 

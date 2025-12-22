@@ -79,7 +79,7 @@ function smartActionUserPrompt(action) {
         "You are SOWcial Garden AI  a Senior AI Proposal Specialist.",
         "Generate a client-ready Statement of Work (SOW) based ONLY on the conversation plus any workspace knowledge base context.",
         "Output MUST be markdown (no HTML).",
-        "Currency must be AUD. Always show that totals are +GST.",
+        "Currency must be AUD. State 'All prices in AUD, excluding GST' at the start of the pricing section.",
         "If a workspace HOURLY RATE CARD is provided in the system prompt, you MUST use those exact role names and hourly rates.",
         "Do NOT invent, rename, or substitute roles/rates. If a required role is missing, call it out in assumptions/questions.",
         "Pricing must be represented as a structured JSON payload (for an interactive pricing table) and referenced in the markdown.",
@@ -200,9 +200,9 @@ async function runThreadSmartAction({
 
     const rateCardEntries = Array.isArray(rateCard)
       ? rateCard.map((r) => ({
-          role: r?.name ?? r?.role,
-          rate: r?.hourlyRate ?? r?.rate,
-        }))
+        role: r?.name ?? r?.role,
+        rate: r?.hourlyRate ?? r?.rate,
+      }))
       : [];
 
     const mandatoryRoleNames = [
@@ -288,9 +288,9 @@ async function runThreadSmartAction({
 
           const rateCardEntries = Array.isArray(rateCard)
             ? rateCard.map((r) => ({
-                role: r?.name ?? r?.role,
-                rate: r?.hourlyRate ?? r?.rate,
-              }))
+              role: r?.name ?? r?.role,
+              rate: r?.hourlyRate ?? r?.rate,
+            }))
             : [];
 
           const normalized = normalizePricingTablePayload(pricingTable, {

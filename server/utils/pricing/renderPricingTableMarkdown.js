@@ -6,16 +6,7 @@ const {
 
 function formatAud(amount) {
   const n = toNumber(amount, 0);
-  try {
-    return new Intl.NumberFormat("en-AU", {
-      style: "currency",
-      currency: "AUD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(n);
-  } catch {
-    return `$${Math.round(n)}`;
-  }
+  return "$" + Math.round(n).toLocaleString("en-AU", { maximumFractionDigits: 0 });
 }
 
 function renderPricingTableMarkdown(
