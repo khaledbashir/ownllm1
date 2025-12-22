@@ -76,24 +76,23 @@ function smartActionUserPrompt(action) {
 
     case SMART_ACTIONS.draft_sow:
       return [
-        "You are SOWcial Garden AI  a Senior AI Proposal Specialist.",
+        "You are SOWcial Garden AI   a Senior AI Proposal Specialist.",
         "Generate a client-ready Statement of Work (SOW) based ONLY on the conversation plus any workspace knowledge base context.",
-        "Output MUST be markdown (no HTML).",
+        "Output MUST be markdown.",
         "Currency must be AUD. State 'All prices in AUD, excluding GST' at the start of the pricing section.",
-        "If a workspace HOURLY RATE CARD is provided in the system prompt, you MUST use those exact role names and hourly rates.",
-        "Do NOT invent, rename, or substitute roles/rates. If a required role is missing, call it out in assumptions/questions.",
-        "Pricing must be represented as a structured JSON payload (for an interactive pricing table) and referenced in the markdown.",
-        "Return TWO parts:",
-        "1) The SOW markdown document.",
-        "2) A JSON object on the final line ONLY, prefixed with: __PRICING_TABLE_JSON__=",
-        "   The JSON must be strict JSON (double quotes) and must include:",
-        '   {"title":string,"currency":"AUD","discountPercent":number,"gstPercent":number,"rows":[{"role":string,"description":string,"hours":number,"baseRate":number}]}',
-        "Ordering rule for pricing rows (if present):",
+        "STRICTLY use the provided Rate Card for all pricing. Do NOT invent rates or roles.",
+        "Structure the SOW with clear Component sections (e.g., Component A, Component B) if the project has distinct phases or Retainers.",
+        "For the Pricing Section:",
+        "1. Create individual pricing tables for each Component/Retainer if complex, OR a single consolidated table if simple.",
+        "2. Tables MUST have columns: | Role | Hours | Hourly Rate (AUD) | Line Total (AUD) |",
+        "3. Always include a final 'Investment Summary' table aggregating the costs.",
+        "4. Apply any discounts to the Investment Summary, not the line items.",
+        "5. Show the final Total + GST clearly.",
+        "Ordering rule for pricing rows:",
         "- Tech-Head Of Senior Project Management must be first",
         "- Project Coordination must be after the above",
         "- Account Management must be last",
-        "If the conversation includes multiple options, output multiple SOW options (clearly labeled) and include pricing rows for each option.",
-        "Use a clear SOW structure with: Overview, Objectives, Scope (In/Out), Deliverables, Timeline, Roles & Responsibilities, Assumptions, Risks, Next Steps.",
+        "Use a clear SOW structure with: Project Overview, Objectives, Scope (broken down by Component), Project Management, Assumptions, Future Scope (if applicable), and Pricing/Investment.",
         "Avoid citations or source tags.",
       ].join("\n");
 
@@ -262,67 +261,8 @@ async function runThreadSmartAction({
     return { markdown, pricingTable: null };
   }
 
-  // For draft_sow we allow a structured payload appended to the markdown.
+  // For draft_sow we now expect pure markdown with embedded tables, so we just return the raw text.
   if (action === SMART_ACTIONS.draft_sow) {
-    const marker = "__PRICING_TABLE_JSON__=";
-    const markerIndex = raw.lastIndexOf(marker);
-
-    if (markerIndex !== -1) {
-      const markdown = raw.slice(0, markerIndex).trim();
-      const jsonText = raw.slice(markerIndex + marker.length).trim();
-      let pricingTable = null;
-      try {
-        pricingTable = JSON.parse(jsonText);
-      } catch {
-        pricingTable = null;
-      }
-
-      // Normalize pricingTable against workspace rate card.
-      if (pricingTable && typeof pricingTable === "object") {
-        try {
-          const rateCard = workspace?.rateCard
-            ? typeof workspace.rateCard === "string"
-              ? JSON.parse(workspace.rateCard)
-              : workspace.rateCard
-            : [];
-
-          const rateCardEntries = Array.isArray(rateCard)
-            ? rateCard.map((r) => ({
-              role: r?.name ?? r?.role,
-              rate: r?.hourlyRate ?? r?.rate,
-            }))
-            : [];
-
-          const normalized = normalizePricingTablePayload(pricingTable, {
-            rateCardEntries,
-            currency: "AUD",
-            defaultGstPercent: 10,
-            injectMandatoryRoles: true,
-            mandatoryRoleNames: [
-              "Tech - Head Of- Senior Project Management",
-              "Tech - Delivery - Project Coordination",
-              "Account Management - (Account Manager)",
-            ],
-          });
-
-          pricingTable = normalized.pricingTable;
-          if (normalized.warnings?.length) {
-            console.warn(
-              "[smartActions:draft_sow] pricing normalization warnings:",
-              normalized.warnings
-            );
-          }
-        } catch (e) {
-          console.warn(
-            "[smartActions:draft_sow] pricing normalization failed:",
-            e?.message || e
-          );
-        }
-      }
-
-      return { markdown, pricingTable };
-    }
-
     return { markdown: raw, pricingTable: null };
   }
 

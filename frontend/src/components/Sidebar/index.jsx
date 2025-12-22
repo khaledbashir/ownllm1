@@ -33,6 +33,7 @@ export default function Sidebar() {
         style={{
           width: showSidebar ? "292px" : "0px",
           paddingLeft: showSidebar ? "0px" : "16px",
+          overflow: showSidebar ? "visible" : "hidden",
         }}
         className="transition-all duration-500"
       >
@@ -55,7 +56,12 @@ export default function Sidebar() {
         </div>
         <div
           ref={sidebarRef}
-          className="relative m-[16px] rounded-[16px] bg-theme-bg-sidebar border-[2px] border-theme-sidebar-border light:border-none min-w-[250px] p-[10px] h-[calc(100%-76px)]"
+          className="relative m-[16px] rounded-[16px] bg-theme-bg-sidebar border-[2px] border-theme-sidebar-border light:border-none min-w-[250px] p-[10px] h-[calc(100%-76px)] transition-all duration-500"
+          style={{
+            minWidth: showSidebar ? "250px" : "0px",
+            maxWidth: showSidebar ? "250px" : "0px",
+            width: showSidebar ? "auto" : "0px",
+          }}
         >
           <div className="flex flex-col h-full overflow-x-hidden">
             <div className="flex-grow flex flex-col min-w-[235px]">
@@ -81,7 +87,7 @@ export default function Sidebar() {
 export function SidebarMobileHeader() {
   const { logo } = useLogo();
   const sidebarRef = useRef(null);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const { showSidebar, setShowSidebar } = useSidebarToggle(); // Use the same hook
   const [showBgOverlay, setShowBgOverlay] = useState(false);
   const {
     showing: showingNewWsModal,
