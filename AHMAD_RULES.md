@@ -40,7 +40,7 @@
 ```bash
 LLM_PROVIDER="zai"
 ZAI_API_KEY="06ed76f259a24ecfb3c3193519be3547.HvNDltxpOeHLnywJ"
-ZAI_MODEL_PREF="glm-4.6"
+ZAI_MODEL_PREF="glm-4.7"
 ZAI_CODING_BASE_URL="https://api.z.ai/api/coding/paas/v4"
 ```
 
