@@ -1230,14 +1230,24 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         const level = headingMatch[1].length; // 1-6
         const headingText = parseInlineFormatting(headingMatch[2]);
         const headingType = level <= 3 ? `h${level}` : "h3";
-        doc.addBlock(
-          "affine:paragraph",
-          {
-            type: headingType,
-            text: new Text(headingText),
-          },
-          noteBlockId
-        );
+        
+        // Skip creating H1 blocks if this is being called from insertMarkdown with remainingContent
+        // The title should already be set as page title in insertMarkdown
+        const isFromInsertMarkdown = doc && doc._insertMarkdownMode;
+        if (level === 1 && isFromInsertMarkdown) {
+          // Skip H1 blocks in remaining content - title already handled
+          console.log("[BlockSuiteEditor] Skipping H1 block in remaining content:", headingText);
+        } else {
+          doc.addBlock(
+            "affine:paragraph",
+            {
+              type: headingType,
+              text: new Text(headingText),
+            },
+            noteBlockId
+          );
+        }
+        
         lastHeadingText = headingText;
         i++;
         continue;
@@ -1493,7 +1503,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         // Parse and insert the remaining content
         if (remainingContent.trim()) {
+          // Set flag to indicate we're in insertMarkdown mode (skip H1 blocks)
+          doc._insertMarkdownMode = true;
           parseMarkdownToBlocks(doc, noteBlock.id, remainingContent);
+          doc._insertMarkdownMode = false;
         }
 
         // Ensure snapshot persists even if slots didn't fire.
