@@ -1465,18 +1465,13 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // Extract title from first heading and remaining content
         const { title, remainingContent } = extractTitleFromMarkdown(markdown);
 
-        // If we found a title, try to set it as the page title
+        // If we found a title, set it as the page title
         if (title) {
-          try {
-            // Get the page block - it holds the document title
-            const pageBlock =
-              getBlocksByFlavourSafe(doc, "affine:page")[0] || doc.root;
-            if (pageBlock) {
-              // BlockSuite page title is stored in the page block's title property
-              // We need to update the title text
+          const pageBlock = getBlocksByFlavourSafe(doc, "affine:page")[0] || doc.root;
+          if (pageBlock) {
+            try {
               const titleProp = pageBlock.title;
               if (titleProp && typeof titleProp.insert === "function") {
-                // Clear existing title and set new one
                 titleProp.clear();
                 titleProp.insert(title, 0);
                 console.log("[BlockSuiteEditor] Set page title to:", title);
@@ -1484,43 +1479,15 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
                 typeof pageBlock.title === "object" &&
                 pageBlock.title?.yText
               ) {
-                // Alternative: try modifying yText directly
                 pageBlock.title.yText.delete(0, pageBlock.title.yText.length);
                 pageBlock.title.yText.insert(0, title);
-                console.log(
-                  "[BlockSuiteEditor] Set page title via yText:",
-                  title
-                );
+                console.log("[BlockSuiteEditor] Set page title via yText:", title);
               } else {
-                // Fallback: Add title as first H1 block
-                doc.addBlock(
-                  "affine:paragraph",
-                  {
-                    type: "h1",
-                    text: new Text(title),
-                  },
-                  noteBlock.id
-                );
-                console.log(
-                  "[BlockSuiteEditor] Added title as H1 block:",
-                  title
-                );
+                console.warn("[BlockSuiteEditor] Could not access page title property");
               }
+            } catch (titleError) {
+              console.warn("[BlockSuiteEditor] Could not set page title:", titleError);
             }
-          } catch (titleError) {
-            console.warn(
-              "[BlockSuiteEditor] Could not set page title, adding as H1:",
-              titleError
-            );
-            // Fallback: Add as H1 block
-            doc.addBlock(
-              "affine:paragraph",
-              {
-                type: "h1",
-                text: new Text(title),
-              },
-              noteBlock.id
-            );
           }
         }
 
