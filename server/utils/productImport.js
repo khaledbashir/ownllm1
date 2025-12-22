@@ -2,6 +2,7 @@ const { CollectorApi } = require("./collectorApi");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const Provider = require("./agents/aibitat/providers/ai-provider");
 const { SystemSettings } = require("../models/systemSettings");
+const { getLLMProvider } = require("./helpers");
 
 async function importProductsFromUrl(url) {
   // 1. Scrape Content
@@ -12,13 +13,10 @@ async function importProductsFromUrl(url) {
   }
 
   // 2. Prepare LLM
-  // We need to get the default system LLM configuration since we are not in a workspace chat context fully
-  // But we can fallback to defaults.
-  // Actually, we should probably prefer the system default or just generic OpenAI if configured.
-  // Let's rely on Provider default handling.
-
-  const provider = process.env.LLM_PROVIDER || "openai";
-  const model = process.env.LLM_MODEL || "gpt-3.5-turbo"; // Fallback
+  // Get the configured LLM provider from system settings
+  const settings = await SystemSettings.currentSettings();
+  const provider = settings?.LLMProvider || "openai";
+  const model = settings?.LLMModel || "gpt-3.5-turbo"; // Fallback
 
   const llm = Provider.LangChainChatModel(provider, {
     temperature: 0.7,
