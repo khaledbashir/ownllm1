@@ -39,6 +39,7 @@ const { inlineAIEndpoints } = require("./endpoints/inlineAI");
 const { templatesEndpoints } = require("./endpoints/templates");
 const { blockTemplatesEndpoints } = require("./endpoints/blockTemplates");
 const { publicProposalsEndpoints } = require("./endpoints/publicProposals");
+const { documentProcessorEndpoints } = require("./routes/documentProcessor");
 const { httpLogger } = require("./middleware/httpLogger");
 const app = express();
 const apiRouter = express.Router();
@@ -116,6 +117,7 @@ inlineAIEndpoints(apiRouter);
 templatesEndpoints(apiRouter);
 blockTemplatesEndpoints(apiRouter);
 publicProposalsEndpoints(apiRouter);
+documentProcessorEndpoints(apiRouter);
 
 // Externally facing embedder endpoints
 embeddedEndpoints(apiRouter);
