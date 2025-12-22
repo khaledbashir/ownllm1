@@ -143,7 +143,7 @@ export default function ActiveWorkspaces() {
                             </div>
                             {user?.role !== "default" && (
                               <div
-                                className={`flex items-center gap-x-[2px] transition-opacity duration-200 ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                                className={`flex items-center gap-x-[2px] transition-opacity duration-200 mr-[4px] ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                               >
                                 <button
                                   type="button"
