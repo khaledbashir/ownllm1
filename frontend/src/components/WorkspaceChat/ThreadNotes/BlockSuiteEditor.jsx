@@ -1925,6 +1925,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // ignore; continue export best-effort
       }
 
+      // Get brand color from template, fallback to default blue
+      // MUST be declared before serializeDocToHtml to avoid TDZ error
+      const brandColor = selectedTemplate?.primaryColor || "#2563eb";
+
       // 1. Serialize Doc to Standard HTML
       const bodyHtml = await serializeDocToHtml(doc, { brandColor });
       if (!bodyHtml || bodyHtml.includes("No content found")) {
@@ -2014,9 +2018,6 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       const googleFontsUrl = isGoogleFont
         ? `https://fonts.googleapis.com/css2?family=${fontUrlParam}&family=JetBrains+Mono&display=swap`
         : `https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap`;
-
-      // Get brand color from template, fallback to default blue
-      const brandColor = selectedTemplate?.primaryColor || "#2563eb";
 
       // Build Header HTML (injected directly into body for WeasyPrint compatibility)
       let activeTemplateHeader = "";
