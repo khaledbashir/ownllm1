@@ -12,6 +12,9 @@
 
 import type { Doc } from '@blocksuite/store';
 
+// Track processed blocks to avoid duplicates
+const processedBlocks = new Set<string>();
+
 /**
  * Main setup function - call this when initializing a document
  * 
@@ -29,11 +32,18 @@ export function setupDatabaseAutoMath(doc: Doc) {
       return;
     }
 
+    const blockId = databaseBlock.id;
+    
+    // Skip if already processed
+    if (processedBlocks.has(blockId)) {
+      return;
+    }
+    processedBlocks.add(blockId);
+
     const model = databaseBlock.model;
     if (!model) return;
 
     const columns = Array.isArray(model.columns) ? model.columns : [];
-    const cells = model.cells || {};
     const children = Array.isArray(databaseBlock.children) ? databaseBlock.children : [];
 
     // Find Hours, Rate, and Total columns
@@ -75,12 +85,16 @@ export function setupDatabaseAutoMath(doc: Doc) {
      */
     function recalculateAllRows() {
       try {
+        // Get fresh data from model
+        const currentCells = model.cells || {};
+        const currentChildren = databaseBlock.children || [];
+        
         let hasChanges = false;
-        const updatedCells = { ...cells };
+        const updatedCells = { ...currentCells };
 
-        children.forEach((rowBlock: any) => {
+        currentChildren.forEach((rowBlock: any) => {
           const rowId = rowBlock.id;
-          const rowCells = cells[rowId] || {};
+          const rowCells = currentCells[rowId] || {};
 
           // Get Hours and Rate values
           const hoursCell = rowCells[hoursCol.id];
@@ -122,30 +136,11 @@ export function setupDatabaseAutoMath(doc: Doc) {
       }
     }
 
-    /**
-     * Handle property updates on database model
-     */
-    const propsObserver = (event: any) => {
-      // Check if cells property was updated
-      if (event.key === 'cells' || event.keysChanged?.includes('cells')) {
-        recalculateAllRows();
-      }
-    };
-
-    // Attach observer to model's properties
-    if (model.propsUpdated && typeof model.propsUpdated.on === 'function') {
-      try {
-        model.propsUpdated.on(propsObserver);
-      } catch (e) {
-        console.warn('[AutoMath] Could not attach props observer:', e);
-      }
-    }
-
     // Initial calculation
     recalculateAllRows();
 
     return {
-      propsObserver,
+      blockId,
       recalculateAllRows,
     };
   }
@@ -166,47 +161,65 @@ export function setupDatabaseAutoMath(doc: Doc) {
     }
   }
 
+  // Store active database blocks for recalculation
+  const activeDatabaseBlocks = new Map<string, any>();
+
   /**
-   * Listen for new blocks being added (in case a database is added later)
+   * Handle block updates - this is the main event listener
    */
-  const handleBlockAdded = (event: any) => {
-    const newBlock = event.model || event.block;
-    if (newBlock?.flavour === 'affine:database') {
-      console.log('📝 New database block detected, initializing');
-      processDatabaseBlock(newBlock);
+  const handleBlockUpdated = (event: any) => {
+    try {
+      const blockId = event.id || event.model?.id;
+      if (!blockId) return;
+
+      const block = doc.getBlock(blockId);
+      if (!block) return;
+
+      // If this is a database block, recalculate it
+      if (block.flavour === 'affine:database') {
+        console.log('📝 Database block updated, recalculating:', blockId);
+        const dbInfo = processDatabaseBlock(block);
+        if (dbInfo) {
+          activeDatabaseBlocks.set(blockId, dbInfo);
+        }
+      }
+      
+      // If this is a row block, find its parent database and recalculate
+      const parent = doc.getParent(blockId);
+      if (parent?.flavour === 'affine:database') {
+        console.log('📝 Row updated, recalculating parent database:', parent.id);
+        const dbInfo = processDatabaseBlock(parent);
+        if (dbInfo) {
+          activeDatabaseBlocks.set(parent.id, dbInfo);
+        }
+      }
+    } catch (e) {
+      console.error('[AutoMath] Error handling block update:', e);
     }
   };
 
   // Initial setup for existing database blocks
   initializeAllDatabaseBlocks();
 
-  // Listen for future database additions
-  let unsubscribeBlockAdded: { dispose: () => void } | null = null;
+  // Listen to block updates
+  let unsubscribeBlockUpdated: { dispose: () => void } | null = null;
   
-  if (doc.slots) {
-    if (doc.slots.rootAdded) {
-      unsubscribeBlockAdded = doc.slots.rootAdded.on(handleBlockAdded);
-    } else if (doc.slots.blockUpdated) {
-      // Fallback: listen to block updates and check for new databases
-      doc.slots.blockUpdated.on((event: any) => {
-        if (event?.type === 'add' || event?.id) {
-          const block = doc.getBlock(event.id);
-          if (block?.flavour === 'affine:database') {
-            console.log('📝 New database block detected via blockUpdated');
-            processDatabaseBlock(block);
-          }
-        }
-      });
-    }
+  if (doc.slots?.blockUpdated) {
+    unsubscribeBlockUpdated = doc.slots.blockUpdated.on(handleBlockUpdated);
+    console.log('✅ Auto-Math Service Connected - listening to block updates');
+  } else {
+    console.warn('⚠️ Could not find blockUpdated slot, auto-math may not work');
   }
 
   /**
    * Cleanup function - call to stop listening
    */
   const unsubscribe = () => {
-    if (unsubscribeBlockAdded && unsubscribeBlockAdded.dispose) {
-      unsubscribeBlockAdded.dispose();
+    if (unsubscribeBlockUpdated && unsubscribeBlockUpdated.dispose) {
+      unsubscribeBlockUpdated.dispose();
     }
+    processedBlocks.clear();
+    activeDatabaseBlocks.clear();
     console.log('🛑 Auto-Math Service disconnected');
   };
 
@@ -227,7 +240,7 @@ function parseNumber(value: any): number {
     return Number.isFinite(value) ? value : 0;
   }
   
-  // If it's a string, extract the number
+  // If it's a string, extract number
   if (typeof value === 'string') {
     const match = value.replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
     if (match) {
