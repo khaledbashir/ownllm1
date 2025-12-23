@@ -1,73 +1,77 @@
 /**
- * DatabaseAutoMathService - Auto-calculation service for affine:database blocks
- *
+ * DatabaseAutoMath - Simple auto-calculation for affine:database blocks
+ * 
  * This service automatically calculates Total = Hours × Rate for database blocks
  * that have columns named "Hours", "Rate", and "Total".
- *
- * Architecture: BlockSuite BlockService (singleton, lifecycle-aware)
- * - Listens to doc.slots.blockUpdated for cell changes
- * - Uses CRDT-safe updates via doc.updateBlock()
- * - Prevents infinite loops with recentlyUpdated tracking
+ * 
+ * Simple approach: Direct event listener on doc.slots.blockUpdated
  */
 
-import { BlockService } from '@blocksuite/block-std';
-
-export class DatabaseAutoMathService extends BlockService {
-  constructor() {
-    super();
-    this.recentlyUpdated = new Set();
-    this.cleanupInterval = null;
+export function setupDatabaseAutoMath(doc) {
+  if (!doc) {
+    console.warn('⚠️  No doc provided to setupDatabaseAutoMath');
+    return null;
   }
 
-  mounted() {
-    console.log('🚀 DatabaseAutoMathService mounted');
-    
-    // Listen to block updates
-    this.disposable = this.std.doc.slots.blockUpdated.on((event) => {
-      this.handleBlockUpdated(event);
-    });
+  const recentlyUpdated = new Set();
+  let cleanupInterval = null;
 
-    // Calculate all databases on mount
-    this.calculateAllDatabases();
+  const handleBlockUpdated = (event) => {
+    try {
+      const blockId = event.id || event.model?.id;
+      if (!blockId) return;
 
-    // Clean up recentlyUpdated set periodically
-    this.cleanupInterval = setInterval(() => {
-      this.recentlyUpdated.clear();
-    }, 5000);
-  }
+      const block = doc.getBlock(blockId);
+      if (!block) return;
 
-  unmounted() {
-    console.log('🛑 DatabaseAutoMathService unmounted');
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
-    }
-    if (this.disposable) {
-      this.disposable.dispose();
-    }
-  }
-
-  handleBlockUpdated(event) {
-    const blockId = event.id || event.model?.id;
-    if (!blockId) return;
-
-    const doc = this.std.doc;
-    const block = doc.getBlock(blockId);
-    
-    if (!block) return;
-
-    // Check if this is a database block or a child of a database block
-    if (block.flavour === 'affine:database') {
-      this.processDatabaseBlock(block);
-    } else {
-      // Check if parent is a database block
-      const parent = doc.getParent(blockId);
-      if (parent?.flavour === 'affine:database') {
-        this.processDatabaseBlock(parent);
+      // Check if this is a database block or a child of a database block
+      if (block.flavour === 'affine:database') {
+        processDatabaseBlock(doc, block, recentlyUpdated);
+      } else {
+        // Check if parent is a database block
+        const parent = doc.getParent(blockId);
+        if (parent?.flavour === 'affine:database') {
+          processDatabaseBlock(doc, parent, recentlyUpdated);
+        }
       }
+    } catch (e) {
+      console.error('❌ Error in handleBlockUpdated:', e);
     }
-  }
+  };
 
-  processDatabaseBlock(block) {
+  // Listen to block updates
+  const disposable = doc.slots.blockUpdated.on(handleBlockUpdated);
+
+  // Calculate all databases on mount (with delay to ensure doc is loaded)
+  setTimeout(() => {
+    try {
+      calculateAllDatabases(doc, recentlyUpdated);
+    } catch (e) {
+      console.error('❌ Error in calculateAllDatabases:', e);
+    }
+  }, 500);
+
+  // Clean up recentlyUpdated set periodically
+  cleanupInterval = setInterval(() => {
+    recentlyUpdated.clear();
+  }, 5000);
+
+  // Return cleanup function
+  return () => {
+    console.log('🛑 DatabaseAutoMathService cleanup');
+    if (cleanupInterval) {
+      clearInterval(cleanupInterval);
+    }
+    if (disposable) {
+      disposable.dispose();
+    }
+  };
+}
+
+function processDatabaseBlock(doc, block, recentlyUpdated) {
+  try {
+    if (!block?.model) return;
+    
     const model = block.model;
     const columns = model.columns || [];
     const children = block.children || [];
@@ -95,34 +99,37 @@ export class DatabaseAutoMathService extends BlockService {
       total: totalCol.name
     });
 
-    this.calculateTotals(model, children, hoursCol, rateCol, totalCol);
+    calculateTotals(doc, model, children, hoursCol, rateCol, totalCol, recentlyUpdated);
+  } catch (e) {
+    console.error('❌ Error in processDatabaseBlock:', e);
   }
+}
 
-  calculateTotals(model, children, hoursCol, rateCol, totalCol) {
-    const doc = this.std.doc;
+function calculateTotals(doc, model, children, hoursCol, rateCol, totalCol, recentlyUpdated) {
+  try {
     const cells = model.cells || {};
     const updatedCells = { ...cells };
-
+    
     let hasUpdates = false;
 
     for (const child of children) {
       const rowId = child.id;
       const rowCells = cells[rowId] || {};
-
+      
       const hoursValue = rowCells[hoursCol.id]?.value;
       const rateValue = rowCells[rateCol.id]?.value;
       const currentTotal = rowCells[totalCol.id]?.value;
-
+      
       // Parse numeric values
-      const hours = this.parseNumber(hoursValue);
-      const rate = this.parseNumber(rateValue);
+      const hours = parseNumber(hoursValue);
+      const rate = parseNumber(rateValue);
       const calculatedTotal = hours * rate;
-
+      
       // Only update if values are valid and different
       if (hours !== null && rate !== null) {
         const cellKey = `${rowId}:${totalCol.id}`;
         
-        if (calculatedTotal !== currentTotal && !this.recentlyUpdated.has(cellKey)) {
+        if (calculatedTotal !== currentTotal && !recentlyUpdated.has(cellKey)) {
           updatedCells[rowId] = {
             ...rowCells,
             [totalCol.id]: {
@@ -130,7 +137,7 @@ export class DatabaseAutoMathService extends BlockService {
               value: calculatedTotal
             }
           };
-          this.recentlyUpdated.add(cellKey);
+          recentlyUpdated.add(cellKey);
           hasUpdates = true;
           
           console.log(`✏️  Updated ${rowId}: ${hours} × ${rate} = ${calculatedTotal}`);
@@ -141,29 +148,34 @@ export class DatabaseAutoMathService extends BlockService {
     if (hasUpdates) {
       doc.updateBlock(model, { cells: updatedCells });
     }
+  } catch (e) {
+    console.error('❌ Error in calculateTotals:', e);
   }
+}
 
-  parseNumber(value) {
-    if (value === null || value === undefined) return null;
-    const num = Number(value);
-    return Number.isFinite(num) ? num : null;
-  }
+function parseNumber(value) {
+  if (value === null || value === undefined) return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
 
-  calculateAllDatabases() {
-    const doc = this.std.doc;
-    const databaseBlocks = doc.getBlocksByFlavour?.('affine:database') || [];
+function calculateAllDatabases(doc, recentlyUpdated) {
+  try {
+    if (!doc) {
+      console.warn('⚠️  Doc not available for calculateAllDatabases');
+      return;
+    }
+
+    // Use getBlocks() and filter instead of getBlocksByFlavour
+    const allBlocks = doc.getBlocks?.() || [];
+    const databaseBlocks = allBlocks.filter(b => b?.flavour === 'affine:database');
     
     console.log(`🔍 Found ${databaseBlocks.length} database blocks`);
     
     for (const block of databaseBlocks) {
-      this.processDatabaseBlock(block);
+      processDatabaseBlock(doc, block, recentlyUpdated);
     }
+  } catch (e) {
+    console.error('❌ Error in calculateAllDatabases:', e);
   }
 }
-
-// Export as a BlockSpec for registration
-export const DatabaseAutoMathBlockSpec = {
-  schema: null, // No custom schema - works with existing affine:database
-  service: DatabaseAutoMathService,
-  view: null, // No custom view - works with existing database view
-};
