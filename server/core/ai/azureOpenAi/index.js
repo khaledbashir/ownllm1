@@ -125,6 +125,22 @@ class AzureOpenAiLLM {
     return content.flat();
   }
 
+  /**
+   * Parses and prepends reasoning from the response and returns the full text response.
+   * @param {Object} response
+   * @returns {string}
+   */
+  #parseReasoningFromResponse({ message }) {
+    let textResponse = message?.content;
+    if (
+      this.isOTypeModel &&
+      !!message?.reasoning_content &&
+      message.reasoning_content.trim().length > 0
+    )
+      textResponse = `<think>${message.reasoning_content}</think>${textResponse}`;
+    return textResponse;
+  }
+
   constructPrompt({
     systemPrompt = "",
     contextTexts = [],
@@ -167,7 +183,7 @@ class AzureOpenAiLLM {
       return null;
 
     return {
-      textResponse: result.output.choices[0].message.content,
+      textResponse: this.#parseReasoningFromResponse(result.output.choices[0]),
       metrics: {
         prompt_tokens: result.output.usage.prompt_tokens || 0,
         completion_tokens: result.output.usage.completion_tokens || 0,

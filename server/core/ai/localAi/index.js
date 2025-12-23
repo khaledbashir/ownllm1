@@ -87,6 +87,24 @@ class LocalAiLLM {
   }
 
   /**
+   * Parses and prepends reasoning from the response and returns the full text response.
+   * @param {Object} response
+   * @returns {string}
+   */
+  #parseReasoningFromResponse({ message }) {
+    let textResponse = message?.content;
+    // Support multiple reasoning field formats from different AI providers
+    const reasoningContent = 
+      message?.reasoning_content || // DeepSeek, GiteeAI format
+      message?.reasoning ||        // OpenRouter format  
+      message?.thinking;           // Ollama format
+    
+    if (!!reasoningContent && reasoningContent.trim().length > 0)
+      textResponse = `<think>${reasoningContent}</think>${textResponse}`;
+    return textResponse;
+  }
+
+  /**
    * Construct the user prompt for this model.
    * @param {{attachments: import("../../helpers").Attachment[]}} param0
    * @returns
@@ -138,7 +156,7 @@ class LocalAiLLM {
     );
 
     return {
-      textResponse: result.output.choices[0].message.content,
+      textResponse: this.#parseReasoningFromResponse(result.output.choices[0]),
       metrics: {
         prompt_tokens: promptTokens,
         completion_tokens: completionTokens,

@@ -76,7 +76,21 @@ function blockTemplatesEndpoints(app) {
         const { name, description, snapshot } = req.body;
         const user = req.user;
 
+        console.log("[BlockTemplates] Create request received:", {
+          slug,
+          name,
+          description: description ? "provided" : "empty",
+          snapshot: snapshot ? "provided" : "missing",
+          snapshotType: snapshot ? typeof snapshot : "undefined",
+          snapshotKeys: snapshot && typeof snapshot === 'object' ? Object.keys(snapshot) : "N/A"
+        });
+
         if (!name || !snapshot) {
+          console.error("[BlockTemplates] Validation failed:", {
+            namePresent: !!name,
+            snapshotPresent: !!snapshot,
+            snapshotType: typeof snapshot
+          });
           return res
             .status(400)
             .json({ error: "Name and snapshot are required" });
@@ -103,6 +117,7 @@ function blockTemplatesEndpoints(app) {
           },
         });
 
+        console.log("[BlockTemplates] Template created successfully:", template.id);
         res.status(201).json({ success: true, template });
       } catch (error) {
         console.error("[BlockTemplates] Create error:", error);

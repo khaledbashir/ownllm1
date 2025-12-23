@@ -98,14 +98,16 @@ export default function ThreadNotes({
   const handleSaveTemplate = useCallback(
     async (name, description) => {
       try {
+        console.log("[ThreadNotes] Starting to save template:", { name, description });
         await editorRef.current.saveAsTemplate(name, description);
+        console.log("[ThreadNotes] Template saved successfully");
         showToast("Template saved!", "success");
         // Refresh list
         const list = await BlockTemplate.list(workspace.slug);
         setBlockTemplates(list);
       } catch (e) {
-        showToast("Failed to save template", "error");
-        console.error(e);
+        console.error("[ThreadNotes] Failed to save template:", e);
+        showToast(`Failed to save template: ${e.message}`, "error");
       }
     },
     [workspace?.slug, editorRef]
