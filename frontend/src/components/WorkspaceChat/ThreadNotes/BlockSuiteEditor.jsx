@@ -13,6 +13,7 @@ import {
   PricingTableBlockSchema,
   PricingTableBlockSpec,
 } from "@/components/BlockSuite/pricing-table-block.jsx";
+import { setupDatabaseAutoMath } from "@/utils/blocksuite/databaseAutoMath";
 import "@blocksuite/presets/themes/affine.css";
 // Deep import for HtmlAdapter as it is not exposed in main entry
 import { HtmlAdapter } from "@blocksuite/blocks/dist/_common/adapters/html.js";
@@ -676,8 +677,14 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // Important: doc must be loaded or editor may appear "frozen"
         await ensureDocLoaded(doc);
 
-        // Auto-Math is now handled by DatabaseAutoMathService (registered in pageSpecs)
-        console.log("✅ Auto-Math Service will be registered via BlockSpec");
+        // Setup Auto-Math Service for database blocks
+        let unsubscribeAutoMath = null;
+        try {
+          unsubscribeAutoMath = setupDatabaseAutoMath(doc);
+          console.log("✅ Auto-Math Service initialized");
+        } catch (e) {
+          console.warn("[BlockSuiteEditor] Failed to initialize Auto-Math Service:", e);
+        }
 
         if (
           typeof window !== "undefined" &&
@@ -726,8 +733,6 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         if (editorContext?.registerEditor) {
           editorContext.registerEditor(editor);
         }
-
-        // Auto-Math service temporarily disabled
 
         // Custom Image Upload Handler
         const handleImageUpload = async (file) => {
@@ -875,7 +880,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       if (editorContext?.unregisterEditor) {
         editorContext.unregisterEditor();
       }
-      // Auto-Math service temporarily disabled
+      // Cleanup Auto-Math Service
+      if (typeof unsubscribeAutoMath === 'function') {
+        unsubscribeAutoMath();
+      }
       if (containerRef.current) {
         containerRef.current.innerHTML = "";
       }

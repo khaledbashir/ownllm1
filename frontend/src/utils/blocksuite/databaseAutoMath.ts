@@ -1,9 +1,9 @@
 /**
  * Auto-Math Logic for native BlockSuite affine:database blocks
- * 
+ *
  * Automatically calculates totals (Hours × Rate = Total) for database blocks.
  * Listens to cell updates and triggers calculations without infinite loops.
- * 
+ *
  * Usage:
  *   const unsubscribe = setupDatabaseAutoMath(doc);
  *   // Later:
@@ -11,9 +11,6 @@
  */
 
 import type { Doc } from '@blocksuite/store';
-
-// Track processed blocks to avoid duplicates
-const processedBlocks = new Set<string>();
 
 /**
  * Main setup function - call this when initializing a document
@@ -24,24 +21,29 @@ const processedBlocks = new Set<string>();
 export function setupDatabaseAutoMath(doc: Doc) {
   console.log("🚀 Initializing Auto-Math Service for Database Blocks");
 
+  // Instance-level state to avoid cross-document contamination
+  const processedBlocks = new Set<string>();
+  const isUpdating = new Set<string>(); // Track blocks being updated to prevent loops
+  const activeDatabaseBlocks = new Map<string, any>();
+
   /**
    * Process a database block and set up auto-calculation
    */
   function processDatabaseBlock(databaseBlock: any) {
     if (!databaseBlock || databaseBlock.flavour !== 'affine:database') {
-      return;
+      return null;
     }
 
     const blockId = databaseBlock.id;
     
     // Skip if already processed
     if (processedBlocks.has(blockId)) {
-      return;
+      return null;
     }
     processedBlocks.add(blockId);
 
     const model = databaseBlock.model;
-    if (!model) return;
+    if (!model) return null;
 
     const columns = Array.isArray(model.columns) ? model.columns : [];
     const children = Array.isArray(databaseBlock.children) ? databaseBlock.children : [];
@@ -69,7 +71,7 @@ export function setupDatabaseAutoMath(doc: Doc) {
         columns: columns.map((c: any) => c.name),
         hasColumns: columns.length > 0
       });
-      return;
+      return null;
     }
 
     console.log('✅ Auto-Math enabled for database block', {
@@ -84,7 +86,15 @@ export function setupDatabaseAutoMath(doc: Doc) {
      * Recalculate totals for all rows in this database
      */
     function recalculateAllRows() {
+      // Guard against infinite loops
+      if (isUpdating.has(blockId)) {
+        console.log('[AutoMath] Skipping recalculation - already updating:', blockId);
+        return;
+      }
+
       try {
+        isUpdating.add(blockId);
+        
         // Get fresh data from model
         const currentCells = model.cells || {};
         const currentChildren = databaseBlock.children || [];
@@ -133,6 +143,8 @@ export function setupDatabaseAutoMath(doc: Doc) {
         }
       } catch (e) {
         console.error('[AutoMath] Failed to recalculate database:', e);
+      } finally {
+        isUpdating.delete(blockId);
       }
     }
 
@@ -154,15 +166,15 @@ export function setupDatabaseAutoMath(doc: Doc) {
       console.log(`🔍 Found ${databaseBlocks.length} database blocks`);
       
       databaseBlocks.forEach((block) => {
-        processDatabaseBlock(block);
+        const dbInfo = processDatabaseBlock(block);
+        if (dbInfo) {
+          activeDatabaseBlocks.set(dbInfo.blockId, dbInfo);
+        }
       });
     } catch (e) {
       console.warn('[AutoMath] Error initializing database blocks:', e);
     }
   }
-
-  // Store active database blocks for recalculation
-  const activeDatabaseBlocks = new Map<string, any>();
 
   /**
    * Handle block updates - this is the main event listener
@@ -178,9 +190,9 @@ export function setupDatabaseAutoMath(doc: Doc) {
       // If this is a database block, recalculate it
       if (block.flavour === 'affine:database') {
         console.log('📝 Database block updated, recalculating:', blockId);
-        const dbInfo = processDatabaseBlock(block);
+        const dbInfo = activeDatabaseBlocks.get(blockId);
         if (dbInfo) {
-          activeDatabaseBlocks.set(blockId, dbInfo);
+          dbInfo.recalculateAllRows();
         }
       }
       
@@ -188,9 +200,9 @@ export function setupDatabaseAutoMath(doc: Doc) {
       const parent = doc.getParent(blockId);
       if (parent?.flavour === 'affine:database') {
         console.log('📝 Row updated, recalculating parent database:', parent.id);
-        const dbInfo = processDatabaseBlock(parent);
+        const dbInfo = activeDatabaseBlocks.get(parent.id);
         if (dbInfo) {
-          activeDatabaseBlocks.set(parent.id, dbInfo);
+          dbInfo.recalculateAllRows();
         }
       }
     } catch (e) {
@@ -220,11 +232,9 @@ export function setupDatabaseAutoMath(doc: Doc) {
     }
     processedBlocks.clear();
     activeDatabaseBlocks.clear();
+    isUpdating.clear();
     console.log('🛑 Auto-Math Service disconnected');
   };
-
-  // Legacy export for backwards compatibility
-  (window as any).recalculateDatabaseRow = recalculateDatabaseRow;
 
   return unsubscribe;
 }
@@ -260,34 +270,41 @@ function parseNumber(value: any): number {
 
 /**
  * Manually trigger a recalculation for a specific database block
+ * This is a standalone function that can be called externally
  */
-export function recalculateDatabaseRow(databaseBlock: any, rowId: string) {
+export function recalculateDatabaseRow(databaseBlock: any, rowId?: string) {
   if (!databaseBlock || databaseBlock.flavour !== 'affine:database') {
+    console.warn('[AutoMath] Invalid database block provided');
     return;
   }
 
   const model = databaseBlock.model;
+  if (!model) {
+    console.warn('[AutoMath] Database block has no model');
+    return;
+  }
+
   const columns = model.columns || [];
   const cells = model.cells || {};
 
   // Find Hours, Rate, and Total columns
-  const hoursCol = columns.find((c: any) => 
-    c.name?.toLowerCase().includes('hour') || 
+  const hoursCol = columns.find((c: any) =>
+    c.name?.toLowerCase().includes('hour') ||
     c.name?.toLowerCase().includes('qty') ||
     c.name?.toLowerCase().includes('quantity')
   );
-  const rateCol = columns.find((c: any) => 
-    c.name?.toLowerCase().includes('rate') || 
+  const rateCol = columns.find((c: any) =>
+    c.name?.toLowerCase().includes('rate') ||
     c.name?.toLowerCase().includes('price') ||
     c.name?.toLowerCase().includes('cost')
   );
-  const totalCol = columns.find((c: any) => 
-    c.name?.toLowerCase().includes('total') || 
+  const totalCol = columns.find((c: any) =>
+    c.name?.toLowerCase().includes('total') ||
     c.name?.toLowerCase().includes('amount')
   );
 
   if (!hoursCol || !rateCol || !totalCol) {
-    console.warn('[AutoMath] Database missing required columns');
+    console.warn('[AutoMath] Database missing required columns (Hours, Rate, Total)');
     return;
   }
 
@@ -350,4 +367,9 @@ export function recalculateDatabaseRow(databaseBlock: any, rowId: string) {
       }
     }
   }
+}
+
+// Export to window for backwards compatibility (after function definition)
+if (typeof window !== 'undefined') {
+  (window as any).recalculateDatabaseRow = recalculateDatabaseRow;
 }
