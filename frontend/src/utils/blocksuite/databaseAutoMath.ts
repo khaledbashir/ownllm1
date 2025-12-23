@@ -32,23 +32,23 @@ export function setupDatabaseAutoMath(doc: Doc) {
     const model = databaseBlock.model;
     if (!model) return;
 
-    const columns = model.columns || [];
+    const columns = Array.isArray(model.columns) ? model.columns : [];
     const cells = model.cells || {};
-    const children = databaseBlock.children || [];
+    const children = Array.isArray(databaseBlock.children) ? databaseBlock.children : [];
 
     // Find Hours, Rate, and Total columns
-    const hoursCol = columns.find((c: any) => 
-      c.name?.toLowerCase().includes('hour') || 
+    const hoursCol = columns.find((c: any) =>
+      c.name?.toLowerCase().includes('hour') ||
       c.name?.toLowerCase().includes('qty') ||
       c.name?.toLowerCase().includes('quantity')
     );
-    const rateCol = columns.find((c: any) => 
-      c.name?.toLowerCase().includes('rate') || 
+    const rateCol = columns.find((c: any) =>
+      c.name?.toLowerCase().includes('rate') ||
       c.name?.toLowerCase().includes('price') ||
       c.name?.toLowerCase().includes('cost')
     );
-    const totalCol = columns.find((c: any) => 
-      c.name?.toLowerCase().includes('total') || 
+    const totalCol = columns.find((c: any) =>
+      c.name?.toLowerCase().includes('total') ||
       c.name?.toLowerCase().includes('amount')
     );
 
@@ -56,7 +56,8 @@ export function setupDatabaseAutoMath(doc: Doc) {
     if (!hoursCol || !rateCol || !totalCol) {
       console.log('⚠️ Database block missing required columns (Hours, Rate, Total)', {
         blockId: databaseBlock.id,
-        columns: columns.map((c: any) => c.name)
+        columns: columns.map((c: any) => c.name),
+        hasColumns: columns.length > 0
       });
       return;
     }
