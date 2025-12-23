@@ -1,8 +1,8 @@
 /**
- * Auto-Math Logic for affine:embed-pricing-table blocks
+ * Auto-Math Logic for native BlockSuite affine:database blocks
  * 
- * Automatically calculates line totals (Hours × Rate = Total) for pricing table blocks.
- * Listens to row updates and triggers calculations without infinite loops.
+ * Automatically calculates totals (Hours × Rate = Total) for database blocks.
+ * Listens to cell updates and triggers calculations without infinite loops.
  * 
  * Usage:
  *   const unsubscribe = setupDatabaseAutoMath(doc);
@@ -19,83 +19,119 @@ import type { Doc } from '@blocksuite/store';
  * @returns Unsubscribe function to stop listening
  */
 export function setupDatabaseAutoMath(doc: Doc) {
-  console.log("🚀 Initializing Auto-Math Service for Pricing Tables");
+  console.log("🚀 Initializing Auto-Math Service for Database Blocks");
 
   /**
-   * Process a pricing table block and set up auto-calculation
+   * Process a database block and set up auto-calculation
    */
-  function processPricingTable(pricingTableBlock: any) {
-    if (!pricingTableBlock || pricingTableBlock.flavour !== 'affine:embed-pricing-table') {
+  function processDatabaseBlock(databaseBlock: any) {
+    if (!databaseBlock || databaseBlock.flavour !== 'affine:database') {
       return;
     }
 
-    const model = pricingTableBlock.model;
+    const model = databaseBlock.model;
     if (!model) return;
 
-    // For pricing table blocks, we work with the rows array directly
-    const rows = model.rows || [];
-    if (rows.length === 0) {
+    const columns = model.columns || [];
+    const cells = model.cells || {};
+    const children = databaseBlock.children || [];
+
+    // Find Hours, Rate, and Total columns
+    const hoursCol = columns.find((c: any) => 
+      c.name?.toLowerCase().includes('hour') || 
+      c.name?.toLowerCase().includes('qty') ||
+      c.name?.toLowerCase().includes('quantity')
+    );
+    const rateCol = columns.find((c: any) => 
+      c.name?.toLowerCase().includes('rate') || 
+      c.name?.toLowerCase().includes('price') ||
+      c.name?.toLowerCase().includes('cost')
+    );
+    const totalCol = columns.find((c: any) => 
+      c.name?.toLowerCase().includes('total') || 
+      c.name?.toLowerCase().includes('amount')
+    );
+
+    // Only proceed if we have all required columns
+    if (!hoursCol || !rateCol || !totalCol) {
+      console.log('⚠️ Database block missing required columns (Hours, Rate, Total)', {
+        blockId: databaseBlock.id,
+        columns: columns.map((c: any) => c.name)
+      });
       return;
     }
 
-    console.log('✅ Auto-Math enabled for pricing table block', {
-      blockId: pricingTableBlock.id,
-      rowCount: rows.length,
+    console.log('✅ Auto-Math enabled for database block', {
+      blockId: databaseBlock.id,
+      hoursCol: hoursCol.name,
+      rateCol: rateCol.name,
+      totalCol: totalCol.name,
+      rowCount: children.length
     });
 
     /**
-     * Recalculate line totals for all rows in this pricing table
+     * Recalculate totals for all rows in this database
      */
     function recalculateAllRows() {
       try {
-        const updatedRows = rows.map((row: any) => {
-          if (row.isHeader) return row; // Skip header rows
+        let hasChanges = false;
+        const updatedCells = { ...cells };
 
-          const hours = Number(row.hours) || 0;
-          const rate = Number(row.baseRate) || 0;
+        children.forEach((rowBlock: any) => {
+          const rowId = rowBlock.id;
+          const rowCells = cells[rowId] || {};
+
+          // Get Hours and Rate values
+          const hoursCell = rowCells[hoursCol.id];
+          const rateCell = rowCells[rateCol.id];
+          const totalCell = rowCells[totalCol.id];
+
+          const hours = parseNumber(hoursCell?.value);
+          const rate = parseNumber(rateCell?.value);
+          const currentTotal = parseNumber(totalCell?.value);
           const calculatedTotal = Math.round(hours * rate);
 
-          // Only update if the calculated total differs from existing total
-          const existingTotal = Math.round(Number(row.lineTotal) || 0);
-          if (calculatedTotal !== existingTotal) {
-            return {
-              ...row,
-              lineTotal: calculatedTotal
-            };
-          }
-          return row;
-        });
+          // Only update if calculated total differs from existing total
+          if (calculatedTotal !== currentTotal) {
+            console.log('🔄 Updating row total:', {
+              rowId,
+              hours,
+              rate,
+              oldTotal: currentTotal,
+              newTotal: calculatedTotal
+            });
 
-        // Only update if something changed
-        const hasChanges = updatedRows.some((newRow: any, index: number) => {
-          const oldRow = rows[index];
-          return newRow.lineTotal !== oldRow.lineTotal;
+            updatedCells[rowId] = {
+              ...rowCells,
+              [totalCol.id]: {
+                columnId: totalCol.id,
+                value: calculatedTotal
+              }
+            };
+            hasChanges = true;
+          }
         });
 
         if (hasChanges) {
-          console.log('🔄 Recalculating pricing table totals:', {
-            blockId: pricingTableBlock.id,
-            changedRows: updatedRows.filter((r: any, i: number) => r.lineTotal !== rows[i].lineTotal).length
-          });
-          
-          doc.updateBlock(model, { rows: updatedRows });
+          console.log('💾 Updating database block with new totals:', databaseBlock.id);
+          doc.updateBlock(model, { cells: updatedCells });
         }
       } catch (e) {
-        console.error('[AutoMath] Failed to recalculate pricing table:', e);
+        console.error('[AutoMath] Failed to recalculate database:', e);
       }
     }
 
     /**
-     * Handle property updates on the pricing table model
+     * Handle property updates on database model
      */
     const propsObserver = (event: any) => {
-      // Check if rows property was updated
-      if (event.key === 'rows' || event.keysChanged?.includes('rows')) {
+      // Check if cells property was updated
+      if (event.key === 'cells' || event.keysChanged?.includes('cells')) {
         recalculateAllRows();
       }
     };
 
-    // Attach observer to the model's properties
+    // Attach observer to model's properties
     if (model.propsUpdated && typeof model.propsUpdated.on === 'function') {
       try {
         model.propsUpdated.on(propsObserver);
@@ -114,49 +150,49 @@ export function setupDatabaseAutoMath(doc: Doc) {
   }
 
   /**
-   * Find and process all pricing table blocks in the doc
+   * Find and process all database blocks in doc
    */
-  function initializeAllPricingTables() {
+  function initializeAllDatabaseBlocks() {
     try {
-      const pricingTableBlocks = doc.getBlocksByFlavour?.('affine:embed-pricing-table') || [];
-      console.log(`🔍 Found ${pricingTableBlocks.length} pricing table blocks`);
+      const databaseBlocks = doc.getBlocksByFlavour?.('affine:database') || [];
+      console.log(`🔍 Found ${databaseBlocks.length} database blocks`);
       
-      pricingTableBlocks.forEach((block) => {
-        processPricingTable(block);
+      databaseBlocks.forEach((block) => {
+        processDatabaseBlock(block);
       });
     } catch (e) {
-      console.warn('[AutoMath] Error initializing pricing tables:', e);
+      console.warn('[AutoMath] Error initializing database blocks:', e);
     }
   }
 
   /**
-   * Listen for new blocks being added (in case a pricing table is added later)
+   * Listen for new blocks being added (in case a database is added later)
    */
   const handleBlockAdded = (event: any) => {
     const newBlock = event.model || event.block;
-    if (newBlock?.flavour === 'affine:embed-pricing-table') {
-      console.log('📝 New pricing table block detected, initializing');
-      processPricingTable(newBlock);
+    if (newBlock?.flavour === 'affine:database') {
+      console.log('📝 New database block detected, initializing');
+      processDatabaseBlock(newBlock);
     }
   };
 
-  // Initial setup for existing pricing tables
-  initializeAllPricingTables();
+  // Initial setup for existing database blocks
+  initializeAllDatabaseBlocks();
 
-  // Listen for future pricing table additions
+  // Listen for future database additions
   let unsubscribeBlockAdded: { dispose: () => void } | null = null;
   
   if (doc.slots) {
     if (doc.slots.rootAdded) {
       unsubscribeBlockAdded = doc.slots.rootAdded.on(handleBlockAdded);
     } else if (doc.slots.blockUpdated) {
-      // Fallback: listen to block updates and check for new pricing tables
+      // Fallback: listen to block updates and check for new databases
       doc.slots.blockUpdated.on((event: any) => {
         if (event?.type === 'add' || event?.id) {
           const block = doc.getBlock(event.id);
-          if (block?.flavour === 'affine:embed-pricing-table') {
-            console.log('📝 New pricing table block detected via blockUpdated');
-            processPricingTable(block);
+          if (block?.flavour === 'affine:database') {
+            console.log('📝 New database block detected via blockUpdated');
+            processDatabaseBlock(block);
           }
         }
       });
@@ -174,47 +210,130 @@ export function setupDatabaseAutoMath(doc: Doc) {
   };
 
   // Legacy export for backwards compatibility
-  (window as any).recalculateDatabaseRow = recalculatePricingTable;
+  (window as any).recalculateDatabaseRow = recalculateDatabaseRow;
 
   return unsubscribe;
 }
 
 /**
- * Manually trigger a recalculation for a specific pricing table block
+ * Helper function to parse number from various cell value formats
  */
-export function recalculatePricingTable(pricingTableBlock: any) {
-  // Legacy alias for backwards compatibility with tests
-  return recalculateDatabaseRow(pricingTableBlock, '');
+function parseNumber(value: any): number {
+  if (value === null || value === undefined) return 0;
+  
+  // If it's already a number
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+  
+  // If it's a string, extract the number
+  if (typeof value === 'string') {
+    const match = value.replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
+    if (match) {
+      const n = Number(match[0]);
+      return Number.isFinite(n) ? n : 0;
+    }
+  }
+  
+  // If it's an object with value property
+  if (value && typeof value === 'object') {
+    if (value.value !== undefined) return parseNumber(value.value);
+    if (typeof value.toString === 'function') return parseNumber(value.toString());
+  }
+  
+  return 0;
 }
 
 /**
- * Legacy function for backwards compatibility
+ * Manually trigger a recalculation for a specific database block
  */
-export function recalculateDatabaseRow(pricingTableBlock: any, rowId: string) {
-  if (!pricingTableBlock || pricingTableBlock.flavour !== 'affine:embed-pricing-table') {
+export function recalculateDatabaseRow(databaseBlock: any, rowId: string) {
+  if (!databaseBlock || databaseBlock.flavour !== 'affine:database') {
     return;
   }
 
-  const model = pricingTableBlock.model;
-  const rows = model.rows || [];
+  const model = databaseBlock.model;
+  const columns = model.columns || [];
+  const cells = model.cells || {};
 
-  const updatedRows = rows.map((row: any) => {
-    if (row.isHeader) return row;
+  // Find Hours, Rate, and Total columns
+  const hoursCol = columns.find((c: any) => 
+    c.name?.toLowerCase().includes('hour') || 
+    c.name?.toLowerCase().includes('qty') ||
+    c.name?.toLowerCase().includes('quantity')
+  );
+  const rateCol = columns.find((c: any) => 
+    c.name?.toLowerCase().includes('rate') || 
+    c.name?.toLowerCase().includes('price') ||
+    c.name?.toLowerCase().includes('cost')
+  );
+  const totalCol = columns.find((c: any) => 
+    c.name?.toLowerCase().includes('total') || 
+    c.name?.toLowerCase().includes('amount')
+  );
 
-    const hours = Number(row.hours) || 0;
-    const rate = Number(row.baseRate) || 0;
+  if (!hoursCol || !rateCol || !totalCol) {
+    console.warn('[AutoMath] Database missing required columns');
+    return;
+  }
+
+  // If rowId is provided, only recalculate that row
+  if (rowId) {
+    const rowCells = cells[rowId] || {};
+    const hours = parseNumber(rowCells[hoursCol.id]?.value);
+    const rate = parseNumber(rowCells[rateCol.id]?.value);
     const calculatedTotal = Math.round(hours * rate);
 
-    return {
-      ...row,
-      lineTotal: calculatedTotal
+    const updatedCells = {
+      ...cells,
+      [rowId]: {
+        ...rowCells,
+        [totalCol.id]: {
+          columnId: totalCol.id,
+          value: calculatedTotal
+        }
+      }
     };
-  });
 
-  try {
-    pricingTableBlock.doc.updateBlock(model, { rows: updatedRows });
-    console.log('🔄 Manually recalculated pricing table:', pricingTableBlock.id);
-  } catch (e) {
-    console.error('[AutoMath] Failed to manually recalculate pricing table:', e);
+    try {
+      databaseBlock.doc.updateBlock(model, { cells: updatedCells });
+      console.log('🔄 Manually recalculated row:', rowId);
+    } catch (e) {
+      console.error('[AutoMath] Failed to manually recalculate row:', e);
+    }
+  } else {
+    // Recalculate all rows
+    const updatedCells = { ...cells };
+    let hasChanges = false;
+
+    databaseBlock.children?.forEach((rowBlock: any) => {
+      const rId = rowBlock.id;
+      const rowCells = cells[rId] || {};
+
+      const hours = parseNumber(rowCells[hoursCol.id]?.value);
+      const rate = parseNumber(rowCells[rateCol.id]?.value);
+      const currentTotal = parseNumber(rowCells[totalCol.id]?.value);
+      const calculatedTotal = Math.round(hours * rate);
+
+      if (calculatedTotal !== currentTotal) {
+        updatedCells[rId] = {
+          ...rowCells,
+          [totalCol.id]: {
+            columnId: totalCol.id,
+            value: calculatedTotal
+          }
+        };
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      try {
+        databaseBlock.doc.updateBlock(model, { cells: updatedCells });
+        console.log('🔄 Manually recalculated database:', databaseBlock.id);
+      } catch (e) {
+        console.error('[AutoMath] Failed to manually recalculate database:', e);
+      }
+    }
   }
 }
