@@ -13,7 +13,6 @@ import {
   PricingTableBlockSchema,
   PricingTableBlockSpec,
 } from "@/components/BlockSuite/pricing-table-block.jsx";
-import { setupDatabaseAutoMath } from "@/components/BlockSuite/DatabaseAutoMathService.js";
 import "@blocksuite/presets/themes/affine.css";
 // Deep import for HtmlAdapter as it is not exposed in main entry
 import { HtmlAdapter } from "@blocksuite/blocks/dist/_common/adapters/html.js";
@@ -728,19 +727,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           editorContext.registerEditor(editor);
         }
 
-        // Initialize Auto-Math Service (delayed to ensure doc is fully loaded)
-        setTimeout(() => {
-          try {
-            const cleanup = setupDatabaseAutoMath(doc);
-            if (cleanup) {
-              // Store cleanup function for later
-              editorRef.current._autoMathCleanup = cleanup;
-            }
-            console.log("✅ Auto-Math Service initialized");
-          } catch (e) {
-            console.error("❌ Failed to initialize Auto-Math Service:", e);
-          }
-        }, 1000); // Wait 1 second for doc to be fully loaded
+        // Auto-Math service temporarily disabled
 
         // Custom Image Upload Handler
         const handleImageUpload = async (file) => {
@@ -888,10 +875,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       if (editorContext?.unregisterEditor) {
         editorContext.unregisterEditor();
       }
-      // Cleanup auto-math service
-      if (editorRef.current?._autoMathCleanup) {
-        editorRef.current._autoMathCleanup();
-      }
+      // Auto-Math service temporarily disabled
       if (containerRef.current) {
         containerRef.current.innerHTML = "";
       }
