@@ -13,7 +13,7 @@ import {
   PricingTableBlockSchema,
   PricingTableBlockSpec,
 } from "@/components/BlockSuite/pricing-table-block.jsx";
-import { DatabaseAutoMathBlockSpec } from "@/components/BlockSuite/DatabaseAutoMathService.js";
+import { DatabaseAutoMathService } from "@/components/BlockSuite/DatabaseAutoMathService.js";
 import "@blocksuite/presets/themes/affine.css";
 // Deep import for HtmlAdapter as it is not exposed in main entry
 import { HtmlAdapter } from "@blocksuite/blocks/dist/_common/adapters/html.js";
@@ -711,7 +711,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         // Create editor and attach document
         const editor = new AffineEditorContainer();
-        editor.pageSpecs = [...PageEditorBlockSpecs, PricingTableBlockSpec, DatabaseAutoMathBlockSpec];
+        editor.pageSpecs = [...PageEditorBlockSpecs, PricingTableBlockSpec];
         editor.doc = doc;
 
         // Clear container and append editor
@@ -726,6 +726,16 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // Register with context for global access
         if (editorContext?.registerEditor) {
           editorContext.registerEditor(editor);
+        }
+
+        // Initialize Auto-Math Service manually
+        try {
+          const autoMathService = new DatabaseAutoMathService();
+          autoMathService.std = editor.std;
+          autoMathService.mounted();
+          console.log("✅ Auto-Math Service initialized");
+        } catch (e) {
+          console.error("❌ Failed to initialize Auto-Math Service:", e);
         }
 
         // Custom Image Upload Handler

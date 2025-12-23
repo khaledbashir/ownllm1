@@ -1,9 +1,9 @@
 /**
  * DatabaseAutoMathService - Auto-calculation service for affine:database blocks
- * 
+ *
  * This service automatically calculates Total = Hours × Rate for database blocks
  * that have columns named "Hours", "Rate", and "Total".
- * 
+ *
  * Architecture: BlockSuite BlockService (singleton, lifecycle-aware)
  * - Listens to doc.slots.blockUpdated for cell changes
  * - Uses CRDT-safe updates via doc.updateBlock()
@@ -40,6 +40,9 @@ export class DatabaseAutoMathService extends BlockService {
     console.log('🛑 DatabaseAutoMathService unmounted');
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
+    }
+    if (this.disposable) {
+      this.disposable.dispose();
     }
   }
 
