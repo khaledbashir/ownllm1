@@ -13,6 +13,7 @@ import {
   PricingTableBlockSchema,
   PricingTableBlockSpec,
 } from "@/components/BlockSuite/pricing-table-block.jsx";
+import { DatabaseAutoMathBlockSpec } from "@/components/BlockSuite/DatabaseAutoMathService.js";
 import "@blocksuite/presets/themes/affine.css";
 // Deep import for HtmlAdapter as it is not exposed in main entry
 import { HtmlAdapter } from "@blocksuite/blocks/dist/_common/adapters/html.js";
@@ -40,7 +41,6 @@ import InlineAI from "@/models/inlineAI";
 import DOMPurify from "@/utils/chat/purify";
 import renderMarkdown from "@/utils/chat/markdown";
 import BlockTemplate from "@/models/blockTemplate";
-import { setupDatabaseAutoMath } from "@/utils/blocksuite/databaseAutoMath";
 import "./editor.css";
 
 // Pre-made document templates
@@ -677,13 +677,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // Important: doc must be loaded or editor may appear "frozen"
         await ensureDocLoaded(doc);
 
-        // Initialize Auto-Math Logic
-        try {
-          setupDatabaseAutoMath(doc);
-          console.log("✅ Auto-Math Service Connected");
-        } catch (e) {
-          console.error("❌ Failed to connect Auto-Math:", e);
-        }
+        // Auto-Math is now handled by DatabaseAutoMathService (registered in pageSpecs)
+        console.log("✅ Auto-Math Service will be registered via BlockSpec");
 
         if (
           typeof window !== "undefined" &&
@@ -716,7 +711,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         // Create editor and attach document
         const editor = new AffineEditorContainer();
-        editor.pageSpecs = [...PageEditorBlockSpecs, PricingTableBlockSpec];
+        editor.pageSpecs = [...PageEditorBlockSpecs, PricingTableBlockSpec, DatabaseAutoMathBlockSpec];
         editor.doc = doc;
 
         // Clear container and append editor
