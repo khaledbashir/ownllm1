@@ -40,6 +40,7 @@ import InlineAI from "@/models/inlineAI";
 import DOMPurify from "@/utils/chat/purify";
 import renderMarkdown from "@/utils/chat/markdown";
 import BlockTemplate from "@/models/blockTemplate";
+import { setupDatabaseAutoMath } from "@/utils/blocksuite/databaseAutoMath";
 import "./editor.css";
 
 // Pre-made document templates
@@ -675,6 +676,14 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         // Important: doc must be loaded or editor may appear "frozen"
         await ensureDocLoaded(doc);
+
+        // Initialize Auto-Math Logic
+        try {
+          setupDatabaseAutoMath(doc);
+          console.log("✅ Auto-Math Service Connected");
+        } catch (e) {
+          console.error("❌ Failed to connect Auto-Math:", e);
+        }
 
         if (
           typeof window !== "undefined" &&
@@ -1794,15 +1803,45 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     getEditor: () => editorRef.current,
 
     saveAsTemplate: async (name, description) => {
-      if (!editorRef.current || !editorRef.current.doc)
+      if (!editorRef.current || !editorRef.current.doc) {
         throw new Error("Editor not ready");
-      const job = new Job({ collection: collectionRef.current });
-      const snapshot = await job.docToSnapshot(editorRef.current.doc);
-      return await BlockTemplate.create(workspaceSlug, {
-        name,
-        description,
-        snapshot,
-      });
+      }
+
+      const doc = editorRef.current.doc;
+      const collection = collectionRef.current;
+
+      if (!collection) {
+        throw new Error("Document collection not available");
+      }
+
+      try {
+        // Ensure the document is loaded before creating snapshot
+        if (doc.load) {
+          const loadResult = doc.load();
+          if (loadResult && typeof loadResult.then === 'function') {
+            await loadResult;
+          }
+        }
+
+        console.log("[BlockSuiteEditor] Creating snapshot for template save...");
+        const job = new Job({ collection });
+        const snapshot = await job.docToSnapshot(doc);
+
+        if (!snapshot) {
+          throw new Error("Failed to generate document snapshot");
+        }
+
+        console.log("[BlockSuiteEditor] Snapshot created successfully, length:", JSON.stringify(snapshot).length);
+
+        return await BlockTemplate.create(workspaceSlug, {
+          name,
+          description,
+          snapshot,
+        });
+      } catch (error) {
+        console.error("[BlockSuiteEditor] Failed to save template:", error);
+        throw new Error(`Failed to save template: ${error.message}`);
+      }
     },
 
     loadBlockTemplate: async (templateId) => {
@@ -3404,8 +3443,7 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
 
         const cells = model.cells || {};
 
-        // IMPORTANT: BlockSuite can store children as IDs or block objects depending on API.
-        // Normalize children to block objects.
+        // CRITICAL: Iterate block.children to get the rows (as required)
         const rowBlocks = children
           .map((child) =>
             typeof child === "string" ? doc.getBlock(child) : child
@@ -3441,6 +3479,41 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
 
         tableHtml += "</tbody></table></div>";
         html = tableHtml;
+        break;
+      }
+
+      case "affine:total-summary": {
+        // Total Summary Footer Block
+        // Look at previous sibling - if it's a database, sum the "Total" column
+        const previousBlock = doc.getBlock(block.id)?.previousSibling;
+        if (!previousBlock || previousBlock.flavour !== 'affine:database') {
+          html = `<div style="width:100%; background:#000; color:#fff; padding:10px; text-align:right; font-weight:bold;">TOTAL INVESTMENT: No database found</div>`;
+          break;
+        }
+
+        let grandTotal = 0;
+        const totalCol = previousBlock.model.columns?.find(c => c.name?.toLowerCase().includes('total'));
+        if (!totalCol) {
+          html = `<div style="width:100%; background:#000; color:#fff; padding:10px; text-align:right; font-weight:bold;">TOTAL INVESTMENT: No total column found</div>`;
+          break;
+        }
+
+        // Iterate rows from block.children (as required)
+        const children = previousBlock.children || [];
+        const cells = previousBlock.model.cells || {};
+
+        children.forEach(row => {
+          const rowCells = cells[row.id] || {};
+          const cell = rowCells[totalCol.id];
+          if (cell && cell.value) {
+            const val = parseFloat(String(cell.value).replace(/[^0-9.]/g, ''));
+            if (!isNaN(val)) grandTotal += val;
+          }
+        });
+
+        // Format as Currency
+        const formatter = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
+        html = `<div style="width:100%; background:#000; color:#fff; padding:10px; text-align:right; font-weight:bold;">TOTAL INVESTMENT: ${formatter.format(grandTotal)}</div>`;
         break;
       }
 
