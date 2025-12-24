@@ -2,6 +2,7 @@ const { SystemSettings } = require("../../models/systemSettings");
 const { User } = require("../../models/user");
 const { EncryptionManager } = require("../EncryptionManager");
 const { decodeJWT } = require("../http");
+const { tenantIsolationMiddleware } = require("./tenantIsolation");
 const EncryptionMgr = new EncryptionManager();
 
 async function validatedRequest(request, response, next) {
@@ -103,6 +104,10 @@ async function validateMultiUserRequest(request, response, next) {
   }
 
   response.locals.user = user;
+  
+  // Attach organization context for tenant isolation
+  await tenantIsolationMiddleware(request, response);
+  
   next();
 }
 

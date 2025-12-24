@@ -27,6 +27,7 @@ const { communityHubEndpoints } = require("./endpoints/communityHub");
 const { agentFlowEndpoints } = require("./endpoints/agentFlows");
 
 const { crmEndpoints } = require("./endpoints/crm");
+const { organizationEndpoints } = require("./endpoints/organization");
 const { mcpServersEndpoints } = require("./endpoints/mcpServers");
 const { artifactsEndpoints } = require("./endpoints/artifacts");
 
@@ -94,6 +95,7 @@ workspaceEndpoints(apiRouter);
 workspaceThreadEndpoints(apiRouter);
 chatEndpoints(apiRouter);
 adminEndpoints(apiRouter);
+organizationEndpoints(apiRouter);
 inviteEndpoints(apiRouter);
 embedManagementEndpoints(apiRouter);
 utilEndpoints(apiRouter);

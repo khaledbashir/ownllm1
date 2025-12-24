@@ -23,6 +23,7 @@ const User = {
     "suspended",
     "dailyMessageLimit",
     "bio",
+    "organizationId",
   ],
   validations: {
     username: (newValue = "") => {
@@ -61,6 +62,16 @@ const User = {
         throw new Error("Bio cannot be longer than 1,000 characters");
       return String(bio);
     },
+    organizationId: (organizationId = null) => {
+      if (organizationId === null) return null;
+      const id = Number(organizationId);
+      if (isNaN(id) || id < 1) {
+        throw new Error(
+          "Organization ID must be null or a positive number"
+        );
+      }
+      return id;
+    },
   },
   // validations for the above writable fields.
   castColumnValue: function (key, value) {
@@ -68,6 +79,8 @@ const User = {
       case "suspended":
         return Number(Boolean(value));
       case "dailyMessageLimit":
+        return value === null ? null : Number(value);
+      case "organizationId":
         return value === null ? null : Number(value);
       default:
         return String(value);
@@ -85,6 +98,7 @@ const User = {
     role = "default",
     dailyMessageLimit = null,
     bio = "",
+    organizationId = null,
   }) {
     const passwordCheck = this.checkPasswordComplexity(password);
     if (!passwordCheck.checkedOK) {
@@ -108,6 +122,7 @@ const User = {
           bio: this.validations.bio(bio),
           dailyMessageLimit:
             this.validations.dailyMessageLimit(dailyMessageLimit),
+          organizationId: this.validations.organizationId(organizationId),
         },
       });
       return { user: this.filterFields(user), error: null };

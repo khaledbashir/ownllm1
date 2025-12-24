@@ -28,6 +28,18 @@ function makeJWT(info = {}, expiry = "30d") {
   return JWT.sign(info, process.env.JWT_SECRET, { expiresIn: expiry });
 }
 
+/**
+ * Creates a JWT with organization context
+ * @param {object} info - The info to include in JWT (including organizationId)
+ * @param {string} expiry - The expiry time for JWT (default: 30 days)
+ * @returns {string} The JWT
+ */
+function makeJWTWithOrg(info = {}, expiry = "30d") {
+  if (!process.env.JWT_SECRET)
+    throw new Error("Cannot create JWT as JWT_SECRET is unset.");
+  return JWT.sign(info, process.env.JWT_SECRET, { expiresIn: expiry });
+}
+
 // Note: Only valid for finding users in multi-user mode
 // as single-user mode with password is not a "user"
 async function userFromSession(request, response = null) {
@@ -109,6 +121,7 @@ module.exports = {
   multiUserMode,
   queryParams,
   makeJWT,
+  makeJWTWithOrg,
   decodeJWT,
   userFromSession,
   parseAuthHeader,

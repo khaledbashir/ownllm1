@@ -60,6 +60,7 @@ const Workspace = {
     "enableProposalMode",
     "inlineAiSystemPrompt",
     "inlineAiActions",
+    "organizationId",
   ],
 
   validations: {
@@ -159,6 +160,16 @@ const Workspace = {
       }
       return null;
     },
+    organizationId: (value) => {
+      if (value === null || value === undefined) return null;
+      const id = Number(value);
+      if (isNaN(id) || id < 1) {
+        throw new Error(
+          "Organization ID must be null or a positive number"
+        );
+      }
+      return id;
+    },
   },
 
   /**
@@ -191,6 +202,15 @@ const Workspace = {
    * @param {Object} updates - The updates to validate - should be writable fields
    * @returns {Object} The validated updates. Only valid fields are returned.
    */
+  castColumnValue: function (key, value) {
+    switch (key) {
+      case "organizationId":
+        return value === null ? null : Number(value);
+      default:
+        return value;
+    }
+  },
+
   validateFields: function (updates = {}) {
     const validatedFields = {};
     for (const [key, value] of Object.entries(updates)) {
@@ -212,7 +232,7 @@ const Workspace = {
    * @param {Object} additionalFields - Additional fields to apply to the workspace - will be validated.
    * @returns {Promise<{workspace: Object | null, message: string | null}>} A promise that resolves to an object containing the created workspace and an error message if applicable.
    */
-  new: async function (name = null, creatorId = null, additionalFields = {}) {
+  new: async function (name = null, creatorId = null, additionalFields = {}, organizationId = null) {
     if (!name) return { workspace: null, message: "name cannot be null" };
     var slug = this.slugify(name, { lower: true });
     slug = slug || uuidv4();
@@ -237,6 +257,7 @@ const Workspace = {
           name: this.validations.name(name),
           ...this.validateFields(additionalFields),
           slug,
+          organizationId: this.validations.organizationId(organizationId),
         },
       });
 

@@ -1,5 +1,6 @@
 const { SystemSettings } = require("../../models/systemSettings");
 const { userFromSession } = require("../http");
+const tenantIsolation = require("./tenantIsolation");
 const ROLES = {
   all: "<all>",
   admin: "admin",
