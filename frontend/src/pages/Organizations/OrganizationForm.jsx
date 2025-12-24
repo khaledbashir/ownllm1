@@ -163,6 +163,5 @@ export default function OrganizationForm({ closeModal, onSubmit, initialData = n
           </div>
         </form>
       </div>
-    </div>
   );
 }
