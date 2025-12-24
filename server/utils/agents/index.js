@@ -411,8 +411,16 @@ class AgentHandler {
           filterString: null, // Agents don't support filters yet
         });
 
-        vectorSearchResults.forEach((result) => {
-          contextTexts.push(result);
+        // vectorSearchResults is an object with contextTexts and sources properties
+        const sources = vectorSearchResults.sources || [];
+        sources.forEach((source) => {
+          const { metadata = {} } = source;
+          if (Object.keys(metadata).length > 0) {
+            contextTexts.push({
+              text: source.text || metadata.text || "",
+              ...metadata,
+            });
+          }
         });
       }
 
