@@ -24,6 +24,8 @@ const User = {
     "dailyMessageLimit",
     "bio",
     "organizationId",
+    "email",
+    "emailVerified",
   ],
   validations: {
     username: (newValue = "") => {
@@ -72,6 +74,16 @@ const User = {
       }
       return id;
     },
+    email: (email = null) => {
+      if (!email || email === null) return null;
+      if (typeof email !== "string") throw new Error("Email must be a string");
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) throw new Error("Invalid email format");
+      return String(email).toLowerCase().trim();
+    },
+    emailVerified: (emailVerified = false) => {
+      return Boolean(emailVerified);
+    },
   },
   // validations for the above writable fields.
   castColumnValue: function (key, value) {
@@ -99,6 +111,8 @@ const User = {
     dailyMessageLimit = null,
     bio = "",
     organizationId = null,
+    email = null,
+    emailVerified = false,
   }) {
     const passwordCheck = this.checkPasswordComplexity(password);
     if (!passwordCheck.checkedOK) {
@@ -123,6 +137,8 @@ const User = {
           dailyMessageLimit:
             this.validations.dailyMessageLimit(dailyMessageLimit),
           organizationId: this.validations.organizationId(organizationId),
+          email: this.validations.email(email),
+          emailVerified: this.validations.emailVerified(emailVerified),
         },
       });
       return { user: this.filterFields(user), error: null };

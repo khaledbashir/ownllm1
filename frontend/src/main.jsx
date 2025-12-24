@@ -90,6 +90,20 @@ const router = createBrowserRouter([
         element: <Login />,
       },
       {
+        path: "register",
+        lazy: async () => {
+          const { default: Register } = await import("@/pages/Register");
+          return { element: <Register /> };
+        },
+      },
+      {
+        path: "verify-email",
+        lazy: async () => {
+          const { default: VerifyEmail } = await import("@/pages/VerifyEmail");
+          return { element: <VerifyEmail /> };
+        },
+      },
+      {
         path: "sso/simple",
         element: <SimpleSSOPassthrough />,
       },
@@ -380,6 +394,14 @@ const router = createBrowserRouter([
           const { default: Organizations } =
             await import("@/pages/Organizations");
           return { element: <AdminRoute Component={Organizations} /> };
+        },
+      },
+      {
+        path: "/settings/super-admin",
+        lazy: async () => {
+          const { default: SuperAdmin } =
+            await import("@/pages/SuperAdmin");
+          return { element: <AdminRoute Component={SuperAdmin} /> };
         },
       },
       // Onboarding Flow

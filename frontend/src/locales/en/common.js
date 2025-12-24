@@ -124,6 +124,7 @@ const TRANSLATIONS = {
     "community-account": "Your Account",
     "community-import": "Import Item",
     "default-system-prompt": "Default System Prompt",
+    "super-admin": "Super Admin",
   },
 
   // Page Definitions

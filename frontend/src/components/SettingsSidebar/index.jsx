@@ -11,6 +11,7 @@ import {
   PencilSimpleLine,
   Nut,
   Toolbox,
+  Shield,
 } from "@phosphor-icons/react";
 import useUser from "@/hooks/useUser";
 import { isMobile } from "react-device-detect";

@@ -1,10 +1,12 @@
 const { EventLogs } = require("../models/eventLogs");
 const { Invite } = require("../models/invite");
 const { User } = require("../models/user");
+const { Organization } = require("../models/organization");
 const { reqBody } = require("../utils/http");
 const {
   simpleSSOLoginDisabledMiddleware,
 } = require("../utils/middleware/simpleSSOEnabled");
+const { checkSeatLimit } = require("../services/billing");
 
 function inviteEndpoints(app) {
   if (!app) return;
@@ -48,7 +50,21 @@ function inviteEndpoints(app) {
             .json({ success: false, error: "Invite not found or is invalid." });
           return;
         }
-
+  
+        // Check seat limit if invite has organization
+        if (invite.organizationId) {
+          const seatLimitCheck = await checkSeatLimit(invite.organizationId);
+          if (seatLimitCheck.exceeded) {
+            response
+              .status(200)
+              .json({
+                success: false,
+                error: `Organization has reached its seat limit (${seatLimitCheck.limit}). Please upgrade your plan to add more users.`
+              });
+            return;
+          }
+        }
+  
         const { user, error } = await User.create({
           username,
           password,

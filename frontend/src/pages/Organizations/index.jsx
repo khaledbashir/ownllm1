@@ -7,14 +7,16 @@ import { Buildings } from "@phosphor-icons/react";
 import Organization from "@/models/organization";
 import OrganizationForm from "./OrganizationForm";
 import OrganizationDetails from "./OrganizationDetails";
+import OrganizationSettings from "./OrganizationSettings";
 import { useModal } from "@/hooks/useModal";
 import ModalWrapper from "@/components/ModalWrapper";
 import CTAButton from "@/components/lib/CTAButton";
-import { Trash, PencilSimple } from "@phosphor-icons/react";
+import { Trash, PencilSimple, Gear } from "@phosphor-icons/react";
 
 export default function Organizations() {
   const { isOpen: isFormOpen, openModal: openFormModal, closeModal: closeFormModal } = useModal();
   const { isOpen: isDetailsOpen, openModal: openDetailsModal, closeModal: closeDetailsModal } = useModal();
+  const { isOpen: isSettingsOpen, openModal: openSettingsModal, closeModal: closeSettingsModal } = useModal();
 
   const [loading, setLoading] = useState(true);
   const [organizations, setOrganizations] = useState([]);
@@ -47,6 +49,21 @@ export default function Organizations() {
   const handleViewDetails = (org) => {
     setSelectedOrg(org);
     openDetailsModal();
+  };
+
+  const handleSettings = (org) => {
+    setSelectedOrg(org);
+    openSettingsModal();
+  };
+
+  const handleSettingsClose = () => {
+    closeSettingsModal();
+    setSelectedOrg(null);
+  };
+
+  const handleSettingsUpdate = async () => {
+    const _organizations = await Organization.getAll();
+    setOrganizations(_organizations?.organizations || []);
   };
 
   const handleDelete = async (org) => {
@@ -209,6 +226,13 @@ export default function Organizations() {
                             <PencilSimple className="h-4 w-4" />
                           </button>
                           <button
+                            onClick={() => handleSettings(org)}
+                            className="text-theme-text-secondary hover:text-theme-text-primary"
+                            title="Settings"
+                          >
+                            <Gear className="h-4 w-4" />
+                          </button>
+                          <button
                             onClick={() => handleDelete(org)}
                             className="text-red-400 hover:text-red-300"
                             title="Delete organization"
@@ -239,6 +263,14 @@ export default function Organizations() {
             organization={selectedOrg}
             closeModal={closeDetailsModal}
             onEdit={handleEdit}
+          />
+        </ModalWrapper>
+
+        <ModalWrapper isOpen={isSettingsOpen}>
+          <OrganizationSettings
+            organization={selectedOrg}
+            closeModal={handleSettingsClose}
+            onUpdate={handleSettingsUpdate}
           />
         </ModalWrapper>
       </div>

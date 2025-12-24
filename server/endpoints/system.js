@@ -1,6 +1,7 @@
 process.env.NODE_ENV === "development"
   ? require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` })
   : require("dotenv").config();
+const prisma = require("../utils/prisma");
 const { viewLocalFiles, normalizePath, isWithin } = require("../utils/files");
 const { purgeDocument, purgeFolder } = require("../utils/files/purgeDocument");
 const { getVectorDbClass } = require("../utils/helpers");
@@ -19,7 +20,11 @@ const {
 const { v4 } = require("uuid");
 const { SystemSettings } = require("../models/systemSettings");
 const { User } = require("../models/user");
+const { Organization } = require("../models/organization");
+const { EmailVerificationTokens } = require("../models/emailVerificationTokens");
+const { EmailService } = require("../utils/emailService");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
+const { checkSeatLimit } = require("../services/billing");
 const fs = require("fs").promises;
 const path = require("path");
 const {
@@ -219,6 +224,27 @@ function systemEndpoints(app) {
           });
           return;
         }
+ 
+        // Check if user's email is verified (if email exists)
+        if (existingUser.email && !existingUser.emailVerified) {
+          await EventLogs.logEvent(
+            "failed_login_email_not_verified",
+            {
+              ip: request.ip || "Unknown IP",
+              username: existingUser.username || "Unknown user",
+            },
+            existingUser?.id
+          );
+          response.status(200).json({
+            user: null,
+            valid: false,
+            requiresEmailVerification: true,
+            email: existingUser.email,
+            token: null,
+            message: "[005] Please verify your email address before logging in.",
+          });
+          return;
+        }
 
         await Telemetry.sendTelemetry(
           "login_event",
@@ -387,6 +413,284 @@ function systemEndpoints(app) {
         }
       } catch (error) {
         console.error("Error resetting password:", error);
+        response.status(500).json({ success: false, message: error.message });
+      }
+    }
+  );
+
+  app.post(
+    "/api/register-with-organization",
+    [isMultiUserSetup],
+    async (request, response) => {
+      try {
+        const { username, password, email, organizationId } = reqBody(request);
+        const bcrypt = require("bcrypt");
+
+        // Verify multi-user mode is enabled
+        if (!(await SystemSettings.isMultiUserMode())) {
+          response.status(403).json({
+            success: false,
+            message: "Multi-user mode is not enabled.",
+          });
+          return;
+        }
+
+        // Validate organization exists
+        const organization = await Organization.get({ id: organizationId });
+        if (!organization) {
+          response.status(400).json({
+            success: false,
+            message: "Organization not found.",
+          });
+          return;
+        }
+
+        // Check if username already exists
+        const existingUser = await User._get({ username: String(username) });
+        if (existingUser) {
+          await EventLogs.logEvent(
+            "registration_failed_username_exists",
+            {
+              ip: request.ip || "Unknown IP",
+              username: username || "Unknown user",
+            },
+            existingUser?.id
+          );
+          response.status(400).json({
+            success: false,
+            message: "Username already exists.",
+          });
+          return;
+        }
+
+        // Check seat limit for organization
+        const seatLimitCheck = await checkSeatLimit(organizationId);
+        if (seatLimitCheck.exceeded) {
+          response.status(400).json({
+            success: false,
+            message: `Organization has reached its seat limit (${seatLimitCheck.limit}). Please upgrade your plan to add more users.`,
+          });
+          return;
+        }
+
+        // Create user with organization role as admin
+        const { user, error } = await User.create({
+          username,
+          password,
+          email,
+          role: "admin",
+          organizationId,
+        });
+
+        if (error) {
+          response.status(400).json({ success: false, message: error });
+          return;
+        }
+
+        // Log registration event
+        await EventLogs.logEvent(
+          "registration_event",
+          {
+            ip: request.ip || "Unknown IP",
+            username: username || "Unknown user",
+            organizationId: organizationId || "Unknown organization",
+          },
+          user.id
+        );
+
+        // Send telemetry
+        await Telemetry.sendTelemetry(
+          "registration_event",
+          { multiUserMode: true },
+          user.id
+        );
+
+        // Create email verification token
+        const { token: verifyToken, error: tokenError } = await EmailVerificationTokens.create(user.id);
+        
+        if (tokenError || !verifyToken) {
+          console.error("Failed to create verification token:", tokenError);
+        }
+
+        // Send verification email
+        if (verifyToken && user.email) {
+          const appUrl = process.env.APP_URL || `http://${request.get("host")}`;
+          const emailResult = await EmailService.sendVerificationEmail({
+            to: user.email,
+            token: verifyToken,
+            username: user.username,
+            appUrl,
+          });
+          
+          if (emailResult.error) {
+            console.error("Failed to send verification email:", emailResult.error);
+          }
+        }
+
+        // Don't generate JWT until email is verified
+        response.status(200).json({
+          success: true,
+          user: User.filterFields(user),
+          token: null, // Token will be issued after email verification
+          requiresEmailVerification: true,
+          message: "Registration successful. Please check your email to verify your account.",
+        });
+      } catch (error) {
+        console.error("Error registering user:", error);
+        response.status(500).json({ success: false, message: error.message });
+      }
+    }
+  );
+
+  // Verify email with token
+  app.get("/api/verify-email", async (request, response) => {
+    try {
+      const { token } = queryParams(request);
+      
+      if (!token) {
+        response.status(400).json({ success: false, message: "Token is required" });
+        return;
+      }
+
+      const { success, error } = await EmailVerificationTokens.verify(token);
+      
+      if (success) {
+        response.status(200).json({
+          success: true,
+          message: "Email verified successfully. You can now log in."
+        });
+      } else {
+        response.status(400).json({ success: false, message: error });
+      }
+    } catch (error) {
+      console.error("Error verifying email:", error);
+      response.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Resend verification email
+  app.post(
+    "/api/resend-verification-email",
+    [isMultiUserSetup],
+    async (request, response) => {
+      try {
+        const { email } = reqBody(request);
+
+        if (!email) {
+          response.status(400).json({ success: false, message: "Email is required" });
+          return;
+        }
+
+        // Find user by email
+        const user = await prisma.users.findUnique({
+          where: { email: String(email).toLowerCase() },
+        });
+
+        if (!user) {
+          response.status(404).json({
+            success: false,
+            message: "No account found with this email address"
+          });
+          return;
+        }
+
+        if (user.emailVerified) {
+          response.status(400).json({
+            success: false,
+            message: "Email is already verified"
+          });
+          return;
+        }
+
+        // Create verification token
+        const { token, error: tokenError } = await EmailVerificationTokens.create(user.id);
+        
+        if (tokenError || !token) {
+          response.status(500).json({
+            success: false,
+            message: "Failed to create verification token"
+          });
+          return;
+        }
+
+        // Send verification email
+        const appUrl = process.env.APP_URL || request.get("host");
+        const { success, error: emailError } = await EmailService.sendVerificationEmail({
+          to: user.email,
+          token,
+          username: user.username,
+          appUrl,
+        });
+
+        if (success) {
+          response.status(200).json({
+            success: true,
+            message: "Verification email sent successfully",
+            sent: true,
+          });
+        } else {
+          response.status(500).json({
+            success: false,
+            message: emailError || "Failed to send verification email"
+          });
+        }
+      } catch (error) {
+        console.error("Error resending verification email:", error);
+        response.status(500).json({ success: false, message: error.message });
+      }
+    }
+  );
+
+  // Send welcome email after registration
+  app.post(
+    "/api/send-welcome-email",
+    [isMultiUserSetup, validatedRequest],
+    async (request, response) => {
+      try {
+        const user = await userFromSession(request, response);
+        if (!user) {
+          response.sendStatus(403).end();
+          return;
+        }
+
+        if (!user.email) {
+          response.status(400).json({
+            success: false,
+            message: "User email is not set"
+          });
+          return;
+        }
+
+        // Get organization name if available
+        let organizationName = "AnythingLLM";
+        if (user.organizationId) {
+          const org = await Organization.get({ id: user.organizationId });
+          if (org) {
+            organizationName = org.name;
+          }
+        }
+
+        const appUrl = process.env.APP_URL || request.get("host");
+        const { success, error } = await EmailService.sendWelcomeEmail({
+          to: user.email,
+          username: user.username,
+          organizationName,
+          appUrl,
+        });
+
+        if (success) {
+          response.status(200).json({
+            success: true,
+            message: "Welcome email sent successfully"
+          });
+        } else {
+          response.status(500).json({
+            success: false,
+            message: error || "Failed to send welcome email"
+          });
+        }
+      } catch (error) {
+        console.error("Error sending welcome email:", error);
         response.status(500).json({ success: false, message: error.message });
       }
     }
