@@ -72,6 +72,13 @@ export default defineConfig({
           if (assetInfo.name === 'index.css') return 'index.css';
           return 'assets/[name]-[hash][extname]';
         },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        manualChunks(id) {
+          // Bundle System with index to avoid chunk dependency issues
+          if (id.includes('/src/models/system.js')) {
+            return 'index';
+          }
+        },
       },
       external: [
         // Reduces transformation time by 50% and we don't even use this variant, so we can ignore.
