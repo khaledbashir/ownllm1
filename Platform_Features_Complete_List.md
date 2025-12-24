@@ -5,7 +5,7 @@
 
 ## 📋 TABLE OF CONTENTS
 
-1. [Original AnythingLLM Features](#1-original-anythingllm-features)
+1. [Original AnythingLLM Featuress](#1-original-anythingllm-features)
 2. [Custom Additions & Enhancements](#2-custom-additions--enhancements)
 
 ---

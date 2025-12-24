@@ -1,4 +1,4 @@
-import System from "./system";
+import { fetchNew } from "./system";
 
 const Organization = {
   /**
@@ -6,7 +6,7 @@ const Organization = {
    * @returns {Promise<Object>} Response with organizations array
    */
   getAll: async () => {
-    return await System.fetchNew(`/organizations`, {
+    return await fetchNew(`/organizations`, {
       method: "GET",
     });
   },
@@ -17,7 +17,7 @@ const Organization = {
    * @returns {Promise<Object>} Response with organization object
    */
   get: async (id) => {
-    return await System.fetchNew(`/organizations/${id}`, {
+    return await fetchNew(`/organizations/${id}`, {
       method: "GET",
     });
   },
@@ -28,7 +28,7 @@ const Organization = {
    * @returns {Promise<Object>} Response with organization statistics
    */
   getStats: async (id) => {
-    return await System.fetchNew(`/organizations/${id}/stats`, {
+    return await fetchNew(`/organizations/${id}/stats`, {
       method: "GET",
     });
   },
@@ -39,7 +39,7 @@ const Organization = {
    * @returns {Promise<Object>} Response with users array
    */
   getUsers: async (id) => {
-    return await System.fetchNew(`/organizations/${id}/users`, {
+    return await fetchNew(`/organizations/${id}/users`, {
       method: "GET",
     });
   },
@@ -50,7 +50,7 @@ const Organization = {
    * @returns {Promise<Object>} Response with workspaces array
    */
   getWorkspaces: async (id) => {
-    return await System.fetchNew(`/organizations/${id}/workspaces`, {
+    return await fetchNew(`/organizations/${id}/workspaces`, {
       method: "GET",
     });
   },
@@ -61,7 +61,7 @@ const Organization = {
    * @returns {Promise<Object>} Response with remaining seats count
    */
   getRemainingSeats: async (id) => {
-    return await System.fetchNew(`/organizations/${id}/remaining-seats`, {
+    return await fetchNew(`/organizations/${id}/remaining-seats`, {
       method: "GET",
     });
   },
@@ -76,7 +76,7 @@ const Organization = {
    * @returns {Promise<Object>} Response with created organization
    */
   create: async (data) => {
-    return await System.fetchNew(`/organizations/new`, {
+    return await fetchNew(`/organizations/new`, {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -89,7 +89,7 @@ const Organization = {
    * @returns {Promise<Object>} Response with success status
    */
   update: async (id, updates) => {
-    return await System.fetchNew(`/organizations/${id}`, {
+    return await fetchNew(`/organizations/${id}`, {
       method: "POST",
       body: JSON.stringify(updates),
     });
@@ -101,7 +101,7 @@ const Organization = {
    * @returns {Promise<Object>} Response with success status
    */
   delete: async (id) => {
-    return await System.fetchNew(`/organizations/${id}`, {
+    return await fetchNew(`/organizations/${id}`, {
       method: "DELETE",
     });
   },

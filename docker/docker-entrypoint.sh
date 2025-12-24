@@ -34,6 +34,12 @@ fi
     npx prisma migrate deploy --schema=./prisma/schema.prisma >/dev/null &&
     node /app/server/index.js
 } &
-{ node /app/collector/index.js; } &
+{
+  # Set DATABASE_URL for collector to satisfy @langchain/community Prisma vector store validation
+  # The collector doesn't use a database directly, but @langchain/community includes
+  # a Prisma vector store that validates a schema requiring this variable.
+  export DATABASE_URL="file:/app/server/storage/anythingllm.db"
+  node /app/collector/index.js
+} &
 wait -n
 exit $?

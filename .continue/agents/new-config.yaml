@@ -1,0 +1,41 @@
+name: Z.ai Coding Plan
+version: 1.0.15
+schema: v1
+
+models:
+  - name: "GLM 4.6"
+    provider: ZAI_API_KEY
+    model: "GLM-4.6"
+    apiBase: https://api.z.ai/api/coding/paas/v4
+    apiKey: ${{ secrets.ZAI_API_KEY }}
+    roles:
+      - chat
+      - edit
+      - apply
+      - autocomplete
+    capabilities:
+      - tool_use
+    defaultCompletionOptions:
+      contextLength: 200000
+      reasoning: true
+      stream: true
+
+mcpServers:
+  - name: filesystem
+    command: npx
+    args:
+      - -y
+      - "@modelcontextprotocol/server-filesystem"
+      - /root
+
+  - name: memory
+    command: npx
+    args:
+      - -y
+      - "@modelcontextprotocol/server-memory"
+
+  - name: shell
+    command: npx
+    args:
+      - -y
+      - "@modelcontextprotocol/server-shell"

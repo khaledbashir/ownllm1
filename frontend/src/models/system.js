@@ -833,7 +833,7 @@ const System = {
       });
   },
 
-  fetchNew: async function (endpoint, options = {}) {
+  const fetchNew = async function (endpoint, options = {}) {
     const url = `${fullApiUrl()}${endpoint}`;
     return await fetch(url, {
       ...options,
@@ -862,4 +862,5 @@ const System = {
   promptVariables: SystemPromptVariable,
 };
 
+export { fetchNew };
 export default System;
