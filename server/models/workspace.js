@@ -639,6 +639,75 @@ const Workspace = {
       return false;
     }
   },
+
+  /**
+   * Replicate a workspace with all its settings.
+   * Creates a new workspace with the same configuration as the source workspace.
+   * @param {number} workspaceId - The ID of the workspace to replicate.
+   * @param {number} creatorId - The ID of the user creating the replicated workspace.
+   * @param {string} newName - Optional custom name for the replicated workspace.
+   * @returns {Promise<{workspace: Object | null, message: string | null}>} A promise that resolves to an object containing the replicated workspace and an error message if applicable.
+   */
+  replicate: async function (workspaceId, creatorId = null, newName = null) {
+    try {
+      // Get the source workspace
+      const sourceWorkspace = await prisma.workspaces.findUnique({
+        where: { id: workspaceId },
+      });
+
+      if (!sourceWorkspace) {
+        return { workspace: null, message: "Source workspace not found" };
+      }
+
+      // Generate a unique name for the replicated workspace
+      const baseName = newName || `${sourceWorkspace.name} (Copy)`;
+      let slug = this.slugify(baseName, { lower: true });
+      slug = slug || uuidv4();
+
+      // Check if slug exists and generate a unique one if needed
+      const existingBySlug = await this.get({ slug });
+      if (existingBySlug !== null) {
+        const slugSeed = Math.floor(10000000 + Math.random() * 90000000);
+        slug = this.slugify(`${baseName}-${slugSeed}`, { lower: true });
+      }
+
+      // Prepare the workspace data to copy (excluding id, slug, createdAt, lastUpdatedAt)
+      const workspaceData = {
+        name: baseName,
+        slug,
+        openAiTemp: sourceWorkspace.openAiTemp,
+        openAiHistory: sourceWorkspace.openAiHistory,
+        openAiPrompt: sourceWorkspace.openAiPrompt,
+        similarityThreshold: sourceWorkspace.similarityThreshold,
+        chatProvider: sourceWorkspace.chatProvider,
+        chatModel: sourceWorkspace.chatModel,
+        topN: sourceWorkspace.topN,
+        chatMode: sourceWorkspace.chatMode,
+        agentProvider: sourceWorkspace.agentProvider,
+        agentModel: sourceWorkspace.agentModel,
+        queryRefusalResponse: sourceWorkspace.queryRefusalResponse,
+        vectorSearchMode: sourceWorkspace.vectorSearchMode,
+        products: sourceWorkspace.products,
+        rateCard: sourceWorkspace.rateCard,
+        enableProposalMode: sourceWorkspace.enableProposalMode,
+        inlineAiSystemPrompt: sourceWorkspace.inlineAiSystemPrompt,
+        inlineAiActions: sourceWorkspace.inlineAiActions,
+      };
+
+      // Create the new workspace
+      const newWorkspace = await prisma.workspaces.create({
+        data: workspaceData,
+      });
+
+      // If created with a user then we need to create the relationship as well
+      if (!!creatorId) await WorkspaceUser.create(creatorId, newWorkspace.id);
+
+      return { workspace: newWorkspace, message: null };
+    } catch (error) {
+      console.error("Error replicating workspace:", error.message);
+      return { workspace: null, message: error.message };
+    }
+  },
 };
 
 module.exports = { Workspace };

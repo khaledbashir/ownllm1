@@ -7,7 +7,7 @@ import ManageWorkspace, {
 } from "../../Modals/ManageWorkspace";
 import paths from "@/utils/paths";
 import { useParams, useNavigate } from "react-router-dom";
-import { GearSix, UploadSimple, DotsSixVertical } from "@phosphor-icons/react";
+import { GearSix, UploadSimple, DotsSixVertical, Copy } from "@phosphor-icons/react";
 import useUser from "@/hooks/useUser";
 import ThreadContainer from "./ThreadContainer";
 import { useMatch } from "react-router-dom";
@@ -156,6 +156,27 @@ export default function ActiveWorkspaces() {
                                   aria-label="Data connectors"
                                 >
                                   <UploadSimple className="h-[20px] w-[20px]" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const { workspace: newWorkspace, message } = await Workspace.replicate(workspace.slug);
+                                    if (newWorkspace) {
+                                      showToast("Workspace replicated successfully!", "success", { clear: true });
+                                      // Refresh workspaces list
+                                      const workspaces = await Workspace.all();
+                                      setWorkspaces(Workspace.orderWorkspaces(workspaces));
+                                    } else {
+                                      showToast(`Failed to replicate workspace: ${message}`, "error", { clear: true });
+                                    }
+                                  }}
+                                  className="border-none rounded-md flex items-center justify-center p-[2px] hover:bg-[#646768] text-[#A7A8A9] hover:text-white"
+                                  aria-label="Replicate workspace"
+                                  title="Replicate workspace"
+                                >
+                                  <Copy className="h-[20px] w-[20px]" />
                                 </button>
                                 <button
                                   onClick={(e) => {

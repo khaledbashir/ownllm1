@@ -115,6 +115,51 @@ function workspaceEndpoints(app) {
   );
 
   app.post(
+    "/workspace/:slug/replicate",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const user = await userFromSession(request, response);
+        const { slug = null } = request.params;
+        const { name = null } = reqBody(request);
+        const currWorkspace = multiUserMode(response)
+          ? await Workspace.getWithUser(user, { slug })
+          : await Workspace.get({ slug });
+
+        if (!currWorkspace) {
+          response.sendStatus(400).end();
+          return;
+        }
+
+        const { workspace, message } = await Workspace.replicate(
+          currWorkspace.id,
+          user?.id,
+          name
+        );
+
+        if (!workspace) {
+          response.status(500).json({ workspace: null, message });
+          return;
+        }
+
+        await EventLogs.logEvent(
+          "workspace_replicated",
+          {
+            workspaceName: workspace?.name || "Unknown Workspace",
+            sourceWorkspaceName: currWorkspace?.name || "Unknown Workspace",
+          },
+          user?.id
+        );
+
+        response.status(200).json({ workspace, message });
+      } catch (e) {
+        console.error(e.message, e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
+
+  app.post(
     "/workspace/:slug/update",
     [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
     async (request, response) => {
