@@ -7,6 +7,7 @@ const {
 } = require("../utils/middleware/multiUserProtected");
 const { validWorkspaceSlug } = require("../utils/middleware/validWorkspace");
 const { reqBody } = require("../utils/http");
+const { createCardFromSignedProposal } = require("../utils/crm/proposalIntegration");
 
 function publicProposalsEndpoints(app) {
   if (!app) return;
@@ -106,6 +107,15 @@ function publicProposalsEndpoints(app) {
         return response
           .status(500)
           .json({ success: false, error: result.message });
+      }
+
+      // Automatically create CRM card for signed proposal
+      try {
+        const crmCard = await createCardFromSignedProposal(proposal, signatureData);
+        console.log(`[Proposal Integration] Created CRM card ${crmCard.id} for proposal ${id}`);
+      } catch (crmError) {
+        // Log error but don't fail the signing process
+        console.error("[Proposal Integration] Failed to create CRM card:", crmError);
       }
 
       return response.status(200).json({ success: true });

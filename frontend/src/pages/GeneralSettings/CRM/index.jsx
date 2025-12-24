@@ -12,6 +12,7 @@ import {
   Clock,
   DollarSign,
   Edit3,
+  ExternalLink,
   Filter,
   Mail,
   MessageSquare,
@@ -29,6 +30,7 @@ import {
 } from "lucide-react";
 import CRM from "@/models/crm";
 import showToast from "@/utils/toast";
+import { API_BASE } from "@/utils/constants";
 
 // Enhanced stage colors with gradients and better contrast
 const STAGE_COLORS = {
@@ -205,6 +207,19 @@ function KanbanCard({ card, onEdit, onDelete, onDragStart, isDragging }) {
             <MessageSquare size={10} />
             <span>From embed chat</span>
           </div>
+        )}
+
+        {/* Proposal Link */}
+        {card.proposalId && (
+          <a
+            href={`${API_BASE}/p/${card.proposalId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-xs text-purple-400 bg-purple-500/10 px-2.5 py-1.5 rounded-lg border border-purple-500/20 hover:bg-purple-500/20 transition-colors cursor-pointer"
+          >
+            <ExternalLink size={10} />
+            <span>View proposal</span>
+          </a>
         )}
 
         {/* Last Activity */}

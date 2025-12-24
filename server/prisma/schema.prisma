@@ -158,6 +158,9 @@ model workspaces {
   // Inline AI (Doc Editor) settings
   inlineAiSystemPrompt         String?                        // Custom system prompt for doc AI (falls back to openAiPrompt)
   inlineAiActions              String?                        // JSON array of custom actions [{name, prompt, icon}]
+  // Proposal CRM Integration settings
+  defaultProposalPipelineId    Int?                           // Default pipeline for signed proposals
+  enableProposalCrmIntegration Boolean                        @default(true) // Auto-create CRM cards on sign
   workspace_users              workspace_users[]
   documents                    workspace_documents[]
   workspace_suggested_messages workspace_suggested_messages[]
@@ -171,6 +174,9 @@ model workspaces {
   crm_pipelines                crm_pipelines[]
   public_proposals             public_proposals[]
   block_templates              block_templates[]
+  defaultProposalPipeline      crm_pipelines?                 @relation("WorkspaceDefaultPipeline", fields: [defaultProposalPipelineId], references: [id], onDelete: SetNull)
+
+  @@index([defaultProposalPipelineId])
 }
 
 model workspace_threads {
@@ -483,9 +489,11 @@ model crm_pipelines {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user        users?      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace   workspaces? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        users?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   workspaces?         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   cards       crm_cards[]
+  proposals   public_proposals[]
+  defaultForWorkspaces workspaces[] @relation("WorkspaceDefaultPipeline")
 
   @@index([userId])
   @@index([workspaceId])
@@ -507,6 +515,7 @@ model crm_cards {
   // Context linking
   embedSessionId String?  // Links to embed_chats.session_id
   threadId       Int?     // Links to workspace_threads
+  proposalId     String?  @unique // Links to public_proposals.id (one-to-one)
   
   // Custom data
   notes          String?
@@ -518,12 +527,14 @@ model crm_cards {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  pipeline       crm_pipelines @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
-  user           users?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pipeline       crm_pipelines    @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  user           users?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  proposal       public_proposals? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
 
   @@index([pipelineId])
   @@index([stage])
   @@index([userId])
+  @@index([proposalId])
 }
 
 // Vault for storing user's integration configs (API keys, webhooks, endpoints)
@@ -573,17 +584,21 @@ model public_proposals {
   workspaceId Int
   htmlContent String    // HTML snapshot of the proposal
   status      String    @default("active") // active, signed, expired, revoked
-  password    String?   // Optional password protection 
+  password    String?   // Optional password protection
   expiresAt   DateTime? // Optional expiry date
   signatures  String?   // JSON: { name, ip, date, signatureImage }
   viewCount   Int       @default(0)
+  pipelineId  Int?      // Link to CRM pipeline for auto-creating cards
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  workspace   workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   workspaces   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  pipeline    crm_pipelines? @relation(fields: [pipelineId], references: [id], onDelete: SetNull)
+  crmCard     crm_cards?    @relation
 
   @@index([workspaceId])
   @@index([status])
+  @@index([pipelineId])
 }
 
 model block_templates {
