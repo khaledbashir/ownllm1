@@ -2368,16 +2368,18 @@ ${activeTemplateFooter}
   /**
    * Extract plain text content from the BlockSuite document
    * for embedding into the vector database
+   *
+   * Uses HTML serialization (same approach as PDF export) to ensure
+   * all content types are captured consistently.
    */
-  const extractTextContent = () => {
+  const extractTextContent = async () => {
     if (!editorRef.current?.doc) return { title: "", content: "" };
 
     const doc = editorRef.current.doc;
-    const textParts = [];
-    let docTitle = "";
-
+    
     // Get page title if available
     const pageBlock = doc.getBlocksByFlavour("affine:page")[0];
+    let docTitle = "";
     if (pageBlock?.title) {
       const titleText =
         pageBlock.title.toString?.() ||
@@ -2388,107 +2390,34 @@ ${activeTemplateFooter}
       }
     }
 
-    // Helper to get text from any block
-    const getBlockText = (block) => {
-      if (!block) return "";
-      
-      // Try multiple ways to get text
-      if (block.text?.toString) return block.text.toString();
-      if (block.model?.text?.toString) return block.model.text.toString();
-      if (block.yText?.toString) return block.yText.toString();
-      if (block.model?.yText?.toString) return block.model.yText.toString();
-      
-      return "";
-    };
+    console.log("[extractTextContent] Starting extraction...");
 
-    // Get all paragraph and list blocks
-    const extractFromBlock = (block) => {
-      if (!block) return;
+    // Serialize doc to HTML (same approach as PDF export)
+    // This ensures all content types are captured consistently
+    const html = await serializeDocToHtml(doc);
+    
+    console.log("[extractTextContent] Serialized HTML length:", html.length);
+    
+    // Strip HTML tags to get plain text
+    const plainText = html
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove style tags
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove script tags
+      .replace(/<[^>]+>/g, '') // Remove all HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+      .replace(/&/g, '&') // Replace HTML entities
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim();
 
-      const flavour = block.flavour || block.type;
-      const text = getBlockText(block);
-
-      // Get text from paragraph blocks
-      if (flavour === "affine:paragraph") {
-        if (text.trim()) textParts.push(text);
-      }
-
-      // Get text from list blocks
-      else if (flavour === "affine:list") {
-        if (text.trim()) textParts.push(`• ${text}`);
-      }
-
-      // Get text from code blocks
-      else if (flavour === "affine:code") {
-        if (text.trim()) textParts.push(`\`\`\`\n${text}\n\`\`\``);
-      }
-
-      // Get text from headings (h1-h6 stored as paragraphs with type)
-      else if (flavour === "affine:paragraph" && block.model?.type) {
-        const type = block.model.type;
-        if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(type)) {
-          if (text.trim()) textParts.push(`\n${"#".repeat(parseInt(type[1]))} ${text}\n`);
-        }
-      }
-
-      // Get text from database blocks (tables)
-      else if (flavour === "affine:database") {
-        const columns = block.model?.columns || [];
-        const children = block.children || [];
-        const cells = block.model?.cells || {};
-        
-        // Add header row
-        const headers = columns.map(c => c.name || "").join(" | ");
-        if (headers) textParts.push(`\n| ${headers} |`);
-        
-        // Add data rows
-        children.forEach((rowBlock) => {
-          const rowId = rowBlock.id;
-          const firstColText = getBlockText(rowBlock);
-          const rowCells = cells[rowId] || {};
-          const rowValues = columns.map((col, idx) => {
-            if (idx === 0) return firstColText;
-            const cell = rowCells[col.id];
-            if (cell?.value?.toString) return cell.value.toString();
-            if (typeof cell?.value === "string") return cell.value;
-            return "";
-          });
-          textParts.push(`| ${rowValues.join(" | ")} |`);
-        });
-      }
-
-      // Get text from pricing table blocks
-      else if (flavour === "affine:embed-pricing-table") {
-        const title = getBlockText(block) || "Pricing Table";
-        textParts.push(`\n## ${title}\n`);
-        
-        const rows = block.model?.rows || block.rows || [];
-        if (Array.isArray(rows)) {
-          rows.forEach(row => {
-            if (row?.role) {
-              textParts.push(`- ${row.role}: ${row.description || ""} - ${row.hours || 0}h @ $${row.baseRate || 0}/h`);
-            }
-          });
-        }
-      }
-
-      // Recursively extract from children
-      if (block.children?.length) {
-        block.children.forEach(extractFromBlock);
-      }
-    };
-
-    // Extract from all note blocks
-    const noteBlocks = doc.getBlocksByFlavour("affine:note");
-    noteBlocks.forEach((noteBlock) => {
-      if (noteBlock.children) {
-        noteBlock.children.forEach(extractFromBlock);
-      }
-    });
+    console.log("[extractTextContent] Plain text length:", plainText.length);
+    console.log("[extractTextContent] Plain text preview:", plainText.slice(0, 200));
 
     return {
       title: docTitle,
-      content: textParts.join("\n\n"),
+      content: plainText,
     };
   };
 
@@ -2583,24 +2512,30 @@ ${activeTemplateFooter}
 
     setEmbedding(true);
     try {
-      const { title, content } = extractTextContent();
+      console.log("[handleEmbed] Starting embed process...");
+      const { title, content } = await extractTextContent();
+
+      console.log("[handleEmbed] Extracted content:", {
+        title,
+        contentLength: content.length,
+        contentPreview: content.slice(0, 300),
+      });
 
       if (!content.trim()) {
+        console.error("[handleEmbed] Content is empty!");
         toast.error("Doc is empty - nothing to embed");
         return;
       }
 
-      console.log("[BlockSuiteEditor] Embedding doc:", {
-        title,
-        contentLength: content.length,
-      });
-
+      console.log("[handleEmbed] Calling WorkspaceThread.embedDoc...");
       const result = await WorkspaceThread.embedDoc(
         workspaceSlug,
         threadSlug,
         content,
         title || undefined
       );
+
+      console.log("[handleEmbed] Embed result:", result);
 
       if (result.success) {
         toast.success(
@@ -2611,7 +2546,7 @@ ${activeTemplateFooter}
         toast.error(result.error || "Failed to embed doc");
       }
     } catch (error) {
-      console.error("Embed failed:", error);
+      console.error("[handleEmbed] Embed failed:", error);
       toast.error("Failed to embed doc");
     } finally {
       setEmbedding(false);
