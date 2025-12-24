@@ -111,7 +111,7 @@ export default function ActiveWorkspaces() {
                           aria-current={isActive ? "page" : ""}
                           className={`
                             transition-all duration-[200ms]
-                            flex flex-grow gap-x-2 py-[6px] pl-[4px] pr-[8px] rounded-[4px] text-white justify-start items-center min-w-0
+                            flex flex-grow gap-x-2 py-[6px] pl-[4px] pr-[24px] rounded-[4px] text-white justify-start items-center min-w-0
                             bg-theme-sidebar-item-default
                             hover:bg-theme-sidebar-subitem-hover hover:font-bold
                             ${isActive ? "bg-theme-sidebar-item-selected font-bold light:outline-2 light:outline light:outline-blue-400 light:outline-offset-[-2px]" : ""}
