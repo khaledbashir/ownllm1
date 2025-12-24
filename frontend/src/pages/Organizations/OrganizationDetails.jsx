@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Users, SquaresFour, DocumentText, WarningCircle } from "@phosphor-icons/react";
+import { X, Users, SquaresFour, FileText, WarningCircle } from "@phosphor-icons/react";
 import Organization from "@/models/organization";
 
 export default function OrganizationDetails({ organization, closeModal, onEdit }) {
