@@ -833,6 +833,28 @@ const System = {
       });
   },
 
+  fetchNew: async function (endpoint, options = {}) {
+    const url = `${fullApiUrl()}${endpoint}`;
+    return await fetch(url, {
+      ...options,
+      headers: {
+        ...baseHeaders(),
+        ...(options.headers || {}),
+      },
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.message || res.statusText || "Request failed");
+        }
+        return data;
+      })
+      .catch((e) => {
+        console.error(`fetchNew error for ${endpoint}:`, e);
+        return { success: false, error: e.message };
+      });
+  },
+
   experimentalFeatures: {
     liveSync: LiveDocumentSync,
     agentPlugins: AgentPlugins,
