@@ -4,14 +4,26 @@
  * This service automatically calculates Total = Hours × Rate for database blocks
  * that have columns named "Hours", "Rate", and "Total".
  * 
- * Simple approach: Direct event listener on doc.slots.blockUpdated
+ * Enhanced with verbose debugging and flexible column matching
  */
 
+// HARDCODED RATE CARD - Add your roles and rates here
+const RATE_CARD = {
+  "Tech - Sr. Architect - Integration Strategy": 365,
+  "Tech - Specialist - Integration Configuration": 180,
+  "Tech - Specialist - Testing": 180,
+  "Account Management - (Account Director)": 295,
+  "Project Management - (Account Manager)": 180,
+  // Add more as needed...
+};
+
 export function setupDatabaseAutoMath(doc) {
-  if (!doc) {
-    console.warn('⚠️  No doc provided to setupDatabaseAutoMath');
+  if (!doc || !doc.slots) {
+    console.warn('⚠️  No doc or slots provided to setupDatabaseAutoMath');
     return null;
   }
+
+  console.log("🚀 Initializing Auto-Math Service for Database Blocks");
 
   const recentlyUpdated = new Set();
   let cleanupInterval = null;
@@ -26,11 +38,13 @@ export function setupDatabaseAutoMath(doc) {
 
       // Check if this is a database block or a child of a database block
       if (block.flavour === 'affine:database') {
+        console.log("📝 Database block updated, checking columns:", block.id);
         processDatabaseBlock(doc, block, recentlyUpdated);
       } else {
         // Check if parent is a database block
         const parent = doc.getParent(blockId);
         if (parent?.flavour === 'affine:database') {
+          console.log("📝 Row updated, recalculating parent database");
           processDatabaseBlock(doc, parent, recentlyUpdated);
         }
       }
@@ -77,23 +91,26 @@ function processDatabaseBlock(doc, block, recentlyUpdated) {
     const children = block.children || [];
     const cells = model.cells || {};
 
-    // Find Hours, Rate, and Total columns
-    const hoursCol = columns.find(c => 
-      c.name?.toLowerCase() === 'hours' || c.name?.toLowerCase() === 'hour'
-    );
-    const rateCol = columns.find(c => 
-      c.name?.toLowerCase() === 'rate' || c.name?.toLowerCase() === 'price'
-    );
-    const totalCol = columns.find(c => 
-      c.name?.toLowerCase() === 'total' || c.name?.toLowerCase() === 'amount'
-    );
+    // 1. Log the columns we found (Debug)
+    const colNames = columns.map(c => c.name);
+    console.log("📋 Found Columns:", colNames.join(', '));
 
-    // Only proceed if we have all three columns
+    // 2. Identify Columns (More flexible matching with regex)
+    // We match 'hrs', 'hour', 'qty', 'quantity' for Hours
+    const hoursCol = columns.find(c => /hour|hrs|qty|quantity/i.test(c.name));
+    
+    // We match 'rate', 'price', 'unit', 'cost' for Price
+    const rateCol = columns.find(c => /rate|price|unit|cost/i.test(c.name));
+    
+    // We match 'total', 'amount', 'sum' for Total
+    const totalCol = columns.find(c => /total|amount|sum/i.test(c.name));
+    
     if (!hoursCol || !rateCol || !totalCol) {
+      console.warn(`⚠️  Block ${block.id} missing columns. Needed: Hours/Rate/Total. Found: ${colNames.join(', ')}`);
       return;
     }
 
-    console.log('📊 Found auto-math columns:', {
+    console.log('✅ Found auto-math columns:', {
       hours: hoursCol.name,
       rate: rateCol.name,
       total: totalCol.name
@@ -115,32 +132,50 @@ function calculateTotals(doc, model, children, hoursCol, rateCol, totalCol, rece
     for (const child of children) {
       const rowId = child.id;
       const rowCells = cells[rowId] || {};
+      const rowText = child.text?.toString().trim(); // "Role"
       
-      const hoursValue = rowCells[hoursCol.id]?.value;
-      const rateValue = rowCells[rateCol.id]?.value;
+      // A. RATE LOOKUP - Check if we have a hardcoded rate for this role
+      const currentRateVal = rowCells[rateCol.id]?.value;
+      if (rowText && RATE_CARD[rowText] && (!currentRateVal || currentRateVal === "")) {
+        console.log(`🔍 Found Rate for "${rowText}": ${RATE_CARD[rowText]}`);
+        const rateValue = RATE_CARD[rowText].toString();
+        updatedCells[rowId] = {
+          ...rowCells,
+          [rateCol.id]: {
+            columnId: rateCol.id,
+            value: rateValue
+          }
+        };
+        hasUpdates = true;
+      }
+
+      // B. MATH CALCULATION
+      const hoursRaw = rowCells[hoursCol.id]?.value || "0";
+      const rateRaw = rowCells[rateCol.id]?.value || "0";
+      
+      // Clean inputs (remove currency symbols, handle "2 hours", etc.)
+      const hours = parseFloat(hoursRaw.toString().replace(/[^0-9.]/g, ''));
+      const rate = parseFloat(rateRaw.toString().replace(/[^0-9.]/g, ''));
+      
       const currentTotal = rowCells[totalCol.id]?.value;
-      
-      // Parse numeric values
-      const hours = parseNumber(hoursValue);
-      const rate = parseNumber(rateValue);
-      const calculatedTotal = hours * rate;
-      
-      // Only update if values are valid and different
-      if (hours !== null && rate !== null) {
+
+      if (!isNaN(hours) && !isNaN(rate) && hours > 0) {
+        const newTotal = (hours * rate).toFixed(2);
+        
         const cellKey = `${rowId}:${totalCol.id}`;
         
-        if (calculatedTotal !== currentTotal && !recentlyUpdated.has(cellKey)) {
+        if (newTotal !== currentTotal && !recentlyUpdated.has(cellKey)) {
           updatedCells[rowId] = {
             ...rowCells,
             [totalCol.id]: {
               columnId: totalCol.id,
-              value: calculatedTotal
+              value: newTotal
             }
           };
           recentlyUpdated.add(cellKey);
           hasUpdates = true;
           
-          console.log(`✏️  Updated ${rowId}: ${hours} × ${rate} = ${calculatedTotal}`);
+          console.log(`🧮 Calculating Row ${rowId}: ${hours} × ${rate} = ${newTotal}`);
         }
       }
     }
@@ -151,12 +186,6 @@ function calculateTotals(doc, model, children, hoursCol, rateCol, totalCol, rece
   } catch (e) {
     console.error('❌ Error in calculateTotals:', e);
   }
-}
-
-function parseNumber(value) {
-  if (value === null || value === undefined) return null;
-  const num = Number(value);
-  return Number.isFinite(num) ? num : null;
 }
 
 function calculateAllDatabases(doc, recentlyUpdated) {
