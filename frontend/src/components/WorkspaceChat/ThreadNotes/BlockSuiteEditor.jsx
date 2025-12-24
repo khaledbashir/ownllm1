@@ -2388,26 +2388,88 @@ ${activeTemplateFooter}
       }
     }
 
+    // Helper to get text from any block
+    const getBlockText = (block) => {
+      if (!block) return "";
+      
+      // Try multiple ways to get text
+      if (block.text?.toString) return block.text.toString();
+      if (block.model?.text?.toString) return block.model.text.toString();
+      if (block.yText?.toString) return block.yText.toString();
+      if (block.model?.yText?.toString) return block.model.yText.toString();
+      
+      return "";
+    };
+
     // Get all paragraph and list blocks
     const extractFromBlock = (block) => {
       if (!block) return;
 
+      const flavour = block.flavour || block.type;
+      const text = getBlockText(block);
+
       // Get text from paragraph blocks
-      if (block.flavour === "affine:paragraph" && block.text) {
-        const text = block.text.toString?.() || "";
+      if (flavour === "affine:paragraph") {
         if (text.trim()) textParts.push(text);
       }
 
       // Get text from list blocks
-      if (block.flavour === "affine:list" && block.text) {
-        const text = block.text.toString?.() || "";
+      else if (flavour === "affine:list") {
         if (text.trim()) textParts.push(`• ${text}`);
       }
 
       // Get text from code blocks
-      if (block.flavour === "affine:code" && block.text) {
-        const text = block.text.toString?.() || "";
+      else if (flavour === "affine:code") {
         if (text.trim()) textParts.push(`\`\`\`\n${text}\n\`\`\``);
+      }
+
+      // Get text from headings (h1-h6 stored as paragraphs with type)
+      else if (flavour === "affine:paragraph" && block.model?.type) {
+        const type = block.model.type;
+        if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(type)) {
+          if (text.trim()) textParts.push(`\n${"#".repeat(parseInt(type[1]))} ${text}\n`);
+        }
+      }
+
+      // Get text from database blocks (tables)
+      else if (flavour === "affine:database") {
+        const columns = block.model?.columns || [];
+        const children = block.children || [];
+        const cells = block.model?.cells || {};
+        
+        // Add header row
+        const headers = columns.map(c => c.name || "").join(" | ");
+        if (headers) textParts.push(`\n| ${headers} |`);
+        
+        // Add data rows
+        children.forEach((rowBlock) => {
+          const rowId = rowBlock.id;
+          const firstColText = getBlockText(rowBlock);
+          const rowCells = cells[rowId] || {};
+          const rowValues = columns.map((col, idx) => {
+            if (idx === 0) return firstColText;
+            const cell = rowCells[col.id];
+            if (cell?.value?.toString) return cell.value.toString();
+            if (typeof cell?.value === "string") return cell.value;
+            return "";
+          });
+          textParts.push(`| ${rowValues.join(" | ")} |`);
+        });
+      }
+
+      // Get text from pricing table blocks
+      else if (flavour === "affine:embed-pricing-table") {
+        const title = getBlockText(block) || "Pricing Table";
+        textParts.push(`\n## ${title}\n`);
+        
+        const rows = block.model?.rows || block.rows || [];
+        if (Array.isArray(rows)) {
+          rows.forEach(row => {
+            if (row?.role) {
+              textParts.push(`- ${row.role}: ${row.description || ""} - ${row.hours || 0}h @ $${row.baseRate || 0}/h`);
+            }
+          });
+        }
       }
 
       // Recursively extract from children
