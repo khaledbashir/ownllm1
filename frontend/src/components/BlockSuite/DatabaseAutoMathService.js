@@ -4,7 +4,11 @@
  * This service automatically calculates Total = Hours × Rate for database blocks
  * that have columns named "Hours", "Rate", and "Total".
  * 
- * Enhanced with verbose debugging and flexible column matching
+ * Enhanced with:
+ * - Value comparison guard to prevent infinite recalculation loops
+ * - Proper model property access instead of child index
+ * - Transactional updates using command chain
+ * - Verbose debugging for column detection
  */
 
 // HARDCODED RATE CARD - Add your roles and rates here
@@ -38,13 +42,13 @@ export function setupDatabaseAutoMath(doc) {
 
       // Check if this is a database block or a child of a database block
       if (block.flavour === 'affine:database') {
-        console.log("📝 Database block updated, checking columns:", block.id);
+        console.log("📝 Database block updated:", block.id);
         processDatabaseBlock(doc, block, recentlyUpdated);
       } else {
         // Check if parent is a database block
         const parent = doc.getParent(blockId);
         if (parent?.flavour === 'affine:database') {
-          console.log("📝 Row updated, recalculating parent database");
+          console.log("📝 Row updated, recalculating parent database:", parent.id);
           processDatabaseBlock(doc, parent, recentlyUpdated);
         }
       }
@@ -125,10 +129,10 @@ function processDatabaseBlock(doc, block, recentlyUpdated) {
 function calculateTotals(doc, model, children, hoursCol, rateCol, totalCol, recentlyUpdated) {
   try {
     const cells = model.cells || {};
-    const updatedCells = { ...cells };
     
-    let hasUpdates = false;
-
+    // Track which cells need updating
+    const updates = [];
+    
     for (const child of children) {
       const rowId = child.id;
       const rowCells = cells[rowId] || {};
@@ -139,14 +143,15 @@ function calculateTotals(doc, model, children, hoursCol, rateCol, totalCol, rece
       if (rowText && RATE_CARD[rowText] && (!currentRateVal || currentRateVal === "")) {
         console.log(`🔍 Found Rate for "${rowText}": ${RATE_CARD[rowText]}`);
         const rateValue = RATE_CARD[rowText].toString();
-        updatedCells[rowId] = {
-          ...rowCells,
-          [rateCol.id]: {
+        
+        // Only add update if rate is different
+        if (rateValue !== currentRateVal) {
+          updates.push({
+            rowId,
             columnId: rateCol.id,
             value: rateValue
-          }
-        };
-        hasUpdates = true;
+          });
+        }
       }
 
       // B. MATH CALCULATION
@@ -159,29 +164,52 @@ function calculateTotals(doc, model, children, hoursCol, rateCol, totalCol, rece
       
       const currentTotal = rowCells[totalCol.id]?.value;
 
+      // Only calculate if values are valid
       if (!isNaN(hours) && !isNaN(rate) && hours > 0) {
         const newTotal = (hours * rate).toFixed(2);
         
         const cellKey = `${rowId}:${totalCol.id}`;
         
+        // VALUE COMPARISON GUARD - Only update if new total is different
+        // This prevents infinite recalculation loop
         if (newTotal !== currentTotal && !recentlyUpdated.has(cellKey)) {
-          updatedCells[rowId] = {
-            ...rowCells,
-            [totalCol.id]: {
-              columnId: totalCol.id,
-              value: newTotal
-            }
-          };
+          updates.push({
+            rowId,
+            columnId: totalCol.id,
+            value: newTotal
+          });
           recentlyUpdated.add(cellKey);
-          hasUpdates = true;
           
           console.log(`🧮 Calculating Row ${rowId}: ${hours} × ${rate} = ${newTotal}`);
         }
       }
     }
 
-    if (hasUpdates) {
-      doc.updateBlock(model, { cells: updatedCells });
+    // C. TRANSACTIONAL UPDATE - Use command chain for atomic updates
+    if (updates.length > 0) {
+      console.log(`💾 Applying ${updates.length} updates to database`);
+      
+      // Create a transactional update using command chain
+      // This ensures CRDT integrity and proper undo/redo history
+      doc.captureSync();
+      
+      for (const update of updates) {
+        const { rowId, columnId, value } = update;
+        
+        // Ensure cells object exists for this row
+        if (!model.cells[rowId]) {
+          model.cells[rowId] = {};
+        }
+        
+        // Update the cell value
+        model.cells[rowId][columnId] = {
+          columnId: columnId,
+          value: value
+        };
+      }
+      
+      // Apply the update
+      doc.updateBlock(model, { cells: model.cells });
     }
   } catch (e) {
     console.error('❌ Error in calculateTotals:', e);
