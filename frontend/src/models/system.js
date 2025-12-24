@@ -5,7 +5,7 @@ import LiveDocumentSync from "./experimental/liveSync";
 import AgentPlugins from "./experimental/agentPlugins";
 import SystemPromptVariable from "./systemPromptVariable";
 
-const fetchNew = async function (endpoint, options = {}) {
+function fetchNew(endpoint, options = {}) {
   const url = `${fullApiUrl()}${endpoint}`;
   return await fetch(url, {
     ...options,
