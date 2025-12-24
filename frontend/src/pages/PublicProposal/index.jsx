@@ -7,7 +7,7 @@ import {
   Check,
   PencilSimple,
   ArrowRight,
-  TrendingUp,
+  ChartLineUp,
 } from "@phosphor-icons/react";
 import { API_BASE } from "@/utils/constants";
 
@@ -124,7 +124,7 @@ export default function PublicProposalView() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg hover:bg-purple-200 transition-colors"
                   >
-                    <TrendingUp className="w-4 h-4" />
+                    <ChartLineUp className="w-4 h-4" />
                     View in CRM
                     <ArrowRight className="w-4 h-4" />
                   </a>
