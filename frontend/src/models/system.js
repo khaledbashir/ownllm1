@@ -5,7 +5,7 @@ import LiveDocumentSync from "./experimental/liveSync";
 import AgentPlugins from "./experimental/agentPlugins";
 import SystemPromptVariable from "./systemPromptVariable";
 
-function fetchNew(endpoint, options = {}) {
+async function fetchNew(endpoint, options = {}) {
   const url = `${fullApiUrl()}${endpoint}`;
   return await fetch(url, {
     ...options,
@@ -853,9 +853,7 @@ const System = {
         console.error("Failed to validate SQL connection:", e);
         return { success: false, error: e.message };
       });
-    },
-    experimentalFeatures: {
-
+  },
   experimentalFeatures: {
     liveSync: LiveDocumentSync,
     agentPlugins: AgentPlugins,
