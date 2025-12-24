@@ -5,6 +5,28 @@ import LiveDocumentSync from "./experimental/liveSync";
 import AgentPlugins from "./experimental/agentPlugins";
 import SystemPromptVariable from "./systemPromptVariable";
 
+const fetchNew = async function (endpoint, options = {}) {
+  const url = `${fullApiUrl()}${endpoint}`;
+  return await fetch(url, {
+    ...options,
+    headers: {
+      ...baseHeaders(),
+      ...(options.headers || {}),
+    },
+  })
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || res.statusText || "Request failed");
+      }
+      return data;
+    })
+    .catch((e) => {
+      console.error(`fetchNew error for ${endpoint}:`, e);
+      return { success: false, error: e.message };
+    });
+};
+
 const System = {
   cacheKeys: {
     footerIcons: "anythingllm_footer_links",
@@ -831,29 +853,8 @@ const System = {
         console.error("Failed to validate SQL connection:", e);
         return { success: false, error: e.message };
       });
-  },
-
-  fetchNew: async function (endpoint, options = {}) {
-    const url = `${fullApiUrl()}${endpoint}`;
-    return await fetch(url, {
-      ...options,
-      headers: {
-        ...baseHeaders(),
-        ...(options.headers || {}),
-      },
-    })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data?.message || res.statusText || "Request failed");
-        }
-        return data;
-      })
-      .catch((e) => {
-        console.error(`fetchNew error for ${endpoint}:`, e);
-        return { success: false, error: e.message };
-      });
-  },
+    },
+    experimentalFeatures: {
 
   experimentalFeatures: {
     liveSync: LiveDocumentSync,
