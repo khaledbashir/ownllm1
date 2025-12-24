@@ -833,7 +833,7 @@ const System = {
       });
   },
 
-  const fetchNew = async function (endpoint, options = {}) {
+  fetchNew: async function (endpoint, options = {}) {
     const url = `${fullApiUrl()}${endpoint}`;
     return await fetch(url, {
       ...options,
