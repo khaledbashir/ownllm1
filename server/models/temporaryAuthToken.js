@@ -85,7 +85,7 @@ const TemporaryAuthToken = {
 
       // Create a new session token for the user valid for 30 days
       const sessionToken = makeJWT(
-        { id: token.user.id, username: token.user.username },
+        { id: token.user.id, username: token.user.username, role: token.user.role, organizationId: token.user.organizationId },
         process.env.JWT_EXPIRY
       );
 

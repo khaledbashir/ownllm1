@@ -374,6 +374,14 @@ const router = createBrowserRouter([
           return { element: <ManagerRoute Component={AdminWorkspaces} /> };
         },
       },
+      {
+        path: "/settings/organizations",
+        lazy: async () => {
+          const { default: Organizations } =
+            await import("@/pages/Organizations");
+          return { element: <AdminRoute Component={Organizations} /> };
+        },
+      },
       // Onboarding Flow
       {
         path: "/onboarding",

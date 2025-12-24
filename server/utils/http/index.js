@@ -60,6 +60,12 @@ async function userFromSession(request, response = null) {
   }
 
   const user = await User.get({ id: valid.id });
+  
+  if (response) {
+    response.locals.organizationId = valid.organizationId || null;
+    response.locals.userRole = valid.role || null;
+  }
+  
   return user;
 }
 

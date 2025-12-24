@@ -110,9 +110,10 @@ const TRANSLATIONS = {
     "system-prompt-variables": "System Prompt Variables",
     "experimental-features": "Experimental Features",
     contact: "Contact Support",
-    "browser-extension": "Browser Extension",
-    // New menu items
-    "document-templates": "Document Templates",
+     "browser-extension": "Browser Extension",
+     "organizations": "Organizations",
+     // New menu items
+     "document-templates": "Document Templates",
     "template-builder": "AI Template Builder",
     "smart-plugins": "Smart Plugins",
     "agent-test-lab": "Agent Test Lab",

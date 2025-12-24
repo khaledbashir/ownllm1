@@ -379,20 +379,19 @@ const SidebarOptions = ({ user = null, t }) => (
               flex: true,
               roles: ["admin"],
             },
-            {
-              btnText: t("settings.browser-extension"),
-              href: paths.settings.browserExtension(),
-              flex: true,
-              roles: ["admin", "manager"],
-            },
-            {
-              btnText: t("settings.crm-pipeline"),
-              href: paths.settings.crm(),
-              icon: <UserCircleGear className="h-5 w-5 flex-shrink-0" />,
-              flex: true,
-              roles: ["admin", "manager"],
-            },
-          ]}
+              {
+               btnText: t("settings.browser-extension"),
+               href: paths.settings.browserExtension(),
+               flex: true,
+               roles: ["admin", "manager"],
+             },
+             {
+               btnText: t("settings.organizations"),
+               href: paths.settings.organizations(),
+               flex: true,
+               roles: ["admin"],
+             },
+           ]}
         />
         <Option
           btnText={t("settings.security")}

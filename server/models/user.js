@@ -232,13 +232,16 @@ const User = {
   },
 
   /**
-   * Returns a user object based on the clause provided.
+   * Returns a user object based on clause provided.
    * @param {Object} clause - The clause to use to find the user.
    * @returns {Promise<import("@prisma/client").users|null>} The user object or null if not found.
    */
   get: async function (clause = {}) {
     try {
-      const user = await prisma.users.findFirst({ where: clause });
+      const user = await prisma.users.findFirst({ 
+        where: clause,
+        include: { organization: true }
+      });
       return user ? this.filterFields({ ...user }) : null;
     } catch (error) {
       console.error(error.message);
@@ -266,9 +269,53 @@ const User = {
     }
   },
 
+  /**
+   * Count users with organization filtering
+   * @param {Object} clause - Query clause
+   * @param {number|null} organizationId - Organization ID for filtering
+   * @returns {Promise<number>} Count of users
+   */
+  countWithOrg: async function (clause = {}, organizationId = null) {
+    try {
+      const where = { ...clause };
+      
+      if (organizationId !== null) {
+        where.organizationId = organizationId;
+      }
+      
+      const count = await prisma.users.count({ where });
+      return count;
+    } catch (error) {
+      console.error(error.message);
+      return 0;
+    }
+  },
+
   delete: async function (clause = {}) {
     try {
       await prisma.users.deleteMany({ where: clause });
+      return true;
+    } catch (error) {
+      console.error(error.message);
+      return false;
+    }
+  },
+
+  /**
+   * Delete users with organization filtering
+   * @param {Object} clause - Query clause
+   * @param {number|null} organizationId - Organization ID for filtering
+   * @returns {Promise<boolean>} True if successful
+   */
+  deleteWithOrg: async function (clause = {}, organizationId = null) {
+    try {
+      const where = { ...clause };
+      
+      if (organizationId !== null) {
+        where.organizationId = organizationId;
+      }
+      
+      await prisma.users.deleteMany({ where });
       return true;
     } catch (error) {
       console.error(error.message);
@@ -280,6 +327,32 @@ const User = {
     try {
       const users = await prisma.users.findMany({
         where: clause,
+        ...(limit !== null ? { take: limit } : {}),
+      });
+      return users.map((usr) => this.filterFields(usr));
+    } catch (error) {
+      console.error(error.message);
+      return [];
+    }
+  },
+
+  /**
+   * Get users with organization filtering
+   * @param {Object} clause - Query clause
+   * @param {number|null} organizationId - Organization ID for filtering
+   * @param {number|null} limit - Optional limit
+   * @returns {Promise<Array>} Filtered users
+   */
+  whereWithOrg: async function (clause = {}, organizationId = null, limit = null) {
+    try {
+      const where = { ...clause };
+      
+      if (organizationId !== null) {
+        where.organizationId = organizationId;
+      }
+      
+      const users = await prisma.users.findMany({
+        where,
         ...(limit !== null ? { take: limit } : {}),
       });
       return users.map((usr) => this.filterFields(usr));

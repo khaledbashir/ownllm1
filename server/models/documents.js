@@ -80,6 +80,46 @@ const Document = {
     }
   },
 
+  /**
+   * Get documents with organization filtering (via workspace)
+   * @param {Object} clause - Query clause
+   * @param {number|null} organizationId - Organization ID for filtering
+   * @param {number|null} limit - Optional limit
+   * @param {Object|null} orderBy - Optional order by clause
+   * @param {Object|null} include - Optional include clause
+   * @param {Object|null} select - Optional select clause
+   * @returns {Promise<Array>} Filtered documents
+   */
+  whereWithOrg: async function (
+    clause = {},
+    organizationId = null,
+    limit = null,
+    orderBy = null,
+    include = null,
+    select = null
+  ) {
+    try {
+      const where = { ...clause };
+      
+      // Filter by organizationId via workspace relationship
+      if (organizationId !== null) {
+        where.workspace = { organizationId };
+      }
+      
+      const results = await prisma.workspace_documents.findMany({
+        where,
+        ...(limit !== null ? { take: limit } : {}),
+        ...(orderBy !== null ? { orderBy } : {}),
+        ...(include !== null ? { include } : {}),
+        ...(select !== null ? { select: { ...select } } : {}),
+      });
+      return results;
+    } catch (error) {
+      console.error(error.message);
+      return [];
+    }
+  },
+
   addDocuments: async function (workspace, additions = [], userId = null) {
     const VectorDb = getVectorDbClass();
     if (additions.length === 0) return { failed: [], embedded: [] };

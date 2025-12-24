@@ -68,6 +68,36 @@ const ApiKey = {
     }
   },
 
+  /**
+   * Get API keys with organization filtering (via createdBy user)
+   * @param {Object} clause - Query clause
+   * @param {number|null} organizationId - Organization ID for filtering
+   * @param {number|null} limit - Optional limit
+   * @returns {Promise<Array>} Filtered API keys
+   */
+  whereWithOrg: async function (clause = {}, organizationId = null, limit = null) {
+    try {
+      const where = { ...clause };
+      
+      // Filter by organizationId via createdBy user
+      if (organizationId !== null) {
+        const { User } = require("./user");
+        const orgUsers = await User.whereWithOrg({}, organizationId);
+        const orgUserIds = orgUsers.map(u => u.id);
+        where.createdBy = { in: orgUserIds };
+      }
+      
+      const apiKeys = await prisma.api_keys.findMany({
+        where,
+        take: limit,
+      });
+      return apiKeys;
+    } catch (error) {
+      console.error("FAILED TO GET API KEYS WITH ORG.", error.message);
+      return [];
+    }
+  },
+
   whereWithUser: async function (clause = {}, limit) {
     try {
       const { User } = require("./user");

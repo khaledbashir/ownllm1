@@ -112,6 +112,36 @@ const Invite = {
     }
   },
 
+  /**
+   * Get invites with organization filtering (via createdBy user or workspace)
+   * @param {Object} clause - Query clause
+   * @param {number|null} organizationId - Organization ID for filtering
+   * @param {number|null} limit - Optional limit
+   * @returns {Promise<Array>} Filtered invites
+   */
+  whereWithOrg: async function (clause = {}, organizationId = null, limit = null) {
+    try {
+      const where = { ...clause };
+      
+      // Filter invites by organizationId via the creating user
+      if (organizationId !== null) {
+        const { User } = require("./user");
+        const orgUsers = await User.whereWithOrg({}, organizationId);
+        const orgUserIds = orgUsers.map(u => u.id);
+        where.createdBy = { in: orgUserIds };
+      }
+      
+      const invites = await prisma.invites.findMany({
+        where,
+        take: limit || undefined,
+      });
+      return invites;
+    } catch (error) {
+      console.error(error.message);
+      return [];
+    }
+  },
+
   whereWithUsers: async function (clause = {}, limit) {
     const { User } = require("./user");
     try {

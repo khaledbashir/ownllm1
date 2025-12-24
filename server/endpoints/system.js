@@ -238,7 +238,7 @@ function systemEndpoints(app) {
         // Generate a session token for the user then check if they have seen the recovery codes
         // and if not, generate recovery codes and return them to the frontend.
         const sessionToken = makeJWT(
-          { id: existingUser.id, username: existingUser.username },
+          { id: existingUser.id, username: existingUser.username, role: existingUser.role, organizationId: existingUser.organizationId },
           process.env.JWT_EXPIRY
         );
         if (!existingUser.seen_recovery_codes) {

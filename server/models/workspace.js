@@ -424,10 +424,60 @@ const Workspace = {
     }
   },
 
+  /**
+   * Delete workspaces with organization filtering
+   * @param {Object} clause - Query clause
+   * @param {number|null} organizationId - Organization ID for filtering
+   * @returns {Promise<boolean>} True if successful
+   */
+  deleteWithOrg: async function (clause = {}, organizationId = null) {
+    try {
+      const where = { ...clause };
+      
+      if (organizationId !== null) {
+        where.organizationId = organizationId;
+      }
+      
+      await prisma.workspaces.deleteMany({ where });
+      return true;
+    } catch (error) {
+      console.error(error.message);
+      return false;
+    }
+  },
+
   where: async function (clause = {}, limit = null, orderBy = null) {
     try {
       const results = await prisma.workspaces.findMany({
         where: clause,
+        ...(limit !== null ? { take: limit } : {}),
+        ...(orderBy !== null ? { orderBy } : {}),
+      });
+      return results;
+    } catch (error) {
+      console.error(error.message);
+      return [];
+    }
+  },
+
+  /**
+   * Get workspaces with organization filtering
+   * @param {Object} clause - Query clause
+   * @param {number|null} organizationId - Organization ID for filtering
+   * @param {number|null} limit - Optional limit
+   * @param {Object|null} orderBy - Optional order by clause
+   * @returns {Promise<Array>} Filtered workspaces
+   */
+  whereWithOrg: async function (clause = {}, organizationId = null, limit = null, orderBy = null) {
+    try {
+      const where = { ...clause };
+      
+      if (organizationId !== null) {
+        where.organizationId = organizationId;
+      }
+      
+      const results = await prisma.workspaces.findMany({
+        where,
         ...(limit !== null ? { take: limit } : {}),
         ...(orderBy !== null ? { orderBy } : {}),
       });

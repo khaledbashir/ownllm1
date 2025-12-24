@@ -197,6 +197,9 @@ export default {
     templateBuilder: () => {
       return `/settings/template-builder`;
     },
+    organizations: () => {
+      return `/settings/organizations`;
+    },
   },
   dashboard: () => {
     return `/dashboard`;
