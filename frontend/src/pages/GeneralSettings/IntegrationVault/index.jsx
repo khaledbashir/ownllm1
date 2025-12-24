@@ -15,16 +15,18 @@ import {
   Shield,
 } from "@phosphor-icons/react";
 
+import { API_BASE } from "@/utils/constants";
+
 // API client for vault
 const VaultAPI = {
   async getAll() {
-    const res = await fetch("/api/v1/vault", {
+    const res = await fetch(`${API_BASE}/vault`, {
       headers: { "Content-Type": "application/json" },
     });
     return res.json();
   },
   async save(data) {
-    const res = await fetch("/api/v1/vault", {
+    const res = await fetch(`${API_BASE}/vault`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -32,7 +34,7 @@ const VaultAPI = {
     return res.json();
   },
   async delete(id) {
-    const res = await fetch(`/api/v1/vault/${id}`, {
+    const res = await fetch(`${API_BASE}/vault/${id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
