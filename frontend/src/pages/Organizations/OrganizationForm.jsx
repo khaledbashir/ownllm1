@@ -45,15 +45,8 @@ export default function OrganizationForm({ closeModal, onSubmit, initialData = n
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) closeModal();
-      }}
+      className="bg-theme-bg-secondary w-full max-w-md rounded-lg shadow-2xl p-6"
     >
-      <div
-        className="bg-theme-bg-secondary w-full max-w-md rounded-lg shadow-2xl p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-theme-text-primary">
             {mode === "create" ? "Create Organization" : "Edit Organization"}

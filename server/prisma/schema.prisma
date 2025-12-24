@@ -2,17 +2,14 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Uncomment the following lines and comment out the SQLite datasource block above to use PostgreSQL
-// Make sure to set the correct DATABASE_URL in your .env file
-// After swapping run `yarn prisma:setup` from the root directory to migrate the database
-//
-// datasource db {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL")
-// }
+// Database configuration
+// Use DATABASE_URL environment variable to configure database
+// Default: SQLite at ../storage/anythingllm.db
+// To use PostgreSQL, set DATABASE_URL=postgresql://user:password@host:port/database
+
 datasource db {
   provider = "sqlite"
-  url      = "file:../storage/anythingllm.db"
+  url      = env("DATABASE_URL")
 }
 
 model organizations {

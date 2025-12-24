@@ -27,6 +27,7 @@ services:
       - .env
     environment:
       - BROWSER_WS_URL=ws://browserless:3000?token=${BROWSERLESS_TOKEN:-browserless}
+      - DATABASE_URL=file:/app/server/storage/anythingllm.db
     networks:
       - anything-llm
     extra_hosts:

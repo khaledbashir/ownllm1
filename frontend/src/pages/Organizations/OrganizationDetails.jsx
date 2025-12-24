@@ -60,15 +60,8 @@ export default function OrganizationDetails({ organization, closeModal, onEdit }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) closeModal();
-      }}
+      className="bg-theme-bg-secondary w-full max-w-2xl rounded-lg shadow-2xl max-h-[90vh] overflow-hidden"
     >
-      <div
-        className="bg-theme-bg-secondary w-full max-w-2xl rounded-lg shadow-2xl max-h-[90vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-center justify-between p-6 border-white/10">
           <h2 className="text-xl font-bold text-theme-text-primary">
             Organization Details
