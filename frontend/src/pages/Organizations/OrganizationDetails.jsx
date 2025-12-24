@@ -300,6 +300,5 @@ export default function OrganizationDetails({ organization, closeModal, onEdit }
           </div>
         </div>
       </div>
-    </div>
   );
 }
