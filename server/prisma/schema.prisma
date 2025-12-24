@@ -15,12 +15,35 @@ datasource db {
   url      = "file:../storage/anythingllm.db"
 }
 
-model api_keys {
+model organizations {
   id            Int      @id @default(autoincrement())
-  secret        String?  @unique
-  createdBy     Int?
+  name          String
+  slug          String   @unique
+  plan          String   @default("free") // free, pro, enterprise
+  subscriptionId String?  // Stripe subscription ID
+  status        String   @default("active") // active, trial, past_due, canceled, suspended
+  seatLimit     Int?     // Max users allowed (null = unlimited)
+  settings      String?  // JSON for organization-specific settings
   createdAt     DateTime @default(now())
-  lastUpdatedAt DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users              users[]
+  workspaces         workspaces[]
+  invites           invites[]
+  crmPipelines      crm_pipelines[]
+  apiKeys           api_keys[]
+  workspaceDocuments workspace_documents[]
+}
+
+model api_keys {
+  id              Int      @id @default(autoincrement())
+  secret          String?  @unique
+  createdBy       Int?
+  organizationId  Int?
+  createdAt       DateTime @default(now())
+  lastUpdatedAt   DateTime @default(now())
+
+  organization     organizations? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 }
 
 model workspace_documents {
@@ -29,24 +52,33 @@ model workspace_documents {
   filename             String
   docpath              String
   workspaceId          Int
+  organizationId        Int?
   metadata             String?
   pinned               Boolean?              @default(false)
   watched              Boolean?              @default(false)
   createdAt            DateTime              @default(now())
   lastUpdatedAt        DateTime              @default(now())
   workspace            workspaces            @relation(fields: [workspaceId], references: [id])
+  organization          organizations?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   document_sync_queues document_sync_queues?
+
+  @@index([organizationId])
 }
 
 model invites {
-  id            Int      @id @default(autoincrement())
-  code          String   @unique
-  status        String   @default("pending")
-  claimedBy     Int?
-  workspaceIds  String?
-  createdAt     DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  code           String   @unique
+  status         String   @default("pending")
+  claimedBy      Int?
+  workspaceIds   String?
+  organizationId Int?
+  createdAt      DateTime @default(now())
   createdBy     Int
-  lastUpdatedAt DateTime @default(now())
+  lastUpdatedAt  DateTime @default(now())
+
+  organization   organizations? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
 }
 
 model system_settings {
@@ -69,6 +101,7 @@ model users {
   lastUpdatedAt               DateTime                      @default(now())
   dailyMessageLimit           Int?
   bio                         String?                       @default("")
+  organizationId              Int?
   workspace_chats             workspace_chats[]
   workspace_users             workspace_users[]
   embed_configs               embed_configs[]
@@ -91,6 +124,9 @@ model users {
   crm_cards                   crm_cards[]
   integration_vault           integration_vault[]
   block_templates             block_templates[]
+  organization                organizations?                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
 }
 
 model recovery_codes {
@@ -134,6 +170,7 @@ model workspaces {
   id                           Int                            @id @default(autoincrement())
   name                         String
   slug                         String                         @unique
+  organizationId                Int?                           
   vectorTag                    String?
   createdAt                    DateTime                       @default(now())
   openAiTemp                   Float?
@@ -174,9 +211,11 @@ model workspaces {
   crm_pipelines                crm_pipelines[]
   public_proposals             public_proposals[]
   block_templates              block_templates[]
+  organization                 organizations?                   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   defaultProposalPipeline      crm_pipelines?                 @relation("WorkspaceDefaultPipeline", fields: [defaultProposalPipelineId], references: [id], onDelete: SetNull)
 
   @@index([defaultProposalPipelineId])
+  @@index([organizationId])
 }
 
 model workspace_threads {
@@ -478,25 +517,28 @@ model smart_plugins {
 }
 
 model crm_pipelines {
-  id          Int      @id @default(autoincrement())
-  name        String   // e.g., "Embed Leads", "Proposals", "Sales Pipeline"
-  description String?
-  type        String   @default("custom") // embed, proposal, custom
-  stages      String   // JSON array: ["New", "Contacted", "Qualified", "Won", "Lost"]
-  color       String?  @default("#3b82f6") // Pipeline accent color
-  userId      Int?
-  workspaceId Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  name           String   // e.g., "Embed Leads", "Proposals", "Sales Pipeline"
+  description    String?
+  type           String   @default("custom") // embed, proposal, custom
+  stages         String   // JSON array: ["New", "Contacted", "Qualified", "Won", "Lost"]
+  color          String?  @default("#3b82f6") // Pipeline accent color
+  userId         Int?
+  workspaceId    Int?
+  organizationId Int?     
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user        users?              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace   workspaces?         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  cards       crm_cards[]
-  proposals   public_proposals[]
+  user           users?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace      workspaces?         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  organization    organizations?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  cards          crm_cards[]
+  proposals      public_proposals[]
   defaultForWorkspaces workspaces[] @relation("WorkspaceDefaultPipeline")
 
   @@index([userId])
   @@index([workspaceId])
+  @@index([organizationId])
 }
 
 model crm_cards {
