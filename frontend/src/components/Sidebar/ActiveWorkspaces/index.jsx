@@ -99,7 +99,7 @@ export default function ActiveWorkspaces() {
                       }`}
                       role="listitem"
                     >
-                      <div className="flex gap-x-2 items-center justify-between">
+                      <div className="flex gap-x-2 items-center justify-between w-full">
                         <a
                           href={
                             isActive
@@ -111,7 +111,7 @@ export default function ActiveWorkspaces() {
                           aria-current={isActive ? "page" : ""}
                           className={`
                             transition-all duration-[200ms]
-                            flex flex-grow w-[75%] gap-x-2 py-[6px] pl-[4px] pr-[6px] rounded-[4px] text-white justify-start items-center
+                            flex flex-grow gap-x-2 py-[6px] pl-[4px] pr-[8px] rounded-[4px] text-white justify-start items-center min-w-0
                             bg-theme-sidebar-item-default
                             hover:bg-theme-sidebar-subitem-hover hover:font-bold
                             ${isActive ? "bg-theme-sidebar-item-selected font-bold light:outline-2 light:outline light:outline-blue-400 light:outline-offset-[-2px]" : ""}
@@ -128,13 +128,13 @@ export default function ActiveWorkspaces() {
                                 weight="bold"
                               />
                             </div>
-                            <div className="flex items-center space-x-2 overflow-hidden flex-grow">
-                              <div className="w-[130px] overflow-hidden">
+                            <div className="flex items-center space-x-2 overflow-hidden flex-grow min-w-0">
+                              <div className="min-w-0 flex-shrink">
                                 <p
                                   className={`
                                   text-[14px] leading-loose whitespace-nowrap overflow-hidden text-white
                                   ${isActive ? "font-bold" : "font-medium"} truncate
-                                  w-full group-hover:w-[130px] group-hover:font-bold group-hover:duration-200
+                                  w-full group-hover:font-bold group-hover:duration-200
                                 `}
                                 >
                                   {workspace.name}
@@ -143,7 +143,7 @@ export default function ActiveWorkspaces() {
                             </div>
                             {user?.role !== "default" && (
                               <div
-                                className={`flex items-center gap-x-[2px] transition-opacity duration-200 mr-[4px] ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                                className={`flex items-center gap-x-[2px] transition-opacity duration-200 flex-shrink-0 ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                               >
                                 <button
                                   type="button"
@@ -152,7 +152,8 @@ export default function ActiveWorkspaces() {
                                     setSelectedWs(workspace);
                                     showModal();
                                   }}
-                                  className="border-none rounded-md flex items-center justify-center ml-auto p-[2px] hover:bg-[#646768] text-[#A7A8A9] hover:text-white"
+                                  className="border-none rounded-md flex items-center justify-center p-[2px] hover:bg-[#646768] text-[#A7A8A9] hover:text-white"
+                                  aria-label="Data connectors"
                                 >
                                   <UploadSimple className="h-[20px] w-[20px]" />
                                 </button>
@@ -168,7 +169,7 @@ export default function ActiveWorkspaces() {
                                           )
                                     );
                                   }}
-                                  className="rounded-md flex items-center justify-center text-[#A7A8A9] hover:text-white ml-auto p-[2px] hover:bg-[#646768]"
+                                  className="rounded-md flex items-center justify-center text-[#A7A8A9] hover:text-white p-[2px] hover:bg-[#646768]"
                                   aria-label="General appearance settings"
                                 >
                                   <GearSix
