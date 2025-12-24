@@ -415,6 +415,5 @@ export default function OrganizationSettings({ organization, closeModal, onUpdat
           </div>
         </div>
       </div>
-    </div>
   );
 }
