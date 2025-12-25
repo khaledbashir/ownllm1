@@ -54,9 +54,10 @@ async function validatedRequest(request, response, next) {
   // in ln:44 will be marked invalid so they can be logged out and forced to log back in and obtain an encrypted token.
   // This kind of methodology only applies to single-user password mode.
   if (
+    process.env.HASHED_AUTH_TOKEN &&
     !bcrypt.compareSync(
       EncryptionMgr.decrypt(p),
-      bcrypt.hashSync(process.env.AUTH_TOKEN, 10)
+      process.env.HASHED_AUTH_TOKEN
     )
   ) {
     response.status(401).json({

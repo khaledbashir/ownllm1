@@ -1,5 +1,12 @@
 require("dotenv").config();
 
+// Pre-hash AUTH_TOKEN at startup for password-based authentication
+// This prevents the bcrypt error and ensures consistent comparisons
+const bcrypt = require("bcrypt");
+process.env.HASHED_AUTH_TOKEN = process.env.AUTH_TOKEN
+  ? bcrypt.hashSync(process.env.AUTH_TOKEN, 10)
+  : "";
+
 require("./utils/logger")();
 const express = require("express");
 const bodyParser = require("body-parser");

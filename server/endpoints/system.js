@@ -289,10 +289,8 @@ function systemEndpoints(app) {
       } else {
         const { password } = reqBody(request);
         if (
-          !bcrypt.compareSync(
-            password,
-            bcrypt.hashSync(process.env.AUTH_TOKEN, 10)
-          )
+          process.env.HASHED_AUTH_TOKEN &&
+          !bcrypt.compareSync(password, process.env.HASHED_AUTH_TOKEN)
         ) {
           await EventLogs.logEvent("failed_login_invalid_password", {
             ip: request.ip || "Unknown IP",
