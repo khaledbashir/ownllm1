@@ -51,9 +51,10 @@ const Organization = {
       return slug;
     },
     plan: (plan = "free") => {
-      if (!this.VALID_PLANS.includes(plan)) {
+      const validPlans = ["free", "pro", "enterprise"];
+      if (!validPlans.includes(plan)) {
         throw new Error(
-          `Invalid plan. Allowed plans are: ${this.VALID_PLANS.join(", ")}`
+          `Invalid plan. Allowed plans are: ${validPlans.join(", ")}`
         );
       }
       return String(plan);
@@ -63,9 +64,10 @@ const Organization = {
       return String(subscriptionId);
     },
     status: (status = "active") => {
-      if (!this.VALID_STATUSES.includes(status)) {
+      const validStatuses = ["active", "trial", "past_due", "canceled", "suspended"];
+      if (!validStatuses.includes(status)) {
         throw new Error(
-          `Invalid status. Allowed statuses are: ${this.VALID_STATUSES.join(", ")}`
+          `Invalid status. Allowed statuses are: ${validStatuses.join(", ")}`
         );
       }
       return String(status);
@@ -171,7 +173,7 @@ const Organization = {
     try {
       // Validate slug uniqueness
       const existing = await prisma.organizations.findUnique({
-        where: { slug: this.validations.slug(slug) },
+        where: { slug: Organization.validations.slug(slug) },
       });
       if (existing) {
         throw new Error("An organization with this slug already exists");
@@ -179,13 +181,13 @@ const Organization = {
 
       const organization = await prisma.organizations.create({
         data: {
-          name: this.validations.name(name),
-          slug: this.validations.slug(slug),
-          plan: this.validations.plan(plan),
-          subscriptionId: this.validations.subscriptionId(subscriptionId),
-          status: this.validations.status(status),
-          seatLimit: this.validations.seatLimit(seatLimit),
-          settings: this.validations.settings(settings),
+          name: Organization.validations.name(name),
+          slug: Organization.validations.slug(slug),
+          plan: Organization.validations.plan(plan),
+          subscriptionId: Organization.validations.subscriptionId(subscriptionId),
+          status: Organization.validations.status(status),
+          seatLimit: Organization.validations.seatLimit(seatLimit),
+          settings: Organization.validations.settings(settings),
         },
       });
 
@@ -221,13 +223,13 @@ const Organization = {
       // Removes non-writable fields for generic updates
       // and force-casts to the proper type
       Object.entries(updates).forEach(([key, value]) => {
-        if (this.writable.includes(key)) {
-          if (this.validations[key]) {
-            updates[key] = this.validations[key](
-              this.castColumnValue(key, value)
+        if (Organization.writable.includes(key)) {
+          if (Organization.validations[key]) {
+            updates[key] = Organization.validations[key](
+              Organization.castColumnValue(key, value)
             );
           } else {
-            updates[key] = this.castColumnValue(key, value);
+            updates[key] = Organization.castColumnValue(key, value);
           }
           return;
         }
