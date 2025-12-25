@@ -43,7 +43,9 @@ function makeJWTWithOrg(info = {}, expiry = "30d") {
 // Note: Only valid for finding users in multi-user mode
 // as single-user mode with password is not a "user"
 async function userFromSession(request, response = null) {
+  console.log("[userFromSession] Checking session...");
   if (!!response && !!response.locals?.user) {
+    console.log("[userFromSession] Found user in response.locals");
     return response.locals.user;
   }
 
@@ -66,6 +68,7 @@ async function userFromSession(request, response = null) {
     response.locals.userRole = valid.role || null;
   }
   
+  console.log(`[userFromSession] Returning user: ${user ? user.id : 'null'}`);
   return user;
 }
 

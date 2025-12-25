@@ -1,4 +1,5 @@
 const { Organization } = require("../models/organization");
+console.log("!!! ORGANIZATION ENDPOINTS FILE LOADED !!!");
 const { User } = require("../models/user");
 const { EventLogs } = require("../models/eventLogs");
 const { reqBody, userFromSession } = require("../utils/http");
@@ -19,13 +20,21 @@ function organizationEndpoints(app) {
     [validatedRequest],
     async (request, response) => {
       try {
+        console.log("!!! ORGANIZATION ENDPOINT CALLED !!!");
         const currUser = await userFromSession(request, response);
-        
+
         // Check if user is authenticated
         if (!currUser) {
+          console.log("!!! NO USER FOUND IN SESSION !!!");
           return response.status(401).json({ error: "Unauthorized" });
         }
-        
+
+        // Ensure user has role property
+        if (!currUser.role) {
+          console.log("!!! USER MISSING ROLE PROPERTY !!!");
+          return response.status(401).json({ error: "Invalid user data" });
+        }
+
         // Only super admin (admin without organization) can see all organizations
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
           return response.status(403).json({
@@ -57,6 +66,11 @@ function organizationEndpoints(app) {
         // Check if user is authenticated
         if (!currUser) {
           return response.status(401).json({ error: "Unauthorized" });
+        }
+
+        // Ensure user has role property
+        if (!currUser.role) {
+          return response.status(401).json({ error: "Invalid user data" });
         }
 
         // Users can only view their own organization
@@ -98,6 +112,11 @@ function organizationEndpoints(app) {
           return response.status(401).json({ error: "Unauthorized" });
         }
 
+        // Ensure user has role property
+        if (!currUser.role) {
+          return response.status(401).json({ error: "Invalid user data" });
+        }
+
         // Users can only view their own organization's stats
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
           if (currUser.organizationId !== parseInt(id)) {
@@ -133,6 +152,11 @@ function organizationEndpoints(app) {
           return response.status(401).json({ error: "Unauthorized" });
         }
 
+        // Ensure user has role property
+        if (!currUser.role) {
+          return response.status(401).json({ error: "Invalid user data" });
+        }
+
         // Users can only view users in their own organization
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
           if (currUser.organizationId !== parseInt(id)) {
@@ -160,12 +184,20 @@ function organizationEndpoints(app) {
     [validatedRequest],
     async (request, response) => {
       try {
+        console.log("!!! ORGANIZATION WORKSPACES ENDPOINT CALLED !!!");
         const currUser = await userFromSession(request, response);
         const { id } = request.params;
 
         // Check if user is authenticated
         if (!currUser) {
+          console.log("!!! NO USER FOUND IN SESSION (WORKSPACES) !!!");
           return response.status(401).json({ error: "Unauthorized" });
+        }
+
+        // Ensure user has role property
+        if (!currUser.role) {
+          console.log("!!! USER MISSING ROLE PROPERTY (WORKSPACES) !!!");
+          return response.status(401).json({ error: "Invalid user data" });
         }
 
         // Users can only view workspaces in their own organization
@@ -203,6 +235,11 @@ function organizationEndpoints(app) {
         // Check if user is authenticated
         if (!currUser) {
           return response.status(401).json({ error: "Unauthorized" });
+        }
+
+        // Ensure user has role property
+        if (!currUser.role) {
+          return response.status(401).json({ error: "Invalid user data" });
         }
 
         // Only super admin can create organizations
@@ -243,6 +280,11 @@ function organizationEndpoints(app) {
         // Check if user is authenticated
         if (!currUser) {
           return response.status(401).json({ error: "Unauthorized" });
+        }
+
+        // Ensure user has role property
+        if (!currUser.role) {
+          return response.status(401).json({ error: "Invalid user data" });
         }
 
         // Users can only update their own organization
@@ -300,6 +342,11 @@ function organizationEndpoints(app) {
           return response.status(401).json({ error: "Unauthorized" });
         }
 
+        // Ensure user has role property
+        if (!currUser.role) {
+          return response.status(401).json({ error: "Invalid user data" });
+        }
+
         // Only super admin can delete organizations
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
           return response.status(403).json({
@@ -341,6 +388,11 @@ function organizationEndpoints(app) {
         // Check if user is authenticated
         if (!currUser) {
           return response.status(401).json({ error: "Unauthorized" });
+        }
+
+        // Ensure user has role property
+        if (!currUser.role) {
+          return response.status(401).json({ error: "Invalid user data" });
         }
 
         // Users can only check their own organization's remaining seats
