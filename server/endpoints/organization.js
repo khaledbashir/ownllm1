@@ -21,6 +21,11 @@ function organizationEndpoints(app) {
       try {
         const currUser = await userFromSession(request, response);
         
+        // Check if user is authenticated
+        if (!currUser) {
+          return response.status(401).json({ error: "Unauthorized" });
+        }
+        
         // Only super admin (admin without organization) can see all organizations
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
           return response.status(403).json({
@@ -48,6 +53,11 @@ function organizationEndpoints(app) {
       try {
         const currUser = await userFromSession(request, response);
         const { id } = request.params;
+
+        // Check if user is authenticated
+        if (!currUser) {
+          return response.status(401).json({ error: "Unauthorized" });
+        }
 
         // Users can only view their own organization
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
@@ -83,6 +93,11 @@ function organizationEndpoints(app) {
         const currUser = await userFromSession(request, response);
         const { id } = request.params;
 
+        // Check if user is authenticated
+        if (!currUser) {
+          return response.status(401).json({ error: "Unauthorized" });
+        }
+
         // Users can only view their own organization's stats
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
           if (currUser.organizationId !== parseInt(id)) {
@@ -113,6 +128,11 @@ function organizationEndpoints(app) {
         const currUser = await userFromSession(request, response);
         const { id } = request.params;
 
+        // Check if user is authenticated
+        if (!currUser) {
+          return response.status(401).json({ error: "Unauthorized" });
+        }
+
         // Users can only view users in their own organization
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
           if (currUser.organizationId !== parseInt(id)) {
@@ -142,6 +162,11 @@ function organizationEndpoints(app) {
       try {
         const currUser = await userFromSession(request, response);
         const { id } = request.params;
+
+        // Check if user is authenticated
+        if (!currUser) {
+          return response.status(401).json({ error: "Unauthorized" });
+        }
 
         // Users can only view workspaces in their own organization
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
@@ -174,6 +199,11 @@ function organizationEndpoints(app) {
     async (request, response) => {
       try {
         const currUser = await userFromSession(request, response);
+
+        // Check if user is authenticated
+        if (!currUser) {
+          return response.status(401).json({ error: "Unauthorized" });
+        }
 
         // Only super admin can create organizations
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
@@ -209,6 +239,11 @@ function organizationEndpoints(app) {
         const currUser = await userFromSession(request, response);
         const { id } = request.params;
         const updates = reqBody(request);
+
+        // Check if user is authenticated
+        if (!currUser) {
+          return response.status(401).json({ error: "Unauthorized" });
+        }
 
         // Users can only update their own organization
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
@@ -260,6 +295,11 @@ function organizationEndpoints(app) {
         const currUser = await userFromSession(request, response);
         const { id } = request.params;
 
+        // Check if user is authenticated
+        if (!currUser) {
+          return response.status(401).json({ error: "Unauthorized" });
+        }
+
         // Only super admin can delete organizations
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
           return response.status(403).json({
@@ -297,6 +337,11 @@ function organizationEndpoints(app) {
       try {
         const currUser = await userFromSession(request, response);
         const { id } = request.params;
+
+        // Check if user is authenticated
+        if (!currUser) {
+          return response.status(401).json({ error: "Unauthorized" });
+        }
 
         // Users can only check their own organization's remaining seats
         if (currUser.role !== ROLES.admin || currUser.organizationId) {
