@@ -160,7 +160,7 @@ export default function OrganizationSettings({ organization, closeModal, onUpdat
                           required
                           minLength={3}
                           maxLength={100}
-                          pattern="[a-z0-9-]+"
+                          pattern="[a-z0-9\-]+"
                           className="w-full bg-theme-settings-input-bg text-theme-settings-input-text border border-white/10 rounded-lg px-3 py-2.5 focus:outline-primary-button focus:outline-2 focus:ring-primary-button"
                         />
                         <p className="text-xs text-theme-text-secondary mt-1">
