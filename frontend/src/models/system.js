@@ -28,6 +28,7 @@ async function fetchNew(endpoint, options = {}) {
 };
 
 const System = {
+  fetchNew,
   cacheKeys: {
     footerIcons: "anythingllm_footer_links",
     supportEmail: "anythingllm_support_email",
