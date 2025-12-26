@@ -944,7 +944,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
     const parseNumber = (value) => {
       const text = String(value || "");
-      const match = text.replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+      // Remove currency symbols and commas
+      const cleanText = text.replace(/[$,]/g, "");
+      const match = cleanText.match(/-?\d+(?:\.\d+)?/);
       if (!match) return null;
       const n = Number(match[0]);
       return Number.isFinite(n) ? n : null;
@@ -1033,14 +1035,15 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         "service",
         "item",
         "deliverable",
+        "component", // Added to support summary tables
       ]);
       const idxHours = findCol(["hour", "qty", "quantity", "days", "units"]);
       const idxRate = findCol(["rate", "price", "cost", "fee", "amount"]);
-      const idxDesc = findCol(["description", "detail", "note", "scope"]);
+      const idxTotal = findCol(["total", "subtotal", "value", "investment"]); // Added to support summary tables
+      const idxDesc = findCol(["description", "detail", "note", "scope", "type"]); // Added 'type' for Investment Type
 
-      // Require at least Role and Rate to be considered a pricing table
-      // Hours is optional (can default to 1 or 0) but highly recommended
-      if (idxRole === -1 || idxRate === -1) {
+      // Require at least Role and (Rate OR Total) to be considered a pricing table
+      if (idxRole === -1 || (idxRate === -1 && idxTotal === -1)) {
         // Not a pricing table
         return null;
       }
@@ -1066,7 +1069,13 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
           const hours =
             idxHours !== -1 ? (parseNumber(cells[idxHours]) ?? 0) : 0;
-          const baseRate = parseNumber(cells[idxRate]) ?? 0;
+          
+          // If Rate is missing but Total exists, use Total as Rate (assuming 1 unit/hour)
+          let baseRate = idxRate !== -1 ? (parseNumber(cells[idxRate]) ?? 0) : 0;
+          if (idxRate === -1 && idxTotal !== -1) {
+             baseRate = parseNumber(cells[idxTotal]) ?? 0;
+          }
+
           const description = idxDesc !== -1 ? cells[idxDesc] || "" : "";
 
           if (!role) return null;
@@ -1075,7 +1084,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             id: `${Date.now()}-${idx}`,
             role,
             description,
-            hours,
+            hours: hours || 1, // Default to 1 if hours missing (e.g. summary table)
             baseRate,
           };
         })

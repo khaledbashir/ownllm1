@@ -249,15 +249,15 @@ export default function ThreadNotes({
 
         // If the markdown contains pricing tables, BlockSuiteEditor.insertMarkdown will convert them
         // into interactive pricing blocks automatically. Only insert the structured pricing payload
-        // as a fallback when the markdown contains no pipe tables.
-        const markdownHasPipeTable = /\n\s*\|.*\|\s*\n\s*\|\s*[-:|\s]+\|/m.test(
+        // as a fallback when the markdown contains no DETAILED pricing tables (summary tables are fine).
+        const markdownHasPricingTable = /\n\s*\|.*(?:Role|Rate|Price|Cost|Hours|Qty|Quantity).*\|\s*\n\s*\|\s*[-:|\s]+\|/mi.test(
           markdown
         );
         if (
           action === "draft_sow" &&
           res?.pricingTable &&
           editorRef.current?.insertPricingTableWithData &&
-          !markdownHasPipeTable
+          !markdownHasPricingTable
         ) {
           editorRef.current.insertPricingTableWithData(res.pricingTable);
         }
