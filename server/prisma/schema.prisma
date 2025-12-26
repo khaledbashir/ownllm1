@@ -8,7 +8,7 @@ generator client {
 // To use PostgreSQL, set DATABASE_URL=postgresql://user:password@host:port/database
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -21,6 +21,7 @@ model organizations {
   status        String   @default("active") // active, trial, past_due, canceled, suspended
   seatLimit     Int?     // Max users allowed (null = unlimited)
   settings      String?  // JSON for organization-specific settings
+  role          String   @default("default") // default, admin (for special organizational permissions)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

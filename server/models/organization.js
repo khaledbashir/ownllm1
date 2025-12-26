@@ -11,6 +11,7 @@ const { EventLogs } = require("./eventLogs");
  * @property {string} status - active, trial, past_due, canceled, suspended
  * @property {number|null} seatLimit - Max users allowed (null = unlimited)
  * @property {string|null} settings - JSON for organization-specific settings
+ * @property {string} role - default, admin (for special organizational permissions)
  * @property {Date} createdAt
  * @property {Date} updatedAt
  */
@@ -24,6 +25,7 @@ const Organization = {
     "status",
     "seatLimit",
     "settings",
+    "role",
   ],
 
   VALID_PLANS: ["free", "pro", "enterprise"],
@@ -95,6 +97,15 @@ const Organization = {
       } catch (error) {
         throw new Error("Settings must be a valid JSON string");
       }
+    },
+    role: (role = "default") => {
+      const validRoles = ["default", "admin"];
+      if (!validRoles.includes(role)) {
+        throw new Error(
+          `Invalid role. Allowed roles are: ${validRoles.join(", ")}`
+        );
+      }
+      return String(role);
     },
   },
 
