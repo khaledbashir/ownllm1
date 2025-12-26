@@ -35,6 +35,11 @@ fi
         echo "Switching Prisma provider to PostgreSQL..."
         sed -i 's/provider = "sqlite"/provider = "postgresql"/g' ./prisma/schema.prisma
     fi &&
+    # Allow forcing a DB reset via env var (useful for stuck migrations)
+    if [ "$RESET_DB" == "true" ]; then
+        echo "⚠️ RESET_DB is set to true. Resetting database..."
+        npx prisma migrate reset --force --schema=./prisma/schema.prisma
+    fi &&
     npx prisma generate --schema=./prisma/schema.prisma >/dev/null &&
     npx prisma migrate deploy --schema=./prisma/schema.prisma >/dev/null &&
     node /app/server/index.js
