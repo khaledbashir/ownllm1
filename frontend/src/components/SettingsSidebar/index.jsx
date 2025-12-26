@@ -216,6 +216,7 @@ const SidebarOptions = ({ user = null, t }) => (
     {({ viewable: canViewChatHistory }) => (
       <>
         <Option
+          hidden={!!user?.organizationId}
           btnText={t("settings.ai-providers")}
           icon={<Gear className="h-5 w-5 flex-shrink-0" />}
           user={user}
@@ -290,6 +291,7 @@ const SidebarOptions = ({ user = null, t }) => (
               href: paths.settings.defaultSystemPrompt(),
               flex: true,
               roles: ["admin"],
+              hidden: !!user?.organizationId,
             },
           ]}
         />
@@ -302,6 +304,7 @@ const SidebarOptions = ({ user = null, t }) => (
           roles={["admin"]}
         />
         <Option
+          hidden={!!user?.organizationId}
           btnText={t("settings.customization")}
           icon={<PencilSimpleLine className="h-5 w-5 flex-shrink-0" />}
           user={user}
@@ -401,7 +404,7 @@ const SidebarOptions = ({ user = null, t }) => (
           user={user}
           flex={true}
           roles={["admin", "manager"]}
-          hidden={user?.role}
+          hidden={!!user?.organizationId}
         />
         <HoldToReveal key="exp_features">
           <Option

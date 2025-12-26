@@ -416,6 +416,23 @@ const Organization = {
       };
     }
   },
+
+  /**
+   * Get the number of users in an organization
+   * @param {number} organizationId - The organization ID
+   * @returns {Promise<number>} The number of users
+   */
+  getUsersCount: async function (organizationId) {
+    try {
+      const count = await prisma.users.count({
+        where: { organizationId: Number(organizationId) },
+      });
+      return count;
+    } catch (error) {
+      console.error(error.message);
+      return 0;
+    }
+  },
 };
 
 module.exports = { Organization };

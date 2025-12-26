@@ -35,9 +35,10 @@ function adminEndpoints(app) {
   app.get(
     "/admin/users",
     [validatedRequest, strictMultiUserRoleValid([ROLES.admin, ROLES.manager])],
-    async (_request, response) => {
+    async (request, response) => {
       try {
-        const users = await User.where();
+        const currUser = await userFromSession(request, response);
+        const users = await User.whereWithOrg({}, currUser.organizationId);
         response.status(200).json({ users });
       } catch (e) {
         console.error(e);
@@ -53,6 +54,21 @@ function adminEndpoints(app) {
       try {
         const currUser = await userFromSession(request, response);
         const newUserParams = reqBody(request);
+        
+        // Ensure new user is tied to the same organization as the creator
+        if (currUser.organizationId) {
+          const { checkSeatLimit } = require("../services/billing");
+          const seatLimitCheck = await checkSeatLimit(currUser.organizationId);
+          if (seatLimitCheck.exceeded) {
+            response.status(200).json({
+              user: null,
+              error: `Organization has reached its seat limit (${seatLimitCheck.limit}). Please upgrade your plan to add more users.`,
+            });
+            return;
+          }
+          newUserParams.organizationId = currUser.organizationId;
+        }
+
         const roleValidation = validRoleSelection(currUser, newUserParams);
 
         if (!roleValidation.valid) {
@@ -91,6 +107,17 @@ function adminEndpoints(app) {
         const { id } = request.params;
         const updates = reqBody(request);
         const user = await User.get({ id: Number(id) });
+
+        if (!user) {
+          response.status(404).json({ success: false, error: "User not found" });
+          return;
+        }
+
+        // Prevent cross-organization modifications
+        if (currUser.organizationId && user.organizationId !== currUser.organizationId) {
+          response.status(403).json({ success: false, error: "Access denied" });
+          return;
+        }
 
         const canModify = validCanModify(currUser, user);
         if (!canModify.valid) {
@@ -158,9 +185,12 @@ function adminEndpoints(app) {
   app.get(
     "/admin/invites",
     [validatedRequest, strictMultiUserRoleValid([ROLES.admin, ROLES.manager])],
-    async (_request, response) => {
+    async (request, response) => {
       try {
-        const invites = await Invite.whereWithUsers();
+        const currUser = await userFromSession(request, response);
+        const invites = await Invite.whereWithUsers(
+          currUser.organizationId ? { organizationId: currUser.organizationId } : {}
+        );
         response.status(200).json({ invites });
       } catch (e) {
         console.error(e);
@@ -183,6 +213,7 @@ function adminEndpoints(app) {
         const { invite, error } = await Invite.create({
           createdByUserId: user.id,
           workspaceIds: body?.workspaceIds || [],
+          organizationId: user.organizationId,
         });
 
         await EventLogs.logEvent(

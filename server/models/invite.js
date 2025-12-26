@@ -7,13 +7,14 @@ const Invite = {
     return uuidAPIKey.create().apiKey;
   },
 
-  create: async function ({ createdByUserId = 0, workspaceIds = [] }) {
+  create: async function ({ createdByUserId = 0, workspaceIds = [], organizationId = null }) {
     try {
       const invite = await prisma.invites.create({
         data: {
           code: this.makeCode(),
           createdBy: createdByUserId,
           workspaceIds: JSON.stringify(workspaceIds),
+          organizationId: organizationId ? Number(organizationId) : null,
         },
       });
       return { invite, error: null };
@@ -47,9 +48,9 @@ const Invite = {
         if (!!invite?.workspaceIds) {
           const { Workspace } = require("./workspace");
           const { WorkspaceUser } = require("./workspaceUsers");
-          const workspaceIds = (await Workspace.where({})).map(
-            (workspace) => workspace.id
-          );
+          const workspaceIds = (await Workspace.where(
+            invite.organizationId ? { organizationId: invite.organizationId } : {}
+          )).map((workspace) => workspace.id);
           const ids = safeJsonParse(invite.workspaceIds)
             .map((id) => Number(id))
             .filter((id) => workspaceIds.includes(id));

@@ -178,7 +178,7 @@ export default function EditUserModal({ currentUser, user, closeModal }) {
                    {role === "admin" && "Administrators have full access to all system features."}
                  </p>
                </div>
-               {currentUser?.role === "admin" && (
+               {currentUser?.role === "admin" && !currentUser?.organizationId && (
                  <div>
                    <label
                      htmlFor="organizationId"

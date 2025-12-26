@@ -69,6 +69,7 @@ function inviteEndpoints(app) {
           username,
           password,
           role: "default",
+          organizationId: invite.organizationId,
         });
         if (!user) {
           console.error("Accepting invite:", error);
