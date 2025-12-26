@@ -35,16 +35,27 @@ fi
         echo "Switching Prisma provider to PostgreSQL..."
         sed -i 's/provider = "sqlite"/provider = "postgresql"/g' ./prisma/schema.prisma
     fi &&
+    echo "Environment: $NODE_ENV"
+    echo "RESET_DB is currently set to: '$RESET_DB'"
+    
     # Allow forcing a DB reset via env var (useful for stuck migrations)
     if [ "$RESET_DB" == "true" ]; then
         echo "⚠️ RESET_DB is set to true. Resetting database..."
-        npx prisma migrate reset --force --schema=./prisma/schema.prisma
-    fi &&
-    echo "Environment: $NODE_ENV" &&
-    npx prisma generate --schema=./prisma/schema.prisma &&
-    echo "Running database migrations..." &&
-    npx prisma migrate deploy --schema=./prisma/schema.prisma &&
-    echo "Starting AnythingLLM Server..." &&
+        npx prisma migrate reset --force --schema=./prisma/schema.prisma || echo "❌ Reset failed, but continuing..."
+    fi
+
+    echo "Generating Prisma Client..."
+    npx prisma generate --schema=./prisma/schema.prisma
+    
+    echo "Running database migrations..."
+    if ! npx prisma migrate deploy --schema=./prisma/schema.prisma; then
+        echo "❌ MIGRATION FAILED!"
+        echo "If this is a new installation and you are seeing P3009, set RESET_DB=\"true\" in your environment variables to wipe and re-init the database."
+        sleep 30
+        exit 1
+    fi
+    
+    echo "Starting AnythingLLM Server..."
     node /app/server/index.js
 } &
 {
