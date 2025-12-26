@@ -540,6 +540,86 @@ function systemEndpoints(app) {
     }
   );
 
+  app.post(
+    "/api/public-signup",
+    [isMultiUserSetup],
+    async (request, response) => {
+      try {
+        const { username, password, email, orgName, orgSlug, plan } = reqBody(request);
+
+        // 1. Create Organization
+        const { organization, error: orgError } = await Organization.create({
+          name: orgName,
+          slug: orgSlug,
+          plan: plan || "free",
+          status: "active",
+          seatLimit: plan === "free" ? 5 : plan === "pro" ? 25 : 100,
+        });
+
+        if (orgError) {
+          return response.status(400).json({ success: false, message: orgError });
+        }
+
+        // 2. Create User as Admin of that Organization
+        const { user, error: userError } = await User.create({
+          username,
+          password,
+          email,
+          role: "admin",
+          organizationId: organization.id,
+        });
+
+        if (userError) {
+          // Cleanup organization if user creation fails
+          await prisma.organizations.delete({ where: { id: organization.id } });
+          return response.status(400).json({ success: false, message: userError });
+        }
+
+        // 3. Log and Telemetry
+        await EventLogs.logEvent(
+          "public_signup_event",
+          {
+            ip: request.ip || "Unknown IP",
+            username: username,
+            organizationId: organization.id,
+          },
+          user.id
+        );
+
+        await Telemetry.sendTelemetry(
+          "public_signup_event",
+          { multiUserMode: true },
+          user.id
+        );
+
+        // 4. Email Verification (if enabled)
+        const { token: verifyToken, error: tokenError } = await EmailVerificationTokens.create(user.id);
+        
+        if (verifyToken && user.email) {
+          const appUrl = process.env.APP_URL || `http://${request.get("host")}`;
+          await EmailService.sendVerificationEmail({
+            to: user.email,
+            token: verifyToken,
+            username: user.username,
+            appUrl,
+          });
+        }
+
+        response.status(200).json({
+          success: true,
+          user: User.filterFields(user),
+          requiresEmailVerification: !!verifyToken,
+          message: verifyToken 
+            ? "Registration successful. Please check your email to verify your account."
+            : "Registration successful. You can now log in.",
+        });
+      } catch (error) {
+        console.error("Error in public signup:", error);
+        response.status(500).json({ success: false, message: error.message });
+      }
+    }
+  );
+
   // Verify email with token
   app.get("/api/verify-email", async (request, response) => {
     try {

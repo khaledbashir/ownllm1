@@ -84,50 +84,35 @@ export default function Register() {
         return;
       }
 
-      // Create organization
-      const orgResult = await Organization.create({
-        name: orgName,
-        slug: orgSlug,
-        plan,
-        status: "active",
-        seatLimit: plan === "free" ? 5 : plan === "pro" ? 25 : 100,
-      });
-
-      if (orgResult.error) {
-        setError(orgResult.error);
-        setLoading(false);
-        return;
-      }
-
-      // Create user with organization
-      const response = await fetch("/api/register-with-organization", {
+      // Create organization and user in one go
+      const response = await fetch("/api/public-signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username,
           password,
           email,
-          organizationId: orgResult.organization.id,
+          orgName,
+          orgSlug,
+          plan,
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok || data.error) {
-        setError(data.error || "Registration failed. Please try again.");
+      if (!response.ok || data.success === false) {
+        setError(data.message || "Registration failed. Please try again.");
         setLoading(false);
         return;
       }
 
-      // Success - redirect to login or auto-login
-      showToast(
-        "Registration successful! Please check your email to verify your account.",
-        "success",
-        { clear: true }
-      );
-
-      // Redirect to email verification page or login
-      navigate("/login");
+      showToast(data.message, "success");
+      
+      if (data.requiresEmailVerification) {
+        navigate("/login", { state: { message: data.message } });
+      } else {
+        navigate("/login");
+      }
     } catch (err) {
       setError(err.message || "An error occurred during registration");
       setLoading(false);
