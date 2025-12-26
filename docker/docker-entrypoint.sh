@@ -40,8 +40,11 @@ fi
         echo "⚠️ RESET_DB is set to true. Resetting database..."
         npx prisma migrate reset --force --schema=./prisma/schema.prisma
     fi &&
-    npx prisma generate --schema=./prisma/schema.prisma >/dev/null &&
-    npx prisma migrate deploy --schema=./prisma/schema.prisma >/dev/null &&
+    echo "Environment: $NODE_ENV" &&
+    npx prisma generate --schema=./prisma/schema.prisma &&
+    echo "Running database migrations..." &&
+    npx prisma migrate deploy --schema=./prisma/schema.prisma &&
+    echo "Starting AnythingLLM Server..." &&
     node /app/server/index.js
 } &
 {

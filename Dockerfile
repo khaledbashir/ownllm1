@@ -59,14 +59,10 @@ RUN (getent passwd "$ARG_UID" && userdel -f "$(getent passwd "$ARG_UID" | cut -d
     useradd -l -u "$ARG_UID" -m -d /app -s /bin/bash -g anythingllm anythingllm && \
     mkdir -p /app/frontend/ /app/server/ /app/collector/ && chown -R anythingllm:anythingllm /app
 
-# Copy docker helper scripts
-COPY ./docker/docker-entrypoint.sh /usr/local/bin/
-COPY ./docker/docker-healthcheck.sh /usr/local/bin/
-COPY --chown=anythingllm:anythingllm ./docker/.env.example /app/server/.env
-
-# Ensure the scripts are executable
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
-    chmod +x /usr/local/bin/docker-healthcheck.sh
+# Skip early copy of scripts to optimize caching
+# COPY ./docker/docker-entrypoint.sh /usr/local/bin/
+# COPY ./docker/docker-healthcheck.sh /usr/local/bin/
+# COPY --chown=anythingllm:anythingllm ./docker/.env.example /app/server/.env
 
 USER anythingllm
 WORKDIR /app
@@ -138,14 +134,14 @@ RUN (getent passwd "$ARG_UID" && userdel -f "$(getent passwd "$ARG_UID" | cut -d
     useradd -l -u "$ARG_UID" -m -d /app -s /bin/bash -g anythingllm anythingllm && \
     mkdir -p /app/frontend/ /app/server/ /app/collector/ && chown -R anythingllm:anythingllm /app
 
-# Copy docker helper scripts
-COPY ./docker/docker-entrypoint.sh /usr/local/bin/
-COPY ./docker/docker-healthcheck.sh /usr/local/bin/
-COPY --chown=anythingllm:anythingllm ./docker/.env.example /app/server/.env
+# Skip early copy of scripts to optimize caching
+# COPY ./docker/docker-entrypoint.sh /usr/local/bin/
+# COPY ./docker/docker-healthcheck.sh /usr/local/bin/
+# COPY --chown=anythingllm:anythingllm ./docker/.env.example /app/server/.env
 
 # Ensure the scripts are executable
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
-    chmod +x /usr/local/bin/docker-healthcheck.sh
+# RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
+#    chmod +x /usr/local/bin/docker-healthcheck.sh
 
 #############################################
 # COMMON BUILD FLOW FOR ALL ARCHS
@@ -200,6 +196,14 @@ ARG DEPLOYMENT_VERSION=1.9.1
 ENV DEPLOYMENT_VERSION=$DEPLOYMENT_VERSION
 
 # Setup the healthcheck
+USER root
+COPY ./docker/docker-entrypoint.sh /usr/local/bin/
+COPY ./docker/docker-healthcheck.sh /usr/local/bin/
+COPY --chown=anythingllm:anythingllm ./docker/.env.example /app/server/.env
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-healthcheck.sh
+USER anythingllm
+
 HEALTHCHECK --interval=1m --timeout=10s --start-period=1m \
   CMD /bin/bash /usr/local/bin/docker-healthcheck.sh || exit 1
 
