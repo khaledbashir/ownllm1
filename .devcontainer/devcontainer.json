@@ -16,13 +16,13 @@
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
     // Docker very useful linter
-    "ghcr.io/dhoeric/features/hadolint:1": {
+    "ghcr.io/dhoeric/features/hadolint": {
       "version": "latest"
     },
     // Terraform support
-    "ghcr.io/devcontainers/features/terraform:1": {},
+    "ghcr.io/devcontainers/features/terraform": {},
     // Just a wrap to install needed packages
-    "ghcr.io/devcontainers-contrib/features/apt-packages:1": {
+    "ghcr.io/devcontainers-extra/features/apt-packages": {
       // Dependencies copied from ../docker/Dockerfile plus some dev stuff
       "packages": [
         "build-essential",
@@ -131,39 +131,6 @@
         "ms-vscode.js-debug"
       ],
       "settings": {
-        "[css]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[dockercompose]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[dockerfile]": {
-          "editor.defaultFormatter": "ms-azuretools.vscode-docker"
-        },
-        "[html]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[javascript]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[javascriptreact]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[json]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[jsonc]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[markdown]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[postcss]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "[toml]": {
-          "editor.defaultFormatter": "tamasfe.even-better-toml"
-        },
         "eslint.debug": true,
         "eslint.enable": true,
         "eslint.experimental.useFlatConfig": true,

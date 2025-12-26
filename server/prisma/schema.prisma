@@ -8,7 +8,7 @@ generator client {
 // To use PostgreSQL, set DATABASE_URL=postgresql://user:password@host:port/database
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
