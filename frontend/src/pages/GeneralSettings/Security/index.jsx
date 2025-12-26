@@ -25,6 +25,7 @@ export default function GeneralSecurity() {
         </div>
         <MultiUserMode />
         <PasswordProtection />
+        <BecomeSuperAdmin />
       </div>
     </div>
   );
@@ -345,5 +346,103 @@ function PasswordProtection() {
         </div>
       </div>
     </form>
+  );
+}
+
+function BecomeSuperAdmin() {
+  const [loading, setLoading] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    async function checkSuperAdminStatus() {
+      try {
+        const user = JSON.parse(localStorage.getItem(AUTH_USER) || "{}");
+        setIsSuperAdmin(user?.organizationId === null);
+      } catch (error) {
+        setIsSuperAdmin(false);
+      }
+    }
+    checkSuperAdminStatus();
+  }, []);
+
+  const handleBecomeSuperAdmin = async () => {
+    if (!window.confirm("Are you sure? This will remove your organization assignment and make you a Super Admin.")) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("/admin/become-super-admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage("Success! Please logout and login again to access Super Admin Dashboard.");
+        setTimeout(() => {
+          window.localStorage.removeItem(AUTH_USER);
+          window.localStorage.removeItem(AUTH_TOKEN);
+          window.localStorage.removeItem(AUTH_TIMESTAMP);
+          window.location = paths.login();
+        }, 3000);
+      } else {
+        setMessage(data.error || "Failed to become Super Admin");
+      }
+    } catch (error) {
+      setMessage("Error: " + error.message);
+    }
+    setLoading(false);
+  };
+
+  if (isSuperAdmin) return null;
+
+  return (
+    <div className="flex flex-col w-full px-1 md:pl-6 md:pr-[50px]">
+      <div className="w-full flex flex-col gap-y-1 pb-6 border-white light:border-theme-sidebar-border border-b-2 border-opacity-10">
+        <div className="w-full flex flex-col gap-y-1">
+          <div className="items-center flex gap-x-4">
+            <p className="text-base font-bold text-white mt-6">
+              Become Super Admin
+            </p>
+          </div>
+          <p className="text-xs leading-[18px] font-base text-white text-opacity-60">
+            Convert your account to Super Admin status. This removes your organization assignment and grants full platform control access.
+          </p>
+        </div>
+        <div className="relative w-full max-h-full">
+          <div className="relative rounded-lg">
+            <div className="flex items-start justify-between px-6 py-4"></div>
+            <div className="space-y-6 flex h-full w-full">
+              <div className="w-full flex flex-col gap-y-4">
+                <div className="">
+                  <CTAButton
+                    onClick={handleBecomeSuperAdmin}
+                    disabled={loading}
+                    className="mt-2"
+                  >
+                    {loading ? "Processing..." : "Become Super Admin"}
+                  </CTAButton>
+                  {message && (
+                    <div className={`mt-3 text-sm ${message.includes("Success") ? "text-green-500" : "text-red-500"}`}>
+                      {message}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between space-x-14">
+              <p className="text-white text-opacity-80 text-xs rounded-lg w-96">
+                Super Admin accounts can access the Super Admin Dashboard at /settings/super-admin and manage all organizations.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
