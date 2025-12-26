@@ -588,6 +588,50 @@ function adminEndpoints(app) {
       }
     }
   );
+
+  // Temporary endpoint: Make current user Super Admin (remove organization assignment)
+  app.post(
+    "/admin/become-super-admin",
+    [validatedRequest],
+    async (request, response) => {
+      try {
+        const currUser = await userFromSession(request, response);
+        
+        if (!currUser) {
+          return response.status(401).json({ success: false, error: "Unauthorized" });
+        }
+
+        // Check if user already is super admin
+        if (currUser.organizationId === null) {
+          return response.status(400).json({ 
+            success: false, 
+            error: "You are already a Super Admin" 
+          });
+        }
+
+        // Update user to Super Admin (remove organizationId)
+        const prisma = require("../utils/prisma");
+        await prisma.users.update({
+          where: { id: currUser.id },
+          data: { organizationId: null }
+        });
+
+        await EventLogs.logEvent(
+          "became_super_admin",
+          { username: currUser.username },
+          currUser.id
+        );
+
+        response.status(200).json({ 
+          success: true, 
+          message: "You are now a Super Admin. Please logout and login again." 
+        });
+      } catch (error) {
+        console.error("Error making user super admin:", error);
+        response.status(500).json({ success: false, error: error.message });
+      }
+    }
+  );
 }
 
 module.exports = { adminEndpoints };
