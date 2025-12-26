@@ -1,0 +1,17 @@
+{
+  "name": "pdf-export-api",
+  "version": "1.0.0",
+  "description": "PDF Export API using Playwright MCP server",
+  "main": "pdf_export_api.js",
+  "scripts": {
+    "start": "node pdf_export_api.js",
+    "dev": "nodemon pdf_export_api.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
