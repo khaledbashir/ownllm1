@@ -30,6 +30,11 @@ fi
   cd /app/server/ &&
     # Disable Prisma CLI telemetry (https://www.prisma.io/docs/orm/tools/prisma-cli#how-to-opt-out-of-data-collection)
     export CHECKPOINT_DISABLE=1 &&
+    # Dynamically update schema provider if using Postgres
+    if [[ "$DATABASE_URL" == "postgres"* ]]; then
+        echo "Switching Prisma provider to PostgreSQL..."
+        sed -i 's/provider = "sqlite"/provider = "postgresql"/g' ./prisma/schema.prisma
+    fi &&
     npx prisma generate --schema=./prisma/schema.prisma >/dev/null &&
     npx prisma migrate deploy --schema=./prisma/schema.prisma >/dev/null &&
     node /app/server/index.js
