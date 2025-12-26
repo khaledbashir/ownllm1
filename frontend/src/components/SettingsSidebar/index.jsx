@@ -399,7 +399,7 @@ const SidebarOptions = ({ user = null, t }) => (
         />
         <Option
           btnText={t("settings.security")}
-          icon={<Nut className="h-5 w-5 flex-shrink-0" />}
+          icon={<Shield className="h-5 w-5 flex-shrink-0" />}
           href={paths.settings.security()}
           user={user}
           flex={true}
