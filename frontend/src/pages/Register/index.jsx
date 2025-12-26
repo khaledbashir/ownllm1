@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import System from "@/models/system";
-import Organization from "@/models/organization";
 import showToast from "@/utils/toast";
 import useLogo from "@/hooks/useLogo";
 import illustration from "@/media/illustrations/login-illustration.svg";
