@@ -404,6 +404,14 @@ const router = createBrowserRouter([
           return { element: <AdminRoute Component={SuperAdmin} /> };
         },
       },
+      {
+        path: "/super-admin",
+        lazy: async () => {
+          const { default: SuperAdmin } =
+            await import("@/pages/SuperAdmin");
+          return { element: <AdminRoute Component={SuperAdmin} /> };
+        },
+      },
       // Onboarding Flow
       {
         path: "/onboarding",
