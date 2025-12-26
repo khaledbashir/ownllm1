@@ -520,15 +520,38 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             });
 
             if (result?.response) {
-              // Replace the selected text in the editor
-              const selection = window.getSelection();
-              if (selection && selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(
-                  document.createTextNode(result.response.trim())
+              const editor = editorRef.current;
+              const responseText = result.response.trim();
+
+              // Try to use BlockSuite's command API to replace selection
+              // This is the "proper" way that won't break Lit's VDOM
+              try {
+                if (editor?.std?.command) {
+                  editor.std.command.exec("insertText", {
+                    text: responseText,
+                  });
+                  return result.response;
+                }
+              } catch (e) {
+                console.warn(
+                  "[BlockSuiteEditor] std.command.insertText failed, falling back",
+                  e
                 );
-                selection.removeAllRanges();
+              }
+
+              // Fallback: If we can't use the command API, append as a new paragraph
+              // instead of messing with the DOM directly.
+              const doc = editor?.doc;
+              if (doc) {
+                const noteBlock = doc.getBlocksByFlavour("affine:note")[0];
+                if (noteBlock) {
+                  doc.addBlock(
+                    "affine:paragraph",
+                    { text: new Text(responseText) },
+                    noteBlock.id
+                  );
+                  return result.response;
+                }
               }
               return result.response;
             }
@@ -1517,10 +1540,12 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         // Parse and insert the remaining content
         if (remainingContent.trim()) {
-          // Set flag to indicate we're in insertMarkdown mode (skip H1 blocks)
-          doc._insertMarkdownMode = true;
-          parseMarkdownToBlocks(doc, noteBlock.id, remainingContent);
-          doc._insertMarkdownMode = false;
+          doc.transact(() => {
+            // Set flag to indicate we're in insertMarkdown mode (skip H1 blocks)
+            doc._insertMarkdownMode = true;
+            parseMarkdownToBlocks(doc, noteBlock.id, remainingContent);
+            doc._insertMarkdownMode = false;
+          });
         }
 
         // Ensure snapshot persists even if slots didn't fire.
@@ -1716,7 +1741,9 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       if (!noteBlock) return;
 
       try {
-        parseMarkdownToBlocks(doc, noteBlock.id, markdown);
+        doc.transact(() => {
+          parseMarkdownToBlocks(doc, noteBlock.id, markdown);
+        });
         // Ensure snapshot persists even if slots didn't fire.
         saveDocSnapshot(doc);
       } catch (e) {
