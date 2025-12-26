@@ -541,7 +541,7 @@ function systemEndpoints(app) {
   );
 
   app.post(
-    "/api/public-signup",
+    "/public-signup",
     [isMultiUserSetup],
     async (request, response) => {
       try {
