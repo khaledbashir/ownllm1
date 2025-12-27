@@ -26,44 +26,58 @@ if [ -n "$MCP_SERVERS_JSON" ]; then
     chown -R anythingllm:anythingllm "$MCP_DIR"
 fi
 
-{
-  cd /app/server/ &&
-    # Disable Prisma CLI telemetry (https://www.prisma.io/docs/orm/tools/prisma-cli#how-to-opt-out-of-data-collection)
-    export CHECKPOINT_DISABLE=1 &&
-    # Dynamically update schema provider if using Postgres
-    if [[ "$DATABASE_URL" == "postgres"* ]]; then
-        echo "Switching Prisma provider to PostgreSQL..."
-        sed -i 's/provider = "sqlite"/provider = "postgresql"/g' ./prisma/schema.prisma
-    fi &&
-    echo "Environment: $NODE_ENV"
-    echo "RESET_DB is currently set to: '$RESET_DB'"
-    
-    # Allow forcing a DB reset via env var (useful for stuck migrations)
-    if [ "$RESET_DB" == "true" ]; then
-        echo "⚠️ RESET_DB is set to true. Resetting database..."
-        npx prisma migrate reset --force --schema=./prisma/schema.prisma || echo "❌ Reset failed, but continuing..."
-    fi
+# --- Database Setup (Synchronous) ---
+echo "--- Starting Database Setup ---"
+cd /app/server/
+export CHECKPOINT_DISABLE=1
 
-    echo "Generating Prisma Client..."
-    npx prisma generate --schema=./prisma/schema.prisma
-    
-    echo "Running database migrations..."
-    if ! npx prisma migrate deploy --schema=./prisma/schema.prisma; then
-        echo "❌ MIGRATION FAILED!"
-        echo "If this is a new installation and you are seeing P3009, set RESET_DB=\"true\" in your environment variables to wipe and re-init the database."
-        sleep 30
-        exit 1
+# Dynamically update schema provider if using Postgres
+if [[ "$DATABASE_URL" == "postgres"* ]]; then
+    echo "🔄 Switching Prisma provider to PostgreSQL..."
+    sed -i 's/provider = "sqlite"/provider = "postgresql"/g' ./prisma/schema.prisma
+fi
+
+echo "Environment: $NODE_ENV"
+echo "RESET_DB setting: '$RESET_DB'"
+
+# Allow forcing a DB reset via env var (useful for stuck migrations)
+if [ "$RESET_DB" == "true" ]; then
+    echo "⚠️  WARNING: RESET_DB is set to true. Attempting to reset database..."
+    if npx prisma migrate resolve --rolled-back "20230921191814_init" --schema=./prisma/schema.prisma; then
+        echo "✅ Marked failed migration as rolled back."
     fi
-    
+    npx prisma migrate reset --force --schema=./prisma/schema.prisma || echo "⚠️  Reset failed, but trying to continue..."
+fi
+
+echo "📦 Generating Prisma Client..."
+npx prisma generate --schema=./prisma/schema.prisma
+
+echo "🚀 Running database migrations (deploy)..."
+if ! npx prisma migrate deploy --schema=./prisma/schema.prisma; then
+    echo "================================================================"
+    echo "❌ CRITICAL ERROR: DATABASE MIGRATION FAILED!"
+    echo "Prisma Error P3009 detected (failed migration state)."
+    echo ""
+    echo "FIX: In Easypanel, add the environment variable:"
+    echo "RESET_DB=\"true\""
+    echo "Then restart the service to wipe and re-initialize the database."
+    echo "================================================================"
+    sleep 60
+    exit 1
+fi
+echo "✅ Database is ready."
+
+# --- Start Services ---
+{
     echo "Starting AnythingLLM Server..."
     node /app/server/index.js
 } &
 {
-  # Set DATABASE_URL for collector to satisfy @langchain/community Prisma vector store validation
-  # The collector doesn't use a database directly, but @langchain/community includes
-  # a Prisma vector store that validates a schema requiring this variable.
-  export DATABASE_URL="file:/app/server/storage/anythingllm.db"
-  node /app/collector/index.js
+    # Set DATABASE_URL for collector to satisfy @langchain/community Prisma vector store validation
+    export DATABASE_URL="file:/app/server/storage/anythingllm.db"
+    echo "Starting Document Collector..."
+    node /app/collector/index.js
 } &
 wait -n
 exit $?
+
