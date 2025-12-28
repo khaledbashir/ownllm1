@@ -1,5 +1,5 @@
 const { BedrockRuntimeClient } = require("@aws-sdk/client-bedrock-runtime");
-const { fromStatic } = require("@aws-sdk/token-providers");
+const { fromStatic } = require("@aws-sdk/credential-providers");
 const { ChatBedrockConverse } = require("@langchain/aws");
 
 /** @typedef {'jpeg' | 'png' | 'gif' | 'webp'} */

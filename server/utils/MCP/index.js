@@ -263,7 +263,7 @@ class MCPCompatibilityLayer extends MCPHypervisor {
    * @returns {Promise<{valid: boolean, error: string | null, warnings: Array<string>}>}
    */
   async validateMCPServer(config) {
-    return this.validateMCPServer(config);
+    return super.validateMCPServer(config);
   }
 
   /**   * Return the result of an MCP server call as a string
