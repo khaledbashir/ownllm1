@@ -1,0 +1,369 @@
+{
+  "name": "Lead Intake Automation - Typeform to Airtable with Clearbit Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "typeform-lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Typeform Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "values": [
+            {
+              "name": "email",
+              "value": "={{ $json.form_response.answers.find(a => a.type === 'email').email }}",
+              "type": "stringValue"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.form_response.answers.find(a => a.type === 'text').text }}",
+              "type": "stringValue"
+            },
+            {
+              "name": "domain",
+              "value": "={{ $json.form_response.answers.find(a => a.type === 'email').email.split('@')[1].toLowerCase() }}",
+              "type": "stringValue"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "set-variables",
+      "name": "Extract Form Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = $input.item.json.email;\nconst domain = $input.item.json.domain;\nconst personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'protonmail.com', 'mail.com'];\nconst isBusinessEmail = !personalDomains.includes(domain);\n\nreturn {\n  json: {\n    ...$input.item.json,\n    isBusinessEmail,\n    emailType: isBusinessEmail ? 'business' : 'personal'\n  }\n};"
+      },
+      "id": "email-validation",
+      "name": "Validate Email Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "business-email-check",
+              "leftValue": "={{ $json.isBusinessEmail }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-email-type",
+      "name": "Is Business Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://company.clearbit.com/v2/companies/find?domain={{ $json.domain }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.CLEARBIT_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "continueOnFail": true,
+          "timeout": 10000
+        }
+      },
+      "id": "clearbit-enrichment",
+      "name": "Enrich with Clearbit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "values": [
+            {
+              "name": "companyLogo",
+              "value": "={{ $json.logo || '' }}",
+              "type": "stringValue"
+            },
+            {
+              "name": "companyName",
+              "value": "={{ $json.name || '' }}",
+              "type": "stringValue"
+            },
+            {
+              "name": "companyLocation",
+              "value": "={{ $json.location || '' }}",
+              "type": "stringValue"
+            },
+            {
+              "name": "companyDomain",
+              "value": "={{ $json.domain || '' }}",
+              "type": "stringValue"
+            },
+            {
+              "name": "companyTags",
+              "value": "={{ $json.tags ? $json.tags.join(', ') : '' }}",
+              "type": "stringValue"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "merge-data",
+      "name": "Merge Enrichment Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "tableId": "={{ $env.AIRTABLE_TABLE_ID }}",
+        "data": "={{ {\n  \"Email\": $json.email,\n  \"Name\": $json.name,\n  \"Company Name\": $json.companyName || '',\n  \"Company Domain\": $json.companyDomain || $json.domain,\n  \"Company Logo\": $json.companyLogo || '',\n  \"Company Location\": $json.companyLocation || '',\n  \"Company Tags\": $json.companyTags || '',\n  \"Lead Source\": \"Typeform\",\n  \"Created At\": new Date().toISOString()\n} }}",
+        "options": {}
+      },
+      "id": "save-to-airtable",
+      "name": "Save to Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "us-location-check",
+              "leftValue": "={{ $json.companyLocation.toLowerCase() }}",
+              "rightValue": "united states",
+              "operator": {
+                "type": "string",
+                  "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-us-location",
+      "name": "Is US Company?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1650, 200]
+    },
+    {
+      "parameters": {
+        "channel": "={{ $env.SLACK_CHANNEL }}",
+        "text": "=🚀 New US Lead Alert!\\n\\n*Name:* {{ $json.name }}\\n*Email:* {{ $json.email }}\\n*Company:* {{ $json.companyName || 'Unknown' }}\\n*Location:* {{ $json.companyLocation || 'Unknown' }}\\n\\n📞 Call them immediately!",
+        "otherOptions": {}
+      },
+      "id": "slack-notification",
+      "name": "Notify Sales Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1850, 100]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_FROM_EMAIL }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Thanks for contacting us!",
+        "text": "Hi {{ $json.name }},\\n\\nThank you for reaching out to us! We've received your inquiry and will get back to you shortly.\\n\\nBest regards,\\nThe Team",
+        "options": {}
+      },
+      "id": "auto-reply-email",
+      "name": "Send Auto-Reply",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"success\": true,\n  \"message\": \"Lead processed successfully\",\n  \"emailType\": $json.isBusinessEmail ? 'business' : 'personal'\n} }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2050, 300]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [
+        [
+          {
+            "node": "set-variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set-variables": {
+      "main": [
+        [
+          {
+            "node": "email-validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "email-validation": {
+      "main": [
+        [
+          {
+            "node": "check-email-type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-email-type": {
+      "main": [
+        [
+          {
+            "node": "clearbit-enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "auto-reply-email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clearbit-enrichment": {
+      "main": [
+        [
+          {
+            "node": "merge-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge-data": {
+      "main": [
+        [
+          {
+            "node": "save-to-airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save-to-airtable": {
+      "main": [
+        [
+          {
+            "node": "check-us-location",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-us-location": {
+      "main": [
+        [
+          {
+            "node": "slack-notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "webhook-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "slack-notification": {
+      "main": [
+        [
+          {
+            "node": "webhook-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "auto-reply-email": {
+      "main": [
+        [
+          {
+            "node": "webhook-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  }
+}
