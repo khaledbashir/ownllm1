@@ -130,6 +130,190 @@ class MCPHypervisor {
   }
 
   /**
+   * Add new MCP server to config file
+   * @param {Object} config - MCP server configuration
+   * @param {string} config.name - Name of the MCP server
+   * @param {string} config.command - Command to run the MCP server
+   * @param {Array<string>} config.args - Arguments for the command
+   * @param {Object<string, string>} config.env - Environment variables
+   * @param {string} [config.connectionType] - Type of connection (stdio, http, sse)
+   * @returns {{success: boolean, error: string | null}}
+   */
+  addMCPServerToConfig(config) {
+    const { name, command, args, env, connectionType } = config;
+
+    // Validate required fields
+    if (!name || !name.trim()) {
+      return { success: false, error: "Server name is required" };
+    }
+    if (!command || !command.trim()) {
+      return { success: false, error: "Command is required" };
+    }
+
+    // Check for duplicate server name
+    const servers = safeJsonParse(
+      fs.readFileSync(this.mcpServerJSONPath, "utf8"),
+      { mcpServers: {} }
+    );
+    if (servers.mcpServers[name]) {
+      return {
+        success: false,
+        error: `MCP server with name "${name}" already exists. Please choose a different name.`,
+      };
+    }
+
+    // Add to config
+    servers.mcpServers[name] = {
+      command,
+      args: args || [],
+      env: env || {},
+    };
+
+    // Add connection type if specified (for http/sse)
+    if (connectionType && connectionType !== 'stdio') {
+      servers.mcpServers[name].url = env?.MCP_SERVER_URL || null;
+      servers.mcpServers[name].transport = connectionType;
+    }
+
+    // Set auto-start by default
+    servers.mcpServers[name].anythingllm = {
+      autoStart: true,
+    };
+
+    fs.writeFileSync(
+      this.mcpServerJSONPath,
+      JSON.stringify(servers, null, 2),
+      "utf8"
+    );
+
+    this.log(`MCP server ${name} added to config file`);
+    return { success: true, error: null };
+  }
+
+  /**
+   * Update existing MCP server in config file
+   * @param {string} name - Name of server to update
+   * @param {Object} updates - Fields to update
+   * @param {string} [updates.command] - New command
+   * @param {Array<string>} [updates.args] - New arguments
+   * @param {Object<string, string>} [updates.env] - New environment variables
+   * @param {string} [updates.connectionType] - New connection type
+   * @returns {{success: boolean, error: string | null}}
+   */
+  updateMCPServerInConfig(name, updates) {
+    const servers = safeJsonParse(
+      fs.readFileSync(this.mcpServerJSONPath, "utf8"),
+      { mcpServers: {} }
+    );
+
+    if (!servers.mcpServers[name]) {
+      return {
+        success: false,
+        error: `MCP server ${name} not found in config file`,
+      };
+    }
+
+    // Update fields that are provided
+    if (updates.command !== undefined) {
+      servers.mcpServers[name].command = updates.command;
+    }
+    if (updates.args !== undefined) {
+      servers.mcpServers[name].args = updates.args;
+    }
+    if (updates.env !== undefined) {
+      servers.mcpServers[name].env = updates.env;
+    }
+    if (updates.connectionType !== undefined && updates.connectionType !== 'stdio') {
+      servers.mcpServers[name].url = updates.env?.MCP_SERVER_URL || null;
+      servers.mcpServers[name].transport = updates.connectionType;
+    }
+
+    fs.writeFileSync(
+      this.mcpServerJSONPath,
+      JSON.stringify(servers, null, 2),
+      "utf8"
+    );
+
+    this.log(`MCP server ${name} updated in config file`);
+    return { success: true, error: null };
+  }
+
+  /**
+   * Validate MCP server configuration
+   * @param {Object} config - MCP server configuration to validate
+   * @param {string} [config.name] - Name of the server
+   * @param {string} [config.command] - Command to run
+   * @param {Array<string>} [config.args] - Arguments for command
+   * @param {string} [config.connectionType] - Type of connection
+   * @returns {Promise<{valid: boolean, error: string | null, warnings: Array<string>}>}
+   */
+  async validateMCPServer(config) {
+    const warnings = [];
+    const { name, command, args, connectionType } = config;
+
+    // Basic validation
+    if (!name || !name.trim()) {
+      return {
+        valid: false,
+        error: "Server name is required",
+        warnings: [],
+      };
+    }
+
+    // Validate server name format
+    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+      return {
+        valid: false,
+        error: "Server name can only contain letters, numbers, hyphens, and underscores",
+        warnings: [],
+      };
+    }
+
+    if (!command || !command.trim()) {
+      return {
+        valid: false,
+        error: "Command is required",
+        warnings: [],
+      };
+    }
+
+    // Warn about autoStart if not set
+    if (!config.autoStart) {
+      warnings.push("autoStart is not set. Server will not start automatically.");
+    }
+
+    // Validate connection type
+    const validConnectionTypes = ['stdio', 'http', 'sse'];
+    if (connectionType && !validConnectionTypes.includes(connectionType)) {
+      return {
+        valid: false,
+        error: `Invalid connection type. Must be one of: ${validConnectionTypes.join(', ')}`,
+        warnings: [],
+      };
+    }
+
+    // Validate args is an array
+    if (args && !Array.isArray(args)) {
+      return {
+        valid: false,
+        error: "Arguments must be an array of strings",
+        warnings: [],
+      };
+    }
+
+    // Check for common npm/npx packages
+    if (command === 'npx' && (!args || args.length === 0)) {
+      warnings.push("No package specified for npx. Server may fail to start.");
+    }
+
+    return {
+      valid: true,
+      error: null,
+      warnings: warnings.length > 0 ? warnings : null,
+    };
+  }
+
+  /**
    * Reload the MCP servers - can be used to reload the MCP servers without restarting the server or app
    * and will also apply changes to the config file if any where made.
    */

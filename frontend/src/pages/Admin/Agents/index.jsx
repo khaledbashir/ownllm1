@@ -24,9 +24,12 @@ import AgentFlowsList from "./AgentFlows";
 import FlowPanel from "./AgentFlows/FlowPanel";
 import { MCPServersList, MCPServerHeader } from "./MCPServers";
 import ServerPanel from "./MCPServers/ServerPanel";
+import AddServerModal from "./MCPServers/AddServerModal";
+import EditServerModal from "./MCPServers/EditServerModal";
 import { Link } from "react-router-dom";
 import paths from "@/utils/paths";
 import AgentFlows from "@/models/agentFlows";
+import MCPModel from "@/models/mcpServers";
 
 export default function AdminAgents() {
   const formEl = useRef(null);
@@ -47,6 +50,10 @@ export default function AdminAgents() {
   // MCP Servers are lazy loaded to not block the UI thread
   const [mcpServers, setMcpServers] = useState([]);
   const [selectedMcpServer, setSelectedMcpServer] = useState(null);
+
+  // MCP Server Modals
+  const [showAddServerModal, setShowAddServerModal] = useState(false);
+  const [showEditServerModal, setShowEditServerModal] = useState(false);
 
   // Alert user if they try to leave the page with unsaved changes
   useEffect(() => {
@@ -229,6 +236,32 @@ export default function AdminAgents() {
     );
   };
 
+  const handleAddServer = async (serverConfig) => {
+    try {
+      await MCPModel.addServer(serverConfig);
+      setShowAddServerModal(false);
+      // Refresh MCP servers list
+      const updatedServers = await MCPModel.getServers();
+      setMcpServers(updatedServers);
+      setHasChanges(true);
+    } catch (error) {
+      console.error("Failed to add MCP server:", error);
+    }
+  };
+
+  const handleEditServer = async (serverName, updates) => {
+    try {
+      await MCPModel.editServer(serverName, updates);
+      setShowEditServerModal(false);
+      // Refresh MCP servers list
+      const updatedServers = await MCPModel.getServers();
+      setMcpServers(updatedServers);
+      setHasChanges(true);
+    } catch (error) {
+      console.error("Failed to edit MCP server:", error);
+    }
+  };
+
   if (loading) {
     return (
       <div
@@ -315,21 +348,33 @@ export default function AdminAgents() {
               id="active_agent_flows"
               value={activeFlowIds.join(",")}
             />
-            <MCPServerHeader
-              setMcpServers={setMcpServers}
-              setSelectedMcpServer={setSelectedMcpServer}
-            >
-              {({ loadingMcpServers }) => {
-                return (
-                  <MCPServersList
-                    isLoading={loadingMcpServers}
-                    servers={mcpServers}
-                    selectedServer={selectedMcpServer}
-                    handleClick={handleMCPClick}
-                  />
-                );
-              }}
-            </MCPServerHeader>
+            <div className="space-y-4">
+              <MCPServerHeader
+                setMcpServers={setMcpServers}
+                setSelectedMcpServer={setSelectedMcpServer}
+              >
+                {({ loadingMcpServers }) => {
+                  return (
+                    <div>
+                      <MCPServersList
+                        isLoading={loadingMcpServers}
+                        servers={mcpServers}
+                        selectedServer={selectedMcpServer}
+                        handleClick={handleMCPClick}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAddServerModal(true)}
+                        className="mt-4 w-full px-6 py-3 rounded-lg border-2 border-dashed border-white/30 text-white hover:border-cta-button hover:text-cta-button transition-all flex items-center justify-center gap-2"
+                      >
+                        <Plug className="w-5 h-5" />
+                        <span className="font-medium">Add New MCP Server</span>
+                      </button>
+                    </div>
+                  );
+                }}
+              </MCPServerHeader>
+            </div>
           </div>
 
           {/* Selected agent skill modal */}
@@ -359,6 +404,7 @@ export default function AdminAgents() {
                           <ServerPanel
                             server={selectedMcpServer}
                             toggleServer={toggleMCP}
+                            onEdit={() => setShowEditServerModal(true)}
                             onDelete={handleMCPServerDelete}
                           />
                         ) : selectedFlow ? (
@@ -550,6 +596,7 @@ export default function AdminAgents() {
                   <ServerPanel
                     server={selectedMcpServer}
                     toggleServer={toggleMCP}
+                    onEdit={() => setShowEditServerModal(true)}
                     onDelete={handleMCPServerDelete}
                   />
                 ) : selectedFlow ? (
@@ -608,6 +655,22 @@ export default function AdminAgents() {
           </div>
         </div>
       </form>
+
+      {/* MCP Server Modals */}
+      {showAddServerModal && (
+        <AddServerModal
+          onClose={() => setShowAddServerModal(false)}
+          onAdd={handleAddServer}
+        />
+      )}
+
+      {showEditServerModal && selectedMcpServer && (
+        <EditServerModal
+          server={selectedMcpServer}
+          onClose={() => setShowEditServerModal(false)}
+          onEdit={handleEditServer}
+        />
+      )}
     </SkillLayout>
   );
 }

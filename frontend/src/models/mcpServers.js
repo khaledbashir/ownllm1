@@ -71,6 +71,60 @@ const MCPServers = {
         error: e.message,
       }));
   },
-};
+  /**
+   * Add new MCP server to config file
+   * @param {Object} config - MCP server configuration
+   * @returns {Promise<{success: boolean, error: string | null}>}
+   */
+  addServer: async (config) => {
+    return await fetch(`${API_BASE}/mcp-servers/add`, {
+      method: "POST",
+      headers: baseHeaders(),
+      body: JSON.stringify(config),
+    })
+      .then((res) => res.json())
+      .catch((e) => ({
+        success: false,
+        error: e.message,
+      }));
+  },
+
+  /**
+   * Edit existing MCP server in config file
+   * @param {string} name - Name of server to edit
+   * @param {Object} updates - Fields to update
+   * @returns {Promise<{success: boolean, error: string | null}>}
+   */
+  editServer: async (name, updates) => {
+    return await fetch(`${API_BASE}/mcp-servers/edit`, {
+      method: "POST",
+      headers: baseHeaders(),
+      body: JSON.stringify({ name, updates }),
+    })
+      .then((res) => res.json())
+      .catch((e) => ({
+        success: false,
+        error: e.message,
+      }));
+  },
+
+  /**
+   * Validate MCP server configuration
+   * @param {Object} config - MCP server configuration to validate
+   * @returns {Promise<{valid: boolean, error: string | null, warnings: Array<string>}>}
+   */
+  validateServer: async (config) => {
+    return await fetch(`${API_BASE}/mcp-servers/validate`, {
+      method: "POST",
+      headers: baseHeaders(),
+      body: JSON.stringify(config),
+    })
+      .then((res) => res.json())
+      .catch((e) => ({
+        valid: false,
+        error: e.message,
+        warnings: [],
+      }));
+  },};
 
 export default MCPServers;

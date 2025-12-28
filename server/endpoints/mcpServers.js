@@ -95,6 +95,67 @@ function mcpServersEndpoints(app) {
       }
     }
   );
+
+  app.post(
+    "/mcp-servers/add",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      try {
+        const config = reqBody(request);
+        const result = await new MCPCompatibilityLayer().addMCPServer(
+          config
+        );
+        return response.status(200).json(result);
+      } catch (error) {
+        console.error("Error adding MCP server:", error);
+        return response.status(500).json({
+          success: false,
+          error: error.message,
+        });
+      }
+    }
+  );
+
+  app.post(
+    "/mcp-servers/edit",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      try {
+        const { name, updates } = reqBody(request);
+        const result = await new MCPCompatibilityLayer().updateMCPServer(
+          name,
+          updates
+        );
+        return response.status(200).json(result);
+      } catch (error) {
+        console.error("Error editing MCP server:", error);
+        return response.status(500).json({
+          success: false,
+          error: error.message,
+        });
+      }
+    }
+  );
+
+  app.post(
+    "/mcp-servers/validate",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      try {
+        const config = reqBody(request);
+        const result = await new MCPCompatibilityLayer().validateMCPServer(
+          config
+        );
+        return response.status(200).json(result);
+      } catch (error) {
+        console.error("Error validating MCP server:", error);
+        return response.status(500).json({
+          valid: false,
+          error: error.message,
+        });
+      }
+    }
+  );
 }
 
 module.exports = { mcpServersEndpoints };

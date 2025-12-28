@@ -7,7 +7,7 @@ import truncate from "truncate";
 import MCPServers from "@/models/mcpServers";
 import pluralize from "pluralize";
 
-function ManageServerMenu({ server, toggleServer, onDelete }) {
+function ManageServerMenu({ server, toggleServer, onEdit, onDelete }) {
   const [open, setOpen] = useState(false);
   const [running, setRunning] = useState(server.running);
   const menuRef = useRef(null);
@@ -87,6 +87,16 @@ function ManageServerMenu({ server, toggleServer, onDelete }) {
             <span className="text-sm">
               {running ? "Stop MCP Server" : "Start MCP Server"}
             </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onEdit();
+            }}
+            className="border-none flex items-center rounded-lg gap-x-2 hover:bg-theme-action-menu-item-hover py-1.5 px-2 transition-colors duration-200 w-full text-left"
+          >
+            <span className="text-sm">Edit MCP Server</span>
           </button>
           <button
             type="button"

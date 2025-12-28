@@ -215,8 +215,58 @@ class MCPCompatibilityLayer extends MCPHypervisor {
     return { success: true, error: null };
   }
 
+  /**   * Add new MCP server to config file
+   * @param {Object} config - MCP server configuration
+   * @returns {Promise<{success: boolean, error: string | null}>}
+   */
+  async addMCPServer(config) {
+    const result = this.addMCPServerToConfig(config);
+    if (!result.success) return result;
+
+    // Auto-start the server if it has autoStart enabled
+    try {
+      await this.bootMCPServers();
+    } catch (error) {
+      console.error(`Failed to start newly added MCP server: ${config.name}`, error);
+    }
+
+    return result;
+  }
+
   /**
-   * Return the result of an MCP server call as a string
+   * Update existing MCP server in config file
+   * @param {string} name - Name of server to update
+   * @param {Object} updates - Fields to update
+   * @returns {Promise<{success: boolean, error: string | null}>}
+   */
+  async updateMCPServer(name, updates) {
+    const result = this.updateMCPServerInConfig(name, updates);
+    if (!result.success) return result;
+
+    // Restart the server if it's currently running
+    const mcp = this.mcps[name];
+    if (mcp) {
+      try {
+        await this.pruneMCPServer(name);
+        await this.bootMCPServers();
+      } catch (error) {
+        console.error(`Failed to restart MCP server after update: ${name}`, error);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Validate MCP server configuration
+   * @param {Object} config - MCP server configuration to validate
+   * @returns {Promise<{valid: boolean, error: string | null, warnings: Array<string>}>}
+   */
+  async validateMCPServer(config) {
+    return this.validateMCPServer(config);
+  }
+
+  /**   * Return the result of an MCP server call as a string
    * This will handle circular references and bigints since an MCP server can return any type of data.
    * @param {Object} result - The result to return
    * @returns {string} The result as a string
