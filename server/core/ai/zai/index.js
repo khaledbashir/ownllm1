@@ -14,7 +14,7 @@ class ZAiLLM {
     const { OpenAI: OpenAIApi } = require("openai");
 
     this.openai = new OpenAIApi({
-      baseURL: process.env.ZAI_CODING_BASE_URL || "https://api.z.ai/api/paas/v4",
+      baseURL: process.env.ZAI_CODING_BASE_URL || "https://api.z.ai/api/coding/paas/v4",
       apiKey: process.env.ZAI_API_KEY,
     });
     this.model = modelPreference || process.env.ZAI_MODEL_PREF || "glm-4.5";
