@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { titleCase } from "text-case";
-import { BookOpenText, ArrowClockwise } from "@phosphor-icons/react";
+import { BookOpenText, ArrowClockwise, Plus } from "@phosphor-icons/react";
 import MCPLogo from "@/media/agents/mcp-logo.svg";
 import MCPServers from "@/models/mcpServers";
 import showToast from "@/utils/toast";
@@ -8,6 +8,7 @@ import showToast from "@/utils/toast";
 export function MCPServerHeader({
   setMcpServers,
   setSelectedMcpServer,
+  onAddClick,
   children,
 }) {
   const [loadingMcpServers, setLoadingMcpServers] = useState(false);
@@ -52,6 +53,14 @@ export function MCPServerHeader({
           <p className="text-lg font-medium">MCP Servers</p>
         </div>
         <div className="flex items-center gap-x-3">
+          <button
+            type="button"
+            onClick={onAddClick}
+            className="border-none text-theme-text-secondary hover:text-cta-button flex items-center gap-x-1"
+            title="Add New MCP Server"
+          >
+            <Plus size={18} weight="bold" />
+          </button>
           <a
             href="https://docs.anythingllm.com/mcp-compatibility/overview"
             target="_blank"

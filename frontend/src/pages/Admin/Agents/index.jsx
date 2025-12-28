@@ -323,6 +323,35 @@ export default function AdminAgents() {
               activeSkills={agentSkills}
             />
 
+            <div className="space-y-4">
+              <MCPServerHeader
+                setMcpServers={setMcpServers}
+                setSelectedMcpServer={setSelectedMcpServer}
+                onAddClick={() => setShowAddServerModal(true)}
+              >
+                {({ loadingMcpServers }) => {
+                  return (
+                    <div>
+                      <MCPServersList
+                        isLoading={loadingMcpServers}
+                        servers={mcpServers}
+                        selectedServer={selectedMcpServer}
+                        handleClick={handleMCPClick}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAddServerModal(true)}
+                        className="mt-4 w-full px-6 py-3 rounded-lg border-2 border-dashed border-white/30 text-white hover:border-cta-button hover:text-cta-button transition-all flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10"
+                      >
+                        <Plug className="w-5 h-5" />
+                        <span className="font-medium">Add New MCP Server</span>
+                      </button>
+                    </div>
+                  );
+                }}
+              </MCPServerHeader>
+            </div>
+
             <div className="text-theme-text-primary flex items-center gap-x-2">
               <Plug size={24} />
               <p className="text-lg font-medium">Custom Skills</p>
@@ -348,33 +377,6 @@ export default function AdminAgents() {
               id="active_agent_flows"
               value={activeFlowIds.join(",")}
             />
-            <div className="space-y-4">
-              <MCPServerHeader
-                setMcpServers={setMcpServers}
-                setSelectedMcpServer={setSelectedMcpServer}
-              >
-                {({ loadingMcpServers }) => {
-                  return (
-                    <div>
-                      <MCPServersList
-                        isLoading={loadingMcpServers}
-                        servers={mcpServers}
-                        selectedServer={selectedMcpServer}
-                        handleClick={handleMCPClick}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowAddServerModal(true)}
-                        className="mt-4 w-full px-6 py-3 rounded-lg border-2 border-dashed border-white/30 text-white hover:border-cta-button hover:text-cta-button transition-all flex items-center justify-center gap-2"
-                      >
-                        <Plug className="w-5 h-5" />
-                        <span className="font-medium">Add New MCP Server</span>
-                      </button>
-                    </div>
-                  );
-                }}
-              </MCPServerHeader>
-            </div>
           </div>
 
           {/* Selected agent skill modal */}
@@ -529,6 +531,33 @@ export default function AdminAgents() {
                 activeSkills={agentSkills}
               />
 
+              <MCPServerHeader
+                setMcpServers={setMcpServers}
+                setSelectedMcpServer={setSelectedMcpServer}
+                onAddClick={() => setShowAddServerModal(true)}
+              >
+                {({ loadingMcpServers }) => {
+                  return (
+                    <div>
+                      <MCPServersList
+                        isLoading={loadingMcpServers}
+                        servers={mcpServers}
+                        selectedServer={selectedMcpServer}
+                        handleClick={handleMCPClick}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAddServerModal(true)}
+                        className="mt-4 w-full px-6 py-3 rounded-lg border-2 border-dashed border-white/30 text-white hover:border-cta-button hover:text-cta-button transition-all flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10"
+                      >
+                        <Plug className="w-5 h-5" />
+                        <span className="font-medium">Add New MCP Server</span>
+                      </button>
+                    </div>
+                  );
+                }}
+              </MCPServerHeader>
+
               <div className="text-theme-text-primary flex items-center gap-x-2 mt-4">
                 <Plug size={24} />
                 <p className="text-lg font-medium">Custom Skills</p>
@@ -567,32 +596,6 @@ export default function AdminAgents() {
                 selectedFlow={selectedFlow}
                 handleClick={handleFlowClick}
               />
-
-              <MCPServerHeader
-                setMcpServers={setMcpServers}
-                setSelectedMcpServer={setSelectedMcpServer}
-              >
-                {({ loadingMcpServers }) => {
-                  return (
-                    <div>
-                      <MCPServersList
-                        isLoading={loadingMcpServers}
-                        servers={mcpServers}
-                        selectedServer={selectedMcpServer}
-                        handleClick={handleMCPClick}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowAddServerModal(true)}
-                        className="mt-4 w-full px-6 py-3 rounded-lg border-2 border-dashed border-white/30 text-white hover:border-cta-button hover:text-cta-button transition-all flex items-center justify-center gap-2"
-                      >
-                        <Plug className="w-5 h-5" />
-                        <span className="font-medium">Add New MCP Server</span>
-                      </button>
-                    </div>
-                  );
-                }}
-              </MCPServerHeader>
             </div>
           </div>
         </div>

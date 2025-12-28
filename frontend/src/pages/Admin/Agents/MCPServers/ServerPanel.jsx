@@ -111,7 +111,7 @@ function ManageServerMenu({ server, toggleServer, onEdit, onDelete }) {
   );
 }
 
-export default function ServerPanel({ server, toggleServer, onDelete }) {
+export default function ServerPanel({ server, toggleServer, onEdit, onDelete }) {
   return (
     <>
       <div className="p-2">
@@ -133,6 +133,7 @@ export default function ServerPanel({ server, toggleServer, onDelete }) {
               key={server.name}
               server={server}
               toggleServer={toggleServer}
+              onEdit={onEdit}
               onDelete={onDelete}
             />
           </div>
