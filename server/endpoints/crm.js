@@ -4,6 +4,7 @@ const {
   flexUserRoleValid,
   ROLES,
 } = require("../utils/middleware/multiUserProtected");
+const rateLimit = require("express-rate-limit");
 
 function crmEndpoints(app) {
   if (!app) return;
@@ -414,6 +415,107 @@ function crmEndpoints(app) {
         return response
           .status(500)
           .json({ success: false, error: error.message });
+      }
+    }
+  );
+
+  // ============================================
+  // PUBLIC WEBHOOK ENDPOINT
+  // ============================================
+
+  // Rate limiter for public lead submissions
+  const leadFormLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Limit each IP to 10 requests per window
+    message: {
+      success: false,
+      error: "Too many submissions. Please try again later.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Public webhook for portfolio form submissions
+  app.post(
+    "/public/lead-submit",
+    [leadFormLimiter],
+    async (request, response) => {
+      try {
+        const { pipelineId, title, name, email, phone, company, notes, value, metadata } = request.body;
+
+        // Validation
+        if (!pipelineId || !title) {
+          return response.status(400).json({
+            success: false,
+            error: "pipelineId and title are required",
+          });
+        }
+
+        // Basic email validation if provided
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          return response.status(400).json({
+            success: false,
+            error: "Invalid email format",
+          });
+        }
+
+        // Verify pipeline exists
+        const pipeline = await prisma.crm_pipelines.findUnique({
+          where: { id: Number(pipelineId) },
+        });
+
+        if (!pipeline) {
+          return response.status(404).json({
+            success: false,
+            error: "Pipeline not found",
+          });
+        }
+
+        // Get stages and determine default stage
+        const stages = JSON.parse(pipeline.stages);
+        const defaultStage = stages[0] || "New";
+
+        // Get max position for the stage
+        const maxPos = await prisma.crm_cards.aggregate({
+          where: { pipelineId: Number(pipelineId), stage: defaultStage },
+          _max: { position: true },
+        });
+
+        // Create the card
+        const card = await prisma.crm_cards.create({
+          data: {
+            pipelineId: Number(pipelineId),
+            stage: defaultStage,
+            position: (maxPos._max.position || 0) + 1,
+            title,
+            name: name || null,
+            email: email || null,
+            phone: phone || null,
+            company: company || null,
+            notes: notes || null,
+            value: value ? parseFloat(value) : null,
+            metadata: metadata ? JSON.stringify(metadata) : null,
+            userId: null, // Public submissions don't have a user
+          },
+        });
+
+        console.log(`[Public Lead] Created card ${card.id} from public webhook`);
+
+        return response.status(200).json({
+          success: true,
+          message: "Lead submitted successfully",
+          card: {
+            id: card.id,
+            title: card.title,
+            stage: card.stage,
+          },
+        });
+      } catch (error) {
+        console.error("Error creating card from public webhook:", error);
+        return response.status(500).json({
+          success: false,
+          error: "Failed to submit lead. Please try again later.",
+        });
       }
     }
   );
