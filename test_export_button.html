@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Export Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-900 to-blue-900 flex items-center justify-center">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full mx-4">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">🧪 PDF Export Test</h1>
+        
+        <p class="text-gray-600 mb-8 text-center">
+            Click the button below to generate a PDF using Playwright MCP server
+        </p>
+        
+        <div class="space-y-4">
+            <button 
+                onclick="testExport()" 
+                class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-4 px-6 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl">
+                    📄 Test Export PDF
+            </button>
+            
+            <div id="status" class="hidden mt-6 p-4 rounded-lg border-2">
+                <p id="status-text" class="text-center font-medium"></p>
+            </div>
+        </div>
+        
+        <div id="result" class="hidden mt-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">✅ PDF Generated!</h2>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-sm text-gray-600 mb-2"><strong>File:</strong> <span id="pdf-filename">test.pdf</span></p>
+                <p class="text-sm text-gray-600"><strong>Size:</strong> <span id="pdf-size">-</span></p>
+                <p class="text-sm text-gray-600"><strong>Generated:</strong> <span id="pdf-time">-</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            statusDiv.classList.remove('hidden');
+            
+            if (type === 'success') {
+                statusDiv.classList.remove('border-blue-200', 'bg-blue-50');
+                statusDiv.classList.add('border-green-200', 'bg-green-50');
+            } else if (type === 'error') {
+                statusDiv.classList.remove('border-blue-200', 'bg-blue-50');
+                statusDiv.classList.add('border-red-200', 'bg-red-50');
+            }
+            
+            statusText.textContent = message;
+        }
+        
+        function showResult(data) {
+            document.getElementById('result').classList.remove('hidden');
+            document.getElementById('pdf-filename').textContent = data.filename || 'unknown.pdf';
+            document.getElementById('pdf-size').textContent = data.size || '-';
+            document.getElementById('pdf-time').textContent = new Date().toLocaleString();
+        }
+        
+        async function testExport() {
+            try {
+                showStatus('🔄 Starting PDF generation...', 'info');
+                
+                // This would call your AI Assistant via MCP
+                // For now, this simulates the flow
+                const response = await fetch('/api/test-export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: window.location.href,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('✅ PDF generated successfully!', 'success');
+                    showResult(result);
+                } else {
+                    showStatus('❌ Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('❌ Failed: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

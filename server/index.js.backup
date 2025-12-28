@@ -103,7 +103,7 @@ const { spawn } = require("child_process");
 
 apiRouter.post("/export/pdf", async (req, res) => {
   try {
-    const { content, filename } = req.body || {};
+    const { content, filename } = req.body;
     
     if (!content) {
       return res.status(400).json({ error: "Content is required" });
@@ -115,10 +115,10 @@ apiRouter.post("/export/pdf", async (req, res) => {
     const pdfFile = path.join(outputDir, exportName + '.pdf');
     
     // Ensure output directory exists
-    await fsModule.mkdir(outputDir, { recursive: true });
+    await fs.mkdir(outputDir, { recursive: true });
     
     // Save HTML content
-    await fsModule.writeFile(htmlFile, content, 'utf8');
+    await fs.writeFile(htmlFile, content, 'utf8');
     
     // Call Playwright MCP to generate PDF
     const playwrightOutput = await new Promise((resolve, reject) => {
@@ -148,7 +148,7 @@ apiRouter.post("/export/pdf", async (req, res) => {
         console.log('Playwright:', data.toString());
       });
       
-      playwrightProcess.stderr.on('data', (data) => {
+      playwrightProcess.stdout.on('data', (data) => {
         console.log('Playwright stderr:', data.toString());
       });
       
@@ -164,8 +164,8 @@ apiRouter.post("/export/pdf", async (req, res) => {
     // Check if PDF was created
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    if (await fsModule.access(pdfFile).then(() => true).catch(() => false)) {
-      const pdfBase64 = await fsModule.readFile(pdfFile);
+    if (await fs.access(pdfFile).then(() => true).catch(() => false)) {
+      const pdfBase64 = await fs.readFile(pdfFile);
       res.json({
         success: true,
         message: "PDF generated successfully",
@@ -179,9 +179,7 @@ apiRouter.post("/export/pdf", async (req, res) => {
     
   } catch (error) {
     console.error('PDF Export Error:', error);
-    const errorMessage = error?.message || error?.toString() || "Unknown error occurred during PDF export";
-    console.error('Error details:', errorMessage);
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: error.message });
   }
 });
 

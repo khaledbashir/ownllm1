@@ -48,6 +48,7 @@
     "chromadb": "^2.0.1",
     "cohere-ai": "^7.19.0",
     "cors": "^2.8.5",
+    "docx": "^8.0.0",
     "dotenv": "^16.0.3",
     "elevenlabs": "^0.5.0",
     "express": "^4.21.2",
@@ -70,7 +71,6 @@
     "ollama": "^0.5.10",
     "openai": "4.95.1",
     "pg": "^8.11.5",
-    "pinecone-client": "^1.1.0",
     "playwright": "1.56.0",
     "playwright-core": "1.56.0",
     "pluralize": "^8.0.0",
@@ -85,9 +85,7 @@
     "uuid": "^9.0.0",
     "uuid-apikey": "^1.5.3",
     "weaviate-ts-client": "^1.4.0",
-    "winston": "^3.13.0",
-    "puppeteer": "^21.0.0",
-    "docx": "^8.0.0"
+    "winston": "^3.13.0"
   },
   "resolutions": {
     "**/graphql-request/form-data": "3.0.4",

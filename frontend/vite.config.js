@@ -9,6 +9,7 @@ dns.setDefaultResultOrder("verbatim")
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  cacheDir: './.vite-cache', // Enable build caching for faster rebuilds
   assetsInclude: [
     './public/piper/ort-wasm-simd-threaded.wasm',
     './public/piper/piper_phonemize.wasm',
@@ -36,13 +37,14 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    visualizer({
+    // Only enable bundle visualizer in development to avoid slow production builds
+    process.env.NODE_ENV === 'development' ? visualizer({
       template: "treemap", // or sunburst
       open: false,
       gzipSize: true,
       brotliSize: true,
       filename: "bundleinspector.html" // will be saved in project's root
-    })
+    }) : null
   ],
   resolve: {
     alias: [

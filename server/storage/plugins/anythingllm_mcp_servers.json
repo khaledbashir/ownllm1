@@ -1,18 +1,18 @@
 {
-    "mcpServers": {
-        "n8n-mcp": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "supergateway",
-                "--streamableHttp",
-                "http://172.17.0.1:5678/mcp-server/http",
-                "--header",
-                "authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwNDA5ZTA2OS1iZjUwLTRmNjgtYjRlMy00ZWI1ODhkMWJjOGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY2NzgzMjU5LCJleHAiOjE3NjkzMTcyMDB9.NqbB4QgcEuPABvEQ_Efj7mB4x2Bs-mogP_zgTBSrF_Y"
-            ],
-            "anythingllm": {
-                "autoStart": true
-            }
-        }
+  "mcpServers": {
+    "n8n-builder": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@makafeli/n8n-workflow-builder"
+      ],
+      "env": {
+        "N8N_HOST": "https://basheer-n8n.5jtgcw.easypanel.host",
+        "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZjk0ZjMzYS0zYmIxLTRmNWMtOGRkNC1jMzJmNDJiYWZiNWQiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY2ODY4NTM0LCJleHAiOjE3Njk0MDM2MDB9.jjHAvNqnxcUNhdapCTO3k70K03-3I5OoaK_fABiVr8I"
+      },
+      "anythingllm": {
+        "autoStart": true
+      }
     }
+  }
 }

@@ -160,5 +160,9 @@
       "temperature": 0.2,
       "top_p": 1
     }
-  ]
+  ],
+  "Codegeex.Chat.LanguagePreference": "English",
+  "Codegeex.SidebarUI.LanguagePreference": "English",
+  "Codegeex.Comment.LanguagePreference": "English",
+  "Codegeex.CommitMessage.LanguagePreference": "English"
 }
