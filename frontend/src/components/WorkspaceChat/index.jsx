@@ -12,7 +12,12 @@ import {
   useWatchForAutoPlayAssistantTTSResponse,
 } from "../contexts/TTSProvider";
 
-export default function WorkspaceChat({ loading, workspace }) {
+export default function WorkspaceChat({
+  loading,
+  workspace,
+  chatOnly = false,
+  externalToolHandler = null,
+}) {
   useWatchForAutoPlayAssistantTTSResponse();
   const { threadSlug = null } = useParams();
   const [history, setHistory] = useState([]);
@@ -26,6 +31,13 @@ export default function WorkspaceChat({ loading, workspace }) {
         return false;
       }
 
+      // Skip history fetch in chatOnly mode for faster load
+      if (chatOnly) {
+        setHistory([]);
+        setLoadingHistory(false);
+        return;
+      }
+
       const chatHistory = threadSlug
         ? await Workspace.threads.chatHistory(workspace.slug, threadSlug)
         : await Workspace.chatHistory(workspace.slug);
@@ -34,7 +46,7 @@ export default function WorkspaceChat({ loading, workspace }) {
       setLoadingHistory(false);
     }
     getHistory();
-  }, [workspace, loading]);
+  }, [workspace, loading, chatOnly]);
 
   if (loadingHistory) return <LoadingChat />;
   if (!loading && !loadingHistory && !workspace) {
@@ -80,7 +92,12 @@ export default function WorkspaceChat({ loading, workspace }) {
   return (
     <TTSProvider>
       <DnDFileUploaderProvider workspace={workspace} threadSlug={threadSlug}>
-        <ChatContainer workspace={workspace} knownHistory={history} />
+        <ChatContainer
+          workspace={workspace}
+          knownHistory={history}
+          chatOnly={chatOnly}
+          externalToolHandler={externalToolHandler}
+        />
       </DnDFileUploaderProvider>
     </TTSProvider>
   );

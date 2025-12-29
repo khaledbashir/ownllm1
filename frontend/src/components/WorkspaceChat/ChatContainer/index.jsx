@@ -150,9 +150,10 @@ export default function ChatContainer({
   externalEditorRef = null,
   externalToolHandler = null, // New prop for custom tools
   threadSlug: propThreadSlug = null,
+  chatOnly = false, // Lightweight mode: no doc tabs, no insert modals
 }) {
   const { threadSlug: paramThreadSlug } = useParams();
-  const threadSlug = propThreadSlug || paramThreadSlug || null;
+  const threadSlug = chatOnly ? null : (propThreadSlug || paramThreadSlug || null);
   const [message, setMessage] = useState("");
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [chatHistory, setChatHistory] = useState(knownHistory);
@@ -654,8 +655,8 @@ export default function ChatContainer({
     >
       {isMobile && <SidebarMobileHeader />}
 
-      {/* Tab Header - Only show when in a thread and NOT split screen */}
-      {threadSlug && !externalEditorRef && (
+      {/* Tab Header - Only show when in a thread and NOT split screen and NOT chatOnly */}
+      {threadSlug && !externalEditorRef && !chatOnly && (
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
@@ -708,10 +709,10 @@ export default function ChatContainer({
         )}
       </div>
 
-      {activeTab === "chat" && <ChatTooltips />}
+      {activeTab === "chat" && !chatOnly && <ChatTooltips />}
 
-      {/* Insert Mode Modal */}
-      {showInsertModal && (
+      {/* Insert Mode Modal - Only when not chatOnly */}
+      {showInsertModal && !chatOnly && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-theme-bg-secondary border border-white/10 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <h3 className="text-white text-lg font-semibold mb-2">
