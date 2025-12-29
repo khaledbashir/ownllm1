@@ -245,21 +245,21 @@
 ## 8. Backend & API
 
 ### Database Schema
-- [ ] `client_proposals` table (if not exists)
-- [ ] `proposal_comments` table
-- [ ] `proposal_versions` table
-- [ ] `proposal_approvals` table
+- [x] `client_proposals` table (if not exists) - Uses existing `public_proposals` ✅
+- [x] `proposal_comments` table ✅
+- [x] `proposal_versions` table ✅
+- [x] `proposal_approvals` table ✅
 - [ ] Indexes for fast queries
 
 ### API Endpoints
-- [ ] `GET /api/client-portal/:id` - Fetch proposal data
-- [ ] `GET /api/client-portal/:id/comments` - Get comments
-- [ ] `POST /api/client-portal/:id/comments` - Add comment
-- [ ] `POST /api/client-portal/:id/approve` - Submit approval
-- [ ] `POST /api/client-portal/:id/decline` - Decline with reason
-- [ ] `POST /api/client-portal/:id/version` - Create version
-- [ ] `GET /api/client-portal/:id/versions` - Get version history
-- [ ] `POST /api/client-portal/:id/ai-query` - AI assistant query
+- [x] `GET /api/client-portal/:id` - Fetch proposal data ✅
+- [x] `GET /api/client-portal/:id/comments` - Get comments ✅
+- [x] `POST /api/client-portal/:id/comments` - Add comment ✅
+- [x] `POST /api/client-portal/:id/approve` - Submit approval ✅
+- [x] `POST /api/client-portal/:id/decline` - Decline with reason ✅
+- [x] `POST /api/client-portal/:id/version` - Create version ✅
+- [x] `GET /api/client-portal/:id/versions` - Get version history ✅
+- [x] `POST /api/client-portal/:id/ai-query` - AI assistant query ✅
 
 ### Authentication
 - [ ] Secure link generation (unique tokens)
@@ -275,7 +275,7 @@
 - [ ] In-app notification bell
 - [ ] Notification preferences
 
-**Progress:** 0%
+**Progress:** 40%
 
 ---
 
