@@ -665,15 +665,15 @@ model proposal_comments {
   parentId    String?  // For threaded replies
   authorName  String   // Name of the commenter (client or internal)
   authorEmail String?  // Email (optional, for identification)
-  content     String   @db.Text // Rich text content (Markdown supported)
+  content     String   // Rich text content (Markdown supported)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   reactions   String?  // JSON: [{ emoji, count, users[] }]
   mentions    String?  // JSON: ["user@example.com"]
 
   proposal    public_proposals @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-  replies     proposal_comments[] @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  parent      proposal_comments? @relation("CommentReplies", fields: [parentId])
+  replies     proposal_comments[] @relation("CommentReplies")
+  parent      proposal_comments? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
 
   @@index([proposalId])
   @@index([parentId])
@@ -686,10 +686,10 @@ model proposal_versions {
   proposalId  String
   versionNumber Int      // Incremental version number
   title       String   // Version title (e.g., "v1.0", "Revised pricing")
-  changes     String   @db.Text // JSON: [{ description, type }]
-  notes       String?  @db.Text // Optional notes explaining the version
+  changes     String   // JSON: [{ description, type }]
+  notes       String?  // Optional notes explaining the version
   authorName  String   // Who made the change
-  htmlContent String   @db.Text // HTML snapshot at this version
+  htmlContent String   // HTML snapshot at this version
   createdAt   DateTime @default(now())
 
   proposal    public_proposals @relation(fields: [proposalId], references: [id], onDelete: Cascade)
@@ -705,10 +705,10 @@ model proposal_approvals {
   proposalId      String
   approverName    String   // Name of the person approving
   approverEmail   String?  // Email for tracking
-  signatureData   String?  @db.Text // JSON: { type: "drawn"|"typed", signatureImage, timestamp, ip }
+  signatureData   String?  // JSON: { type: "drawn"|"typed", signatureImage, timestamp, ip }
   status          String   @default("pending") // pending, approved, declined, requested_changes
-  declineReason   String?  @db.Text // Reason for declining or requesting changes
-  changeNotes     String?  @db.Text // Notes when requesting changes
+  declineReason   String?  // Reason for declining or requesting changes
+  changeNotes     String?  // Notes when requesting changes
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
