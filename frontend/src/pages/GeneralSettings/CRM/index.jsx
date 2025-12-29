@@ -146,6 +146,17 @@ Always aim for accuracy in data entry.`;
             setCrmThreads(Array.isArray(updatedThreads) ? updatedThreads : []);
           }
         }
+
+        // Ensure the workspace has an LLM provider set if it's currently 'none' or null
+        // inheriting from system defaults if possible.
+        if (!ws.chatProvider || ws.chatProvider === "none") {
+          await Workspace.update(ws.slug, {
+            chatProvider: process.env.LLM_PROVIDER,
+            chatModel: process.env.OPEN_MODEL_PREF,
+            agentProvider: process.env.LLM_PROVIDER,
+            agentModel: process.env.OPEN_MODEL_PREF,
+          });
+        }
       }
     } catch (e) {
       console.error("[CRM] Failed to load workspace context:", e);
@@ -518,86 +529,88 @@ Always aim for accuracy in data entry.`;
                 </div>
                 <div className="flex flex-col">
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    {chatWorkspace?.name || "Assistant"}
-                    <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/10 text-white/50">Workspace</span>
+                    Assistant
+                    <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/10 text-white/50">Active Session</span>
                   </h3>
-                  <div className="flex items-center gap-2">
-                    {crmThreads.length > 0 ? (
-                      <select
-                        value={crmThreadSlug}
-                        onChange={(e) => setCrmThreadSlug(e.target.value)}
-                        className="bg-transparent text-[10px] text-white/50 hover:text-white cursor-pointer appearance-none border-none outline-none p-0 m-0"
-                      >
-                        {crmThreads.map(t => (
-                          <option key={t.slug} value={t.slug} className="bg-[#1a1a1a]">
-                            {t.name === "CRM Assistant" ? "Main Assistant" : t.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <p className="text-[10px] text-white/50">
-                        Type <span className="text-blue-400 font-mono">@agent</span> to start
-                      </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {crmThreads.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={crmThreadSlug}
+                          onChange={(e) => setCrmThreadSlug(e.target.value)}
+                          className="bg-transparent text-[10px] text-blue-400 font-bold hover:text-blue-300 cursor-pointer appearance-none border-none outline-none p-0 m-0"
+                        >
+                          {crmThreads.map(t => (
+                            <option key={t.slug} value={t.slug} className="bg-[#1a1a1a]">
+                              {t.name === "CRM Assistant" ? "Main Assistant" : t.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     )}
-                    <button
-                      onClick={handleNewThread}
-                      className="text-white/30 hover:text-white transition-colors"
-                      title="New Assistant Thread"
-                    >
-                      <Plus size={10} />
-                    </button>
-                    <a
-                      href={paths.workspace.settings.generalAppearance(chatWorkspace?.slug)}
-                      target="_blank"
-                      className="text-white/30 hover:text-white transition-colors ml-1"
-                      title="Workspace Settings"
-                    >
-                      <Settings size={10} />
-                    </a>
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleNewThread}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] font-bold text-white hover:bg-white/10 transition-all"
+                title="New Assistant Session"
+              >
+                <Plus size={12} />
+                New Session
+              </button>
+              <a
+                href={paths.workspace.settings.generalAppearance(chatWorkspace?.slug)}
+                target="_blank"
+                className="p-2 text-white/30 hover:text-white transition-colors"
+                title="Session Settings"
+              >
+                <Settings size={14} />
+              </a>
               <button
                 onClick={() => setChatOpen(false)}
-                className="p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+                className="p-2 text-white/30 hover:text-white transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
+          </div>
 
-            {/* Agent Status Indicator */}
-            {isAgentActive && (
-              <div className="px-6 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between animate-in fade-in slide-in-from-top-1 duration-300">
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping absolute inset-0" />
-                    <div className="w-2 h-2 rounded-full bg-blue-500 relative" />
-                  </div>
-                  <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                    Agent Executing Skill
-                  </span>
+          {/* Agent Status Indicator */}
+          {isAgentActive && (
+            <div className="px-6 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between animate-in fade-in slide-in-from-top-1 duration-300">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping absolute inset-0" />
+                  <div className="w-2 h-2 rounded-full bg-blue-500 relative" />
                 </div>
-                <Sparkles size={12} className="text-blue-400 animate-pulse" />
+                <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                  Agent Executing Skill
+                </span>
+              </div>
+              <Sparkles size={12} className="text-blue-400 animate-pulse" />
+            </div>
+          )}
+
+          {/* Chat Body */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {chatWorkspace ? (
+              <WorkspaceChatContainer
+                workspace={chatWorkspace}
+                externalToolHandler={handleToolCall}
+                chatOnly={false}
+                threadSlug={crmThreadSlug}
+              />
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center p-8 text-center text-white/40">
+                <Settings size={48} className="mb-4 text-white/10" />
+                <p className="mb-2">No workspace selected</p>
+                <p className="text-xs max-w-[200px]">Please configure at least one workspace to enable the AI assistant.</p>
               </div>
             )}
-
-            {/* Chat Body */}
-            <div className="flex-1 overflow-hidden flex flex-col">
-              {chatWorkspace ? (
-                <WorkspaceChatContainer
-                  workspace={chatWorkspace}
-                  externalToolHandler={handleToolCall}
-                  chatOnly={false}
-                  threadSlug={crmThreadSlug}
-                />
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center p-8 text-center text-white/40">
-                  <Settings size={48} className="mb-4 text-white/10" />
-                  <p className="mb-2">No workspace selected</p>
-                  <p className="text-xs max-w-[200px]">Please configure at least one workspace to enable the AI assistant.</p>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>

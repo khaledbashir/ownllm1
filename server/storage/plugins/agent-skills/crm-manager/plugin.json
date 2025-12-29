@@ -1,0 +1,35 @@
+{
+    "hubId": "crm-manager",
+    "name": "CRM Manager",
+    "description": "Powerful skill for managing CRM leads, pipelines, and activities.",
+    "active": true,
+    "entrypoint": {
+        "params": {
+            "action": {
+                "type": "string",
+                "enum": [
+                    "list_leads",
+                    "create_lead",
+                    "update_lead",
+                    "move_lead",
+                    "delete_lead"
+                ],
+                "description": "The CRM action to perform."
+            },
+            "params": {
+                "type": "object",
+                "description": "Parameters for the action."
+            }
+        }
+    },
+    "examples": [
+        {
+            "prompt": "Show me all active leads",
+            "call": "{\"action\": \"list_leads\"}"
+        },
+        {
+            "prompt": "Create a new lead for John Doe",
+            "call": "{\"action\": \"create_lead\", \"params\": {\"name\": \"John Doe\", \"pipeline\": \"Lead\"}}"
+        }
+    ]
+}

@@ -224,7 +224,7 @@ export default function ChatContainer({
       console.error("[ClientTool] Execution failed:", e);
       toast.error(`AI Action Failed: ${e.message}`);
     }
-  }, [notesEditorRef]);
+  }, [notesEditorRef, externalToolHandler]);
 
   // Tool Execution Effect
   useEffect(() => {
