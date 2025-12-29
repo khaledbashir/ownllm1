@@ -10,6 +10,7 @@ const { sqlAgent } = require("./sql-agent/index.js");
 const { productExtraction } = require("./product-extraction.js");
 const { apiTester } = require("./api-tester.js");
 const { browserQA } = require("./browser-qa.js");
+const { crmManager } = require("./crm-manager.js");
 
 module.exports = {
   webScraping,
@@ -24,6 +25,7 @@ module.exports = {
   productExtraction,
   apiTester,
   browserQA,
+  crmManager,
 
   // Plugin name aliases so they can be pulled by slug as well.
   [webScraping.name]: webScraping,
@@ -38,4 +40,6 @@ module.exports = {
   [productExtraction.name]: productExtraction,
   [apiTester.name]: apiTester,
   [browserQA.name]: browserQA,
+  [crmManager.name]: crmManager,
 };
+
