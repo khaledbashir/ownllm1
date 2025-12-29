@@ -112,6 +112,11 @@ async function generatePdf(htmlContent, options = {}) {
           border-left: 4px solid #3b82f6 !important;
           padding-left: 12pt !important;
           color: #1e293b !important;
+          /* CRITICAL: Ensure h2 stands out from body text */
+          font-family: 'Libre Baskerville', Georgia, serif !important;
+          font-weight: 700 !important;
+          letter-spacing: -0.01em !important;
+          page-break-before: avoid !important;
         }
         
         h3 {
@@ -119,6 +124,69 @@ async function generatePdf(htmlContent, options = {}) {
           margin: 18pt 0 9pt 0 !important;
           color: #334155 !important;
           font-weight: 600 !important;
+          page-break-before: avoid !important;
+        }
+        
+        /* Add spacing between sections to prevent orphaned headers */
+        section, .section {
+          margin: 24pt 0 !important;
+          padding: 14pt !important;
+          background: #ffffff !important;
+          border-radius: 6px !important;
+          page-break-inside: avoid !important;
+          border: 1px solid #f1f5f9 !important;
+        }
+        
+        /* Cover page styling */
+        .cover-page {
+          page-break-after: always !important;
+          min-height: 100vh !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
+          align-items: center !important;
+          padding: 40pt !important;
+          background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+        }
+        
+        .cover-title {
+          font-family: 'Libre Baskerville', Georgia, serif !important;
+          font-size: 32pt !important;
+          font-weight: 700 !important;
+          color: #0d1b2a !important;
+          margin-bottom: 20pt !important;
+          text-align: center !important;
+          letter-spacing: -0.02em !important;
+        }
+        
+        .cover-subtitle {
+          font-family: 'Inter', sans-serif !important;
+          font-size: 14pt !important;
+          font-weight: 500 !important;
+          color: #64748b !important;
+          margin-bottom: 16pt !important;
+          text-align: center !important;
+        }
+        
+        .cover-info {
+          font-family: 'Inter', sans-serif !important;
+          font-size: 11pt !important;
+          color: #475569 !important;
+          margin-bottom: 12pt !important;
+          text-align: center !important;
+          line-height: 1.8 !important;
+        }
+        
+        .cover-info strong {
+          color: #0d1b2a !important;
+          font-weight: 600 !important;
+        }
+        
+        .cover-divider {
+          width: 100px !important;
+          height: 3px !important;
+          background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%) !important;
+          margin: 24pt auto !important;
         }
         
         /* PARAGRAPHS - Editorial Quality */
@@ -147,6 +215,9 @@ async function generatePdf(htmlContent, options = {}) {
             0 1px 3px rgba(0,0,0,0.08),
             0 4px 12px rgba(0,0,0,0.04) !important;
           background: #ffffff !important;
+          /* CRITICAL: Prevent table overflow and ensure proper column distribution */
+          max-width: 100% !important;
+          min-width: 100% !important;
         }
         
         thead {
@@ -165,6 +236,47 @@ async function generatePdf(htmlContent, options = {}) {
           padding: 12pt 10pt !important;
           border: none !important;
           position: relative !important;
+          /* CRITICAL: Allow text wrapping in headers */
+          white-space: normal !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+          hyphens: auto !important;
+          text-align: left !important;
+          vertical-align: middle !important;
+        }
+        
+        /* Column-specific widths for pricing tables */
+        thead th:first-child {
+          /* Role column - give it minimum width */
+          width: 20% !important;
+          min-width: 80px !important;
+        }
+        
+        thead th:nth-child(2) {
+          /* Description column - give it maximum space */
+          width: 50% !important;
+          min-width: 200px !important;
+        }
+        
+        thead th:nth-child(3) {
+          /* Hours column */
+          width: 15% !important;
+          min-width: 60px !important;
+          text-align: center !important;
+        }
+        
+        thead th:nth-child(4) {
+          /* Rate column */
+          width: 15% !important;
+          min-width: 70px !important;
+          text-align: right !important;
+        }
+        
+        thead th:last-child {
+          /* Total column */
+          width: 15% !important;
+          min-width: 70px !important;
+          text-align: right !important;
         }
         
         thead th::after {
@@ -223,6 +335,41 @@ async function generatePdf(htmlContent, options = {}) {
           max-width: 100% !important;
           color: #1a1a1a !important;
           font-size: 10pt !important;
+          /* CRITICAL: Prevent vertical text stacking */
+          white-space: normal !important;
+          min-width: 1px !important;
+          min-height: 1em !important;
+        }
+        
+        /* Column-specific widths for table body cells */
+        td:first-child {
+          border-left: none !important;
+          width: 20% !important;
+          min-width: 80px !important;
+        }
+        
+        td:nth-child(2) {
+          width: 50% !important;
+          min-width: 200px !important;
+        }
+        
+        td:nth-child(3) {
+          width: 15% !important;
+          min-width: 60px !important;
+          text-align: center !important;
+        }
+        
+        td:nth-child(4) {
+          width: 15% !important;
+          min-width: 70px !important;
+          text-align: right !important;
+        }
+        
+        td:last-child {
+          border-right: none !important;
+          width: 15% !important;
+          min-width: 70px !important;
+          text-align: right !important;
         }
         
         td:first-child, th:first-child {
@@ -347,6 +494,82 @@ async function generatePdf(htmlContent, options = {}) {
           border-radius: 6px !important;
         }
         
+        /* PRICING TOTALS SECTION */
+        .totals-section {
+          margin-top: 24pt !important;
+          padding: 16pt !important;
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+          border-radius: 8px !important;
+          border: 2px solid #e2e8f0 !important;
+          page-break-inside: avoid !important;
+        }
+        
+        .totals-row {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          padding: 8pt 0 !important;
+          border-bottom: 1px solid #e2e8f0 !important;
+        }
+        
+        .totals-row:last-child {
+          border-bottom: none !important;
+        }
+        
+        .totals-label {
+          font-family: 'Inter', sans-serif !important;
+          font-size: 11pt !important;
+          font-weight: 500 !important;
+          color: #475569 !important;
+          text-align: left !important;
+        }
+        
+        .totals-value {
+          font-family: 'Inter', sans-serif !important;
+          font-size: 11pt !important;
+          font-weight: 600 !important;
+          color: #0d1b2a !important;
+          text-align: right !important;
+          min-width: 120px !important;
+        }
+        
+        .totals-row.grand-total .totals-label {
+          font-size: 13pt !important;
+          font-weight: 700 !important;
+          color: #0d1b2a !important;
+        }
+        
+        .totals-row.grand-total .totals-value {
+          font-size: 15pt !important;
+          font-weight: 700 !important;
+          color: #6366f1 !important;
+        }
+        
+        /* TERMS AND CONDITIONS SECTION */
+        .terms-section {
+          margin-top: 32pt !important;
+          padding: 16pt !important;
+          background: #ffffff !important;
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 8px !important;
+          page-break-inside: avoid !important;
+        }
+        
+        .terms-section h4 {
+          font-family: 'Libre Baskerville', Georgia, serif !important;
+          font-size: 13pt !important;
+          font-weight: 700 !important;
+          color: #0d1b2a !important;
+          margin-bottom: 12pt !important;
+          page-break-after: avoid !important;
+        }
+        
+        .terms-section p {
+          font-size: 10pt !important;
+          line-height: 1.6 !important;
+          margin-bottom: 8pt !important;
+        }
+        
         /* HIGHLIGHTS - Attention Grabs */
         .highlight {
           background: linear-gradient(120deg, #fef3c7 0%, #fde68a 100%) !important;
@@ -433,6 +656,35 @@ async function generatePdf(htmlContent, options = {}) {
           page-break-inside: avoid !important;
         }
         
+        /* PREVENT ORPHANS AND WIDOWS */
+        p, li, td, th {
+          orphans: 2 !important;
+          widows: 2 !important;
+        }
+        
+        /* AVOID ORPHANED LISTS */
+        ul, ol {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+        
+        /* AVOID ORPHANED TABLE ROWS */
+        tr {
+          page-break-inside: avoid !important;
+          page-break-after: auto !important;
+        }
+        
+        /* Ensure tables don't break awkwardly */
+        table {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+        
+        /* If table must break, repeat headers */
+        thead {
+          display: table-header-group !important;
+        }
+        
         /* DIVIDER LINES - Elegant Separators */
         hr, .divider {
           border: none !important;
@@ -445,6 +697,37 @@ async function generatePdf(htmlContent, options = {}) {
 
     // STEP 2: Pre-process HTML for semantic table structure
     let processedHtml = htmlContent;
+    
+    // Remove AI-generated meta-commentary and internal notes
+    const aiCommentPatterns = [
+      /The user['']s brief is for implementing[\s\S]*?/gi,
+      /I['']ve calculated pricing[\s\S]*?/gi,
+      /I['']ll include mandatory JSON block[\s\S]*?/gi,
+      /I['']ll create[\s\S]*?/gi,
+      /Based on[\s\S]*?/gi,
+      /Here['']s the[\s\S]*?/gi,
+      /The proposal[\s\S]*?/gi,
+      /This document[\s\S]*?/gi,
+    ];
+    
+    aiCommentPatterns.forEach(pattern => {
+      processedHtml = processedHtml.replace(pattern, '');
+    });
+    
+    // Remove duplicate sections (common in AI generation)
+    const h2Matches = processedHtml.match(/<h2[^>]*>.*?<\/h2>/gi);
+    if (h2Matches) {
+      const seenHeaders = new Set();
+      processedHtml = processedHtml.replace(/<h2[^>]*>(.*?)<\/h2>([\s\S]*?)(?=<h2[^>]*>|$)/gi, (match, header, content) => {
+        const normalizedHeader = header.toLowerCase().trim();
+        if (seenHeaders.has(normalizedHeader)) {
+          console.log(`[PDF Export] Removing duplicate section: ${header}`);
+          return '';
+        }
+        seenHeaders.add(normalizedHeader);
+        return match;
+      });
+    }
     
     // Wrap tables without thead/tbody in proper structure
     processedHtml = processedHtml.replace(
