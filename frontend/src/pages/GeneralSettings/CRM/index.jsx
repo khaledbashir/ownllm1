@@ -528,11 +528,11 @@ export default function CRMPage() {
                absolute right-0 top-0 bottom-0 z-30
                transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] 
                bg-[#1a1a1a]/95 backdrop-blur-xl border-l border-white/10 flex flex-col shadow-2xl
-               ${chatOpen ? "w-[450px] translate-x-0" : "w-[450px] translate-x-full pointer-events-none opacity-0"}
+               ${chatOpen ? "w-[500px] translate-x-0" : "w-[500px] translate-x-full pointer-events-none opacity-0"}
              `}
           >
             {/* Chat Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/5">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/10 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-[#007AFF] to-blue-600">
                   <MessageSquare size={16} className="text-white" />
@@ -542,85 +542,71 @@ export default function CRMPage() {
                     Assistant
                     <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/10 text-white/50">Active Session</span>
                   </h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {crmThreads.length > 0 && (
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={crmThreadSlug}
-                          onChange={(e) => setCrmThreadSlug(e.target.value)}
-                          className="bg-transparent text-[10px] text-blue-400 font-bold hover:text-blue-300 cursor-pointer appearance-none border-none outline-none p-0 m-0"
-                        >
-                          {crmThreads.map(t => (
-                            <option key={t.slug} value={t.slug} className="bg-[#1a1a1a]">
-                              {t.name === "CRM Assistant" ? "Main Assistant" : t.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
+                  {crmThreads.length > 0 && (
+                    <select
+                      value={crmThreadSlug}
+                      onChange={(e) => setCrmThreadSlug(e.target.value)}
+                      className="bg-transparent text-[10px] text-blue-400 font-bold hover:text-blue-300 cursor-pointer appearance-none border-none outline-none p-0 m-0"
+                    >
+                      {crmThreads.map(t => (
+                        <option key={t.slug} value={t.slug} className="bg-[#1a1a1a]">
+                          {t.name === "CRM Assistant" ? "Main Assistant" : t.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleNewThread}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] font-bold text-white hover:bg-white/10 transition-all"
-                title="New Assistant Session"
-              >
-                <Plus size={12} />
-                New Session
-              </button>
-              <a
-                href={paths.workspace.settings.generalAppearance(chatWorkspace?.slug)}
-                target="_blank"
-                className="p-2 text-white/30 hover:text-white transition-colors"
-                title="Session Settings"
-              >
-                <Settings size={14} />
-              </a>
-              <button
-                onClick={() => setChatOpen(false)}
-                className="p-2 text-white/30 hover:text-white transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          </div>
-
-          {/* Agent Status Indicator */}
-          {isAgentActive && (
-            <div className="px-6 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between animate-in fade-in slide-in-from-top-1 duration-300">
               <div className="flex items-center gap-2">
-                <div className="relative">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping absolute inset-0" />
-                  <div className="w-2 h-2 rounded-full bg-blue-500 relative" />
-                </div>
-                <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                  Agent Executing Skill
-                </span>
+                <button
+                  onClick={handleNewThread}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-[10px] font-bold text-blue-400 hover:bg-blue-600/30 transition-all"
+                >
+                  <Plus size={12} />
+                  New Session
+                </button>
+                <button
+                  onClick={() => setChatOpen(false)}
+                  className="p-2 text-white/30 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
               </div>
-              <Sparkles size={12} className="text-blue-400 animate-pulse" />
             </div>
-          )}
 
-          {/* Chat Body */}
-          <div className="flex-1 overflow-hidden flex flex-col">
-            {chatWorkspace ? (
-              <WorkspaceChatContainer
-                workspace={chatWorkspace}
-                externalToolHandler={handleToolCall}
-                chatOnly={false}
-                threadSlug={crmThreadSlug}
-              />
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center p-8 text-center text-white/40">
-                <Settings size={48} className="mb-4 text-white/10" />
-                <p className="mb-2">No workspace selected</p>
-                <p className="text-xs max-w-[200px]">Please configure at least one workspace to enable the AI assistant.</p>
+            {/* Agent Status Indicator */}
+            {isAgentActive && (
+              <div className="px-6 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping absolute inset-0" />
+                    <div className="w-2 h-2 rounded-full bg-blue-500 relative" />
+                  </div>
+                  <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">
+                    Agent Executing Skill
+                  </span>
+                </div>
+                <Sparkles size={12} className="text-blue-400 animate-pulse" />
               </div>
             )}
+
+            {/* Chat Body */}
+            <div className="flex-1 overflow-hidden flex flex-col relative">
+              {chatWorkspace ? (
+                <WorkspaceChatContainer
+                  workspace={chatWorkspace}
+                  externalToolHandler={handleToolCall}
+                  chatOnly={true}
+                  threadSlug={crmThreadSlug}
+                />
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center p-8 text-center text-white/40">
+                  <Settings size={48} className="mb-4 text-white/10" />
+                  <p className="mb-2">No workspace selected</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
