@@ -36,44 +36,6 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "landing-gemini",
-        lazy: async () => {
-          const { default: LandingGemini } =
-            await import("@/pages/LandingGemini");
-          return { element: <LandingGemini /> };
-        },
-      },
-      {
-        path: "features",
-        lazy: async () => {
-          const { default: FeaturesDetail } =
-            await import("@/pages/FeaturesDetail");
-          return { element: <FeaturesDetail /> };
-        },
-      },
-      {
-        path: "landingclaude",
-        lazy: async () => {
-          const { default: LandingClaude } =
-            await import("@/pages/LandingClaude");
-          return { element: <LandingClaude /> };
-        },
-      },
-      {
-        path: "landingkimi",
-        lazy: async () => {
-          const { default: LandingKimi } = await import("@/pages/LandingKimi");
-          return { element: <LandingKimi /> };
-        },
-      },
-      {
-        path: "landing-grok",
-        lazy: async () => {
-          const { default: LandingGrok } = await import("@/pages/LandingGrok");
-          return { element: <LandingGrok /> };
-        },
-      },
-      {
         path: "p/:id",
         lazy: async () => {
           const { default: PublicProposal } =

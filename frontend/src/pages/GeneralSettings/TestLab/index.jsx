@@ -17,18 +17,21 @@ import WorkspaceThread from "@/models/workspaceThread";
 
 // Mode definitions
 const MODES = [
+  /*
   {
     id: "slides",
     label: "Slides",
     icon: Slideshow,
     description: "Presentations & decks",
   },
+  */
   {
     id: "docs",
     label: "Docs",
     icon: FileText,
     description: "Documents & reports",
   },
+  /*
   {
     id: "data",
     label: "Data",
@@ -41,6 +44,7 @@ const MODES = [
     icon: MagnifyingGlass,
     description: "Search & analysis",
   },
+  */
 ];
 
 export default function TheLab() {

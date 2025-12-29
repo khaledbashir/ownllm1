@@ -22,7 +22,6 @@ const crmManager = {
                 aibitat.function({
                     super: aibitat,
                     name: "create_lead",
-                    controller: new AbortController(),
                     description:
                         "Creates a new lead/opportunity in the CRM. Use when the user asks to add a contact, lead, or opportunity.",
                     examples: [
@@ -49,6 +48,7 @@ const crmManager = {
                     handler: async function ({ title, company, email, phone, value, stage, notes, priority }) {
                         try {
                             const userId = getUserId(this);
+                            if (!userId) return JSON.stringify({ success: false, error: "Authentication required" });
                             this.super.introspect(`${this.caller}: Creating lead "${title}"...`);
 
                             const pipeline = await prisma.crm_pipelines.findFirst({ where: { userId } });
@@ -88,7 +88,6 @@ const crmManager = {
                 aibitat.function({
                     super: aibitat,
                     name: "update_lead",
-                    controller: new AbortController(),
                     description:
                         "Updates an existing lead. Use to change notes, value, email, phone, company, priority, or other details.",
                     examples: [
@@ -112,10 +111,13 @@ const crmManager = {
                     },
                     handler: async function ({ id, ...updates }) {
                         try {
+                            const userId = getUserId(this);
+                            if (!userId) return JSON.stringify({ success: false, error: "Authentication required" });
                             this.super.introspect(`${this.caller}: Updating lead #${id}...`);
 
                             const existing = await prisma.crm_cards.findUnique({ where: { id: Number(id) } });
                             if (!existing) return JSON.stringify({ success: false, error: "Lead not found" });
+                            if (existing.userId !== userId) return JSON.stringify({ success: false, error: "Unauthorized" });
 
                             const data = {};
                             if (updates.title !== undefined) data.title = updates.title;
@@ -141,7 +143,6 @@ const crmManager = {
                 aibitat.function({
                     super: aibitat,
                     name: "move_lead",
-                    controller: new AbortController(),
                     description:
                         "Moves a lead to a different pipeline stage. Use when user says 'move to Won', 'change stage to Proposal', etc.",
                     examples: [
@@ -158,10 +159,13 @@ const crmManager = {
                     },
                     handler: async function ({ id, stage }) {
                         try {
+                            const userId = getUserId(this);
+                            if (!userId) return JSON.stringify({ success: false, error: "Authentication required" });
                             this.super.introspect(`${this.caller}: Moving lead #${id} to "${stage}"...`);
 
                             const existing = await prisma.crm_cards.findUnique({ where: { id: Number(id) } });
                             if (!existing) return JSON.stringify({ success: false, error: "Lead not found" });
+                            if (existing.userId !== userId) return JSON.stringify({ success: false, error: "Unauthorized" });
 
                             const card = await prisma.crm_cards.update({ where: { id: Number(id) }, data: { stage } });
                             this.super.introspect(`${this.caller}: ✅ Moved lead #${id} to "${stage}"`);
@@ -178,7 +182,6 @@ const crmManager = {
                 aibitat.function({
                     super: aibitat,
                     name: "delete_lead",
-                    controller: new AbortController(),
                     description: "Deletes a lead from the CRM. Use when user says 'remove lead', 'delete lead #X'.",
                     parameters: {
                         $schema: "http://json-schema.org/draft-07/schema#",
@@ -190,10 +193,13 @@ const crmManager = {
                     },
                     handler: async function ({ id }) {
                         try {
+                            const userId = getUserId(this);
+                            if (!userId) return JSON.stringify({ success: false, error: "Authentication required" });
                             this.super.introspect(`${this.caller}: Deleting lead #${id}...`);
 
                             const existing = await prisma.crm_cards.findUnique({ where: { id: Number(id) } });
                             if (!existing) return JSON.stringify({ success: false, error: "Lead not found" });
+                            if (existing.userId !== userId) return JSON.stringify({ success: false, error: "Unauthorized" });
 
                             await prisma.crm_cards.delete({ where: { id: Number(id) } });
                             this.super.introspect(`${this.caller}: ✅ Deleted lead #${id}`);
@@ -210,7 +216,6 @@ const crmManager = {
                 aibitat.function({
                     super: aibitat,
                     name: "list_leads",
-                    controller: new AbortController(),
                     description:
                         "Lists leads from the CRM. Use to show all leads, filter by stage, or get statistics.",
                     examples: [
@@ -233,13 +238,14 @@ const crmManager = {
                             const pipeline = await prisma.crm_pipelines.findFirst({ where: { userId } });
                             if (!pipeline) return JSON.stringify({ success: false, error: "No pipeline found" });
 
-                            let cards = await prisma.crm_cards.findMany({
-                                where: { pipelineId: pipeline.id },
+                            const cards = await prisma.crm_cards.findMany({
+                                where: {
+                                    pipelineId: pipeline.id,
+                                    ...(stage ? { stage: { equals: stage, mode: 'insensitive' } } : {})
+                                },
                                 orderBy: { createdAt: "desc" },
                                 take: limit,
                             });
-
-                            if (stage) cards = cards.filter((c) => c.stage.toLowerCase() === stage.toLowerCase());
 
                             const totalValue = cards.reduce((s, c) => s + (Number(c.value) || 0), 0);
                             this.super.introspect(`${this.caller}: Found ${cards.length} leads ($${totalValue.toLocaleString()})`);
@@ -262,7 +268,6 @@ const crmManager = {
                 aibitat.function({
                     super: aibitat,
                     name: "create_pipeline",
-                    controller: new AbortController(),
                     description: "Creates a new CRM pipeline with custom stages.",
                     examples: [
                         { prompt: "Create pipeline 'Hiring' with stages Interview, Offer, Hired", call: JSON.stringify({ name: "Hiring", stages: ["Interview", "Offer", "Hired"] }) },
@@ -280,6 +285,7 @@ const crmManager = {
                     handler: async function ({ name, description, stages }) {
                         try {
                             const userId = getUserId(this);
+                            if (!userId) return JSON.stringify({ success: false, error: "Authentication required" });
                             this.super.introspect(`${this.caller}: Creating pipeline "${name}"...`);
 
                             const defaultStages = stages || ["New", "Contacted", "Qualified", "Proposal", "Won", "Lost"];
@@ -309,7 +315,6 @@ const crmManager = {
                 aibitat.function({
                     super: aibitat,
                     name: "list_pipelines",
-                    controller: new AbortController(),
                     description: "Lists all CRM pipelines for the user.",
                     parameters: {
                         $schema: "http://json-schema.org/draft-07/schema#",
@@ -319,6 +324,7 @@ const crmManager = {
                     handler: async function () {
                         try {
                             const userId = getUserId(this);
+                            if (!userId) return JSON.stringify({ success: false, error: "Authentication required" });
                             this.super.introspect(`${this.caller}: Fetching pipelines...`);
 
                             const pipelines = await prisma.crm_pipelines.findMany({

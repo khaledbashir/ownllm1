@@ -365,20 +365,15 @@ function useIsDisabled() {
    */
   useEffect(() => {
     if (!window) return;
-    window.addEventListener(ATTACHMENTS_PROCESSING_EVENT, () =>
-      setIsDisabled(true)
-    );
-    window.addEventListener(ATTACHMENTS_PROCESSED_EVENT, () =>
-      setIsDisabled(false)
-    );
+    const handleProcessing = () => setIsDisabled(true);
+    const handleProcessed = () => setIsDisabled(false);
+
+    window.addEventListener(ATTACHMENTS_PROCESSING_EVENT, handleProcessing);
+    window.addEventListener(ATTACHMENTS_PROCESSED_EVENT, handleProcessed);
 
     return () => {
-      window?.removeEventListener(ATTACHMENTS_PROCESSING_EVENT, () =>
-        setIsDisabled(true)
-      );
-      window?.removeEventListener(ATTACHMENTS_PROCESSED_EVENT, () =>
-        setIsDisabled(false)
-      );
+      window.removeEventListener(ATTACHMENTS_PROCESSING_EVENT, handleProcessing);
+      window.removeEventListener(ATTACHMENTS_PROCESSED_EVENT, handleProcessed);
     };
   }, []);
 

@@ -15,6 +15,7 @@ function safeJsonParse(text) {
   try {
     return { ok: true, value: JSON.parse(text) };
   } catch (e) {
+    console.error("[SmartPlugins] JSON Parse Error:", e.message, "\nSnippet:", text.slice(0, 100));
     return { ok: false, error: e.message };
   }
 }
@@ -296,11 +297,10 @@ export default function SmartPluginsSettings() {
                       <button
                         key={p.id}
                         onClick={() => setSelectedId(p.id)}
-                        className={`text-left rounded-lg px-3 py-2 border ${
-                          selectedId === p.id
+                        className={`text-left rounded-lg px-3 py-2 border ${selectedId === p.id
                             ? "border-theme-sidebar-border bg-theme-bg-secondary"
                             : "border-transparent hover:bg-theme-bg-secondary"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="text-sm text-theme-text-primary truncate">
@@ -489,10 +489,10 @@ export default function SmartPluginsSettings() {
                         {previewSchema?.fields?.some(
                           (f) => f.type === "calculated"
                         ) && (
-                          <span className="text-xs text-blue-400 font-normal ml-2">
-                            (Interactive - try editing!)
-                          </span>
-                        )}
+                            <span className="text-xs text-blue-400 font-normal ml-2">
+                              (Interactive - try editing!)
+                            </span>
+                          )}
                       </div>
                       {previewSchema?.fields?.some(
                         (f) => f.type === "calculated"

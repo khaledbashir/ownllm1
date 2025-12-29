@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import CRM from "@/models/crm";
 import Workspace from "@/models/workspace";
+import WorkspaceThread from "@/models/workspaceThread";
 import showToast from "@/utils/toast";
 
 // Chat
@@ -40,6 +41,7 @@ export default function CRMPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatWorkspace, setChatWorkspace] = useState(null);
   const [crmThreadSlug, setCrmThreadSlug] = useState(null);
+  const [crmThreads, setCrmThreads] = useState([]);
 
   // Modals
   const [showCardModal, setShowCardModal] = useState(false);
@@ -67,24 +69,53 @@ export default function CRMPage() {
 
   const loadWorkspace = async () => {
     try {
-      const workspaces = await Workspace.all();
-      if (workspaces.length > 0) {
-        const slug = workspaces[0].slug;
-        const ws = await Workspace.bySlug(slug);
+      // Try to get the dedicated CRM workspace
+      let ws = await Workspace.bySlug("crm");
+
+      if (!ws) {
+        // Create it if it doesn't exist (mirroring Lab pattern)
+        const { workspace: newWs, message } = await Workspace.new({
+          name: "CRM",
+          openAiTemp: 0.2, // Lower temp for more consistent data handling
+        });
+
+        if (newWs) {
+          ws = newWs;
+        } else {
+          console.error("[CRM] Failed to create CRM workspace:", message);
+          // Fallback to first available if CRM creation fails
+          const workspaces = await Workspace.all();
+          if (workspaces.length > 0) {
+            ws = await Workspace.bySlug(workspaces[0].slug);
+          }
+        }
+      }
+
+      if (ws) {
         setChatWorkspace(ws);
 
+        // Update system prompt to enforce CRM focus
+        const CRM_PROMPT = `You are the AI Sales Assistant. Your primary goal is to help manage leads, pipelines, and opportunities in the CRM.
+Use the crm-manager tools to create, update, move, or list leads. 
+Always aim for accuracy in data entry.`;
+        await Workspace.update(ws.slug, { openAiPrompt: CRM_PROMPT });
+
         // Find or create a dedicated CRM thread
-        const threads = await Workspace.threads.all(slug);
-        const crmThread = threads.find(t => t.name === "CRM Assistant");
+        const { threads } = await WorkspaceThread.all(ws.slug);
+        setCrmThreads(threads);
+
+        const crmThread = Array.isArray(threads) ? threads.find(t => t.name === "CRM Assistant") : null;
         if (crmThread) {
           setCrmThreadSlug(crmThread.slug);
         } else {
-          // Create a new CRM thread
-          const newThread = await Workspace.threads.new(slug);
-          if (newThread?.thread) {
-            // Update the thread name
-            await Workspace.threads.update(slug, newThread.thread.slug, { name: "CRM Assistant" });
-            setCrmThreadSlug(newThread.thread.slug);
+          // Create a new CRM thread if none exist or specific one not found
+          const { thread: newThread } = await WorkspaceThread.new(ws.slug);
+          if (newThread) {
+            await WorkspaceThread.update(ws.slug, newThread.slug, { name: "CRM Assistant" });
+            setCrmThreadSlug(newThread.slug);
+            // Refresh threads list
+            const { threads: updatedThreads } = await WorkspaceThread.all(ws.slug);
+            setCrmThreads(updatedThreads);
           }
         }
       }
@@ -457,11 +488,28 @@ export default function CRMPage() {
                 <div className="p-2 rounded-lg bg-gradient-to-br from-[#007AFF] to-blue-600">
                   <MessageSquare size={16} className="text-white" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">AI Sales Assistant</h3>
-                  <p className="text-[10px] text-white/50">
-                    Type <span className="text-blue-400 font-mono">@agent</span> + your command
-                  </p>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    {chatWorkspace?.name || "Assistant"}
+                    <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/10 text-white/50">Workspace</span>
+                  </h3>
+                  {crmThreads.length > 0 ? (
+                    <select
+                      value={crmThreadSlug}
+                      onChange={(e) => setCrmThreadSlug(e.target.value)}
+                      className="bg-transparent text-[10px] text-white/50 hover:text-white cursor-pointer appearance-none border-none outline-none p-0 m-0"
+                    >
+                      {crmThreads.map(t => (
+                        <option key={t.slug} value={t.slug} className="bg-[#1a1a1a]">
+                          {t.name === "CRM Assistant" ? "Main Assistant" : t.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-[10px] text-white/50">
+                      Type <span className="text-blue-400 font-mono">@agent</span> to start
+                    </p>
+                  )}
                 </div>
               </div>
               <button
