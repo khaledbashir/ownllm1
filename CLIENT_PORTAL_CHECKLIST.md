@@ -1,9 +1,9 @@
 # 🏰 Client Portal - Build Checklist
 **King of AI Edition** 🤴
 
-> **Status:** 🚧 Planning Phase
+> **Status:** � In Progress
 > **Last Updated:** Dec 29, 2025
-> **Overall Progress:** 0%
+> **Overall Progress:** 20% (Foundation + Core Layout + Sidebar + Pricing)
 
 ---
 
@@ -33,43 +33,43 @@
 
 ### Design System
 - [ ] Define color palette (Primary: `#667eea`, Success: `#10b981`, etc.)
-- [ ] Create shared StatusBadge component
+- [x] Create shared StatusBadge component ✅
 - [ ] Create shared Button components (Primary, Secondary, Danger)
 - [ ] Define typography scale (H1-H6, body, caption)
 
-**Progress:** 0%
+**Progress:** 25%
 
 ---
 
 ## 2. Core Layout
 
 ### ClientPortalLayout Wrapper
-- [ ] Create `ClientPortalLayout/index.jsx`
-- [ ] Implement responsive grid layout (sidebar + main content)
-- [ ] Add sticky header with company logo
+- [x] Create `ClientPortalLayout/index.jsx` ✅ (includes responsive grid, sticky header, mobile drawer)
+- [x] Implement responsive grid layout (sidebar + main content) ✅
+- [x] Add sticky header with company logo ✅
 - [ ] Add floating action bar (bottom-right)
-- [ ] Mobile drawer trigger
+- [x] Mobile drawer trigger ✅
 - [ ] Implement smooth scrolling
 - [ ] Add loading states
 
 ### Header Hero
-- [ ] Create `ProposalHeader` component
-- [ ] Display document title and ID
-- [ ] Show "Prepared for" client info
-- [ ] Add status badge (animated)
-- [ ] Add action buttons (Download PDF, Print, Share)
-- [ ] Implement date validity display
+- [x] Create `ProposalHeader` component ✅
+- [x] Display document title and ID ✅
+- [x] Show "Prepared for" client info ✅
+- [x] Add status badge (animated) ✅
+- [x] Add action buttons (Download PDF, Print, Share) ✅
+- [x] Implement date validity display ✅
 
-**Progress:** 0%
+**Progress:** 100%
 
 ---
 
 ## 3. Sidebar Components
 
 ### Sidebar Panel
-- [ ] Create `DocumentSidebar/index.jsx`
-- [ ] Implement collapsible behavior
-- [ ] Add section icons (Lucide)
+- [x] Create `DocumentSidebar/index.jsx` ✅
+- [x] Implement collapsible behavior ✅
+- [x] Add section icons (Lucide) ✅
 - [ ] Add progress indicator (read time)
 - [ ] Mobile toggle animation (slide-in)
 - [ ] Sticky positioning on desktop
@@ -106,15 +106,15 @@
 - [ ] Copy to clipboard button
 
 ### Interactive Pricing Table
-- [ ] Create `PricingTableInteractive/index.jsx`
-- [ ] Editable rows (if permissions allow)
-- [ ] Live calculation (Hours × Rate = Total)
-- [ ] Tax calculation (GST/VAT)
-- [ ] Grand total display (bold, larger)
-- [ ] Currency formatting
-- [ ] Row hover highlight
-- [ ] Add/Remove row buttons
-- [ ] Subtotal/Tax/Total sections
+- [x] Create `PricingTableInteractive/index.jsx` ✅
+- [x] Editable rows (if permissions allow) ✅
+- [x] Live calculation (Hours × Rate = Total) ✅
+- [x] Tax calculation (GST/VAT) ✅
+- [x] Grand total display (bold, larger) ✅
+- [x] Currency formatting ✅
+- [x] Row hover highlight ✅
+- [x] Add/Remove row buttons ✅
+- [x] Subtotal/Tax/Total sections ✅
 
 ### Team Members Section
 - [ ] Team member cards with avatars
