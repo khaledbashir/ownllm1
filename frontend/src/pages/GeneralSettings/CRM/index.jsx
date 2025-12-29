@@ -65,37 +65,47 @@ export default function CRMPage() {
   }, [selectedPipeline]);
 
   const loadWorkspace = async () => {
-    const workspaces = await Workspace.all();
-    if (workspaces.length > 0) {
-      const slug = workspaces[0].slug;
-      const ws = await Workspace.bySlug(slug);
-      setChatWorkspace(ws);
+    try {
+      const workspaces = await Workspace.all();
+      if (workspaces.length > 0) {
+        const slug = workspaces[0].slug;
+        const ws = await Workspace.bySlug(slug);
+        setChatWorkspace(ws);
+      }
+    } catch (e) {
+      console.error("[CRM] Failed to load workspace context:", e);
     }
   };
 
   const loadPipelines = async () => {
-    const res = await CRM.listPipelines();
-    if (res.success && res.pipelines.length > 0) {
-      setPipelines(res.pipelines);
-      if (selectedPipeline) {
-        const stillExists = res.pipelines.find(p => p.id === selectedPipeline.id);
-        if (stillExists) setSelectedPipeline(stillExists);
-        else setSelectedPipeline(res.pipelines[0]);
-      } else {
-        setSelectedPipeline(res.pipelines[0]);
+    try {
+      const res = await CRM.listPipelines();
+      if (res.success && res.pipelines.length > 0) {
+        setPipelines(res.pipelines);
+        if (selectedPipeline) {
+          const stillExists = res.pipelines.find(p => p.id === selectedPipeline.id);
+          if (stillExists) setSelectedPipeline(stillExists);
+          else setSelectedPipeline(res.pipelines[0]);
+        } else {
+          setSelectedPipeline(res.pipelines[0]);
+        }
+      } else if (res.success && res.pipelines.length === 0) {
+        const createRes = await CRM.createPipeline({
+          name: "Sales Pipeline",
+          description: "Track your sales leads",
+          type: "custom",
+        });
+        if (createRes.success) {
+          setPipelines([createRes.pipeline]);
+          setSelectedPipeline(createRes.pipeline);
+        }
       }
-    } else if (res.success && res.pipelines.length === 0) {
-      const createRes = await CRM.createPipeline({
-        name: "Sales Pipeline",
-        description: "Track your sales leads",
-        type: "custom",
-      });
-      if (createRes.success) {
-        setPipelines([createRes.pipeline]);
-        setSelectedPipeline(createRes.pipeline);
-      }
+    } catch (e) {
+      console.error("[CRM] Failed to load pipelines:", e);
+      showToast("Failed to load CRM pipelines", "error");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const loadCards = async (pipelineId) => {

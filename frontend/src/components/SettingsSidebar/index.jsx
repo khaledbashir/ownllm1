@@ -12,7 +12,7 @@ import {
   Nut,
   Toolbox,
   Shield,
-  LayoutDashboard,
+  SquaresFour,
 } from "@phosphor-icons/react";
 import useUser from "@/hooks/useUser";
 import { isMobile } from "react-device-detect";
@@ -74,8 +74,8 @@ export default function SettingsSidebar() {
         >
           <div
             className={`${showBgOverlay
-                ? "transition-all opacity-1"
-                : "transition-none opacity-0"
+              ? "transition-all opacity-1"
+              : "transition-none opacity-0"
               }  duration-500 fixed top-0 left-0 bg-theme-bg-secondary bg-opacity-75 w-screen h-screen`}
             onClick={() => setShowSidebar(false)}
           />
@@ -305,7 +305,7 @@ const SidebarOptions = ({ user = null, t }) => (
         />
         <Option
           btnText="CRM"
-          icon={<LayoutDashboard className="h-5 w-5 flex-shrink-0" />}
+          icon={<SquaresFour className="h-5 w-5 flex-shrink-0" />}
           href={paths.settings.crm()}
           user={user}
           flex={true}
