@@ -180,21 +180,21 @@
 ## 6. Premium "Cool" Features
 
 ### Floating Action Bar
-- [ ] Create `FloatingActionBar/index.jsx`
-- [ ] Fixed position bottom-right
-- [ ] Quick actions: Comment, Attach, AI Chat, Download
-- [ ] Collapse on scroll, expand on hover
-- [ ] Tooltip labels
-- [ ] Animation (slide up)
+- [x] Create `FloatingActionBar/index.jsx` ✅
+- [x] Fixed position bottom-right ✅
+- [x] Quick actions: Comment, Attach, AI Chat, Download ✅
+- [x] Collapse on scroll, expand on hover ✅
+- [x] Tooltip labels ✅
+- [x] Animation (slide up) ✅
 
 ### AI Assistant Panel
-- [ ] Create `AIAssistantPanel/index.jsx`
-- [ ] Collapsible side panel (right side)
-- [ ] Chat input for questions
-- [ ] AI summary of proposal
-- [ ] Highlight relevant sections
-- [ ] Export to markdown
-- [ ] "Ask about this section" context-aware
+- [x] Create `AIAssistantPanel/index.jsx` ✅
+- [x] Collapsible side panel (right side) ✅
+- [x] Chat input for questions ✅
+- [x] AI summary of proposal ✅
+- [x] Highlight relevant sections ✅
+- [x] Export to markdown ✅
+- [x] "Ask about this section" context-aware ✅
 
 ### Search & Find
 - [ ] Global search bar (top of main content)
