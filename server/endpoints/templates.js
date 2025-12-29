@@ -250,6 +250,8 @@ Return the complete HTML document wrapped in \`\`\`html code blocks.`;
         margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" },
       });
 
+      console.log(`[Templates] PDF generated successfully, size: ${pdfBuffer.length} bytes`);
+
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",

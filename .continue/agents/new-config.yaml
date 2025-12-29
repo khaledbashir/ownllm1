@@ -1,17 +1,16 @@
-name: Z.ai Coding Plan
+name: z-ai-coding
 version: 1.0.15
 schema: v1
-
 models:
-  - name: "GLM 4.6"
-    provider: ZAI_API_KEY
-    model: "GLM-4.6"
+  - name: GLM 4.7
+    model: GLM-4.7
+    provider: z
     apiBase: https://api.z.ai/api/coding/paas/v4
     apiKey: ${{ secrets.ZAI_API_KEY }}
     roles:
+      - apply
       - chat
       - edit
-      - apply
       - autocomplete
     capabilities:
       - tool_use
@@ -19,7 +18,26 @@ models:
       contextLength: 200000
       reasoning: true
       stream: true
-
+  - name: GLM 4.6v
+    model: GLM-4.6v
+    provider: z
+    apiBase: https://api.z.ai/api/coding/paas/v4
+    apiKey: ${{ secrets.ZAI_API_KEY }}
+    roles:
+      - apply
+      - chat
+      - edit
+      - autocomplete
+    capabilities:
+      - tool_use
+    defaultCompletionOptions:
+      contextLength: 200000
+      reasoning: true
+      stream: true
+  - name: Autodetect
+    provider: groq
+    model: AUTODETECT
+    apiKey: ${{ secrets.GROQ_API_KEY }}
 mcpServers:
   - name: filesystem
     command: npx
@@ -27,15 +45,17 @@ mcpServers:
       - -y
       - "@modelcontextprotocol/server-filesystem"
       - /root
-
   - name: memory
     command: npx
     args:
       - -y
       - "@modelcontextprotocol/server-memory"
-
   - name: shell
     command: npx
     args:
       - -y
       - "@modelcontextprotocol/server-shell"
+docs:
+  - name: conversation with sam
+    faviconUrl: ""
+    startUrl: https://pastebin.com/HZpsp8fk

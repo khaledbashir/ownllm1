@@ -69,7 +69,19 @@ async function generatePdf(htmlContent, options = {}) {
       },
     });
 
-    console.log(`[PDF Export] Successfully generated PDF ${jobId}`);
+    console.log(`[PDF Export] Successfully generated PDF ${jobId}, size: ${pdfBuffer.length} bytes`);
+    
+    // Validate PDF buffer
+    if (!Buffer.isBuffer(pdfBuffer) || pdfBuffer.length === 0) {
+      throw new Error("Generated PDF buffer is empty or invalid");
+    }
+    
+    // Check PDF header (should start with %PDF)
+    const header = pdfBuffer.slice(0, 4).toString();
+    if (!header.startsWith("%PDF")) {
+      throw new Error(`Invalid PDF: header is "${header}" instead of "%PDF"`);
+    }
+    
     return pdfBuffer;
   } catch (error) {
     console.error("[PDF Export] Puppeteer Error:", error);
