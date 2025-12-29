@@ -10,6 +10,7 @@ import {
   FileMagnifyingGlass,
   Lightning,
   Detective,
+  Users,
 } from "@phosphor-icons/react";
 import RAGImage from "@/media/agents/rag-memory.png";
 import SummarizeImage from "@/media/agents/view-summarize.png";
@@ -90,5 +91,13 @@ export const configurableSkills = {
     component: GenericSkillPanel,
     skill: "browser-qa",
     icon: Detective,
+  },
+  "crm-manager": {
+    title: "CRM Manager",
+    description:
+      "Manage your CRM from chat. Create, update, move, and delete leads. List pipelines and filter opportunities by stage.",
+    component: GenericSkillPanel,
+    skill: "crm-manager",
+    icon: Users,
   },
 };
