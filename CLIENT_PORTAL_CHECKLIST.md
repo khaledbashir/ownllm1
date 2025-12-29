@@ -249,7 +249,7 @@
 - [x] `proposal_comments` table ✅
 - [x] `proposal_versions` table ✅
 - [x] `proposal_approvals` table ✅
-- [ ] Indexes for fast queries
+- [x] Indexes for fast queries ✅
 
 ### API Endpoints
 - [x] `GET /api/client-portal/:id` - Fetch proposal data ✅
@@ -275,7 +275,7 @@
 - [ ] In-app notification bell
 - [ ] Notification preferences
 
-**Progress:** 40%
+**Progress:** 50%
 
 ---
 
