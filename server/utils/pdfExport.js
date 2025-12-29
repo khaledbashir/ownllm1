@@ -69,20 +69,40 @@ async function generatePdf(htmlContent, options = {}) {
       },
     });
 
+    console.log(`[PDF Export] Puppeteer returned type: ${typeof pdfBuffer}, constructor: ${pdfBuffer?.constructor?.name}, length: ${pdfBuffer?.length}`);
     console.log(`[PDF Export] Successfully generated PDF ${jobId}, size: ${pdfBuffer.length} bytes`);
     
     // Validate PDF buffer
-    if (!Buffer.isBuffer(pdfBuffer) || pdfBuffer.length === 0) {
-      throw new Error("Generated PDF buffer is empty or invalid");
+    let validatedBuffer = pdfBuffer;
+    
+    // Handle cases where Puppeteer might return a non-Buffer object
+    if (!Buffer.isBuffer(pdfBuffer)) {
+      console.warn("[PDF Export] PDF is not a Buffer, attempting to convert:", typeof pdfBuffer);
+      if (pdfBuffer && pdfBuffer.length > 0) {
+        // Try to convert to Buffer
+        validatedBuffer = Buffer.from(pdfBuffer);
+      } else {
+        throw new Error(`Generated PDF is not a Buffer (type: ${typeof pdfBuffer})`);
+      }
+    }
+    
+    if (validatedBuffer.length === 0) {
+      throw new Error("Generated PDF buffer is empty");
     }
     
     // Check PDF header (should start with %PDF)
-    const header = pdfBuffer.slice(0, 4).toString();
+    const header = validatedBuffer.slice(0, 4).toString();
+    console.log(`[PDF Export] Buffer type: ${validatedBuffer.constructor.name}, Length: ${validatedBuffer.length}, Header: "${header}"`);
+    
+    // Log first 100 bytes in hex for debugging
+    const hexPreview = validatedBuffer.slice(0, 100).toString('hex');
+    console.log(`[PDF Export] First 100 bytes (hex): ${hexPreview}`);
+    
     if (!header.startsWith("%PDF")) {
-      throw new Error(`Invalid PDF: header is "${header}" instead of "%PDF"`);
+      throw new Error(`Invalid PDF: header is "${header}" instead of "%PDF", buffer type: ${validatedBuffer.constructor.name}`);
     }
     
-    return pdfBuffer;
+    return validatedBuffer;
   } catch (error) {
     console.error("[PDF Export] Puppeteer Error:", error);
     throw new Error(`PDF generation failed: ${error.message}`);
