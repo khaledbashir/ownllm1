@@ -43,11 +43,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install WeasyPrint and Python dependencies
+# Install Puppeteer dependencies (Chrome will be downloaded by NPM in later step)
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
-    python3-pip python3-cairo && \
-    pip3 install weasyprint --break-system-packages && \
+    wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -118,11 +117,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install WeasyPrint and Python dependencies
+# Install Puppeteer dependencies (Chrome will be downloaded by NPM in later step)
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends \
-    python3-pip python3-cairo && \
-    pip3 install weasyprint --break-system-packages && \
+    wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
