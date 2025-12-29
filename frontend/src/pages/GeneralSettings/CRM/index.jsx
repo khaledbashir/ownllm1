@@ -39,6 +39,7 @@ export default function CRMPage() {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatWorkspace, setChatWorkspace] = useState(null);
+  const [crmThreadSlug, setCrmThreadSlug] = useState(null);
 
   // Modals
   const [showCardModal, setShowCardModal] = useState(false);
@@ -71,6 +72,21 @@ export default function CRMPage() {
         const slug = workspaces[0].slug;
         const ws = await Workspace.bySlug(slug);
         setChatWorkspace(ws);
+
+        // Find or create a dedicated CRM thread
+        const threads = await Workspace.threads.all(slug);
+        const crmThread = threads.find(t => t.name === "CRM Assistant");
+        if (crmThread) {
+          setCrmThreadSlug(crmThread.slug);
+        } else {
+          // Create a new CRM thread
+          const newThread = await Workspace.threads.new(slug);
+          if (newThread?.thread) {
+            // Update the thread name
+            await Workspace.threads.update(slug, newThread.thread.slug, { name: "CRM Assistant" });
+            setCrmThreadSlug(newThread.thread.slug);
+          }
+        }
       }
     } catch (e) {
       console.error("[CRM] Failed to load workspace context:", e);
@@ -443,7 +459,9 @@ export default function CRMPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">AI Sales Assistant</h3>
-                  <p className="text-[10px] text-white/50">Powered by {chatWorkspace?.name || "Workspace"}</p>
+                  <p className="text-[10px] text-white/50">
+                    Type <span className="text-blue-400 font-mono">@agent</span> + your command
+                  </p>
                 </div>
               </div>
               <button
@@ -461,6 +479,7 @@ export default function CRMPage() {
                   workspace={chatWorkspace}
                   externalToolHandler={handleToolCall}
                   chatOnly={true}
+                  threadSlug={crmThreadSlug}
                 />
               ) : (
                 <div className="h-full flex flex-col items-center justify-center p-8 text-center text-white/40">

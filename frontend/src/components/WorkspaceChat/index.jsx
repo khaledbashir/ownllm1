@@ -17,9 +17,11 @@ export default function WorkspaceChat({
   workspace,
   chatOnly = false,
   externalToolHandler = null,
+  threadSlug: propThreadSlug = null,
 }) {
   useWatchForAutoPlayAssistantTTSResponse();
-  const { threadSlug = null } = useParams();
+  const { threadSlug: paramThreadSlug = null } = useParams();
+  const threadSlug = propThreadSlug || paramThreadSlug;
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
@@ -46,7 +48,7 @@ export default function WorkspaceChat({
       setLoadingHistory(false);
     }
     getHistory();
-  }, [workspace, loading, chatOnly]);
+  }, [workspace, loading, chatOnly, threadSlug]);
 
   if (loadingHistory) return <LoadingChat />;
   if (!loading && !loadingHistory && !workspace) {
@@ -97,6 +99,7 @@ export default function WorkspaceChat({
           knownHistory={history}
           chatOnly={chatOnly}
           externalToolHandler={externalToolHandler}
+          threadSlug={threadSlug}
         />
       </DnDFileUploaderProvider>
     </TTSProvider>
