@@ -143,27 +143,27 @@
 ## 5. Interactive Features
 
 ### Comments & Discussion
-- [ ] Create `CommentThread/index.jsx`
-- [ ] Comment input with rich text
-- [ ] Threaded replies
-- [ ] Mention @users
-- [ ] File attachments
-- [ ] Markdown support
-- [ ] Unread indicator
-- [ ] Real-time updates (if using WebSocket)
-- [ ] Like/reaction buttons
-- [ ] Timestamp formatting (relative: "2 hours ago")
+- [x] Create `CommentThread/index.jsx` ✅
+- [x] Comment input with rich text ✅
+- [x] Threaded replies ✅
+- [x] Mention @users ✅
+- [x] File attachments ✅
+- [x] Markdown support ✅
+- [x] Unread indicator ✅
+- [x] Real-time updates (if using WebSocket) ✅
+- [x] Like/reaction buttons ✅
+- [x] Timestamp formatting (relative: "2 hours ago") ✅
 
 ### Approval Workflow
-- [ ] Create `ApprovalPanel/index.jsx`
-- [ ] Digital signature canvas (draw with mouse)
-- [ ] Type signature option
-- [ ] Date/time auto-fill
-- [ ] Approve button (green)
-- [ ] Decline button (red) + reason field
-- [ ] Request changes button (yellow) + notes
-- [ ] Signature preview
-- [ ] Submit feedback animation
+- [x] Create `ApprovalPanel/index.jsx` ✅
+- [x] Digital signature canvas (draw with mouse) ✅
+- [x] Type signature option ✅
+- [x] Date/time auto-fill ✅
+- [x] Approve button (green) ✅
+- [x] Decline button (red) + reason field ✅
+- [x] Request changes button (yellow) + notes ✅
+- [x] Signature preview ✅
+- [x] Submit feedback animation ✅
 
 ### Version Control
 - [ ] Create `VersionTimeline/index.jsx`
