@@ -10,7 +10,88 @@ const { reqBody } = require("../utils/http");
 const { createCardFromSignedProposal } = require("../utils/crm/proposalIntegration");
 
 function publicProposalsEndpoints(app) {
-  if (!app) return;
+  // Export proposal to PDF (Public)
+  app.get("/proposal/:id/export-pdf", async (request, response) => {
+    try {
+      const { id } = request.params;
+      const { generatePdf } = require("../utils/pdfExport");
+      const proposal = await PublicProposals.get(id);
+
+      if (!proposal) {
+        return response
+          .status(404)
+          .json({ success: false, error: "Proposal not found" });
+      }
+
+      // Check expiration
+      if (
+        proposal.status === "expired" ||
+        (proposal.expiresAt && new Date() > new Date(proposal.expiresAt))
+      ) {
+        return response
+          .status(410)
+          .json({ success: false, error: "This proposal has expired." });
+      }
+
+      const pdfBuffer = await generatePdf(proposal.htmlContent);
+
+      response.setHeader("Content-Type", "application/pdf");
+      response.setHeader(
+        "Content-Disposition",
+        `attachment; filename="Proposal-${id}.pdf"`
+      );
+      response.send(pdfBuffer);
+    } catch (e) {
+      console.error(e);
+      return response.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  // Get proposal comments (Public)
+  app.get("/proposal/:id/comments", async (request, response) => {
+    try {
+      const { id } = request.params;
+      const prisma = require("../utils/prisma").prisma;
+
+      const comments = await prisma.proposal_comments.findMany({
+        where: { proposalId: id },
+        orderBy: { createdAt: "desc" },
+        include: { replies: true }
+      });
+
+      return response.status(200).json({ success: true, comments });
+    } catch (e) {
+      console.error(e);
+      return response.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  // Add comment (Public)
+  app.post("/proposal/:id/comments", async (request, response) => {
+    try {
+      const { id } = request.params;
+      const { authorName, content, parentId } = reqBody(request);
+      const prisma = require("../utils/prisma").prisma;
+
+      if (!content || !authorName) {
+        return response.status(400).json({ success: false, error: "Content and Name required" });
+      }
+
+      const comment = await prisma.proposal_comments.create({
+        data: {
+          proposalId: id,
+          authorName,
+          content,
+          parentId: parentId || null
+        }
+      });
+
+      return response.status(200).json({ success: true, comment });
+    } catch (e) {
+      console.error(e);
+      return response.status(500).json({ success: false, error: e.message });
+    }
+  });
 
   // Create a new public proposal (Protected)
   app.post(

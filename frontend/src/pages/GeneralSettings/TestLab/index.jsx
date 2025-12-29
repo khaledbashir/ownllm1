@@ -1,17 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/SettingsSidebar";
 import { isMobile } from "react-device-detect";
 import {
-  PaperPlaneTilt,
-  Robot,
   Flask,
   Slideshow,
   FileText,
   ChartBar,
   MagnifyingGlass,
-  Sparkle,
 } from "@phosphor-icons/react";
 import BlockSuiteEditor from "@/components/WorkspaceChat/ThreadNotes/BlockSuiteEditor";
+import ChatContainer from "@/components/WorkspaceChat/ChatContainer";
+import { DnDFileUploaderProvider } from "@/components/WorkspaceChat/ChatContainer/DnDWrapper";
+import { TTSProvider } from "@/components/contexts/TTSProvider";
+import Workspace from "@/models/workspace";
+import WorkspaceThread from "@/models/workspaceThread";
 
 // Mode definitions
 const MODES = [
@@ -41,98 +43,116 @@ const MODES = [
   },
 ];
 
-// Sample prompts per mode
-const SAMPLE_PROMPTS = {
-  slides: [
-    "Create a pitch deck for a SaaS startup",
-    "Design an all-hands presentation with company updates",
-    "Build a product launch presentation",
-  ],
-  docs: [
-    "Write a technical PRD for a new feature",
-    "Create a business proposal template",
-    "Draft a quarterly review report",
-  ],
-  data: [
-    "Build a sales dashboard with monthly trends",
-    "Create a cohort analysis showing user retention",
-    "Generate a financial projection spreadsheet",
-  ],
-  research: [
-    "Research the latest AI agent frameworks",
-    "Analyze competitor pricing strategies",
-    "Find best practices for developer onboarding",
-  ],
-};
-
 export default function TheLab() {
   const [mode, setMode] = useState("docs");
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [labWorkspace, setLabWorkspace] = useState(null);
+  const [labThread, setLabThread] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [chatHistory, setChatHistory] = useState([]);
   const editorRef = useRef(null);
-  const chatEndRef = useRef(null);
 
+  // Fetch or create the "lab" workspace on mount
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    async function initLabWorkspace() {
+      setLoading(true);
+      try {
+        // Try to get the lab workspace
+        let workspace = await Workspace.bySlug("lab");
 
-  // Reset messages when mode changes
-  useEffect(() => {
-    setMessages([
-      {
-        role: "assistant",
-        content: `Ready to create ${MODES.find((m) => m.id === mode)?.description.toLowerCase()}. What would you like to generate?`,
-      },
-    ]);
-  }, [mode]);
+        if (!workspace) {
+          // Create it if it doesn't exist
+          const { workspace: newWorkspace, message } = await Workspace.new({
+            name: "Lab",
+            openAiTemp: 0.7,
+          });
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+          if (newWorkspace) {
+            workspace = newWorkspace;
+          } else {
+            console.error("Failed to create lab workspace:", message);
+          }
+        }
 
-    const userMessage = input.trim();
-    setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
-    setLoading(true);
+        // Always update the system prompt to ensure it has the latest tool definitions
+        if (workspace) {
+          const SYSTEM_PROMPT = `You are The Lab AI, a capable assistant with direct programmatic control over the document editor.
+You can read, write, and modify the document using specific JSON tool calls.
 
-    try {
-      // For now, simulate AI response
-      // Later: call appropriate endpoint based on mode
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+Available Tools:
+1. insert_block(type: string, text: string, parentId?: string, props?: object)
+   - type: "affine:paragraph" (default), "affine:list", "affine:code"
+   - text: Content of the block
+   - parentId: Optional ID of parent block
+   - props: Optional attributes. Examples:
+     - Headings: type="affine:paragraph", props={ "type": "h1" } (or h2-h6)
+     - Quote: type="affine:paragraph", props={ "type": "quote" }
+     - Lists: type="affine:list", props={ "type": "bulleted" } (or "numbered", "todo")
 
-      const response = `I'll generate that for you. [${mode.toUpperCase()} mode]\n\nThis is where the AI output will appear...`;
+2. update_block(id: string, text: string)
+   - id: Block ID to update
+   - text: New content
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: response },
-      ]);
+3. delete_block(id: string)
 
-      // If docs mode, stream to BlockSuite
-      if (mode === "docs" && editorRef.current?.insertMarkdown) {
-        await editorRef.current.insertMarkdown(
-          `# ${userMessage}\n\nGenerating content...\n`
-        );
+4. get_selection()
+   - Returns current user selection (use this to contextually edit)
+   - Returns { type: 'text', from, to, blockId } or { type: 'block', blockIds }
+
+5. get_document_structure()
+   - Returns full JSON tree of document
+
+6. insert_database(title: string, columns: array, rows: array)
+   - Creates a Kanban/Table database
+   - columns: [{ name: "Status", type: "select", options: ["Todo", "Done"] }]
+   - rows: [{ "Task": "My Task", "Status": "Todo" }] (First key is title)
+
+To use a tool, output a JSON block like this:
+\`\`\`json
+{
+  "tool": "insert_block",
+  "args": {
+    "type": "affine:paragraph",
+    "text": "Hello from AI"
+  }
+}
+\`\`\`
+Do not provide explanation before the tool call if you are just performing an action.`;
+
+          await Workspace.update(workspace.slug, {
+            openAiPrompt: SYSTEM_PROMPT
+          });
+        }
+
+        if (workspace) {
+          setLabWorkspace(workspace);
+
+          // Ensure a thread exists for the lab
+          let { threads } = await WorkspaceThread.all(workspace.slug);
+          let activeThread = threads[0];
+
+          if (!activeThread) {
+            const { thread, error } = await WorkspaceThread.new(workspace.slug);
+            if (thread) activeThread = thread;
+            else console.error("Failed to create lab thread:", error);
+          }
+
+          setLabThread(activeThread);
+
+          // Fetch chat history if thread exists
+          if (activeThread) {
+            const history = await WorkspaceThread.chatHistory(workspace.slug, activeThread.slug);
+            setChatHistory(history);
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing lab workspace:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: `Error: ${error.message}` },
-      ]);
-    } finally {
-      setLoading(false);
     }
-  };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const handleSamplePrompt = (prompt) => {
-    setInput(prompt);
-  };
+    initLabWorkspace();
+  }, []);
 
   // Render canvas based on mode
   const renderCanvas = () => {
@@ -141,9 +161,9 @@ export default function TheLab() {
         return (
           <BlockSuiteEditor
             ref={editorRef}
-            onSave={() => {}}
+            onSave={() => { }}
             workspaceSlug="lab"
-            threadSlug={`lab-${Date.now()}`}
+            threadSlug={labThread?.slug}
           />
         );
       case "slides":
@@ -209,11 +229,10 @@ export default function TheLab() {
                 <button
                   key={m.id}
                   onClick={() => setMode(m.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    isActive
-                      ? "bg-white text-black"
-                      : "text-white/50 hover:text-white/80 hover:bg-white/5"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive
+                    ? "bg-white text-black"
+                    : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                    }`}
                 >
                   <Icon size={16} weight={isActive ? "fill" : "regular"} />
                   {m.label}
@@ -225,78 +244,32 @@ export default function TheLab() {
 
         {/* Split View */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Left: Chat */}
-          <div className="w-[400px] flex flex-col min-w-0 border-r border-white/5">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Sample Prompts (when no messages) */}
-              {messages.length <= 1 && (
-                <div className="space-y-2 mb-4">
-                  <p className="text-xs text-white/40 uppercase tracking-wider">
-                    Sample prompts
-                  </p>
-                  {SAMPLE_PROMPTS[mode]?.map((prompt, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSamplePrompt(prompt)}
-                      className="w-full text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white/70 hover:text-white transition-all flex items-start gap-2"
-                    >
-                      <Sparkle size={14} className="mt-0.5 text-white/30" />
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  {msg.role === "assistant" && (
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
-                      <Robot size={16} className="text-white/50" />
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-[85%] ${msg.role === "user" ? "bg-white/10 px-4 py-3 rounded-2xl rounded-tr-md" : ""}`}
-                  >
-                    <p className="text-sm text-white whitespace-pre-wrap">
-                      {msg.content}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center mr-3">
-                    <Robot size={16} className="text-white/50 animate-pulse" />
-                  </div>
-                  <span className="text-white/50 text-sm">Generating...</span>
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Input */}
-            <div className="p-4 border-t border-white/5">
-              <div className="flex items-end gap-2 bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3 focus-within:border-white/20 transition-colors">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={`Describe what to create...`}
-                  className="flex-1 bg-transparent text-white text-sm placeholder-white/30 outline-none"
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={loading || !input.trim()}
-                  className="p-2 rounded-xl bg-white text-black disabled:opacity-30 hover:bg-white/90 transition-all"
-                >
-                  <PaperPlaneTilt size={18} weight="fill" />
-                </button>
+          {/* Left: Full Chat Container with all features */}
+          <div className="w-[500px] flex flex-col min-w-0 border-r border-white/5">
+            {loading ? (
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-white/40 text-sm">Loading workspace...</p>
               </div>
-            </div>
+            ) : labWorkspace ? (
+              <TTSProvider>
+                <DnDFileUploaderProvider workspace={labWorkspace}>
+                  <ChatContainer
+                    workspace={labWorkspace}
+                    knownHistory={chatHistory}
+                    externalEditorRef={editorRef}
+                    threadSlug={labThread?.slug}
+                  />
+                </DnDFileUploaderProvider>
+              </TTSProvider>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-4">
+                <p className="text-white/40 text-sm text-center">
+                  Failed to load workspace.
+                  <br />
+                  Try refreshing the page.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Right: Dynamic Canvas */}

@@ -26,6 +26,7 @@ const { developerEndpoints } = require("./endpoints/api");
 const { extensionEndpoints } = require("./endpoints/extensions");
 const { bootHTTP, bootSSL } = require("./utils/boot");
 const { workspaceThreadEndpoints } = require("./endpoints/workspaceThreads");
+const { portalAuthEndpoints } = require("./endpoints/portalAuth");
 const { documentEndpoints } = require("./endpoints/document");
 const { agentWebsocket } = require("./endpoints/agentWebsocket");
 const { experimentalEndpoints } = require("./endpoints/experimental");
@@ -46,6 +47,7 @@ const { mobileEndpoints } = require("./endpoints/mobile");
 const { agentTestLabEndpoints } = require("./endpoints/agentTestLab");
 const { inlineAIEndpoints } = require("./endpoints/inlineAI");
 const { templatesEndpoints } = require("./endpoints/templates");
+const { labEndpoints } = require("./endpoints/lab");
 const { blockTemplatesEndpoints } = require("./endpoints/blockTemplates");
 const { publicProposalsEndpoints } = require("./endpoints/publicProposals");
 const { clientPortalEndpoints } = require("./endpoints/clientPortal");
@@ -105,22 +107,22 @@ const { spawn } = require("child_process");
 apiRouter.post("/export/pdf", async (req, res) => {
   try {
     const { content, filename } = req.body || {};
-    
+
     if (!content) {
       return res.status(400).json({ error: "Content is required" });
     }
-    
+
     const exportName = filename || 'export';
     const outputDir = path.join(__dirname, "storage/exports");
     const htmlFile = path.join(outputDir, exportName + '.html');
     const pdfFile = path.join(outputDir, exportName + '.pdf');
-    
+
     // Ensure output directory exists
     await fsModule.mkdir(outputDir, { recursive: true });
-    
+
     // Save HTML content
     await fsModule.writeFile(htmlFile, content, 'utf8');
-    
+
     // Call Playwright MCP to generate PDF
     const playwrightOutput = await new Promise((resolve, reject) => {
       const playwrightScript = `
@@ -132,7 +134,7 @@ apiRouter.post("/export/pdf", async (req, res) => {
         await browser.close();
         console.log('PDF generated successfully');
       `;
-      
+
       const playwrightProcess = spawn('docker', [
         'run',
         '--rm',
@@ -144,15 +146,15 @@ apiRouter.post("/export/pdf", async (req, res) => {
         'exec',
         'node', '-e', playwrightScript
       ]);
-      
+
       playwrightProcess.stdout.on('data', (data) => {
         console.log('Playwright:', data.toString());
       });
-      
+
       playwrightProcess.stderr.on('data', (data) => {
         console.log('Playwright stderr:', data.toString());
       });
-      
+
       playwrightProcess.on('close', (code) => {
         if (code === 0) {
           resolve();
@@ -161,10 +163,10 @@ apiRouter.post("/export/pdf", async (req, res) => {
         }
       });
     });
-    
+
     // Check if PDF was created
     await new Promise(resolve => setTimeout(resolve, 5000));
-    
+
     if (await fsModule.access(pdfFile).then(() => true).catch(() => false)) {
       const pdfBase64 = await fsModule.readFile(pdfFile);
       res.json({
@@ -177,7 +179,7 @@ apiRouter.post("/export/pdf", async (req, res) => {
     } else {
       res.status(500).json({ error: "Failed to generate PDF" });
     }
-    
+
   } catch (error) {
     console.error('PDF Export Error:', error);
     const errorMessage = error?.message || error?.toString() || "Unknown error occurred during PDF export";
@@ -218,8 +220,10 @@ mobileEndpoints(apiRouter);
 agentTestLabEndpoints(apiRouter);
 inlineAIEndpoints(apiRouter);
 templatesEndpoints(apiRouter);
+labEndpoints(apiRouter);
 blockTemplatesEndpoints(apiRouter);
 publicProposalsEndpoints(apiRouter);
+portalAuthEndpoints(apiRouter);
 clientPortalEndpoints(apiRouter);
 documentProcessorEndpoints(apiRouter);
 

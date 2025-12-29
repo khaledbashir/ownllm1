@@ -144,8 +144,14 @@ function sanitizeNotesMarkdown(raw) {
   return text;
 }
 
-export default function ChatContainer({ workspace, knownHistory = [] }) {
-  const { threadSlug = null } = useParams();
+export default function ChatContainer({
+  workspace,
+  knownHistory = [],
+  externalEditorRef = null,
+  threadSlug: propThreadSlug = null,
+}) {
+  const { threadSlug: paramThreadSlug } = useParams();
+  const threadSlug = propThreadSlug || paramThreadSlug || null;
   const [message, setMessage] = useState("");
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [chatHistory, setChatHistory] = useState(knownHistory);
@@ -159,12 +165,90 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
   const { files, parseAttachments } = useContext(DndUploaderContext);
 
   // Ref for notes editor to allow AI to insert content
-  const notesEditorRef = useRef(null);
+  // If external ref is provided, use it. Otherwise use internal ref.
+  const internalNotesEditorRef = useRef(null);
+  const notesEditorRef = externalEditorRef || internalNotesEditorRef;
+  const executedMessageIds = useRef(new Set());
 
-  // Reset to chat tab when thread changes
+  const executeTool = useCallback(async (toolCall) => {
+    const editor = notesEditorRef.current;
+    if (!editor) return;
+
+    const { tool, args } = toolCall;
+    console.log("[ClientTool] Executing:", tool, args);
+
+    try {
+      switch (tool) {
+        case "insert_block":
+          // args: type, text, parentId, props
+          await editor.appendBlock(args.type, args.text, args.parentId, args.props);
+          toast.success("AI inserted content");
+          break;
+        case "insert_database":
+          await editor.insertDatabase(args.title, args.view, args.columns, args.rows, args.parentId);
+          toast.success("AI created database");
+          break;
+        case "update_block":
+          // args: id, text
+          await editor.updateBlock(args.id, args.text);
+          toast.success("AI updated content");
+          break;
+        case "delete_block":
+          // args: id
+          await editor.deleteBlock(args.id);
+          toast.success("AI deleted content");
+          break;
+        case "clear_document":
+          await editor.clearDocument();
+          toast.success("AI cleared document");
+          break;
+        case "get_selection":
+          const sel = editor.getSelection();
+          console.log("[ClientTool] Selection:", sel);
+          // In a full implementation, we'd feed this back to the AI
+          break;
+        case "get_document_structure":
+          const struct = editor.getDocumentStructure();
+          console.log("[ClientTool] Structure:", struct);
+          break;
+        default:
+          console.warn("[ClientTool] Unknown tool:", tool);
+      }
+    } catch (e) {
+      console.error("[ClientTool] Execution failed:", e);
+      toast.error(`AI Action Failed: ${e.message}`);
+    }
+  }, [notesEditorRef]);
+
+  // Tool Execution Effect
   useEffect(() => {
-    setActiveTab("chat");
-  }, [threadSlug]);
+    if (loadingResponse) return; // Wait for stream to finish
+    const lastMsg = chatHistory[chatHistory.length - 1];
+    if (!lastMsg || lastMsg.role !== 'assistant' || !lastMsg.uuid) return;
+
+    if (executedMessageIds.current.has(lastMsg.uuid)) return;
+
+    // Regex to find the JSON block
+    const toolRegex = /```json\s*\n(\{\s*"tool":\s*".*?"[\s\S]*?\})\s*\n```/;
+    const match = lastMsg.content?.match(toolRegex);
+
+    if (match) {
+      try {
+        const toolCall = JSON.parse(match[1]);
+        executedMessageIds.current.add(lastMsg.uuid);
+        executeTool(toolCall);
+      } catch (e) {
+        console.error("Failed to parse tool call", e);
+      }
+    }
+  }, [chatHistory, loadingResponse, executeTool]);
+
+  // Reset to chat tab when thread changes (only if not using external editor)
+  useEffect(() => {
+    if (!externalEditorRef) {
+      setActiveTab("chat");
+    }
+  }, [threadSlug, externalEditorRef]);
 
   // Listen for AI note insert events
   useEffect(() => {
@@ -195,9 +279,14 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
         }
       }
 
-      // Queue the content and switch to Notes
+      // Queue the content
       setPendingNoteInsert(pendingContent);
-      setActiveTab("notes");
+
+      // Only switch tab if NOT using external editor (split screen)
+      if (!externalEditorRef) {
+        setActiveTab("notes");
+      }
+
       setShowInsertModal(false);
       setPendingContent(null);
     };
@@ -208,9 +297,9 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
     window.addEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
     return () =>
       window.removeEventListener(NOTE_INSERT_EVENT, handleNoteInsert);
-  }, []);
+  }, [externalEditorRef]); // Re-bind if ref strategy changes
 
-  // When switching to Notes, insert any queued content once the editor is ready.
+  // When pending content exists, insert it once the editor is ready.
   useEffect(() => {
     if (!pendingNoteInsert) return;
 
@@ -269,7 +358,7 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
 
     toast
       .promise(waitForEditorAndInsert(), {
-        pending: "Waiting for editor...",
+        pending: "Waitng for editor...",
         success: "Content added to your Notes!",
         error: {
           render({ data }) {
@@ -560,27 +649,25 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
     >
       {isMobile && <SidebarMobileHeader />}
 
-      {/* Tab Header - Only show when in a thread */}
-      {threadSlug && (
+      {/* Tab Header - Only show when in a thread and NOT split screen */}
+      {threadSlug && !externalEditorRef && (
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
-              activeTab === "chat"
-                ? "border-theme-text-primary text-theme-text-primary"
-                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-            }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
+              ? "border-theme-text-primary text-theme-text-primary"
+              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              }`}
           >
             <ChatText size={18} />
             Chat
           </button>
           <button
             onClick={() => setActiveTab("notes")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
-              activeTab === "notes"
-                ? "border-theme-text-primary text-theme-text-primary"
-                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-            }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
+              ? "border-theme-text-primary text-theme-text-primary"
+              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              }`}
           >
             <FileText size={18} />
             Doc
@@ -590,7 +677,7 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
 
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto no-scroll">
-        {activeTab === "chat" ? (
+        {activeTab === "chat" || externalEditorRef ? (
           <DnDFileUploaderWrapper>
             <MetricsProvider>
               <ChatHistory
@@ -603,6 +690,7 @@ export default function ChatContainer({ workspace, knownHistory = [] }) {
               />
             </MetricsProvider>
             <PromptInput
+              workspace={workspace}
               submit={handleSubmit}
               onChange={handleMessageChange}
               isStreaming={loadingResponse}

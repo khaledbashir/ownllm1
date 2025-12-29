@@ -2,46 +2,39 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Database configuration
-// Use DATABASE_URL environment variable to configure database
-// Default: SQLite at ../storage/anythingllm.db
-// To use PostgreSQL, set DATABASE_URL=postgresql://user:password@host:port/database
-
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model organizations {
-  id            Int      @id @default(autoincrement())
-  name          String
-  slug          String   @unique
-  plan          String   @default("free") // free, pro, enterprise
-  subscriptionId String?  // Stripe subscription ID
-  status        String   @default("active") // active, trial, past_due, canceled, suspended
-  seatLimit     Int?     // Max users allowed (null = unlimited)
-  settings      String?  // JSON for organization-specific settings
-  role          String   @default("default") // default, admin (for special organizational permissions)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
+  id                 Int                   @id @default(autoincrement())
+  name               String
+  slug               String                @unique
+  plan               String                @default("free")
+  subscriptionId     String?
+  status             String                @default("active")
+  seatLimit          Int?
+  settings           String?
+  role               String                @default("default")
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  apiKeys            api_keys[]
+  crmPipelines       crm_pipelines[]
+  invites            invites[]
   users              users[]
-  workspaces         workspaces[]
-  invites           invites[]
-  crmPipelines      crm_pipelines[]
-  apiKeys           api_keys[]
   workspaceDocuments workspace_documents[]
+  workspaces         workspaces[]
 }
 
 model api_keys {
-  id              Int      @id @default(autoincrement())
-  secret          String?  @unique
-  createdBy       Int?
-  organizationId  Int?
-  createdAt       DateTime @default(now())
-  lastUpdatedAt   DateTime @default(now())
-
-  organization     organizations? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  id             Int            @id @default(autoincrement())
+  secret         String?        @unique
+  createdBy      Int?
+  organizationId Int?
+  createdAt      DateTime       @default(now())
+  lastUpdatedAt  DateTime       @default(now())
+  organization   organizations? @relation(fields: [organizationId], references: [id])
 }
 
 model workspace_documents {
@@ -50,30 +43,29 @@ model workspace_documents {
   filename             String
   docpath              String
   workspaceId          Int
-  organizationId        Int?
+  organizationId       Int?
   metadata             String?
   pinned               Boolean?              @default(false)
   watched              Boolean?              @default(false)
   createdAt            DateTime              @default(now())
   lastUpdatedAt        DateTime              @default(now())
-  workspace            workspaces            @relation(fields: [workspaceId], references: [id])
-  organization          organizations?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   document_sync_queues document_sync_queues?
+  organization         organizations?        @relation(fields: [organizationId], references: [id])
+  workspace            workspaces            @relation(fields: [workspaceId], references: [id])
 
   @@index([organizationId])
 }
 
 model invites {
-  id             Int      @id @default(autoincrement())
-  code           String   @unique
-  status         String   @default("pending")
+  id             Int            @id @default(autoincrement())
+  code           String         @unique
+  status         String         @default("pending")
   claimedBy      Int?
   workspaceIds   String?
   organizationId Int?
-  createdAt      DateTime @default(now())
-  createdBy     Int
-  lastUpdatedAt  DateTime @default(now())
-
+  createdAt      DateTime       @default(now())
+  createdBy      Int
+  lastUpdatedAt  DateTime       @default(now())
   organization   organizations? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
@@ -99,33 +91,33 @@ model users {
   lastUpdatedAt               DateTime                      @default(now())
   dailyMessageLimit           Int?
   bio                         String?                       @default("")
+  organizationId              Int?
   email                       String?                       @unique
   emailVerified               Boolean?                      @default(false)
-  organizationId              Int?
-  workspace_chats             workspace_chats[]
-  workspace_users             workspace_users[]
-  embed_configs               embed_configs[]
-  embed_chats                 embed_chats[]
-  threads                     workspace_threads[]
-  recovery_codes              recovery_codes[]
-  password_reset_tokens       password_reset_tokens[]
-  email_verification_tokens   email_verification_tokens[]
-  workspace_agent_invocations workspace_agent_invocations[]
-  slash_command_presets       slash_command_presets[]
-  browser_extension_api_keys  browser_extension_api_keys[]
-  temporary_auth_tokens       temporary_auth_tokens[]
-  system_prompt_variables     system_prompt_variables[]
-  prompt_history              prompt_history[]
-  desktop_mobile_devices      desktop_mobile_devices[]
-  workspace_parsed_files      workspace_parsed_files[]
   artifacts                   artifacts[]
-  pdf_templates               pdf_templates[]
-  smart_plugins               smart_plugins[]
-  crm_pipelines               crm_pipelines[]
-  crm_cards                   crm_cards[]
-  integration_vault           integration_vault[]
   block_templates             block_templates[]
-  organization                organizations?                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  browser_extension_api_keys  browser_extension_api_keys[]
+  crm_cards                   crm_cards[]
+  crm_pipelines               crm_pipelines[]
+  desktop_mobile_devices      desktop_mobile_devices[]
+  email_verification_tokens   email_verification_tokens[]
+  embed_chats                 embed_chats[]
+  embed_configs               embed_configs[]
+  integration_vault           integration_vault[]
+  password_reset_tokens       password_reset_tokens[]
+  pdf_templates               pdf_templates[]
+  prompt_history              prompt_history[]
+  recovery_codes              recovery_codes[]
+  slash_command_presets       slash_command_presets[]
+  smart_plugins               smart_plugins[]
+  system_prompt_variables     system_prompt_variables[]
+  temporary_auth_tokens       temporary_auth_tokens[]
+  organization                organizations?                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workspace_agent_invocations workspace_agent_invocations[]
+  workspace_chats             workspace_chats[]
+  workspace_parsed_files      workspace_parsed_files[]
+  threads                     workspace_threads[]
+  workspace_users             workspace_users[]
 
   @@index([organizationId])
 }
@@ -182,13 +174,12 @@ model workspaces {
   id                           Int                            @id @default(autoincrement())
   name                         String
   slug                         String                         @unique
-  organizationId                Int?                           
+  organizationId               Int?
   vectorTag                    String?
   createdAt                    DateTime                       @default(now())
   openAiTemp                   Float?
   openAiHistory                Int                            @default(20)
   lastUpdatedAt                DateTime                       @default(now())
-  // THIS IS THE SYSTEM PROMPT FOR THE WORKSPACE
   openAiPrompt                 String?
   similarityThreshold          Float?                         @default(0.25)
   chatProvider                 String?
@@ -200,31 +191,28 @@ model workspaces {
   agentModel                   String?
   queryRefusalResponse         String?
   vectorSearchMode             String?                        @default("default")
-  // Products and Rate Card for proposal generation
-  products                     String?                        // JSON array of products/services
-  rateCard                     String?                        // JSON array of roles with hourly rates
+  products                     String?
+  rateCard                     String?
   enableProposalMode           Boolean                        @default(false)
-  // Inline AI (Doc Editor) settings
-  inlineAiSystemPrompt         String?                        // Custom system prompt for doc AI (falls back to openAiPrompt)
-  inlineAiActions              String?                        // JSON array of custom actions [{name, prompt, icon}]
-  // Proposal CRM Integration settings
-  defaultProposalPipelineId    Int?                           // Default pipeline for signed proposals
-  enableProposalCrmIntegration Boolean                        @default(true) // Auto-create CRM cards on sign
-  workspace_users              workspace_users[]
-  documents                    workspace_documents[]
-  workspace_suggested_messages workspace_suggested_messages[]
-  embed_configs                embed_configs[]
-  threads                      workspace_threads[]
-  workspace_agent_invocations  workspace_agent_invocations[]
-  prompt_history               prompt_history[]
-  workspace_parsed_files       workspace_parsed_files[]
+  inlineAiSystemPrompt         String?
+  inlineAiActions              String?
+  defaultProposalPipelineId    Int?
+  enableProposalCrmIntegration Boolean                        @default(true)
   artifacts                    artifacts[]
-  smart_plugins                smart_plugins[]
-  crm_pipelines                crm_pipelines[]
-  public_proposals             public_proposals[]
   block_templates              block_templates[]
-  organization                 organizations?                   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  defaultProposalPipeline      crm_pipelines?                 @relation("WorkspaceDefaultPipeline", fields: [defaultProposalPipelineId], references: [id], onDelete: SetNull)
+  crm_pipelines                crm_pipelines[]
+  embed_configs                embed_configs[]
+  prompt_history               prompt_history[]
+  public_proposals             public_proposals[]
+  smart_plugins                smart_plugins[]
+  workspace_agent_invocations  workspace_agent_invocations[]
+  documents                    workspace_documents[]
+  workspace_parsed_files       workspace_parsed_files[]
+  workspace_suggested_messages workspace_suggested_messages[]
+  threads                      workspace_threads[]
+  workspace_users              workspace_users[]
+  defaultProposalPipeline      crm_pipelines?                 @relation("WorkspaceDefaultPipeline", fields: [defaultProposalPipelineId], references: [id])
+  organization                 organizations?                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([defaultProposalPipelineId])
   @@index([organizationId])
@@ -236,12 +224,12 @@ model workspace_threads {
   slug                   String                   @unique
   workspace_id           Int
   user_id                Int?
-  notes                  String?                  @default("")
   createdAt              DateTime                 @default(now())
   lastUpdatedAt          DateTime                 @default(now())
-  workspace              workspaces               @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
-  user                   users?                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  notes                  String?                  @default("")
   workspace_parsed_files workspace_parsed_files[]
+  user                   users?                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  workspace              workspaces               @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
 
   @@index([workspace_id])
   @@index([user_id])
@@ -266,26 +254,26 @@ model workspace_chats {
   response       String
   include        Boolean  @default(true)
   user_id        Int?
-  thread_id      Int? // No relation to prevent whole table migration
-  api_session_id String? // String identifier for only the dev API to partition chats in any mode.
   createdAt      DateTime @default(now())
   lastUpdatedAt  DateTime @default(now())
+  thread_id      Int?
   feedbackScore  Boolean?
-  users          users?   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  api_session_id String?
+  users          users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model workspace_agent_invocations {
   id            Int        @id @default(autoincrement())
   uuid          String     @unique
-  prompt        String // Contains agent invocation to parse + option additional text for seed.
+  prompt        String
   closed        Boolean    @default(false)
   user_id       Int?
-  thread_id     Int? // No relation to prevent whole table migration
+  thread_id     Int?
   workspace_id  Int
   createdAt     DateTime   @default(now())
   lastUpdatedAt DateTime   @default(now())
-  user          users?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  workspace     workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  workspace     workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  user          users?     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([uuid])
 }
@@ -296,8 +284,8 @@ model workspace_users {
   workspace_id  Int
   createdAt     DateTime   @default(now())
   lastUpdatedAt DateTime   @default(now())
-  workspaces    workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  users         users      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  users         users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  workspaces    workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
 }
 
 model cache_data {
@@ -322,14 +310,14 @@ model embed_configs {
   allow_prompt_override      Boolean       @default(false)
   max_chats_per_day          Int?
   max_chats_per_session      Int?
-  message_limit              Int?          @default(20)
   workspace_id               Int
   createdBy                  Int?
   usersId                    Int?
   createdAt                  DateTime      @default(now())
-  workspace                  workspaces    @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  message_limit              Int?          @default(20)
   embed_chats                embed_chats[]
   users                      users?        @relation(fields: [usersId], references: [id])
+  workspace                  workspaces    @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
 }
 
 model embed_chats {
@@ -342,8 +330,8 @@ model embed_chats {
   embed_id               Int
   usersId                Int?
   createdAt              DateTime      @default(now())
-  embed_config           embed_configs @relation(fields: [embed_id], references: [id], onDelete: Cascade)
   users                  users?        @relation(fields: [usersId], references: [id])
+  embed_config           embed_configs @relation(fields: [embed_id], references: [id], onDelete: Cascade)
 }
 
 model event_logs {
@@ -361,7 +349,7 @@ model slash_command_presets {
   command       String
   prompt        String
   description   String
-  uid           Int      @default(0) // 0 is null user
+  uid           Int      @default(0)
   userId        Int?
   createdAt     DateTime @default(now())
   lastUpdatedAt DateTime @default(now())
@@ -372,13 +360,13 @@ model slash_command_presets {
 
 model document_sync_queues {
   id             Int                        @id @default(autoincrement())
-  staleAfterMs   Int                        @default(604800000) // 7 days
+  staleAfterMs   Int                        @default(604800000)
   nextSyncAt     DateTime
   createdAt      DateTime                   @default(now())
   lastSyncedAt   DateTime                   @default(now())
   workspaceDocId Int                        @unique
-  workspaceDoc   workspace_documents?       @relation(fields: [workspaceDocId], references: [id], onDelete: Cascade)
   runs           document_sync_executions[]
+  workspaceDoc   workspace_documents        @relation(fields: [workspaceDocId], references: [id], onDelete: Cascade)
 }
 
 model document_sync_executions {
@@ -418,7 +406,7 @@ model system_prompt_variables {
   key         String   @unique
   value       String?
   description String?
-  type        String   @default("system") // system, user, dynamic
+  type        String   @default("system")
   userId      Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -429,17 +417,16 @@ model system_prompt_variables {
 
 model prompt_history {
   id          Int        @id @default(autoincrement())
-  workspace   workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId Int
   prompt      String
   modifiedBy  Int?
   modifiedAt  DateTime   @default(now())
   user        users?     @relation(fields: [modifiedBy], references: [id])
+  workspace   workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
 }
 
-// Schema specific to mobile app <> Desktop app connection
 model desktop_mobile_devices {
   id         Int      @id @default(autoincrement())
   deviceOs   String
@@ -462,66 +449,63 @@ model workspace_parsed_files {
   metadata           String?
   tokenCountEstimate Int?               @default(0)
   createdAt          DateTime           @default(now())
-  workspace          workspaces         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user               users?             @relation(fields: [userId], references: [id], onDelete: Cascade)
   thread             workspace_threads? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user               users?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace          workspaces         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@index([userId])
 }
 
 model artifacts {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   code        String
   language    String
   userId      Int?
   workspaceId Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt // using @updatedAt for auto-update
-
-  user        users?     @relation(fields: [userId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   workspace   workspaces @relation(fields: [workspaceId], references: [id])
+  user        users?     @relation(fields: [userId], references: [id])
 
   @@index([workspaceId])
   @@index([userId])
 }
 
 model pdf_templates {
-  id             Int      @id @default(autoincrement())
-  name           String
-  logoPath       String?
-  headerText     String?
-  footerText     String?
-  primaryColor   String   @default("#3b82f6")
-  secondaryColor String   @default("#1e293b")
-  fontFamily     String   @default("Inter")
-  userId         Int?
-  isDefault      Boolean  @default(false)
+  id              Int      @id @default(autoincrement())
+  name            String
+  logoPath        String?
+  headerText      String?
+  footerText      String?
+  primaryColor    String   @default("#3b82f6")
+  secondaryColor  String   @default("#1e293b")
+  fontFamily      String   @default("Inter")
+  userId          Int?
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   backgroundImage String?
-  cssOverrides   String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  user           users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cssOverrides    String?
+  user            users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model smart_plugins {
-  id          Int       @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   description String?
   schema      String
   uiConfig    String?
-  active      Boolean   @default(true)
+  active      Boolean    @default(true)
   workspaceId Int
   createdBy   Int?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        users?     @relation(fields: [createdBy], references: [id])
   workspace   workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user        users?     @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@unique([workspaceId, name])
   @@index([workspaceId])
@@ -529,24 +513,23 @@ model smart_plugins {
 }
 
 model crm_pipelines {
-  id             Int      @id @default(autoincrement())
-  name           String   // e.g., "Embed Leads", "Proposals", "Sales Pipeline"
-  description    String?
-  type           String   @default("custom") // embed, proposal, custom
-  stages         String   // JSON array: ["New", "Contacted", "Qualified", "Won", "Lost"]
-  color          String?  @default("#3b82f6") // Pipeline accent color
-  userId         Int?
-  workspaceId    Int?
-  organizationId Int?     
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  user           users?              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace      workspaces?         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  organization    organizations?       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  cards          crm_cards[]
-  proposals      public_proposals[]
-  defaultForWorkspaces workspaces[] @relation("WorkspaceDefaultPipeline")
+  id                   Int                @id @default(autoincrement())
+  name                 String
+  description          String?
+  type                 String             @default("custom")
+  stages               String
+  color                String?            @default("#3b82f6")
+  userId               Int?
+  workspaceId          Int?
+  organizationId       Int?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  cards                crm_cards[]
+  organization         organizations?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workspace            workspaces?        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user                 users?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposals            public_proposals[]
+  defaultForWorkspaces workspaces[]       @relation("WorkspaceDefaultPipeline")
 
   @@index([userId])
   @@index([workspaceId])
@@ -554,36 +537,27 @@ model crm_pipelines {
 }
 
 model crm_cards {
-  id             Int      @id @default(autoincrement())
+  id             Int               @id @default(autoincrement())
   pipelineId     Int
-  stage          String   // Current stage name
-  position       Int      @default(0) // Order within stage
-
-  // Contact/Lead Info
-  title          String   // Card title (e.g., name or "Lead #123")
+  stage          String
+  position       Int               @default(0)
+  title          String
   name           String?
   email          String?
   phone          String?
   company        String?
-
-  // Context linking
-  embedSessionId String?  // Links to embed_chats.session_id
-  threadId       Int?     // Links to workspace_threads
-  proposalId     String?  @unique // Links to public_proposals.id (one-to-one)
-  
-  // Custom data
+  embedSessionId String?
+  threadId       Int?
+  proposalId     String?           @unique
   notes          String?
-  metadata       String?  // JSON for custom fields
-  value          Float?   // Deal value
-
-  // Audit
+  metadata       String?
+  value          Float?
   userId         Int?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  pipeline       crm_pipelines    @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
-  user           users?           @relation(fields: [userId], references: [id], onDelete: SetNull)
-  proposal       public_proposals? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  proposal       public_proposals? @relation(fields: [proposalId], references: [id])
+  user           users?            @relation(fields: [userId], references: [id])
+  pipeline       crm_pipelines     @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
 
   @@index([pipelineId])
   @@index([stage])
@@ -591,128 +565,116 @@ model crm_cards {
   @@index([proposalId])
 }
 
-// Vault for storing user's integration configs (API keys, webhooks, endpoints)
-// Flow Builder checks this FIRST before asking user questions
 model integration_vault {
-  id          Int      @id @default(autoincrement())
-  service     String   // slack, hubspot, stripe, crm, custom, etc.
-  name        String   // Display name: "My Slack Workspace"
-  configJson  String   // Encrypted: { webhook, apiKey, endpoint, headers, etc. }
-  category    String   @default("integration") // integration, api, webhook, internal
-  userId      Int?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user        users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         Int      @id @default(autoincrement())
+  service    String
+  name       String
+  configJson String
+  category   String   @default("integration")
+  userId     Int?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, service, name])
   @@index([userId])
   @@index([service])
 }
 
-// Public API registry - cached free APIs for common use cases
 model public_api_registry {
-  id           Int      @id @default(autoincrement())
-  category     String   // jokes, weather, translation, stocks, etc.
-  name         String   // JokeAPI, OpenWeatherMap, etc.
-  endpoint     String   // https://v2.jokeapi.dev/joke/Any
-  method       String   @default("GET")
-  authType     String   @default("none") // none, apiKey, bearer, basic
-  headers      String?  // JSON: { "X-Api-Key": "required" }
-  bodySchema   String?  // JSON schema for request body
-  responseExample String? // Example response
-  docsUrl      String?
-  isVerified   Boolean  @default(false)
-  lastTestedAt DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              Int       @id @default(autoincrement())
+  category        String
+  name            String
+  endpoint        String
+  method          String    @default("GET")
+  authType        String    @default("none")
+  headers         String?
+  bodySchema      String?
+  responseExample String?
+  docsUrl         String?
+  isVerified      Boolean   @default(false)
+  lastTestedAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@unique([category, name])
   @@index([category])
 }
 
-// Public proposals for client portal - shareable read-only snapshots
 model public_proposals {
-  id          String    @id @default(uuid())
+  id          String               @id @default(uuid())
   workspaceId Int
-  htmlContent String    // HTML snapshot of the proposal
-  status      String    @default("active") // active, signed, expired, revoked
-  password    String?   // Optional password protection
-  expiresAt   DateTime? // Optional expiry date
-  signatures  String?   // JSON: { name, ip, date, signatureImage }
-  viewCount   Int       @default(0)
-  pipelineId  Int?      // Link to CRM pipeline for auto-creating cards
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  workspace   workspaces   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  pipeline    crm_pipelines? @relation(fields: [pipelineId], references: [id], onDelete: SetNull)
-  crmCard     crm_cards?    @relation
+  htmlContent String
+  status      String               @default("active")
+  password    String?
+  expiresAt   DateTime?
+  signatures  String?
+  viewCount   Int                  @default(0)
+  pipelineId  Int?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  crmCard     crm_cards?
+  approvals   proposal_approvals[]
   comments    proposal_comments[]
   versions    proposal_versions[]
-  approvals    proposal_approvals[]
+  pipeline    crm_pipelines?       @relation(fields: [pipelineId], references: [id])
+  workspace   workspaces           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@index([status])
   @@index([pipelineId])
 }
 
-// Threaded comments for proposal discussions
 model proposal_comments {
-  id          String   @id @default(uuid())
+  id          String              @id @default(uuid())
   proposalId  String
-  parentId    String?  // For threaded replies
-  authorName  String   // Name of the commenter (client or internal)
-  authorEmail String?  // Email (optional, for identification)
-  content     String   // Rich text content (Markdown supported)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  reactions   String?  // JSON: [{ emoji, count, users[] }]
-  mentions    String?  // JSON: ["user@example.com"]
-
-  proposal    public_proposals @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  parentId    String?
+  authorName  String
+  authorEmail String?
+  content     String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  reactions   String?
+  mentions    String?
+  parent      proposal_comments?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies     proposal_comments[] @relation("CommentReplies")
-  parent      proposal_comments? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  proposal    public_proposals    @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 
   @@index([proposalId])
   @@index([parentId])
   @@index([createdAt])
 }
 
-// Version history for proposal changes
 model proposal_versions {
-  id          String   @id @default(uuid())
-  proposalId  String
-  versionNumber Int      // Incremental version number
-  title       String   // Version title (e.g., "v1.0", "Revised pricing")
-  changes     String   // JSON: [{ description, type }]
-  notes       String?  // Optional notes explaining the version
-  authorName  String   // Who made the change
-  htmlContent String   // HTML snapshot at this version
-  createdAt   DateTime @default(now())
+  id            String           @id @default(uuid())
+  proposalId    String
+  versionNumber Int
+  title         String
+  changes       String
+  notes         String?
+  authorName    String
+  htmlContent   String
+  createdAt     DateTime         @default(now())
+  proposal      public_proposals @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 
-  proposal    public_proposals @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-
+  @@unique([proposalId, versionNumber])
   @@index([proposalId])
   @@index([versionNumber])
-  @@unique([proposalId, versionNumber])
 }
 
-// Approval workflow with multiple signers
 model proposal_approvals {
-  id              String   @id @default(uuid())
-  proposalId      String
-  approverName    String   // Name of the person approving
-  approverEmail   String?  // Email for tracking
-  signatureData   String?  // JSON: { type: "drawn"|"typed", signatureImage, timestamp, ip }
-  status          String   @default("pending") // pending, approved, declined, requested_changes
-  declineReason   String?  // Reason for declining or requesting changes
-  changeNotes     String?  // Notes when requesting changes
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  proposal        public_proposals @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  id            String           @id @default(uuid())
+  proposalId    String
+  approverName  String
+  approverEmail String?
+  signatureData String?
+  status        String           @default("pending")
+  declineReason String?
+  changeNotes   String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  proposal      public_proposals @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 
   @@index([proposalId])
   @@index([status])
@@ -720,19 +682,18 @@ model proposal_approvals {
 }
 
 model block_templates {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   description String?
-  snapshot    String   // JSON serialized block tree
+  snapshot    String
   workspaceId Int
-  isGlobal    Boolean  @default(false)
+  isGlobal    Boolean    @default(false)
   createdBy   Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        users?     @relation(fields: [createdBy], references: [id])
   workspace   workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user        users?     @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 
-  @@index([workspaceId])
   @@unique([workspaceId, name])
+  @@index([workspaceId])
 }

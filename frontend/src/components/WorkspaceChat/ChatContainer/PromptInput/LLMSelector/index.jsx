@@ -16,7 +16,7 @@ import showToast from "@/utils/toast";
 import Workspace from "@/models/workspace";
 import System from "@/models/system";
 
-export default function LLMSelectorModal() {
+export default function LLMSelectorModal({ workspace: propWorkspace }) {
   const { slug } = useParams();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -31,6 +31,26 @@ export default function LLMSelectorModal() {
   const [missingCredentials, setMissingCredentials] = useState(false);
 
   useEffect(() => {
+    // If we have a prop workspace, we don't need to fetch it by slug
+    // but we still need system keys
+    if (propWorkspace) {
+      setLoading(true);
+      System.keys()
+        .then((systemSettings) => {
+          const selectedLLMProvider =
+            propWorkspace.chatProvider ?? systemSettings.LLMProvider;
+          const selectedLLMModel =
+            propWorkspace.chatModel ?? systemSettings.LLMModel;
+
+          setSettings(systemSettings);
+          setSelectedLLMProvider(selectedLLMProvider);
+          autoScrollToSelectedLLMProvider(selectedLLMProvider);
+          setSelectedLLMModel(selectedLLMModel);
+        })
+        .finally(() => setLoading(false));
+      return;
+    }
+
     if (!slug) return;
     setLoading(true);
     Promise.all([Workspace.bySlug(slug), System.keys()])
@@ -45,7 +65,7 @@ export default function LLMSelectorModal() {
         setSelectedLLMModel(selectedLLMModel);
       })
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, propWorkspace]);
 
   function handleSearch(e) {
     const searchTerm = e.target.value.toLowerCase();
@@ -71,7 +91,10 @@ export default function LLMSelectorModal() {
       const validatedModel = validatedModelSelection(selectedLLMModel);
       if (!validatedModel) throw new Error("Invalid model selection");
 
-      const { message } = await Workspace.update(slug, {
+      const targetSlug = propWorkspace?.slug || slug;
+      if (!targetSlug) throw new Error("No workspace slug found");
+
+      const { message } = await Workspace.update(targetSlug, {
         chatProvider: selectedLLMProvider,
         chatModel: validatedModel,
       });

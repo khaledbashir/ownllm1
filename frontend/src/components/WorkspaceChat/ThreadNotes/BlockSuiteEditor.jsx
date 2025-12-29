@@ -1069,11 +1069,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
           const hours =
             idxHours !== -1 ? (parseNumber(cells[idxHours]) ?? 0) : 0;
-          
+
           // If Rate is missing but Total exists, use Total as Rate (assuming 1 unit/hour)
           let baseRate = idxRate !== -1 ? (parseNumber(cells[idxRate]) ?? 0) : 0;
           if (idxRate === -1 && idxTotal !== -1) {
-             baseRate = parseNumber(cells[idxTotal]) ?? 0;
+            baseRate = parseNumber(cells[idxTotal]) ?? 0;
           }
 
           const description = idxDesc !== -1 ? cells[idxDesc] || "" : "";
@@ -1276,7 +1276,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         const level = headingMatch[1].length; // 1-6
         const headingText = parseInlineFormatting(headingMatch[2]);
         const headingType = level <= 3 ? `h${level}` : "h3";
-        
+
         // Skip creating H1 blocks if this is being called from insertMarkdown with remainingContent
         // The title should already be set as page title in insertMarkdown
         const isFromInsertMarkdown = doc && doc._insertMarkdownMode;
@@ -1293,7 +1293,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             noteBlockId
           );
         }
-        
+
         lastHeadingText = headingText;
         i++;
         continue;
@@ -1388,6 +1388,221 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
   // Expose insert method to parent
   useImperativeHandle(ref, () => ({
     isReady: () => isReady,
+
+    // === Programmatic Control API (SiYuan-like) ===
+
+    // Get the full document structure as a JSON tree
+    getDocumentStructure: () => {
+      if (!editorRef.current?.doc) return null;
+      try {
+        const doc = editorRef.current.doc;
+        // Recursive helper to build tree
+        const buildTree = (block) => {
+          return {
+            id: block.id,
+            flavour: block.flavour,
+            text: block.text?.toString?.() || "",
+            // Add other props as needed
+            children: (block.children || []).map(buildTree)
+          };
+        };
+        return buildTree(doc.root);
+      } catch (e) {
+        console.error("Failed to get document structure:", e);
+        return null;
+      }
+    },
+
+    // Get the current user selection (Block or Text)
+    getSelection: () => {
+      if (!editorRef.current?.std?.selection) return null;
+      try {
+        const selection = editorRef.current.std.selection;
+        const textSelection = selection.find('text');
+        const blockSelection = selection.find('block');
+
+        if (textSelection) {
+          return {
+            type: 'text',
+            from: textSelection.from,
+            to: textSelection.to,
+            blockId: textSelection.blockId
+          };
+        }
+        if (blockSelection) {
+          return {
+            type: 'block',
+            blockIds: blockSelection.blockIds
+          };
+        }
+        return null;
+      } catch (e) {
+        console.error("Failed to get selection:", e);
+        return null;
+      }
+    },
+
+    // Update a specific block's text
+    updateBlock: (blockId, newText) => {
+      if (!editorRef.current?.doc) return false;
+      try {
+        const doc = editorRef.current.doc;
+        const block = doc.getBlock(blockId);
+        if (block && block.text) {
+          // We need to transact to update text? Or just set it?
+          // BlockSuite Text object has update method or we replace the prop
+          console.log(`Updating block ${blockId} to "${newText}"`);
+          // Note: This is an internal API guess, actual BlockSuite API might vary
+          // Usually we do: doc.updateBlock(block, { text: new Text(newText) })
+          doc.updateBlock(block, { text: new Text(newText) });
+          return true;
+        }
+        return false;
+      } catch (e) {
+        console.error("Failed to update block:", e);
+        return false;
+      }
+    },
+
+    // Append a block to a parent (or root/last note if parentId null)
+    appendBlock: (type = "affine:paragraph", textContent = "", parentId = null, props = {}) => {
+      if (!editorRef.current?.doc) return false;
+      try {
+        const doc = editorRef.current.doc;
+        let pId = parentId;
+
+        // If no parent, find the last note block
+        if (!pId) {
+          // If we have a selection, try to append after it?
+          // For now, default to last note for reliability
+          const noteBlocks = doc.getBlocksByFlavour("affine:note");
+          if (noteBlocks.length > 0) {
+            pId = noteBlocks[noteBlocks.length - 1].id;
+          }
+        }
+
+        if (!pId) return false; // Cannot find place to insert
+
+        const id = doc.addBlock(
+          type,
+          { text: new Text(textContent), ...props },
+          pId
+        );
+        return id;
+      } catch (e) {
+        console.error("Failed to append block:", e);
+        return false;
+      }
+    },
+
+    // Create a database (Kanban/Table)
+    insertDatabase: (title, view = 'kanban', columnsDef = [], rowsData = [], parentId = null) => {
+      if (!editorRef.current?.doc) return false;
+      try {
+        const doc = editorRef.current.doc;
+        // Generate internal IDs for columns
+        const columns = columnsDef.map(col => ({
+          id: window.crypto.randomUUID(),
+          name: col.name,
+          type: col.type || 'text',
+          data: col.options ? {
+            options: col.options.map(o => ({
+              id: window.crypto.randomUUID(),
+              value: o,
+              color: 'var(--affine-tag-blue)'
+            }))
+          } : {}
+        }));
+
+        // Find parent
+        let pId = parentId;
+        if (!pId) {
+          const noteBlocks = doc.getBlocksByFlavour("affine:note");
+          if (noteBlocks.length > 0) pId = noteBlocks[noteBlocks.length - 1].id;
+        }
+        if (!pId) return false;
+
+        // Create Database Block
+        // We must provide a View so it renders.
+        const viewId = window.crypto.randomUUID();
+        const views = [{
+          id: viewId,
+          name: 'Default View',
+          mode: view || 'table',
+          columns: columns.map(c => ({
+            id: c.id,
+            width: 180,
+            hidden: false
+          })),
+          filter: { type: 'group', op: 'and', conditions: [] }
+        }];
+
+        const dbId = doc.addBlock('affine:database', {
+          title: new Text(title),
+          columns: columns,
+          views: views
+        }, pId);
+
+        // Add Rows and Populate Cells
+        const cells = {};
+
+        for (const row of rowsData) {
+          // Identify title content: look for 'title', 'name', 'Task', or first key
+          const titleKey = Object.keys(row).find(k => k.toLowerCase() === 'title' || k.toLowerCase() === 'name' || k.toLowerCase() === 'task') || Object.keys(row)[0];
+          const rowTitle = row[titleKey] || "Untitled";
+
+          // Create row block (child paragraph)
+          const rowId = doc.addBlock('affine:paragraph', { text: new Text(rowTitle) }, dbId);
+
+          // Map other columns
+          cells[rowId] = {};
+          columns.forEach(col => {
+            if (col.name === titleKey) return; // Skip title, already set
+
+            const val = row[col.name];
+            if (val) {
+              if (col.type === 'select' && col.data?.options) {
+                const opt = col.data.options.find(o => o.value === val);
+                if (opt) cells[rowId][col.id] = { value: opt.id };
+              } else if (col.type === 'multi-select' && Array.isArray(val) && col.data?.options) {
+                // Handle multi-select? Just skipping complexity for now
+              } else {
+                cells[rowId][col.id] = { value: val };
+              }
+            }
+          });
+        }
+
+        // Update cells
+        const block = doc.getBlock(dbId);
+        if (block) {
+          doc.updateBlock(block, { cells });
+        }
+
+        console.log("[BlockSuite] Created database:", dbId);
+        return dbId;
+      } catch (e) {
+        console.error("Failed to insert database:", e);
+        return false;
+      }
+    },
+
+    // Delete a block
+    deleteBlock: (blockId) => {
+      if (!editorRef.current?.doc) return false;
+      try {
+        const doc = editorRef.current.doc;
+        const block = doc.getBlock(blockId);
+        if (block) {
+          doc.deleteBlock(block);
+          return true;
+        }
+        return false;
+      } catch (e) {
+        console.error("Failed to delete block:", e);
+        return false;
+      }
+    },
 
     // Clear all content from the document
     clearDocument: () => {
@@ -2040,8 +2255,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 20px 30px;
-            margin-bottom: 30px;
-            break-after: page;
+            margin-bottom: 40px;
+            /* break-after: page; Removed to allow content to start immediately */
           ">
             <h2 style="margin: 0 0 15px 0; font-size: 1.4em; color: #111827; border: none;">Table of Contents</h2>
             <ul style="list-style: none; padding: 0; margin: 0;">
@@ -2347,7 +2562,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         /* Paged.js / WeasyPrint page rules */
         @page {
             size: A4;
-            margin: 25mm 20mm 30mm 20mm;
+            size: A4;
+            margin: 20mm; /* Standardized margins */
         }
         @page:first {
             margin-top: 15mm; /* Less margin on first page for header */
@@ -2365,10 +2581,8 @@ ${activeTemplateFooter}
 </body>
 </html>`;
 
-      const sanitizedEditorHtml = editorHtml.replace(
-        /[^\x09\x0A\x0D\x20-\x7E]/g,
-        ""
-      );
+      // No sanitization needed - Puppeteer handles UTF-8 correctly
+      const sanitizedEditorHtml = editorHtml;
 
       const result = await WorkspaceThread.exportPdf(
         workspaceSlug,
@@ -2412,7 +2626,7 @@ ${activeTemplateFooter}
     if (!editorRef.current?.doc) return { title: "", content: "" };
 
     const doc = editorRef.current.doc;
-    
+
     // Get page title if available
     const pageBlock = doc.getBlocksByFlavour("affine:page")[0];
     let docTitle = "";
@@ -2431,9 +2645,9 @@ ${activeTemplateFooter}
     // Serialize doc to HTML (same approach as PDF export)
     // This ensures all content types are captured consistently
     const html = await serializeDocToHtml(doc);
-    
+
     console.log("[extractTextContent] Serialized HTML length:", html.length);
-    
+
     // Strip HTML tags to get plain text
     const plainText = html
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove style tags

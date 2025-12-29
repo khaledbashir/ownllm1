@@ -1,8 +1,7 @@
 const prisma = require("../utils/prisma");
 
 const ProposalVersions = {
-  writable: []
-
+  writable: [],
   create: async (data) => {
     try {
       // Auto-increment version number for this proposal

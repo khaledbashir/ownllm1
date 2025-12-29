@@ -1,8 +1,7 @@
 const prisma = require("../utils/prisma");
 
 const ProposalApprovals = {
-  writable: []
-
+  writable: [],
   create: async (data) => {
     try {
       const approval = await prisma.proposal_approvals.create({

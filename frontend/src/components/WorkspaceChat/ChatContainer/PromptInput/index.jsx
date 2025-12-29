@@ -31,6 +31,7 @@ export const PROMPT_INPUT_EVENT = "set_prompt_input";
 const MAX_EDIT_STACK_SIZE = 100;
 
 export default function PromptInput({
+  workspace,
   submit,
   onChange,
   isStreaming,
@@ -337,7 +338,7 @@ export default function PromptInput({
                   setShowAgents={setShowAgents}
                 />
                 <TextSizeButton />
-                <LLMSelectorAction />
+                <LLMSelectorAction workspace={workspace} />
               </div>
               <div className="flex gap-x-2">
                 <SpeechToText sendCommand={sendCommand} />

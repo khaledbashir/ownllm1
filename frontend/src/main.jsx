@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { ConfirmProvider } from "@/components/Modals/ConfirmModal";
 import DocumentTemplates from "@/pages/GeneralSettings/DocumentTemplates";
 import App from "@/App.jsx";
@@ -11,6 +11,9 @@ import PrivateRoute, {
 import Login from "@/pages/Login";
 import SimpleSSOPassthrough from "@/pages/Login/SSO/simple";
 import OnboardingFlow from "@/pages/OnboardingFlow";
+import ClientPortalLogin from "@/pages/ClientPortal/Login";
+import ClientPortalVerify from "@/pages/ClientPortal/Verify";
+import ClientPortalLayout from "@/components/ClientPortal/Layout";
 import "@/index.css";
 
 const isDev = process.env.NODE_ENV !== "production";
@@ -77,6 +80,63 @@ const router = createBrowserRouter([
             await import("@/pages/PublicProposal");
           return { element: <PublicProposal /> };
         },
+      },
+      {
+        path: "portal/login",
+        element: <ClientPortalLogin />,
+      },
+      {
+        path: "portal/verify",
+        element: <ClientPortalVerify />,
+      },
+      {
+        path: "portal",
+        element: <ClientPortalLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/portal/dashboard" replace />,
+          },
+          {
+            path: "dashboard",
+            lazy: async () => {
+              const { default: ClientDashboard } = await import(
+                "@/pages/ClientPortal/Dashboard"
+              );
+              return { element: <ClientDashboard /> };
+            },
+          },
+          {
+            path: "projects",
+            lazy: async () => {
+              const { default: ClientProjects } = await import(
+                "@/pages/ClientPortal/Projects"
+              );
+              return { element: <ClientProjects /> };
+            },
+          },
+          {
+            path: "messages",
+            lazy: async () => {
+              const { default: ClientMessages } = await import(
+                "@/pages/ClientPortal/Messages"
+              );
+              return { element: <ClientMessages /> };
+            },
+          },
+          {
+            path: "project/:projectId",
+            lazy: async () => {
+              // Reusing PublicProposal logic but wrapping it in the portal context?
+              // Ideally we refactor PublicProposal to be a component we can reuse.
+              // For now, let's just leave a placeholder or point to a new wrapper.
+              const { default: PublicProposal } = await import(
+                "@/pages/PublicProposal"
+              );
+              return { element: <PublicProposal /> };
+            },
+          },
+        ],
       },
       {
         path: "app",

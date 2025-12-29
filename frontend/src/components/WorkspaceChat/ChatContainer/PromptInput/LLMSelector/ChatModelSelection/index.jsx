@@ -69,11 +69,7 @@ export default function ChatModelSelection({
           <optgroup label="General models">
             {defaultModels.map((model) => {
               return (
-                <option
-                  key={model}
-                  value={model}
-                  selected={selectedLLMModel === model}
-                >
+                <option key={model} value={model}>
                   {model}
                 </option>
               );
@@ -84,11 +80,7 @@ export default function ChatModelSelection({
           <optgroup label="Discovered models">
             {customModels.map((model) => {
               return (
-                <option
-                  key={model.id}
-                  value={model.id}
-                  selected={selectedLLMModel === model.id}
-                >
+                <option key={model.id} value={model.id}>
                   {model.id}
                 </option>
               );
@@ -102,11 +94,7 @@ export default function ChatModelSelection({
               {Object.entries(customModels).map(([organization, models]) => (
                 <optgroup key={organization} label={organization}>
                   {models.map((model) => (
-                    <option
-                      key={model.id}
-                      value={model.id}
-                      selected={selectedLLMModel === model.id}
-                    >
+                    <option key={model.id} value={model.id}>
                       {model.name}
                     </option>
                   ))}

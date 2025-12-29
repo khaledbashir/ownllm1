@@ -198,10 +198,11 @@ Return the complete HTML document wrapped in \`\`\`html code blocks.`;
       ];
 
       console.log("[Templates] Generating template with LLM...");
-      const response = await LLMConnector.sendChat(llmMessages, {
+      const result = await LLMConnector.getChatCompletion(llmMessages, {
         temperature: 0.7,
       });
 
+      const response = result?.textResponse;
       if (!response) {
         return res
           .status(500)

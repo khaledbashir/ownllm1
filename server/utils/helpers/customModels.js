@@ -860,7 +860,7 @@ async function getZAiModels(_apiKey = null) {
       ? process.env.ZAI_API_KEY
       : _apiKey || process.env.ZAI_API_KEY || null;
   const openai = new OpenAIApi({
-    baseURL: "https://api.z.ai/api/paas/v4",
+    baseURL: "https://api.z.ai/api/coding/paas/v4",
     apiKey,
   });
   const models = await openai.models

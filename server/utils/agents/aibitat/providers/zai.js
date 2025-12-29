@@ -10,7 +10,7 @@ class ZAIProvider extends InheritMultiple([Provider, UnTooled]) {
     const { model = "glm-4.5" } = config;
     super();
     const client = new OpenAI({
-      baseURL: "https://api.z.ai/api/paas/v4",
+      baseURL: "https://api.z.ai/api/coding/paas/v4",
       apiKey: process.env.ZAI_API_KEY,
       maxRetries: 3,
     });

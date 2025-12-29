@@ -22,7 +22,7 @@ class EmailService {
     try {
       // Check if SMTP is configured in system settings
       const settings = await SystemSettings.currentSettings();
-      
+
       this.config = {
         host: process.env.SMTP_HOST || null,
         port: parseInt(process.env.SMTP_PORT) || 587,
@@ -75,7 +75,7 @@ class EmailService {
 
     try {
       const nodemailer = require("nodemailer");
-      
+
       const transporter = nodemailer.createTransport({
         host: this.config.host,
         port: this.config.port,
@@ -225,6 +225,64 @@ The ${appTitle} Team
     return this.send({
       to,
       subject: `Welcome to ${appTitle}!`,
+      text,
+      html,
+    });
+  }
+  /**
+   * Send magic login link
+   * @param {Object} options - Magic link options
+   * @param {string} options.to - Recipient email
+   * @param {string} options.magicLink - The magic link URL
+   * @param {string} options.appUrl - Base URL of the application
+   * @returns {Promise<{success: boolean, error: string|null}>}
+   */
+  async sendMagicLink({ to, magicLink, appUrl }) {
+    const appTitle = process.env.APP_NAME || "OwnLLM";
+
+    const text = `
+Hello,
+
+You requested a magic sign-in link for ${appTitle}.
+
+Click the link below to sign in:
+${magicLink}
+
+This link will expire in 15 minutes.
+
+If you did not request this link, please ignore this email.
+
+Best regards,
+The ${appTitle} Team
+`.trim();
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sign in to ${appTitle}</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px;">
+    <h2 style="color: #333; margin-top: 0;">Sign in to ${appTitle}</h2>
+    <p>Hello,</p>
+    <p>You requested a magic sign-in link.</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${magicLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Sign In to Portal</a>
+    </div>
+    <p style="font-size: 14px; color: #666;">Or copy and paste this link:</p>
+    <p style="font-size: 12px; word-break: break-all; color: #666;">${magicLink}</p>
+    <p style="font-size: 14px; color: #666;">This link will expire in 15 minutes.</p>
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+  </div>
+</body>
+</html>
+`.trim();
+
+    return this.send({
+      to,
+      subject: `Sign in to ${appTitle}`,
       text,
       html,
     });
