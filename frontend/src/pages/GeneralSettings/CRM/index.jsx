@@ -119,8 +119,18 @@ export default function CRMPage() {
 
         // Update system prompt to enforce CRM focus
         const CRM_PROMPT = `You are the AI Sales Assistant. Your primary goal is to help manage leads, pipelines, and opportunities in the CRM.
-Use the crm-manager tools to create, update, move, or list leads. 
-Always aim for accuracy in data entry.`;
+        
+        To perform actions, you MUST use the following JSON tool format in a code block:
+        
+        \`\`\`json
+        { "tool": "create_lead", "args": { "title": "Lead Name", "value": 5000, "company": "Company Name" } }
+        \`\`\`
+        
+        Available tools:
+        - "create_lead": Create a new lead. args: { title, value, stage, company, name, email }
+        - "list_leads": List current leads. args: { stage }
+        
+        Always reply in a professional Noir aesthetic.`;
 
         // Only update if prompt is different to avoid unnecessary writes
         if (ws.openAiPrompt !== CRM_PROMPT) {
