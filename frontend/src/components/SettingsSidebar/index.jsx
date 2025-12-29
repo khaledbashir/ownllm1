@@ -12,6 +12,7 @@ import {
   Nut,
   Toolbox,
   Shield,
+  LayoutDashboard,
 } from "@phosphor-icons/react";
 import useUser from "@/hooks/useUser";
 import { isMobile } from "react-device-detect";
@@ -72,11 +73,10 @@ export default function SettingsSidebar() {
           className={`z-99 fixed top-0 left-0 transition-all duration-500 w-[100vw] h-[100vh]`}
         >
           <div
-            className={`${
-              showBgOverlay
+            className={`${showBgOverlay
                 ? "transition-all opacity-1"
                 : "transition-none opacity-0"
-            }  duration-500 fixed top-0 left-0 bg-theme-bg-secondary bg-opacity-75 w-screen h-screen`}
+              }  duration-500 fixed top-0 left-0 bg-theme-bg-secondary bg-opacity-75 w-screen h-screen`}
             onClick={() => setShowSidebar(false)}
           />
           <div
@@ -304,6 +304,14 @@ const SidebarOptions = ({ user = null, t }) => (
           roles={["admin"]}
         />
         <Option
+          btnText="CRM"
+          icon={<LayoutDashboard className="h-5 w-5 flex-shrink-0" />}
+          href={paths.settings.crm()}
+          user={user}
+          flex={true}
+          roles={["admin", "manager"]}
+        />
+        <Option
           hidden={!!user?.organizationId}
           btnText={t("settings.customization")}
           icon={<PencilSimpleLine className="h-5 w-5 flex-shrink-0" />}
@@ -383,19 +391,19 @@ const SidebarOptions = ({ user = null, t }) => (
               flex: true,
               roles: ["admin"],
             },
-              {
-               btnText: t("settings.browser-extension"),
-               href: paths.settings.browserExtension(),
-               flex: true,
-               roles: ["admin", "manager"],
-             },
-             {
-               btnText: t("settings.organizations"),
-               href: paths.settings.organizations(),
-               flex: true,
-               roles: ["admin"],
-             },
-           ]}
+            {
+              btnText: t("settings.browser-extension"),
+              href: paths.settings.browserExtension(),
+              flex: true,
+              roles: ["admin", "manager"],
+            },
+            {
+              btnText: t("settings.organizations"),
+              href: paths.settings.organizations(),
+              flex: true,
+              roles: ["admin"],
+            },
+          ]}
         />
         <Option
           btnText={t("settings.security")}

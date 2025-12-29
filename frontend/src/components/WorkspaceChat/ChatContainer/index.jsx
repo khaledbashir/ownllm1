@@ -148,6 +148,7 @@ export default function ChatContainer({
   workspace,
   knownHistory = [],
   externalEditorRef = null,
+  externalToolHandler = null, // New prop for custom tools
   threadSlug: propThreadSlug = null,
 }) {
   const { threadSlug: paramThreadSlug } = useParams();
@@ -212,7 +213,11 @@ export default function ChatContainer({
           console.log("[ClientTool] Structure:", struct);
           break;
         default:
-          console.warn("[ClientTool] Unknown tool:", tool);
+          if (externalToolHandler) {
+            await externalToolHandler(tool, args);
+          } else {
+            console.warn("[ClientTool] Unknown tool:", tool);
+          }
       }
     } catch (e) {
       console.error("[ClientTool] Execution failed:", e);
