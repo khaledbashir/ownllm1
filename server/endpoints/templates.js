@@ -3,6 +3,8 @@ const { validatedRequest } = require("../utils/middleware/validatedRequest");
 const { Telemetry } = require("../models/telemetry");
 const { getLLMProvider } = require("../utils/helpers");
 const { generatePdf } = require("../utils/pdfExport");
+const createDOMPurify = require("isomorphic-dompurify");
+const DOMPurify = createDOMPurify();
 
 function templatesEndpoints(app) {
   if (!app) return;
@@ -59,14 +61,14 @@ function templatesEndpoints(app) {
 
       const template = await prisma.pdf_templates.create({
         data: {
-          name: name.trim(),
+          name: DOMPurify.sanitize(name.trim()),
           logoPath: logoPath || null,
-          headerText: headerText || null,
-          footerText: footerText || null,
+          headerText: headerText ? DOMPurify.sanitize(headerText) : null,
+          footerText: footerText ? DOMPurify.sanitize(footerText) : null,
           primaryColor: primaryColor || "#3b82f6",
           secondaryColor: secondaryColor || "#1e293b",
           fontFamily: fontFamily || "Inter",
-          cssOverrides: cssOverrides || null,
+          cssOverrides: cssOverrides ? DOMPurify.sanitize(cssOverrides) : null,
           userId: req.user?.id || null,
         },
       });
@@ -108,15 +110,16 @@ function templatesEndpoints(app) {
       const template = await prisma.pdf_templates.update({
         where: { id: parseInt(id) },
         data: {
-          name: name?.trim() || existing.name,
+          name: name ? DOMPurify.sanitize(name.trim()) : existing.name,
           logoPath: logoPath !== undefined ? logoPath : existing.logoPath,
           headerText:
-            headerText !== undefined ? headerText : existing.headerText,
+            headerText !== undefined ? DOMPurify.sanitize(headerText) : existing.headerText,
           footerText:
-            footerText !== undefined ? footerText : existing.footerText,
+            footerText !== undefined ? DOMPurify.sanitize(footerText) : existing.footerText,
           primaryColor: primaryColor || existing.primaryColor,
           secondaryColor: secondaryColor || existing.secondaryColor,
           fontFamily: fontFamily || existing.fontFamily,
+          cssOverrides: req.body.cssOverrides !== undefined ? DOMPurify.sanitize(req.body.cssOverrides) : existing.cssOverrides,
         },
       });
 
@@ -245,7 +248,11 @@ Return the complete HTML document wrapped in \`\`\`html code blocks.`;
       }
 
       console.log("[Templates] Exporting PDF...");
-      const pdfBuffer = await generatePdf(html, {
+      const sanitizedHtml = DOMPurify.sanitize(html, {
+        ADD_TAGS: ["style"], // Allow style tags for PDF rendering
+        ADD_ATTR: ["style"],
+      });
+      const pdfBuffer = await generatePdf(sanitizedHtml, {
         format: "A4",
         printBackground: true,
         margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" },

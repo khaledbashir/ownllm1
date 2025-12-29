@@ -182,6 +182,19 @@ You can fix this by restarting AnythingLLM so the model map is re-pulled.
     return formattedModelMap;
   }
 
+  _parseContextFromName(model = "") {
+    const name = model.toLowerCase();
+    const match = name.match(/(\d+)([km])/);
+    if (!match) return null;
+
+    const value = parseInt(match[1]);
+    const unit = match[2];
+
+    if (unit === "k") return value * 1000;
+    if (unit === "m") return value * 1000000;
+    return null;
+  }
+
   /**
    * Gets the context window for a given provider and model.
    *
@@ -199,14 +212,20 @@ You can fix this by restarting AnythingLLM so the model map is re-pulled.
     if (!model) return this.cachedModelMap[provider];
 
     const modelContextWindow = this.cachedModelMap[provider][model];
-    if (!modelContextWindow) {
-      this.log("Invalid access to model context window - not found in cache", {
-        provider,
-        model,
-      });
-      return null;
+    if (modelContextWindow) return Number(modelContextWindow);
+
+    // Smart Fallback: Try to parse context from name (e.g. gpt-4-32k -> 32000)
+    const fallback = this._parseContextFromName(model);
+    if (fallback) {
+      this.log(`Resolved context for ${model} via name parsing: ${fallback}`);
+      return fallback;
     }
-    return Number(modelContextWindow);
+
+    this.log("Invalid access to model context window - not found in cache", {
+      provider,
+      model,
+    });
+    return 4096; // Hard fallback for safety
   }
 }
 

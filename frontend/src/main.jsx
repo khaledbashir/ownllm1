@@ -170,26 +170,6 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: "/settings/transcription-preference",
-        lazy: async () => {
-          const { default: GeneralTranscriptionPreference } =
-            await import("@/pages/GeneralSettings/TranscriptionPreference");
-          return {
-            element: <AdminRoute Component={GeneralTranscriptionPreference} />,
-          };
-        },
-      },
-      {
-        path: "/settings/audio-preference",
-        lazy: async () => {
-          const { default: GeneralAudioPreference } =
-            await import("@/pages/GeneralSettings/AudioPreference");
-          return {
-            element: <AdminRoute Component={GeneralAudioPreference} />,
-          };
-        },
-      },
-      {
         path: "/settings/embedding-preference",
         lazy: async () => {
           const { default: GeneralEmbeddingPreference } =

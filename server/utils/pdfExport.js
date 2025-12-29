@@ -2,6 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
+const createDOMPurify = require("isomorphic-dompurify");
+const DOMPurify = createDOMPurify();
 
 /**
  * Generates a PDF from HTML content using Puppeteer (Chromium-based).
@@ -697,7 +699,7 @@ async function generatePdf(htmlContent, options = {}) {
 
     // STEP 2: Pre-process HTML for semantic table structure
     let processedHtml = htmlContent;
-    
+
     // Remove AI-generated meta-commentary and internal notes
     const aiCommentPatterns = [
       /The user['']s brief is for implementing[\s\S]*?/gi,
@@ -709,11 +711,11 @@ async function generatePdf(htmlContent, options = {}) {
       /The proposal[\s\S]*?/gi,
       /This document[\s\S]*?/gi,
     ];
-    
+
     aiCommentPatterns.forEach(pattern => {
       processedHtml = processedHtml.replace(pattern, '');
     });
-    
+
     // Remove duplicate sections (common in AI generation)
     const h2Matches = processedHtml.match(/<h2[^>]*>.*?<\/h2>/gi);
     if (h2Matches) {
@@ -728,7 +730,7 @@ async function generatePdf(htmlContent, options = {}) {
         return match;
       });
     }
-    
+
     // Wrap tables without thead/tbody in proper structure
     processedHtml = processedHtml.replace(
       /<table([^>]*)>([\s\S]*?)<\/table>/gi,
@@ -737,19 +739,19 @@ async function generatePdf(htmlContent, options = {}) {
         if (content.includes('<thead>') && content.includes('<tbody>')) {
           return match;
         }
-        
+
         // Extract rows
         const rows = content.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
-        
+
         if (rows.length === 0) return match;
-        
+
         // First row becomes thead, rest become tbody
         const headerRow = rows[0];
         const bodyRows = rows.slice(1).join('');
-        
+
         // Replace th with td in body rows if needed
         const fixedBodyRows = bodyRows.replace(/<th/gi, '<td').replace(/<\/th>/gi, '</td>');
-        
+
         return `<table${attrs}><thead>${headerRow}</thead><tbody>${fixedBodyRows}</tbody></table>`;
       }
     );
@@ -769,8 +771,13 @@ async function generatePdf(htmlContent, options = {}) {
       </html>
     `;
 
-    // Write HTML to temp file
-    await fs.promises.writeFile(inputPath, enhancedHtml, "utf8");
+    // Write HTML to temp file (Sanitize one last time for safety)
+    const finalSanitizedHtml = DOMPurify.sanitize(enhancedHtml, {
+      ADD_TAGS: ["style", "html", "head", "body", "meta"],
+      ADD_ATTR: ["name", "content", "charset", "viewport"],
+      WHOLE_DOCUMENT: true,
+    });
+    await fs.promises.writeFile(inputPath, finalSanitizedHtml, "utf8");
 
     // Launch headless Chrome
     browser = await puppeteer.launch({
@@ -789,9 +796,9 @@ async function generatePdf(htmlContent, options = {}) {
     await page.setViewport({ width: 1200, height: 1600, deviceScaleFactor: 2 });
 
     // STEP 4: Set content directly (better than file:// for print emulation)
-    await page.setContent(enhancedHtml, { 
+    await page.setContent(enhancedHtml, {
       waitUntil: ["networkidle0", "domcontentloaded"],
-      timeout: 30000 
+      timeout: 30000
     });
 
     // STEP 5: Wait for fonts to load
@@ -818,10 +825,10 @@ async function generatePdf(htmlContent, options = {}) {
 
     console.log(`[PDF Export] Puppeteer returned type: ${typeof pdfBuffer}, constructor: ${pdfBuffer?.constructor?.name}, length: ${pdfBuffer?.length}`);
     console.log(`[PDF Export] Successfully generated PDF ${jobId}, size: ${pdfBuffer.length} bytes`);
-    
+
     // Validate PDF buffer
     let validatedBuffer = pdfBuffer;
-    
+
     if (!Buffer.isBuffer(pdfBuffer)) {
       console.warn("[PDF Export] PDF is not a Buffer, attempting to convert:", typeof pdfBuffer);
       if (pdfBuffer && pdfBuffer.length > 0) {
@@ -830,16 +837,16 @@ async function generatePdf(htmlContent, options = {}) {
         throw new Error(`Generated PDF is not a Buffer (type: ${typeof pdfBuffer})`);
       }
     }
-    
+
     if (validatedBuffer.length === 0) {
       throw new Error("Generated PDF buffer is empty");
     }
-    
+
     const header = validatedBuffer.slice(0, 4).toString();
     if (!header.startsWith("%PDF")) {
       throw new Error(`Invalid PDF: header is "${header}" instead of "%PDF"`);
     }
-    
+
     return validatedBuffer;
   } catch (error) {
     console.error("[PDF Export] Puppeteer Error:", error);

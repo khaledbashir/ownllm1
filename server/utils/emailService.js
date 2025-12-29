@@ -1,3 +1,4 @@
+const nodemailer = require("nodemailer");
 const { SystemSettings } = require("../models/systemSettings");
 
 /**
@@ -74,8 +75,6 @@ class EmailService {
     }
 
     try {
-      const nodemailer = require("nodemailer");
-
       const transporter = nodemailer.createTransport({
         host: this.config.host,
         port: this.config.port,

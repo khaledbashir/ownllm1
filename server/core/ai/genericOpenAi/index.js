@@ -9,6 +9,7 @@ const {
 } = require("../../../utils/helpers/chat/responses");
 const { toValidNumber } = require("../../../utils/http");
 const { getAnythingLLMUserAgent } = require("../../../endpoints/utils");
+const { MODEL_MAP } = require("../modelMap");
 
 class GenericOpenAiLLM {
   constructor(embedder = null, modelPreference = null) {
@@ -66,20 +67,18 @@ class GenericOpenAiLLM {
     return "streamGetChatCompletion" in this;
   }
 
-  static promptWindowLimit(_modelName) {
-    const limit = process.env.GENERIC_OPEN_AI_MODEL_TOKEN_LIMIT || 4096;
-    if (!limit || isNaN(Number(limit)))
-      throw new Error("No token context limit was set.");
-    return Number(limit);
+  static promptWindowLimit(modelName) {
+    const limit = process.env.GENERIC_OPEN_AI_MODEL_TOKEN_LIMIT;
+    if (limit && !isNaN(Number(limit))) return Number(limit);
+    return MODEL_MAP.get("openai", modelName) || 4096;
   }
 
   // Ensure the user set a value for the token limit
   // and if undefined - assume 4096 window.
   promptWindowLimit() {
-    const limit = process.env.GENERIC_OPEN_AI_MODEL_TOKEN_LIMIT || 4096;
-    if (!limit || isNaN(Number(limit)))
-      throw new Error("No token context limit was set.");
-    return Number(limit);
+    const limit = process.env.GENERIC_OPEN_AI_MODEL_TOKEN_LIMIT;
+    if (limit && !isNaN(Number(limit))) return Number(limit);
+    return MODEL_MAP.get("openai", this.model) || 4096;
   }
 
   // Short circuit since we have no idea if the model is valid or not

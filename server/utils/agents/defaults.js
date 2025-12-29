@@ -11,6 +11,7 @@ const DEFAULT_SKILLS = [
   AgentPlugins.memory.name,
   AgentPlugins.docSummarizer.name,
   AgentPlugins.webScraping.name,
+  AgentPlugins.crmManager.name,
 ];
 
 const USER_AGENT = {
