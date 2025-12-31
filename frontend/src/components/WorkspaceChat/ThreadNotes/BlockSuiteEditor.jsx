@@ -2697,27 +2697,45 @@ ${activeTemplateFooter}
 </body>
 </html>`;
 
-      // Send to Carbone service
-      const formData = new FormData();
-      formData.append('data', JSON.stringify({ html: carboneHtml }));
-      formData.append('template', carboneHtml); // Use HTML as template
-      formData.append('options', JSON.stringify({ convertTo: 'pdf' }));
-
-      const response = await fetch('https://basheer-carbone.5jtgcw.easypanel.host/render', {
+      // Step 1: Request render from Carbone
+      // Carbone API uses /render/template endpoint with JSON payload
+      const renderResponse = await fetch('https://basheer-carbone.5jtgcw.easypanel.host/render/template', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: {}, // Empty data object since HTML is self-contained
+          template: carboneHtml, // Full HTML template
+          options: { convertTo: 'pdf' }
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Carbone service error: ${response.status}`);
+      if (!renderResponse.ok) {
+        throw new Error(`Carbone service error: ${renderResponse.status}`);
+      }
+
+      const renderResult = await renderResponse.json();
+
+      if (!renderResult.success || !renderResult.data?.renderId) {
+        throw new Error('Invalid response from Carbone service');
+      }
+
+      const renderId = renderResult.data.renderId;
+
+      // Step 2: Download the rendered PDF using the renderId
+      const pdfResponse = await fetch(`https://basheer-carbone.5jtgcw.easypanel.host/render/${renderId}.pdf`);
+
+      if (!pdfResponse.ok) {
+        throw new Error(`Failed to download PDF from Carbone: ${pdfResponse.status}`);
       }
 
       // Get binary PDF response
-      const pdfBlob = await response.blob();
+      const pdfBlob = await pdfResponse.blob();
 
       // Validate it's a PDF
       if (pdfBlob.type !== 'application/pdf' && !pdfBlob.type.startsWith('application/')) {
-        throw new Error('Invalid response from Carbone service');
+        throw new Error('Invalid PDF response from Carbone service');
       }
 
       // Trigger download
