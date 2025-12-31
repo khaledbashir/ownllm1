@@ -972,7 +972,55 @@ model WorkspaceThread {
 }
 ```
 
-### 2. CORS Errors
+### 2. Vector Dimension Mismatch
+
+**Problem:** Error: "No vector column found to match with query vector dimension: 384"
+
+**Cause:** Switching embedders with different output dimensions or existing data with old dimensions
+
+**Common Embedder Dimensions:**
+
+| Embedder Model | Dimensions |
+|---------------|-------------|
+| Xenova/all-MiniLM-L6-v2 (Native) | 384 |
+| OpenAI text-embedding-3-small | 1536 |
+| OpenAI text-embedding-3-large | 3072 |
+| OpenAI text-embedding-ada-002 | 1536 |
+| Cohere embed-english-v3.0 | 1024 |
+
+**Fix 1: Reset Vector Store (Nuclear Option)**
+```bash
+# Via API
+curl -X DELETE \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  http://localhost:3001/vector-store/reset
+
+# Or via server CLI
+node server/utils/vectorStore/resetAllVectorStores.js
+```
+
+**Fix 2: Clear Workspace Vectors Only**
+```bash
+# Via API
+curl -X POST \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{}' \
+  http://localhost:3001/workspace/:slug/reset-vector-cache
+```
+
+**Fix 3: Manually Re-embed Documents**
+```bash
+# 1. Clear existing vectors
+DELETE FROM workspace_vectors WHERE workspaceId = [workspace_id];
+
+# 2. Re-upload documents via UI or API
+POST /workspace/:slug/update-embeddings
+```
+
+**Prevention:** Stick to one embedder or reset vector store when switching embedders.
+
+### 3. CORS Errors
 
 **Problem:** Browser blocks API requests
 
@@ -986,7 +1034,7 @@ app.use(cors({
 }));
 ```
 
-### 3. Chat Response is Empty
+### 4. Chat Response is Empty
 
 **Problem:** No response or "Unable to find relevant content"
 
@@ -996,8 +1044,9 @@ app.use(cors({
 1. Lower similarityThreshold (try 0.5)
 2. Upload more documents
 3. Check LLM provider is configured
+4. Verify vector store has data (check dimension mismatch above!)
 
-### 4. Streaming Not Working
+### 5. Streaming Not Working
 
 **Problem:** Response waits until complete before showing
 
@@ -1017,7 +1066,7 @@ location /api/ {
 }
 ```
 
-### 5. Memory Issues with Large Documents
+### 6. Memory Issues with Large Documents
 
 **Problem:** Server crashes when embedding large PDFs
 
@@ -1032,6 +1081,34 @@ location /api/ {
   "textSplitterChunkOverlap": 50   // Default: 20
 }
 ```
+
+### 7. PDF Export Error: "DOMPurify.sanitize is not a function"
+
+**Problem:** PDF export fails with DOMPurify error
+
+**Cause:** Wrong import pattern for `isomorphic-dompurify`
+
+**Fix:** `isomorphic-dompurify` returns an object with `.sanitize` method when using `require()`
+
+**WRONG (calling as function):**
+```javascript
+const sanitize = require("isomorphic-dompurify")();  // ❌ Returns DOMPurify function
+sanitize(html);  // Actually calls DOMPurify function itself, not sanitize method
+```
+
+**CORRECT (using .sanitize property):**
+```javascript
+const DOMPurify = require("isomorphic-dompurify");  // ✅ Returns object with methods
+DOMPurify.sanitize(html);  // Calls the sanitize method
+```
+
+**Why this matters:**
+- `isomorphic-dompurify` v2.35.0 returns a **factory function** when called
+- The factory returns the DOMPurify object with `.sanitize` method
+- You can also use the factory directly: `const sanitize = require('isomorphic-dompurify')();`
+- But then you must call `sanitize(html)` as a function, not access `.sanitize` property
+
+**Status:** Fixed in commits `37923e6a` → `fe7cf72f` (Dec 31, 2025)
 
 ---
 
@@ -1104,29 +1181,642 @@ psql $DATABASE_URL "SELECT * FROM document_vectors LIMIT 10;"
 
 ---
 
+## 📄 Custom Client Portal (Proposals)
+
+The Client Portal API provides public-facing endpoints for sharing proposals with clients. These endpoints support password protection, expiration dates, approval workflows, and version control.
+
+### Access Control
+
+All client portal endpoints support access control via:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `password` | string | ❌ | Optional password for protected proposals |
+| `:id` | string | ✅ | Proposal UUID from URL |
+
+**Access Check Flow:**
+```
+1. Validate proposal exists
+2. Check if password required (and matches if provided)
+3. Check if proposal has expired (expiresAt < now)
+4. Check if proposal has been revoked (status != 'active')
+5. Grant access or return 403/410 error
+```
+
+**Error Responses:**
+
+| Code | Reason |
+|------|--------|
+| 403 | Invalid password or access revoked |
+| 410 | Proposal has expired |
+| 404 | Proposal not found |
+
+---
+
+### Get Proposal Data
+
+```http
+GET /api/client-portal/:id?password=optional
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "proposal": {
+    "id": "uuid-v4",
+    "htmlContent": "<div>Proposal HTML...</div>",
+    "workspace": {
+      "id": 79,
+      "name": "Project Workspace",
+      "slug": "project-workspace"
+    },
+    "status": "active",
+    "signatures": [
+      {
+        "approverName": "John Doe",
+        "signatureData": "data:image/png;base64,...",
+        "signedAt": "2025-12-31T12:00:00Z"
+      }
+    ],
+    "commentCount": 15,
+    "versionCount": 3,
+    "currentVersion": {
+      "id": "version-uuid",
+      "versionNumber": 3,
+      "title": "Final Version",
+      "notes": "Added new pricing",
+      "authorName": "Jane Smith",
+      "createdAt": "2025-12-30T15:30:00Z"
+    },
+    "approvals": [
+      {
+        "id": "approval-uuid",
+        "approverName": "Client Name",
+        "approverEmail": "client@company.com",
+        "status": "approved",
+        "signatureData": "data:image/png;base64,...",
+        "createdAt": "2025-12-31T10:00:00Z"
+      }
+    ],
+    "createdAt": "2025-12-28T09:00:00Z",
+    "updatedAt": "2025-12-31T12:00:00Z"
+  }
+}
+```
+
+**Note:** This endpoint automatically increments `viewCount` on each successful access.
+
+---
+
+### Get Comments
+
+```http
+GET /api/client-portal/:id/comments?password=optional&limit=50&offset=0&lastViewTime=2025-12-30T00:00:00Z
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | number | 50 | Max comments to return |
+| `offset` | number | 0 | Pagination offset |
+| `lastViewTime` | string | null | ISO datetime for unread count |
+
+**Response:**
+```json
+{
+  "success": true,
+  "comments": [
+    {
+      "id": "comment-uuid",
+      "parentId": null,
+      "authorName": "John Doe",
+      "authorEmail": "john@example.com",
+      "content": "Question about timeline",
+      "reactions": {
+        "👍": ["john@example.com", "jane@example.com"],
+        "🎉": ["bob@example.com"]
+      },
+      "mentions": ["jane@example.com"],
+      "createdAt": "2025-12-31T10:00:00Z",
+      "updatedAt": "2025-12-31T10:00:00Z",
+      "replies": [
+        {
+          "id": "reply-uuid",
+          "parentId": "comment-uuid",
+          "authorName": "Jane Smith",
+          "authorEmail": "jane@example.com",
+          "content": "Updated timeline section",
+          "reactions": {},
+          "mentions": [],
+          "createdAt": "2025-12-31T10:30:00Z",
+          "updatedAt": "2025-12-31T10:30:00Z",
+          "replies": []
+        }
+      ]
+    }
+  ],
+  "unreadCount": 3
+}
+```
+
+---
+
+### Add Comment
+
+```http
+POST /api/client-portal/:id/comments?password=optional
+Content-Type: application/json
+
+{
+  "content": "Question about pricing",
+  "authorName": "John Doe",
+  "authorEmail": "john@example.com",
+  "parentId": null  // Optional: comment UUID for replies
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "comment": {
+    "id": "new-comment-uuid",
+    "parentId": null,
+    "authorName": "John Doe",
+    "authorEmail": "john@example.com",
+    "content": "Question about pricing",
+    "reactions": {},
+    "mentions": [],
+    "createdAt": "2025-12-31T11:00:00Z",
+    "updatedAt": "2025-12-31T11:00:00Z",
+    "replies": []
+  }
+}
+```
+
+**Comment Features:**
+- **Threaded Replies:** Set `parentId` to reply to existing comment
+- **Mentions:** Include `@user@email.com` in content to mention users
+- **Reactions:** Use `/api/client-portal/:id/reactions/:commentId` to add reactions
+
+---
+
+### Submit Approval
+
+```http
+POST /api/client-portal/:id/approve?password=optional
+Content-Type: application/json
+
+{
+  "approverName": "John Doe",
+  "approverEmail": "john@example.com",
+  "signatureData": "data:image/png;base64,iVBORw0KG..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "approvalId": "approval-uuid"
+}
+```
+
+**Approval Workflow:**
+1. If approval already exists for email → Update with new signature
+2. If approval doesn't exist → Create new approval + sign immediately
+3. Signature data is base64-encoded PNG (from canvas drawing)
+
+---
+
+### Decline Proposal
+
+```http
+POST /api/client-portal/:id/decline?password=optional
+Content-Type: application/json
+
+{
+  "approverName": "John Doe",
+  "approverEmail": "john@example.com",
+  "declineReason": "Pricing is too high for current budget"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "approvalId": "approval-uuid"
+}
+```
+
+---
+
+### Create New Version
+
+```http
+POST /api/client-portal/:id/version?password=optional
+Content-Type: application/json
+
+{
+  "title": "Updated Pricing Structure",
+  "changes": [
+    { "section": "Pricing", "before": "$50,000", "after": "$45,000" },
+    { "section": "Timeline", "before": "3 months", "after": "2.5 months" }
+  ],
+  "notes": "Reduced scope to fit client budget",
+  "authorName": "Jane Smith",
+  "htmlContent": "<div>New proposal HTML...</div>"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "version": {
+    "id": "new-version-uuid",
+    "proposalId": "proposal-uuid",
+    "versionNumber": 4,
+    "title": "Updated Pricing Structure",
+    "changes": "[{\"section\":\"Pricing\",\"before\":\"$50,000\",\"after\":\"$45,000\"}]",
+    "notes": "Reduced scope to fit client budget",
+    "authorName": "Jane Smith",
+    "htmlContent": "<div>New proposal HTML...</div>",
+    "createdAt": "2025-12-31T12:00:00Z"
+  }
+}
+```
+
+---
+
+### Get Version History
+
+```http
+GET /api/client-portal/:id/versions?password=optional&limit=20&offset=0
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "versions": [
+    {
+      "id": "version-uuid-1",
+      "versionNumber": 1,
+      "title": "Initial Proposal",
+      "changes": "[]",
+      "notes": null,
+      "authorName": "Jane Smith",
+      "createdAt": "2025-12-28T09:00:00Z"
+    },
+    {
+      "id": "version-uuid-2",
+      "versionNumber": 2,
+      "title": "Added Timeline",
+      "changes": "[{\"section\":\"Timeline\",\"before\":\"\",\"after\":\"3 months\"}]",
+      "notes": "Added project timeline",
+      "authorName": "Jane Smith",
+      "createdAt": "2025-12-29T10:00:00Z"
+    }
+  ],
+  "currentVersionId": "version-uuid-2"
+}
+```
+
+---
+
+### AI Assistant Query
+
+```http
+POST /api/client-portal/:id/ai-query?password=optional
+Content-Type: application/json
+
+{
+  "question": "What is the total project cost?",
+  "selectedSection": "Pricing"  // Optional: Focus on specific section
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "response": {
+    "summary": "The total project cost is $45,000, including development, design, and maintenance phases.",
+    "highlights": [
+      {
+        "title": "Project Scope",
+        "description": "Key deliverables and milestones"
+      },
+      {
+        "title": "Pricing",
+        "description": "Budget breakdown and terms"
+      },
+      {
+        "title": "Timeline",
+        "description": "Project phases and deadlines"
+      }
+    ]
+  }
+}
+```
+
+**Note:** This endpoint currently returns placeholder responses. Integrate with your LLM system (OpenAI/Anthropic) for actual AI-powered Q&A.
+
+---
+
+### Add/Remove Reaction
+
+```http
+POST /api/client-portal/:id/reactions/:commentId?password=optional
+Content-Type: application/json
+
+{
+  "emoji": "👍",
+  "userEmail": "john@example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "reactions": {
+    "👍": ["john@example.com", "jane@example.com"],
+    "🎉": ["bob@example.com"]
+  }
+}
+```
+
+**Behavior:** Sending the same emoji again removes the reaction (toggle).
+
+---
+
+## 📊 Data Models
+
+### Public Proposals
+
+```prisma
+model public_proposals {
+  id          String               @id @default(uuid())
+  workspaceId Int
+  htmlContent String
+  status      String               @default("active")
+  password    String?              // Optional password protection
+  expiresAt   DateTime?            // Optional expiration date
+  signatures  String?              // JSON array of signatures
+  viewCount   Int                  @default(0)
+  pipelineId  Int?                 // Optional CRM pipeline
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  crmCard     crm_cards?
+  approvals   proposal_approvals[]
+  comments    proposal_comments[]
+  versions    proposal_versions[]
+  pipeline    crm_pipelines?
+  workspace   workspaces
+}
+```
+
+### Proposal Comments
+
+```prisma
+model proposal_comments {
+  id          String              @id @default(uuid())
+  proposalId  String
+  parentId    String?             // For threaded replies
+  authorName  String
+  authorEmail String?
+  content     String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  reactions   String?             // JSON object: {emoji: [emails]}
+  mentions    String?             // JSON array: [emails]
+  parent      proposal_comments?
+  replies     proposal_comments[]
+  proposal    public_proposals
+}
+```
+
+### Proposal Versions
+
+```prisma
+model proposal_versions {
+  id            String           @id @default(uuid())
+  proposalId    String
+  versionNumber Int
+  title         String
+  changes       String           // JSON array of changes
+  notes         String?
+  authorName    String
+  htmlContent   String
+  createdAt     DateTime         @default(now())
+  proposal      public_proposals
+}
+```
+
+### Proposal Approvals
+
+```prisma
+model proposal_approvals {
+  id            String           @id @default(uuid())
+  proposalId    String
+  approverName  String
+  approverEmail String?
+  signatureData String?          // Base64 PNG signature
+  status        String           @default("pending") // pending | approved | declined
+  declineReason String?
+  changeNotes   String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  proposal      public_proposals
+}
+```
+
+---
+
+## 📝 Client Portal Frontend Integration
+
+### Create Proposal from Workspace
+
+This endpoint would be created in your backend:
+
+```javascript
+// server/endpoints/proposals.js
+app.post("/api/workspace/:slug/proposals/create", async (req, res) => {
+  const { slug } = req.params;
+  const { htmlContent, password, expiresAt, pipelineId } = req.body;
+  
+  const workspace = await Workspace.bySlug(slug);
+  const proposal = await prisma.public_proposals.create({
+    data: {
+      workspaceId: workspace.id,
+      htmlContent,
+      password,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      pipelineId,
+      status: "active",
+    },
+  });
+  
+  res.json({ success: true, proposal });
+});
+```
+
+### Generate Public URL
+
+```javascript
+function generateProposalUrl(proposalId, password = null) {
+  const baseUrl = window.location.origin;
+  const url = `${baseUrl}/client-portal/${proposalId}`;
+  return password ? `${url}?password=${password}` : url;
+}
+
+// Usage:
+const proposalUrl = generateProposalUrl('uuid-here', 'secret-password');
+// Returns: "https://yourdomain.com/client-portal/uuid-here?password=secret-password"
+```
+
+### Fetch Proposal Data
+
+```javascript
+async function getProposal(proposalId, password) {
+  const params = new URLSearchParams();
+  if (password) params.set('password', password);
+  
+  const response = await fetch(`/api/client-portal/${proposalId}?${params}`);
+  
+  if (response.status === 403 || response.status === 410) {
+    const error = await response.json();
+    throw new Error(error.error);
+  }
+  
+  if (!response.ok) throw new Error('Failed to fetch proposal');
+  return await response.json();
+}
+```
+
+### Submit Approval with Canvas Signature
+
+```javascript
+async function submitApproval(proposalId, approverName, approverEmail, signatureCanvas, password) {
+  // Convert canvas to base64 PNG
+  const signatureData = signatureCanvas.toDataURL('image/png');
+  
+  const params = new URLSearchParams();
+  if (password) params.set('password', password);
+  
+  const response = await fetch(`/api/client-portal/${proposalId}/approve?${params}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      approverName,
+      approverEmail,
+      signatureData,
+    }),
+  });
+  
+  if (!response.ok) throw new Error('Failed to submit approval');
+  return await response.json();
+}
+```
+
+### Real-time Comments Polling
+
+```javascript
+function startCommentsPolling(proposalId, password, onUpdate) {
+  let lastViewTime = new Date().toISOString();
+  
+  async function poll() {
+    const params = new URLSearchParams();
+    if (password) params.set('password', password);
+    params.set('lastViewTime', lastViewTime);
+    
+    const response = await fetch(`/api/client-portal/${proposalId}/comments?${params}`);
+    const data = await response.json();
+    
+    if (data.unreadCount > 0) {
+      onUpdate(data.comments, data.unreadCount);
+      lastViewTime = new Date().toISOString();
+    }
+  }
+  
+  // Poll every 5 seconds
+  return setInterval(poll, 5000);
+}
+```
+
+---
+
+## 🔗 Related Files
+
+- `server/endpoints/clientPortal.js` - Client portal endpoints
+- `server/models/publicProposals.js` - Proposal CRUD operations
+- `server/models/proposalComments.js` - Comment management
+- `server/models/proposalVersions.js` - Version history
+- `server/models/proposalApprovals.js` - Approval workflow
+- `server/prisma/schema.prisma` - Database schema (lines 605-683)
+- `frontend/src/pages/ClientPortal/` - Frontend client portal UI
+
+---
+
 ## 🤝 Handover
 
 **Completed:**
-- ✅ Documented all major API endpoints
-- ✅ Explained authentication mechanisms
+- ✅ Documented all major API endpoints (Workspaces, Chats, Documents, Users)
+- ✅ Explained authentication mechanisms (Bearer tokens, API keys)
 - ✅ Detailed chat streaming SSE protocol
-- ✅ Provided attachment handling (critical MIME type fix)
+- ✅ Provided attachment handling (critical MIME type fix for documents)
 - ✅ Outlined workspace-as-backend architecture
-- ✅ Included frontend integration examples
-- ✅ Listed common pitfalls and solutions
+- ✅ Included frontend integration examples (JavaScript/React)
+- ✅ Listed common pitfalls and solutions (CORS, streaming, memory issues)
+- ✅ Documented client portal API (proposals, comments, approvals, versions)
+- ✅ Provided database models (Prisma schema)
+- ✅ Added real-time polling example for comments
 
 **Next Steps:**
-1. **Set up API Key:** Generate API key via web UI Settings → API Keys
-2. **Test Authentication:** Verify `/v1/auth` endpoint works
-3. **Create Workspace:** Use `/v1/workspace/new` for your app
-4. **Upload Documents:** Use `/v1/document/upload-and-embed`
-5. **Build Frontend:** Start with authentication → workspaces → chat
+1. **Set up API Key:** Generate API key via web UI Settings → API Keys (or create via database)
+2. **Test Authentication:** Verify `/v1/auth` endpoint works with your API key
+3. **Create Workspace:** Use `/v1/workspace/new` to create workspace for your app
+4. **Upload Documents:** Use `/v1/document/upload-and-embed` to populate knowledge base
+5. **Test Chat:** Use `/v1/workspace/{slug}/chat` with SSE streaming
+6. **Build Frontend:** Start with authentication → workspaces → chat → attachments
+7. **Client Portal (Optional):** Implement proposal sharing with `/api/client-portal/:id` endpoints
 
 **Deployment Reminder:**
-- Push changes to GitHub → Easypanel auto-rebuilds
-- Ensure vector database is initialized (LanceDB is default)
-- Configure LLM provider in `.env` or Easypanel UI
-- Set `DISABLE_TELEMETRY=true` for production
+- Push changes to GitHub → Easypanel auto-rebuilds container
+- Ensure vector database is initialized (LanceDB is default, requires no setup)
+- Configure LLM provider in `.env` or Easypanel UI (OpenAI/Anthropic API keys)
+- Set `DISABLE_TELEMETRY=true` for production privacy
+- Set `MULTI_USER_MODE=true` if using per-user workspaces
+
+**Quick Start Commands:**
+
+```bash
+# Generate API key (run in server directory)
+node -e "const { v4: uuidv4 } = require('crypto'); console.log(uuidv4());"
+
+# Test authentication
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  http://localhost:3001/v1/auth
+
+# Create workspace
+curl -X POST \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"My Workspace"}' \
+  http://localhost:3001/v1/workspace/new
+
+# Upload document
+curl -X POST \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@document.pdf" \
+  -F "addToWorkspaces=my-workspace" \
+  http://localhost:3001/v1/document/upload-and-embed
+```
 
 ---
 

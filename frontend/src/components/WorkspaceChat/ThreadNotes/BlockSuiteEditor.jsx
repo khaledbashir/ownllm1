@@ -496,6 +496,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           casual: `Rewrite this text in a casual, conversational tone. Return ONLY the rewritten text:\n\n${selectedText}`,
           summarize: `Summarize this text into key points. Be concise. Return ONLY the summary:\n\n${selectedText}`,
           expand: `Expand this text with more detail and explanation. Return ONLY the expanded text:\n\n${selectedText}`,
+          table: `Convert this text into a markdown table. Use pipe characters | to separate columns. Create appropriate headers. Return ONLY the markdown table, no explanations:\n\n${selectedText}`,
         };
 
         if (selectionAction === "custom") {
@@ -520,11 +521,26 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             });
 
             if (result?.response) {
-              const editor = editorRef.current;
               const responseText = result.response.trim();
 
-              // Try to use BlockSuite's command API to replace selection
-              // This is the "proper" way that won't break Lit's VDOM
+              // Check if response contains markdown table syntax
+              // Tables have pipe characters | on multiple lines
+              const containsTable = /^\s*\|.*\|.*$/m.test(responseText);
+
+              if (containsTable) {
+                // Use insertMarkdown to properly parse tables as BlockSuite blocks
+                console.log(
+                  "[BlockSuiteEditor] AI response contains table, using insertMarkdown to parse"
+                );
+                const editor = editorRef.current;
+                if (editor && typeof editor.insertMarkdown === "function") {
+                  await editor.insertMarkdown(`\n\n${responseText}\n`);
+                  return result.response;
+                }
+              }
+
+              // For non-table content, use BlockSuite's command API to replace selection
+              const editor = editorRef.current;
               try {
                 if (editor?.std?.command) {
                   editor.std.command.exec("insertText", {

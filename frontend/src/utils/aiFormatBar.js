@@ -30,6 +30,7 @@ const DEFAULT_AI_ACTIONS = [
   { id: "casual", label: "💬 Casual", description: "Conversational tone" },
   { id: "summarize", label: "📋 Summarize", description: "Key points only" },
   { id: "expand", label: "📖 Expand", description: "Add more detail" },
+  { id: "table", label: "📊 Table", description: "Convert to table" },
 ];
 
 // Simple star icon for AI button
