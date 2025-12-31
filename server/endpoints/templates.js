@@ -3,8 +3,7 @@ const { validatedRequest } = require("../utils/middleware/validatedRequest");
 const { Telemetry } = require("../models/telemetry");
 const { getLLMProvider } = require("../utils/helpers");
 const { generatePdf } = require("../utils/pdfExport");
-// isomorphic-dompurify returns a function directly, not an object
-const sanitize = require("isomorphic-dompurify")();
+const DOMPurify = require("isomorphic-dompurify");
 
 function templatesEndpoints(app) {
   if (!app) return;
@@ -61,14 +60,14 @@ function templatesEndpoints(app) {
 
       const template = await prisma.pdf_templates.create({
         data: {
-          name: sanitize(name.trim()),
+          name: DOMPurify.sanitize(name.trim()),
           logoPath: logoPath || null,
-          headerText: headerText ? sanitize(headerText) : null,
-          footerText: footerText ? sanitize(footerText) : null,
+          headerText: headerText ? DOMPurify.sanitize(headerText) : null,
+          footerText: footerText ? DOMPurify.sanitize(footerText) : null,
           primaryColor: primaryColor || "#3b82f6",
           secondaryColor: secondaryColor || "#1e293b",
           fontFamily: fontFamily || "Inter",
-          cssOverrides: cssOverrides ? sanitize(cssOverrides) : null,
+          cssOverrides: cssOverrides ? DOMPurify.sanitize(cssOverrides) : null,
           userId: req.user?.id || null,
         },
       });
@@ -110,16 +109,16 @@ function templatesEndpoints(app) {
       const template = await prisma.pdf_templates.update({
         where: { id: parseInt(id) },
         data: {
-          name: name ? sanitize(name.trim()) : existing.name,
+          name: name ? DOMPurify.sanitize(name.trim()) : existing.name,
           logoPath: logoPath !== undefined ? logoPath : existing.logoPath,
           headerText:
-            headerText !== undefined ? sanitize(headerText) : existing.headerText,
+            headerText !== undefined ? DOMPurify.sanitize(headerText) : existing.headerText,
           footerText:
-            footerText !== undefined ? sanitize(footerText) : existing.footerText,
+            footerText !== undefined ? DOMPurify.sanitize(footerText) : existing.footerText,
           primaryColor: primaryColor || existing.primaryColor,
           secondaryColor: secondaryColor || existing.secondaryColor,
           fontFamily: fontFamily || existing.fontFamily,
-          cssOverrides: req.body.cssOverrides !== undefined ? sanitize(req.body.cssOverrides) : existing.cssOverrides,
+          cssOverrides: req.body.cssOverrides !== undefined ? DOMPurify.sanitize(req.body.cssOverrides) : existing.cssOverrides,
         },
       });
 
@@ -248,7 +247,7 @@ Return the complete HTML document wrapped in \`\`\`html code blocks.`;
       }
 
       console.log("[Templates] Exporting PDF...");
-      const sanitizedHtml = sanitize(html, {
+      const sanitizedHtml = DOMPurify.sanitize(html, {
         ADD_TAGS: ["style"], // Allow style tags for PDF rendering
         ADD_ATTR: ["style"],
       });
