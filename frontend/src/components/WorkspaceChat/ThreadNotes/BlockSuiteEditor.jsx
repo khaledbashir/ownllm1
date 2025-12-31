@@ -2634,6 +2634,11 @@ ${activeTemplateFooter}
   /**
    * Export PDF using Carbone rendering service
    * Sends serialized HTML to self-hosted Carbone instance
+   *
+   * Carbone API Flow:
+   * 1. POST /template - Upload HTML template (FormData), get templateId
+   * 2. POST /render/{templateId} - Render with JSON data, get renderId
+   * 3. GET /render/{renderId}.pdf - Download PDF
    */
   const handleExportCarbone = async () => {
     if (!editorRef.current) return;
@@ -2697,39 +2702,74 @@ ${activeTemplateFooter}
 </body>
 </html>`;
 
-      // Step 1: Request render from Carbone
-      // Use FormData with 'template' field for HTML content
-      // This avoids JSON serialization issues with special characters
+      // Step 1: Upload template to Carbone storage
+      // Use FormData for file upload, template must be last field
       const formData = new FormData();
-      formData.append('data', JSON.stringify({})); // Empty data object
-      formData.append('template', carboneHtml); // HTML template as string
-      formData.append('options', JSON.stringify({ convertTo: 'pdf' }));
+      formData.append('template', carboneHtml); // HTML template
+      formData.append('name', 'Document Export Template');
+      formData.append('comment', 'Auto-generated from BlockSuite editor');
 
-      const renderResponse = await fetch('https://basheer-carbone.5jtgcw.easypanel.host/render/template', {
+      const templateResponse = await fetch('https://basheer-carbone.5jtgcw.easypanel.host/template', {
         method: 'POST',
         body: formData,
-        // Don't set Content-Type header - let browser set it with multipart boundary
+        // Don't set Content-Type - let browser set multipart boundary
+      });
+
+      if (!templateResponse.ok) {
+        const errorText = await templateResponse.text();
+        console.error('[Carbone] Template upload error:', errorText);
+        throw new Error(`Carbone template upload failed: ${templateResponse.status}`);
+      }
+
+      const templateResult = await templateResponse.json();
+
+      // Get templateId (Community Edition returns 'id', Enterprise returns 'id' + 'versionId')
+      const templateId = templateResult.data?.id || templateResult.data?.templateId;
+
+      if (!templateId || !templateResult.success) {
+        throw new Error('Failed to upload template to Carbone');
+      }
+
+      console.log('[Carbone] Template uploaded successfully, ID:', templateId);
+
+      // Step 2: Render document using the uploaded templateId
+      // Send empty data object since HTML is self-contained
+      const renderPayload = {
+        data: {},
+        convertTo: 'pdf',
+        converter: 'C' // Chromium for HTML-to-PDF
+      };
+
+      const renderResponse = await fetch(`https://basheer-carbone.5jtgcw.easypanel.host/render/${templateId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(renderPayload),
       });
 
       if (!renderResponse.ok) {
         const errorText = await renderResponse.text();
-        console.error('[Carbone] Error response:', errorText);
-        throw new Error(`Carbone service error: ${renderResponse.status}`);
+        console.error('[Carbone] Render error:', errorText);
+        throw new Error(`Carbone render failed: ${renderResponse.status}`);
       }
 
       const renderResult = await renderResponse.json();
 
       if (!renderResult.success || !renderResult.data?.renderId) {
-        throw new Error('Invalid response from Carbone service');
+        throw new Error('Invalid render response from Carbone');
       }
 
       const renderId = renderResult.data.renderId;
+      console.log('[Carbone] Document rendered, ID:', renderId);
 
-      // Step 2: Download the rendered PDF using the renderId
+      // Step 3: Download the rendered PDF
       const pdfResponse = await fetch(`https://basheer-carbone.5jtgcw.easypanel.host/render/${renderId}.pdf`);
 
       if (!pdfResponse.ok) {
-        throw new Error(`Failed to download PDF from Carbone: ${pdfResponse.status}`);
+        const errorText = await pdfResponse.text();
+        console.error('[Carbone] Download error:', errorText);
+        throw new Error(`Failed to download PDF: ${pdfResponse.status}`);
       }
 
       // Get binary PDF response
@@ -2737,7 +2777,7 @@ ${activeTemplateFooter}
 
       // Validate it's a PDF
       if (pdfBlob.type !== 'application/pdf' && !pdfBlob.type.startsWith('application/')) {
-        throw new Error('Invalid PDF response from Carbone service');
+        console.warn('[Carbone] Unexpected content type:', pdfBlob.type);
       }
 
       // Trigger download
