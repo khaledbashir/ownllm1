@@ -172,176 +172,33 @@ export default function ExportPdfModal({ isOpen, onClose, onExport }) {
               )}
             </div>
           )}
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-theme-bg-primary flex items-center justify-center border border-theme-border">
-                          <FilePdf
-                            size={16}
-                            className="text-theme-text-secondary"
-                          />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm text-theme-text-primary">
-                            No Template
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {templates.map((template) => (
-                      <div
-                        key={template.id}
-                        onClick={() => setSelectedTemplate(template)}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                          selectedTemplate?.id === template.id
-                            ? "border-blue-500 bg-blue-500/10"
-                            : "border-theme-border hover:border-theme-border-hover"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-8 h-8 rounded flex items-center justify-center shrink-0"
-                            style={{
-                              backgroundColor:
-                                template.primaryColor || "#3b82f6",
-                            }}
-                          >
-                            {template.logoPath ? (
-                              <img
-                                src={template.logoPath}
-                                alt=""
-                                className="w-full h-full object-contain rounded p-0.5"
-                              />
-                            ) : (
-                              <span className="text-white text-xs font-bold">
-                                {template.name.charAt(0)}
-                              </span>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium text-sm text-theme-text-primary truncate">
-                              {template.name}
-                            </p>
-                            <p className="text-xs text-theme-text-secondary truncate">
-                              {template.headerText || "No header"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="pt-2 border-t border-theme-border flex justify-center">
-                    <a
-                      href="/settings/document-templates"
-                      target="_blank"
-                      className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1.5 transition-colors"
-                    >
-                      <Gear size={12} />
-                      Manage Templates in Settings
-                    </a>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Footer */}
         <div className="flex justify-between items-center gap-3 p-4 border-t border-theme-border bg-theme-bg-primary/50">
-          {/* Export Type Selector */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 px-4 py-2 bg-theme-bg-primary hover:bg-white/5 border border-theme-border rounded-lg transition-colors text-sm"
-            >
-              {exportType === 'standard' ? (
-                <>
-                  <FilePdf size={16} className="text-red-400" />
-                  <span>Standard Export</span>
-                </>
-              ) : (
-                <>
-                  <FilePdf size={16} className="text-blue-400" />
-                  <span>Carbone PDF</span>
-                </>
-              )}
-              <CaretDown size={14} className="text-theme-text-secondary" />
-            </button>
-
-            {showDropdown && (
-              <div className="absolute bottom-full left-0 mb-2 w-56 bg-theme-bg-secondary border border-theme-border rounded-lg shadow-xl overflow-hidden z-10">
-                <div
-                  onClick={() => {
-                    setExportType('standard');
-                    setShowDropdown(false);
-                  }}
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
-                    exportType === 'standard'
-                      ? 'bg-blue-500/10 border-l-2 border-blue-500'
-                      : 'hover:bg-white/5'
-                  }`}
-                >
-                  <FilePdf size={20} className="text-red-400" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-theme-text-primary">Standard Export</p>
-                    <p className="text-xs text-theme-text-secondary">Using existing template engine</p>
-                  </div>
-                  {exportType === 'standard' && <Check size={16} className="text-blue-400" />}
-                </div>
-                <div
-                  onClick={() => {
-                    setExportType('carbone');
-                    setShowDropdown(false);
-                  }}
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
-                    exportType === 'carbone'
-                      ? 'bg-blue-500/10 border-l-2 border-blue-500'
-                      : 'hover:bg-white/5'
-                  }`}
-                >
-                  <FilePdf size={20} className="text-blue-400" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-theme-text-primary">Carbone PDF</p>
-                    <p className="text-xs text-theme-text-secondary">Professional Carbone rendering</p>
-                  </div>
-                  {exportType === 'carbone' && <Check size={16} className="text-blue-400" />}
-                </div>
-              </div>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-theme-text-secondary hover:text-theme-text-primary transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="px-6 py-2 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 shadow-lg transition-all font-medium text-sm bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-red-500/20"
+          >
+            {exporting ? (
+              <>
+                <CircleNotch className="animate-spin" size={16} />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <FilePdf size={16} />
+                Export PDF
+              </>
             )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-theme-text-secondary hover:text-theme-text-primary transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleExport}
-              disabled={exporting}
-              className={`px-6 py-2 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 shadow-lg transition-all font-medium text-sm ${
-                exportType === 'carbone'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-blue-500/20'
-                  : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-red-500/20'
-              }`}
-            >
-              {exporting ? (
-                <>
-                  <CircleNotch className="animate-spin" size={16} />
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <FilePdf size={16} />
-                  Export
-                </>
-              )}
-            </button>
-          </div>
+          </button>
         </div>
       </div>
     </div>
