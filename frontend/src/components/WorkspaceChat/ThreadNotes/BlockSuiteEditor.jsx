@@ -2632,6 +2632,113 @@ ${activeTemplateFooter}
   };
 
   /**
+   * Export PDF using Carbone rendering service
+   * Sends serialized HTML to self-hosted Carbone instance
+   */
+  const handleExportCarbone = async () => {
+    if (!editorRef.current) return;
+
+    try {
+      // Serialize document to HTML (same logic as standard export)
+      const doc = editorRef.current.doc;
+      if (!doc) throw new Error("Document not found");
+
+      // Ensure doc is loaded before exporting
+      try {
+        const maybePromise = doc.load?.();
+        if (maybePromise && typeof maybePromise.then === "function") {
+          await maybePromise;
+        }
+      } catch {
+        // ignore; continue export best-effort
+      }
+
+      // Serialize Doc to HTML
+      const bodyHtml = await serializeDocToHtml(doc, {
+        brandColor: selectedBrandTemplate?.primaryColor || "#2563eb",
+      });
+
+      if (!bodyHtml || bodyHtml.includes("No content found")) {
+        throw new Error("Document is empty");
+      }
+
+      // Build complete HTML document with default template
+      const carboneHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Export</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 2.2em; font-weight: 700; border-bottom: 3px solid #2563eb; padding-bottom: 0.3em; margin-top: 1.5em; }
+        h2 { font-size: 1.8em; font-weight: 600; border-bottom: 2px solid #2563eb; padding-bottom: 0.2em; margin-top: 1.4em; }
+        h3 { font-size: 1.4em; font-weight: 600; margin-top: 1.3em; }
+        p { margin-bottom: 1em; }
+        ul, ol { margin-bottom: 1em; padding-left: 1.5em; }
+        li { margin-bottom: 0.3em; }
+        table { width: 100%; border-collapse: collapse; margin: 2em 0; }
+        th, td { border: 1px solid #e5e7eb; padding: 12px 10px; text-align: left; }
+        th { background: #f3f4f6; font-weight: 600; }
+        code { background: #f3f4f6; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+        pre { background: #1e1e1e; color: #e5e7eb; padding: 1em; border-radius: 6px; overflow-x: auto; }
+        blockquote { border-left: 4px solid #2563eb; padding-left: 1em; margin: 1.5em 0; color: #4b5563; }
+    </style>
+</head>
+<body>
+    ${bodyHtml}
+</body>
+</html>`;
+
+      // Send to Carbone service
+      const formData = new FormData();
+      formData.append('data', JSON.stringify({ html: carboneHtml }));
+      formData.append('template', carboneHtml); // Use HTML as template
+      formData.append('options', JSON.stringify({ convertTo: 'pdf' }));
+
+      const response = await fetch('https://basheer-carbone.5jtgcw.easypanel.host/render', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Carbone service error: ${response.status}`);
+      }
+
+      // Get binary PDF response
+      const pdfBlob = await response.blob();
+
+      // Validate it's a PDF
+      if (pdfBlob.type !== 'application/pdf' && !pdfBlob.type.startsWith('application/')) {
+        throw new Error('Invalid response from Carbone service');
+      }
+
+      // Trigger download
+      const url = window.URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `report-${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("Carbone PDF exported successfully");
+    } catch (error) {
+      console.error("Carbone export failed:", error);
+      toast.error("Carbone Service Unavailable");
+      throw error; // Re-throw so modal knows export failed
+    }
+  };
+
+  /**
    * Extract plain text content from the BlockSuite document
    * for embedding into the vector database
    *
@@ -3097,7 +3204,7 @@ ${activeTemplateFooter}
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         onExport={handleExport}
-        exporting={exporting}
+        onExportCarbone={handleExportCarbone}
       />
 
       <ShareProposalModal

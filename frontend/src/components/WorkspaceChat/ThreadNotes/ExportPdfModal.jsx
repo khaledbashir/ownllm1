@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { X, FilePdf, CircleNotch, Gear } from "@phosphor-icons/react";
+import React, { useState, useEffect, useRef } from "react";
+import { X, FilePdf, CircleNotch, Gear, CaretDown, Check } from "@phosphor-icons/react";
 import PdfTemplates from "@/models/pdfTemplates";
 import showToast from "@/utils/toast";
 
-export default function ExportPdfModal({ isOpen, onClose, onExport }) {
+export default function ExportPdfModal({ isOpen, onClose, onExport, onExportCarbone }) {
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportType, setExportType] = useState("standard"); // 'standard' or 'carbone'
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -33,10 +36,25 @@ export default function ExportPdfModal({ isOpen, onClose, onExport }) {
 
   const handleExport = async () => {
     setExporting(true);
-    await onExport(selectedTemplate);
+    if (exportType === "carbone") {
+      await onExportCarbone();
+    } else {
+      await onExport(selectedTemplate);
+    }
     setExporting(false);
     onClose();
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -175,30 +193,99 @@ export default function ExportPdfModal({ isOpen, onClose, onExport }) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-4 border-t border-theme-border bg-theme-bg-primary/50">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-theme-text-secondary hover:text-theme-text-primary transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="px-6 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-red-500/20 transition-all font-medium text-sm"
-          >
-            {exporting ? (
-              <>
-                <CircleNotch className="animate-spin" size={16} />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <FilePdf size={16} />
-                Export PDF
-              </>
+        <div className="flex justify-between items-center gap-3 p-4 border-t border-theme-border bg-theme-bg-primary/50">
+          {/* Export Type Selector */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-bg-primary hover:bg-white/5 border border-theme-border rounded-lg transition-colors text-sm"
+            >
+              {exportType === 'standard' ? (
+                <>
+                  <FilePdf size={16} className="text-red-400" />
+                  <span>Standard Export</span>
+                </>
+              ) : (
+                <>
+                  <FilePdf size={16} className="text-blue-400" />
+                  <span>Carbone PDF</span>
+                </>
+              )}
+              <CaretDown size={14} className="text-theme-text-secondary" />
+            </button>
+
+            {showDropdown && (
+              <div className="absolute bottom-full left-0 mb-2 w-56 bg-theme-bg-secondary border border-theme-border rounded-lg shadow-xl overflow-hidden z-10">
+                <div
+                  onClick={() => {
+                    setExportType('standard');
+                    setShowDropdown(false);
+                  }}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
+                    exportType === 'standard'
+                      ? 'bg-blue-500/10 border-l-2 border-blue-500'
+                      : 'hover:bg-white/5'
+                  }`}
+                >
+                  <FilePdf size={20} className="text-red-400" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm text-theme-text-primary">Standard Export</p>
+                    <p className="text-xs text-theme-text-secondary">Using existing template engine</p>
+                  </div>
+                  {exportType === 'standard' && <Check size={16} className="text-blue-400" />}
+                </div>
+                <div
+                  onClick={() => {
+                    setExportType('carbone');
+                    setShowDropdown(false);
+                  }}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${
+                    exportType === 'carbone'
+                      ? 'bg-blue-500/10 border-l-2 border-blue-500'
+                      : 'hover:bg-white/5'
+                  }`}
+                >
+                  <FilePdf size={20} className="text-blue-400" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm text-theme-text-primary">Carbone PDF</p>
+                    <p className="text-xs text-theme-text-secondary">Professional Carbone rendering</p>
+                  </div>
+                  {exportType === 'carbone' && <Check size={16} className="text-blue-400" />}
+                </div>
+              </div>
             )}
-          </button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-theme-text-secondary hover:text-theme-text-primary transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className={`px-6 py-2 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 shadow-lg transition-all font-medium text-sm ${
+                exportType === 'carbone'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-blue-500/20'
+                  : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-red-500/20'
+              }`}
+            >
+              {exporting ? (
+                <>
+                  <CircleNotch className="animate-spin" size={16} />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <FilePdf size={16} />
+                  Export
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
