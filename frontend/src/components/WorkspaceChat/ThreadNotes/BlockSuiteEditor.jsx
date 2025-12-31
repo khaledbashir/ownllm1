@@ -2632,15 +2632,14 @@ ${activeTemplateFooter}
   };
 
   /**
-   * Export PDF using Carbone rendering service
-   * Sends serialized HTML to self-hosted Carbone instance
+   * Export PDF using Gotenberg rendering service
+   * Sends serialized HTML to self-hosted Gotenberg instance
    *
-   * Carbone API Flow:
-   * 1. POST /template - Upload HTML template (FormData), get templateId
-   * 2. POST /render/{templateId} - Render with JSON data, get renderId
-   * 3. GET /render/{renderId}.pdf - Download PDF
+   * Gotenberg API Flow:
+   * POST /forms/chromium/convert/html - Direct HTML to PDF conversion
+   * Gotenberg uses Chromium headless browser for pixel-perfect rendering
    */
-  const handleExportCarbone = async () => {
+  const handleExportGotenberg = async () => {
     if (!editorRef.current) return;
 
     try {
@@ -2668,7 +2667,7 @@ ${activeTemplateFooter}
       }
 
       // Build complete HTML document with default template
-      const carboneHtml = `<!DOCTYPE html>
+      const gotenbergHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2702,82 +2701,39 @@ ${activeTemplateFooter}
 </body>
 </html>`;
 
-      // Step 1: Upload template to Carbone storage
-      // Use FormData for file upload, template must be last field
+      // Use FormData to send HTML to Gotenberg
+      // Gotenberg endpoint: POST /forms/chromium/convert/html
       const formData = new FormData();
-      formData.append('template', carboneHtml); // HTML template
-      formData.append('name', 'Document Export Template');
-      formData.append('comment', 'Auto-generated from BlockSuite editor');
+      formData.append('index.html', gotenbergHtml, 'index.html');
+      formData.append('landscape', 'false'); // Portrait orientation
+      formData.append('marginTop', '1');
+      formData.append('marginBottom', '1');
+      formData.append('marginLeft', '1');
+      formData.append('marginRight', '1');
+      formData.append('printBackground', 'true'); // Include background colors
+      formData.append('preferCssPageSize', 'true'); // Use CSS page size
 
-      const templateResponse = await fetch('https://basheer-carbone.5jtgcw.easypanel.host/template', {
+      const gotenbergUrl = 'http://gotenberg:4000/forms/chromium/convert/html';
+
+      const response = await fetch(gotenbergUrl, {
         method: 'POST',
         body: formData,
         // Don't set Content-Type - let browser set multipart boundary
       });
 
-      if (!templateResponse.ok) {
-        const errorText = await templateResponse.text();
-        console.error('[Carbone] Template upload error:', errorText);
-        throw new Error(`Carbone template upload failed: ${templateResponse.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Gotenberg] Error response:', errorText);
+        throw new Error(`Gotenberg service error: ${response.status}`);
       }
 
-      const templateResult = await templateResponse.json();
-
-      // Get templateId (Community Edition returns 'id', Enterprise returns 'id' + 'versionId')
-      const templateId = templateResult.data?.id || templateResult.data?.templateId;
-
-      if (!templateId || !templateResult.success) {
-        throw new Error('Failed to upload template to Carbone');
-      }
-
-      console.log('[Carbone] Template uploaded successfully, ID:', templateId);
-
-      // Step 2: Render document using the uploaded templateId
-      // Send empty data object since HTML is self-contained
-      const renderPayload = {
-        data: {},
-        convertTo: 'pdf',
-        converter: 'C' // Chromium for HTML-to-PDF
-      };
-
-      const renderResponse = await fetch(`https://basheer-carbone.5jtgcw.easypanel.host/render/${templateId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(renderPayload),
-      });
-
-      if (!renderResponse.ok) {
-        const errorText = await renderResponse.text();
-        console.error('[Carbone] Render error:', errorText);
-        throw new Error(`Carbone render failed: ${renderResponse.status}`);
-      }
-
-      const renderResult = await renderResponse.json();
-
-      if (!renderResult.success || !renderResult.data?.renderId) {
-        throw new Error('Invalid render response from Carbone');
-      }
-
-      const renderId = renderResult.data.renderId;
-      console.log('[Carbone] Document rendered, ID:', renderId);
-
-      // Step 3: Download the rendered PDF
-      const pdfResponse = await fetch(`https://basheer-carbone.5jtgcw.easypanel.host/render/${renderId}.pdf`);
-
-      if (!pdfResponse.ok) {
-        const errorText = await pdfResponse.text();
-        console.error('[Carbone] Download error:', errorText);
-        throw new Error(`Failed to download PDF: ${pdfResponse.status}`);
-      }
-
-      // Get binary PDF response
-      const pdfBlob = await pdfResponse.blob();
+      // Get binary PDF response directly from Gotenberg
+      const pdfBlob = await response.blob();
 
       // Validate it's a PDF
-      if (pdfBlob.type !== 'application/pdf' && !pdfBlob.type.startsWith('application/')) {
-        console.warn('[Carbone] Unexpected content type:', pdfBlob.type);
+      if (pdfBlob.type !== 'application/pdf') {
+        console.warn('[Gotenberg] Unexpected content type:', pdfBlob.type);
+        throw new Error('Gotenberg did not return a PDF');
       }
 
       // Trigger download
@@ -2790,10 +2746,10 @@ ${activeTemplateFooter}
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success("Carbone PDF exported successfully");
+      toast.success("PDF exported successfully");
     } catch (error) {
-      console.error("Carbone export failed:", error);
-      toast.error("Carbone Service Unavailable");
+      console.error("Gotenberg export failed:", error);
+      toast.error("PDF Service Unavailable");
       throw error; // Re-throw so modal knows export failed
     }
   };
@@ -3264,7 +3220,6 @@ ${activeTemplateFooter}
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         onExport={handleExport}
-        onExportCarbone={handleExportCarbone}
       />
 
       <ShareProposalModal

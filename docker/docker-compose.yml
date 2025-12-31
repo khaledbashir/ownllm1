@@ -32,6 +32,15 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: gotenberg
+    ports:
+      - "4000:3000"
+    networks:
+      - anything-llm
+    restart: unless-stopped
+
   # REMOVED: n8n, redis, and browserless services
   # Reason: User self-hosts n8n on Easypanel at basheer-n8n.5jtgcw.easypanel.host
   # AnythingLLM connects via MCP (see anythingllm_mcp_servers.json)
