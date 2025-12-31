@@ -2,8 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
-const createDOMPurify = require("isomorphic-dompurify");
-const DOMPurify = createDOMPurify();
+// isomorphic-dompurify returns a function directly, not an object
+const sanitize = require("isomorphic-dompurify")();
 
 /**
  * Generates a PDF from HTML content using Puppeteer (Chromium-based).
@@ -772,7 +772,7 @@ async function generatePdf(htmlContent, options = {}) {
     `;
 
     // Write HTML to temp file (Sanitize one last time for safety)
-    const finalSanitizedHtml = DOMPurify.sanitize(enhancedHtml, {
+    const finalSanitizedHtml = sanitize(enhancedHtml, {
       ADD_TAGS: ["style", "html", "head", "body", "meta"],
       ADD_ATTR: ["name", "content", "charset", "viewport"],
       WHOLE_DOCUMENT: true,
