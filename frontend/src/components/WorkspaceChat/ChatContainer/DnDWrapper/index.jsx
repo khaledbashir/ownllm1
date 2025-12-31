@@ -127,9 +127,13 @@ export function DnDFileUploaderProvider({
             /** @type {Attachment} */
             attachment
           ) => {
+            // Backend expects "application/anythingllm-document" for document attachments
+            // Any other mime type is treated as an image attachment
             return {
               name: attachment.file.name,
-              mime: attachment.file.type,
+              mime: attachment.file.type?.startsWith("image/")
+                ? attachment.file.type
+                : "application/anythingllm-document",
               contentString: attachment.contentString,
             };
           }
