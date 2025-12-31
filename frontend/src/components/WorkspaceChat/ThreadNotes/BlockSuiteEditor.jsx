@@ -2698,20 +2698,22 @@ ${activeTemplateFooter}
 </html>`;
 
       // Step 1: Request render from Carbone
-      // Carbone API uses /render/template endpoint with JSON payload
+      // Use FormData with 'template' field for HTML content
+      // This avoids JSON serialization issues with special characters
+      const formData = new FormData();
+      formData.append('data', JSON.stringify({})); // Empty data object
+      formData.append('template', carboneHtml); // HTML template as string
+      formData.append('options', JSON.stringify({ convertTo: 'pdf' }));
+
       const renderResponse = await fetch('https://basheer-carbone.5jtgcw.easypanel.host/render/template', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: {}, // Empty data object since HTML is self-contained
-          template: carboneHtml, // Full HTML template
-          options: { convertTo: 'pdf' }
-        }),
+        body: formData,
+        // Don't set Content-Type header - let browser set it with multipart boundary
       });
 
       if (!renderResponse.ok) {
+        const errorText = await renderResponse.text();
+        console.error('[Carbone] Error response:', errorText);
         throw new Error(`Carbone service error: ${renderResponse.status}`);
       }
 
