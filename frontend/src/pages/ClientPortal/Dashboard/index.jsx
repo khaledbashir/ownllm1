@@ -66,6 +66,15 @@ export default function ClientDashboard() {
 
     const filteredProposals = proposals.filter(p => filter === "all" || p.status === filter);
 
+    // Update stats based on real data
+    const activeCount = proposals.filter(p => p.status === "active").length;
+    const signedCount = proposals.filter(p => p.status === "signed").length;
+    const totalValue = proposals.reduce((sum, p) => {
+        // Extract numeric value from amount string (e.g., "$12,000" -> 12000)
+        const numeric = parseFloat(p.amount?.replace(/[^\d.]/g, "")) || 0;
+        return sum + numeric;
+    }, 0);
+
     return (
         <div className="p-8 max-w-7xl mx-auto animate-fade-in-up">
             {/* Header */}

@@ -16,8 +16,9 @@
 - [5. Interactive Features](#5-interactive-features)
 - [6. Premium "Cool" Features](#6-premium-cool-features)
 - [7. Mobile Responsive](#7-mobile-responsive)
-- [8. Backend & API](#8-backend--api)
+- [8. Backend & API](#8-backend--api) ✅ **COMPLETED**
 - [9. Integration & Polish](#9-integration--polish)
+- [10. CRM Integration](#10-crm-integration) ✅ **NEW**
 
 ---
 
@@ -331,6 +332,67 @@
 - Reuse existing icons from `@phosphor-icons/react`
 - Follow existing code patterns in `frontend/src`
 - Use existing PDF export (already perfected!)
+
+---
+
+## 10. CRM Integration ✅ **COMPLETED**
+
+### Auto-Setup & Configuration
+- [x] Workspace settings for CRM integration (`enableProposalCrmIntegration`, `defaultProposalPipelineId`) ✅
+- [x] Auto-create "Proposals" pipeline on first proposal ✅
+- [x] Pipeline stages: Sent, Viewed, Signed, Negotiation, Won, Lost ✅
+
+### Proposal → CRM Card Auto-Creation
+- [x] Create CRM card when proposal is signed ✅
+- [x] Extract contact info from signature data ✅
+- [x] Link proposal to CRM card (`proposalId`, `crmCardId`) ✅
+- [x] Store signature metadata in CRM card ✅
+
+### Real-Time CRM Stage Updates ✅ **NEW**
+- [x] View → "Viewed" stage (when proposal is opened) ✅
+- [x] Sign → "Signed" stage (when client signs) ✅
+- [x] Decline → "Lost" stage (when client declines) ✅
+- [x] Automatic stage mapping based on proposal status ✅
+
+### Comment Sync to CRM ✅ **NEW**
+- [x] Append client comments to CRM card notes ✅
+- [x] Include timestamp and author email ✅
+- [x] Format: "💬 Comment from Name (email)\n📅 timestamp\n\ncontent" ✅
+
+### Client Dashboard API ✅ **NEW**
+- [x] `GET /api/client-portal/proposals?email=` endpoint ✅
+- [x] Query by `approverEmail` or `crmCard.email` ✅
+- [x] Include: status, viewCount, commentCount, versionCount ✅
+- [x] Frontend uses real data (no more mock data) ✅
+
+**Progress:** 100% ✅
+
+**Section 10 Complete:** CRM Integration ✅
+
+---
+
+## 📊 **Overall Progress Update**
+
+| Section | Progress | Status |
+|---------|-----------|--------|
+| 1. Foundation Setup | 25% | Partial |
+| 2. Core Layout | 100% | ✅ Complete |
+| 3. Sidebar Components | 30% | Partial |
+| 4. Main Content Components | 60% | Partial |
+| 5. Interactive Features | 100% | ✅ Complete |
+| 6. Premium Features | 100% | ✅ Complete |
+| 7. Mobile Responsive | 100% | ✅ Complete |
+| 8. Backend & API | 100% | ✅ Complete |
+| 9. Integration & Polish | 0% | Not Started |
+| **10. CRM Integration** | **100%** | **✅ Complete** |
+
+**Overall: 75% Complete** (up from 70%)
+
+**Quick Wins Completed:**
+- ✅ CRM stage updates on view/approve/decline
+- ✅ Comment sync to CRM cards
+- ✅ Client dashboard with real API
+- ✅ All mock data replaced
 
 ---
 
