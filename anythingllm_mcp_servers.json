@@ -21,6 +21,16 @@
       "anythingllm": {
         "autoStart": true
       }
+    },
+    "ui-test-generator": {
+      "command": "node",
+      "args": ["/root/ownllm/server/storage/mcp-servers/cli.js", "--headless", "--output-dir", "/root/ownllm/server/storage/mcp-servers/output"],
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "anythingllm": {
+        "autoStart": true
+      }
     }
   }
 }
