@@ -3,6 +3,7 @@ const { ProposalComments } = require("../models/proposalComments");
 const { ProposalVersions } = require("../models/proposalVersions");
 const { ProposalApprovals } = require("../models/proposalApprovals");
 const { reqBody } = require("../utils/http");
+const { updateCardFromProposalStatus, appendCommentToCrmCard } = require("../utils/crm/proposalIntegration");
 
 /**
  * Client Portal Endpoints
@@ -39,6 +40,15 @@ function clientPortalEndpoints(app) {
 
       // Increment view count
       await PublicProposals.incrementViewCount(id);
+
+      // Update CRM card stage to "Viewed" if proposal has CRM card
+      try {
+        await updateCardFromProposalStatus(id, "viewed");
+        console.log(`[ClientPortal] Updated CRM card to 'Viewed' for proposal ${id}`);
+      } catch (crmError) {
+        // Log error but don't fail the request
+        console.error("[ClientPortal] Failed to update CRM card stage:", crmError);
+      }
 
       return response.status(200).json({
         success: true,
@@ -139,6 +149,14 @@ function clientPortalEndpoints(app) {
         return response.status(500).json({ success: false, error: result.message });
       }
 
+      // Sync comment to CRM card
+      try {
+        await appendCommentToCrmCard(id, result.comment);
+      } catch (crmError) {
+        // Log error but don't fail the comment creation
+        console.error("[ClientPortal] Failed to sync comment to CRM:", crmError);
+      }
+
       return response.status(201).json({
         success: true,
         comment: result.comment,
@@ -204,6 +222,15 @@ function clientPortalEndpoints(app) {
         }
       }
 
+      // Update CRM card stage to "Signed" or "Negotiation"
+      try {
+        await updateCardFromProposalStatus(id, "signed");
+        console.log(`[ClientPortal] Updated CRM card to 'Signed' for proposal ${id}`);
+      } catch (crmError) {
+        // Log error but don't fail the request
+        console.error("[ClientPortal] Failed to update CRM card stage:", crmError);
+      }
+
       return response.status(200).json({
         success: true,
         approvalId,
@@ -262,6 +289,15 @@ function clientPortalEndpoints(app) {
       const result = await ProposalApprovals.decline(approvalId, declineReason);
       if (!result.success) {
         return response.status(500).json({ success: false, error: result.message });
+      }
+
+      // Update CRM card stage to "Lost"
+      try {
+        await updateCardFromProposalStatus(id, "declined");
+        console.log(`[ClientPortal] Updated CRM card to 'Lost' for proposal ${id}`);
+      } catch (crmError) {
+        // Log error but don't fail the request
+        console.error("[ClientPortal] Failed to update CRM card stage:", crmError);
       }
 
       return response.status(200).json({
@@ -412,6 +448,39 @@ function clientPortalEndpoints(app) {
       });
     } catch (e) {
       console.error("[ClientPortal] AI query error:", e);
+      return response.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  // ============================================================================
+  // ============================================================================
+  // GET /api/client-portal/proposals - Get all proposals for a client
+  // ============================================================================
+  app.get("/api/client-portal/proposals", async (request, response) => {
+    try {
+      const { email, status, limit = 50, offset = 0 } = request.query;
+
+      if (!email) {
+        return response.status(400).json({ 
+          success: false, 
+          error: "Client email is required" 
+        });
+      }
+
+      // Get proposals for this client
+      const proposals = await PublicProposals.getClientProposals(email, {
+        status,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+
+      return response.status(200).json({
+        success: true,
+        proposals,
+        count: proposals.length,
+      });
+    } catch (e) {
+      console.error("[ClientPortal] Get client proposals error:", e);
       return response.status(500).json({ success: false, error: e.message });
     }
   });

@@ -40,26 +40,26 @@ export default function ClientDashboard() {
     const fetchProposals = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem("anythingllm_client_auth");
-            // TODO: Create this endpoint in backend: GET /v1/client-portal/proposals
-            // For now, we simulate data or use existing if adaptable
-            // const response = await fetch(`${API_BASE}/v1/client-portal/proposals`, {
-            //   headers: { Authorization: `Bearer ${token}` }
-            // });
-            // const data = await response.json();
+            // Get client email from localStorage (set during login)
+            const clientEmail = localStorage.getItem("client_email") || localStorage.getItem("anythingllm_client_email");
 
-            // MOCK DATA for Visual Verification
-            setTimeout(() => {
-                setProposals([
-                    { id: 1, title: "Website Redesign", status: "active", date: "2023-10-25", amount: "$12,000", workspace: "Acme Corp" },
-                    { id: 2, title: "SEO Optimization", status: "signed", date: "2023-09-15", amount: "$4,500", workspace: "Acme Corp" },
-                    { id: 3, title: "Mobile App Phase 1", status: "expired", date: "2023-08-01", amount: "$25,000", workspace: "Acme Corp" },
-                ]);
+            if (!clientEmail) {
+                console.error("No client email found in localStorage");
                 setLoading(false);
-            }, 800);
+                return;
+            }
 
+            const response = await fetch(`${API_BASE}/api/client-portal/proposals?email=${encodeURIComponent(clientEmail)}`);
+            const data = await response.json();
+
+            if (data.success) {
+                setProposals(data.proposals);
+            } else {
+                console.error("Failed to fetch proposals:", data.error);
+            }
         } catch (err) {
             console.error("Failed to fetch proposals", err);
+        } finally {
             setLoading(false);
         }
     };

@@ -36,6 +36,75 @@ const PublicProposals = {
     }
   },
 
+  getClientProposals: async (clientEmail, options = {}) => {
+    try {
+      const { status, limit = 50, offset = 0 } = options;
+
+      // Find proposals where client email matches
+      const proposals = await prisma.public_proposals.findMany({
+        where: {
+          OR: [
+            // Client has approval record
+            {
+              approvals: {
+                some: {
+                  approverEmail: clientEmail,
+                },
+              },
+            },
+            // Or CRM card has client email
+            {
+              crmCard: {
+                email: clientEmail,
+              },
+            },
+          ],
+          ...(status && { status }), // Filter by status if provided
+        },
+        include: {
+          workspace: {
+            select: {
+              name: true,
+              slug: true,
+              pfpFilename: true,
+            },
+          },
+          approvals: {
+            where: { approverEmail: clientEmail },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+          _count: {
+            select: {
+              comments: true,
+              versions: true,
+            },
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: limit,
+        skip: offset,
+      });
+
+      // Transform to match frontend format
+      return proposals.map(p => ({
+        id: p.id,
+        title: p.htmlContent ? extractTitleFromHtml(p.htmlContent) : `Proposal #${p.id.slice(0, 8)}`,
+        status: p.status,
+        date: p.createdAt,
+        amount: extractValueFromHtml(p.htmlContent),
+        workspace: p.workspace.name,
+        viewCount: p.viewCount,
+        commentCount: p._count.comments,
+        versionCount: p._count.versions,
+        approval: p.approvals[0] || null,
+      }));
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  },
+
   getWithStats: async (id) => {
     try {
       const proposal = await prisma.public_proposals.findUnique({
@@ -160,5 +229,25 @@ const PublicProposals = {
     }
   },
 };
+
+// Helper function to extract title from HTML
+function extractTitleFromHtml(html) {
+  if (!html) return 'Untitled Proposal';
+  const titleMatch = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
+  if (titleMatch) {
+    // Strip HTML tags from content
+    return titleMatch[1].replace(/<[^>]*>/g, '').trim();
+  }
+  return 'Untitled Proposal';
+}
+
+// Helper function to extract value/amount from HTML
+function extractValueFromHtml(html) {
+  if (!html) return '$0';
+  // Try to find pricing data or total amount
+  const totalMatch = html.match(/total.*?(\$[\d,]+(?:\.\d{2})?)/i);
+  if (totalMatch) return totalMatch[1];
+  return '$0';
+}
 
 module.exports = { PublicProposals };

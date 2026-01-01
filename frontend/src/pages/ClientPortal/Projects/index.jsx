@@ -22,23 +22,39 @@ const StatusBadge = ({ status }) => {
 };
 
 export default function ClientProjects() {
-    // reusing mock data logic from Dashboard for now
     const [proposals, setProposals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all");
 
     useEffect(() => {
-        // Simulate fetch
-        setTimeout(() => {
-            setProposals([
-                { id: 1, title: "Website Redesign", status: "active", date: "2023-10-25", amount: "$12,000", workspace: "Acme Corp" },
-                { id: 2, title: "SEO Optimization", status: "signed", date: "2023-09-15", amount: "$4,500", workspace: "Acme Corp" },
-                { id: 3, title: "Mobile App Phase 1", status: "expired", date: "2023-08-01", amount: "$25,000", workspace: "Acme Corp" },
-                { id: 4, title: "Q4 Marketing Strategy", status: "draft", date: "2023-11-01", amount: "$8,000", workspace: "Acme Corp" },
-            ]);
-            setLoading(false);
-        }, 500);
+        fetchProposals();
     }, []);
+
+    const fetchProposals = async () => {
+        setLoading(true);
+        try {
+            const clientEmail = localStorage.getItem("client_email") || localStorage.getItem("anythingllm_client_email");
+
+            if (!clientEmail) {
+                console.error("No client email found in localStorage");
+                setLoading(false);
+                return;
+            }
+
+            const response = await fetch(`${API_BASE}/api/client-portal/proposals?email=${encodeURIComponent(clientEmail)}`);
+            const data = await response.json();
+
+            if (data.success) {
+                setProposals(data.proposals);
+            } else {
+                console.error("Failed to fetch proposals:", data.error);
+            }
+        } catch (err) {
+            console.error("Failed to fetch proposals", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const filtered = proposals.filter(p => filter === "all" || p.status === filter);
 

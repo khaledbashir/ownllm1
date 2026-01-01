@@ -172,6 +172,7 @@ async function updateCardFromProposalStatus(proposalId, status) {
     signed: "Signed",
     expired: "Lost",
     revoked: "Lost",
+    declined: "Lost",
   };
 
   const mappedStage = statusToStageMap[status];
@@ -188,8 +189,44 @@ async function updateCardFromProposalStatus(proposalId, status) {
   return card;
 }
 
+/**
+ * Append comment to CRM card notes
+ * @param {string} proposalId - The proposal ID
+ * @param {Object} comment - The comment object
+ * @returns {Promise<Object|null>} The updated CRM card or null
+ */
+async function appendCommentToCrmCard(proposalId, comment) {
+  const proposal = await prisma.public_proposals.findUnique({
+    where: { id: proposalId },
+    select: { crmCardId: true },
+  });
+
+  if (!proposal || !proposal.crmCardId) {
+    return null;
+  }
+
+  const card = await prisma.crm_cards.findUnique({
+    where: { id: proposal.crmCardId },
+    select: { notes: true },
+  });
+
+  const timestamp = new Date().toLocaleString();
+  const commentEntry = `\n---\n💬 Comment from ${comment.authorName} (${comment.authorEmail || 'No email'})\n📅 ${timestamp}\n\n${comment.content}`;
+
+  const updatedNotes = (card.notes || '') + commentEntry;
+
+  const updatedCard = await prisma.crm_cards.update({
+    where: { id: proposal.crmCardId },
+    data: { notes: updatedNotes },
+  });
+
+  console.log(`[Proposal Integration] Appended comment to CRM card ${proposal.crmCardId} for proposal ${proposalId}`);
+  return updatedCard;
+}
+
 module.exports = {
   findOrCreateProposalPipeline,
   createCardFromSignedProposal,
   updateCardFromProposalStatus,
+  appendCommentToCrmCard,
 };
