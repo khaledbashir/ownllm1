@@ -13,6 +13,7 @@ const {
   ROLES,
 } = require("../utils/middleware/multiUserProtected");
 const { Workspace } = require("../models/workspace");
+const { SystemSettings } = require("../models/systemSettings");
 
 // System prompts for different actions
 const ACTION_PROMPTS = {
@@ -75,9 +76,14 @@ function inlineAIEndpoints(app) {
         }
 
         // Get LLM provider - use inline AI settings if available, fall back to workspace chat settings
+        const customProviderConfig = await SystemSettings.getCustomProvider(
+          workspace?.inlineAiProvider || workspace?.chatProvider
+        );
+
         const LLMConnector = getLLMProvider({
           provider: workspace?.inlineAiProvider || workspace?.chatProvider || null,
           model: workspace?.inlineAiModel || workspace?.chatModel || null,
+          customProviderConfig,
         });
         if (!LLMConnector) {
           return response.status(500).json({

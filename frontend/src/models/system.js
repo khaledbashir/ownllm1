@@ -190,6 +190,19 @@ const System = {
         return { success: false, error: e.message };
       });
   },
+  getCustomProviders: async function () {
+    return await fetch(`${API_BASE}/api/system/custom-providers`, {
+      headers: baseHeaders(),
+    })
+      .then(async (res) => {
+        if (!res.ok) throw await res.json();
+        return await res.json();
+      })
+      .catch((e) => {
+        console.error(e);
+        return { providers: [] };
+      });
+  },
   setupMultiUser: async (data) => {
     return await fetch(`${API_BASE}/system/enable-multi-user`, {
       method: "POST",

@@ -124,12 +124,18 @@ function getVectorDbClass(getExactly = null) {
 
 /**
  * Returns the LLMProvider with its embedder attached via system or via defined provider.
- * @param {{provider: string | null, model: string | null} | null} params - Initialize params for LLMs provider
+ * @param {{provider: string | null, model: string | null, customProviderConfig: object | null} | null} params - Initialize params for LLMs provider
  * @returns {BaseLLMProvider}
  */
-function getLLMProvider({ provider = null, model = null } = {}) {
+function getLLMProvider({ provider = null, model = null, customProviderConfig = null } = {}) {
   const LLMSelection = provider ?? process.env.LLM_PROVIDER ?? "openai";
   const embedder = getEmbeddingEngineSelection();
+
+  // If custom provider config is provided and provider is custom, use that config
+  if (customProviderConfig && customProviderConfig.id === provider) {
+    const { GenericOpenAiLLM } = require("../../core/ai/genericOpenAi");
+    return new GenericOpenAiLLM(embedder, model, customProviderConfig);
+  }
 
   switch (LLMSelection) {
     case "openai":

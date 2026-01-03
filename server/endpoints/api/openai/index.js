@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const { Document } = require("../../../models/documents");
 const { Telemetry } = require("../../../models/telemetry");
 const { Workspace } = require("../../../models/workspace");
+const { SystemSettings } = require("../../../models/systemSettings");
 const {
   getLLMProvider,
   getEmbeddingEngineSelection,
@@ -59,9 +60,11 @@ function apiOpenAICompatibleEndpoints(app) {
       const workspaces = await Workspace.where();
       for (const workspace of workspaces) {
         const provider = workspace?.chatProvider ?? process.env.LLM_PROVIDER;
+        const customProviderConfig = await SystemSettings.getCustomProvider(provider);
         let LLMProvider = getLLMProvider({
           provider,
           model: workspace?.chatModel,
+          customProviderConfig,
         });
         data.push({
           id: workspace.slug,

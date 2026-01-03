@@ -62,6 +62,7 @@ const Workspace = {
     "inlineAiActions",
     "inlineAiProvider",
     "inlineAiModel",
+    "customLlmProviders",
     "organizationId",
   ],
 
@@ -169,6 +170,22 @@ const Workspace = {
     inlineAiModel: (value) => {
       if (!value || typeof value !== "string") return null;
       return String(value);
+    },
+    customLlmProviders: (value) => {
+      // Stores custom LLM providers as JSON array
+      if (!value) return "[]";
+      if (typeof value === "string") {
+        try {
+          JSON.parse(value); // Validate it's valid JSON
+          return value;
+        } catch {
+          return "[]";
+        }
+      }
+      if (Array.isArray(value)) {
+        return JSON.stringify(value);
+      }
+      return "[]";
     },
     organizationId: (value) => {
       if (value === null || value === undefined) return null;
@@ -783,6 +800,7 @@ const Workspace = {
         inlineAiActions: sourceWorkspace.inlineAiActions,
         inlineAiProvider: sourceWorkspace.inlineAiProvider,
         inlineAiModel: sourceWorkspace.inlineAiModel,
+        customLlmProviders: sourceWorkspace.customLlmProviders,
       };
 
       // Create the new workspace

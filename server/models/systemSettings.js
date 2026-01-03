@@ -61,6 +61,9 @@ const SystemSettings = {
 
     // Hub settings
     "hub_api_key",
+    
+    // Custom Generic OpenAI Providers
+    "customGenericProviders",
   ],
   validations: {
     footer_data: (updates) => {
@@ -146,6 +149,27 @@ const SystemSettings = {
         return JSON.stringify(skills);
       } catch (e) {
         console.error(`Could not validate disabled agent skills.`);
+        return JSON.stringify([]);
+      }
+    },
+    customGenericProviders: (update) => {
+      try {
+        const providers = JSON.parse(update);
+        if (!Array.isArray(providers)) throw new Error("Must be an array");
+        // Validate each provider has required fields
+        return JSON.stringify(
+          providers.map((provider, index) => ({
+            id: provider.id || `custom_${Date.now()}_${index}`,
+            name: provider.name || `Custom Provider ${index + 1}`,
+            basePath: provider.baseUrl || provider.basePath || "", // Accept both field names
+            apiKey: provider.apiKey || "",
+            model: provider.defaultModel || provider.model || "", // Accept both field names
+            maxTokens: provider.maxTokens || null,
+            streamingDisabled: provider.streamingDisabled || false,
+          }))
+        );
+      } catch (e) {
+        console.error("Failed to validate customGenericProviders", e.message);
         return JSON.stringify([]);
       }
     },
@@ -327,7 +351,17 @@ const SystemSettings = {
       return null;
     }
   },
-
+  getCustomProvider: async function (id) {
+    if (!id || !id.startsWith("custom_")) return null;
+    try {
+      const setting = await this.get({ label: "customGenericProviders" });
+      const providers = setting ? JSON.parse(setting.value) : [];
+      return providers.find((p) => p.id === id) || null;
+    } catch (e) {
+      console.error("Failed to get custom provider", e.message);
+      return null;
+    }
+  },
   getValueOrFallback: async function (clause = {}, fallback = null) {
     try {
       return (await this.get(clause))?.value ?? fallback;

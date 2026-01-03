@@ -90,6 +90,22 @@ async function messageArrayCompressor(llm, messages = [], rawHistory = []) {
     let compressedPrompt;
     let compressedContext;
 
+    // Preserve Rate Card and Products sections - NEVER truncate them
+    // Match both products section and rate card section
+    const rateCardRegex = /(## AVAILABLE PRODUCTS & SERVICES.*?)(?=\n\n## HOURLY RATE CARD|\n\n## PROPOSAL INSTRUCTIONS|\n\n## [A-Z]|$)/s;
+    const rateCardRegex2 = /(## HOURLY RATE CARD.*?)(?=\n\n## PROPOSAL INSTRUCTIONS|\n\n## [A-Z]|$)/s;
+    
+    const productsMatch = context.match(rateCardRegex);
+    const rateCardMatch = context.match(rateCardRegex2);
+    
+    let protectedRateCardSection = "";
+    if (productsMatch) protectedRateCardSection += productsMatch[0];
+    if (rateCardMatch) protectedRateCardSection += rateCardMatch[0];
+    
+    console.log(
+      `[Context Compression] Found protected sections: Products=${!!productsMatch}, RateCard=${!!rateCardMatch}. Total protected length: ${protectedRateCardSection.length} chars`
+    );
+
     // If the user system prompt contribution's to the system prompt is more than
     // 25% of the system limit, we will cannonball it - this favors the context
     // over the instruction from the user.
@@ -103,12 +119,45 @@ async function messageArrayCompressor(llm, messages = [], rawHistory = []) {
       compressedPrompt = prompt;
     }
 
-    if (tokenManager.countFromString(context) >= llm.limits.system * 0.75) {
+    // Compress context (excluding protected Rate Card section)
+    const contextToCompressTokens = tokenManager.countFromString(
+      contextToCompress
+    );
+    const rateCardTokens = protectedRateCardSection
+      ? tokenManager.countFromString(protectedRateCardSection)
+      : 0;
+    const totalContextTokens = contextToCompressTokens + rateCardTokens;
+
+    // Reserve space for Rate Card - allocate at most 50% of system limit for Rate Card
+    // But ALWAYS include the full Rate Card regardless of size - truncate history instead
+    const maxRateCardTokens = Math.floor(llm.limits.system * 0.5);
+    const remainingForOtherContext = llm.limits.system * 0.75 - rateCardTokens;
+
+    // Even if Rate Card exceeds recommended limit, we include it in full and truncate everything else
+    if (rateCardTokens > maxRateCardTokens) {
+      console.warn(
+        `[Context Compression] Rate Card (${rateCardTokens} tokens) exceeds recommended limit (${maxRateCardTokens} tokens). Will truncate history/context instead.`
+      );
+    }
+
+    if (
+      totalContextTokens >= llm.limits.system * 0.75 &&
+      contextToCompressTokens > 0
+    ) {
+      // Compress only the non-Rate Card context, accounting for Rate Card size
       compressedContext = cannonball({
-        input: context,
-        targetTokenSize: llm.limits.system * 0.75,
+        input: contextToCompress,
+        targetTokenSize: Math.max(0, remainingForOtherContext),
         tiktokenInstance: tokenManager,
       });
+
+      // Re-add the protected Rate Card section
+      if (protectedRateCardSection) {
+        compressedContext = compressedContext + protectedRateCardSection;
+        console.log(
+          `[Context Compression] Restored Rate Card section: ${protectedRateCardSection.length} chars, ${rateCardTokens} tokens`
+        );
+      }
     } else {
       compressedContext = context;
     }
@@ -224,13 +273,57 @@ async function messageStringCompressor(llm, promptArgs = {}, rawHistory = []) {
       resolve(system);
       return;
     }
-    resolve(
-      cannonball({
-        input: system,
-        targetTokenSize: llm.limits.system,
-        tiktokenInstance: tokenManager,
-      })
-    );
+
+    // Preserve Rate Card and Products sections - NEVER truncate them
+    // Match both products section and rate card section
+    const rateCardRegex = /(## AVAILABLE PRODUCTS & SERVICES.*?)(?=\n\n## HOURLY RATE CARD|\n\n## PROPOSAL INSTRUCTIONS|\n\n## [A-Z]|$)/s;
+    const rateCardRegex2 = /(## HOURLY RATE CARD.*?)(?=\n\n## PROPOSAL INSTRUCTIONS|\n\n## [A-Z]|$)/s;
+    
+    const productsMatch = system.match(rateCardRegex);
+    const rateCardMatch = system.match(rateCardRegex2);
+    
+    let protectedRateCardSection = "";
+    if (productsMatch) protectedRateCardSection += productsMatch[0];
+    if (rateCardMatch) protectedRateCardSection += rateCardMatch[0];
+
+    if (protectedRateCardSection) {
+      // Remove Rate Card section, compress the rest, then re-add
+      const systemWithoutRateCard = system.replace(protectedRateCardSection, "");
+      const rateCardTokens = tokenManager.countFromString(
+        protectedRateCardSection
+      );
+      const maxRateCardTokens = Math.floor(llm.limits.system * 0.5);
+      const remainingForOtherContext = llm.limits.system - rateCardTokens;
+
+      console.log(
+        `[String Compression] Protected Rate Card section: ${protectedRateCardSection.length} chars, ${rateCardTokens} tokens`
+      );
+
+      if (rateCardTokens > maxRateCardTokens) {
+        console.warn(
+          `[String Compression] Rate Card (${rateCardTokens} tokens) exceeds recommended limit (${maxRateCardTokens} tokens). Consider reducing Rate Card size.`
+        );
+      }
+
+      const compressedWithoutRateCard =
+        rateCardTokens >= llm.limits.system
+          ? systemWithoutRateCard
+          : cannonball({
+              input: systemWithoutRateCard,
+              targetTokenSize: Math.max(0, remainingForOtherContext),
+              tiktokenInstance: tokenManager,
+            });
+
+      resolve(compressedWithoutRateCard + protectedRateCardSection);
+    } else {
+      resolve(
+        cannonball({
+          input: system,
+          targetTokenSize: llm.limits.system,
+          tiktokenInstance: tokenManager,
+        })
+      );
+    }
   });
 
   // Prompt is allowed to take up to 70% of window - we know its under

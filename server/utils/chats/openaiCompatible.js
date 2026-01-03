@@ -4,6 +4,7 @@ const { WorkspaceChats } = require("../../models/workspaceChats");
 const { getVectorDbClass, getLLMProvider } = require("../helpers");
 const { writeResponseChunk } = require("../helpers/chat/responses");
 const { chatPrompt, sourceIdentifier } = require("./index");
+const { SystemSettings } = require("../../models/systemSettings");
 
 const { PassThrough } = require("stream");
 
@@ -17,9 +18,14 @@ async function chatSync({
 }) {
   const uuid = uuidv4();
   const chatMode = workspace?.chatMode ?? "chat";
+
+  // Load custom provider configuration if needed
+  const customProviderConfig = await SystemSettings.getCustomProvider(workspace?.chatProvider);
+
   const LLMConnector = getLLMProvider({
     provider: workspace?.chatProvider,
     model: workspace?.chatModel,
+    customProviderConfig,
   });
   const VectorDb = getVectorDbClass();
   const hasVectorizedSpace = await VectorDb.hasNamespace(workspace.slug);
@@ -220,9 +226,14 @@ async function streamChat({
 }) {
   const uuid = uuidv4();
   const chatMode = workspace?.chatMode ?? "chat";
+
+  // Load custom provider configuration if needed
+  const customProviderConfig = await SystemSettings.getCustomProvider(workspace?.chatProvider);
+
   const LLMConnector = getLLMProvider({
     provider: workspace?.chatProvider,
     model: workspace?.chatModel,
+    customProviderConfig,
   });
   const VectorDb = getVectorDbClass();
   const hasVectorizedSpace = await VectorDb.hasNamespace(workspace.slug);

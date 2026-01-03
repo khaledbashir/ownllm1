@@ -12,26 +12,32 @@ const { getAnythingLLMUserAgent } = require("../../../endpoints/utils");
 const { MODEL_MAP } = require("../modelMap");
 
 class GenericOpenAiLLM {
-  constructor(embedder = null, modelPreference = null) {
+  constructor(embedder = null, modelPreference = null, customProviderConfig = null) {
     const { OpenAI: OpenAIApi } = require("openai");
-    if (!process.env.GENERIC_OPEN_AI_BASE_PATH)
+    
+    // Use custom provider config if provided, otherwise use environment variables
+    const basePath = customProviderConfig?.basePath || process.env.GENERIC_OPEN_AI_BASE_PATH;
+    const apiKey = customProviderConfig?.apiKey || process.env.GENERIC_OPEN_AI_API_KEY ?? null;
+    const maxTokens = customProviderConfig?.maxTokens || process.env.GENERIC_OPEN_AI_MAX_TOKENS;
+    const streamingDisabled = customProviderConfig?.streamingDisabled || process.env.GENERIC_OPENAI_STREAMING_DISABLED === "true";
+
+    if (!basePath && !customProviderConfig)
       throw new Error(
         "GenericOpenAI must have a valid base path to use for the api."
       );
 
     this.className = "GenericOpenAiLLM";
-    this.basePath = process.env.GENERIC_OPEN_AI_BASE_PATH;
+    this.basePath = basePath;
     this.openai = new OpenAIApi({
-      baseURL: this.basePath,
-      apiKey: process.env.GENERIC_OPEN_AI_API_KEY ?? null,
+      baseURL: basePath,
+      apiKey: apiKey,
       defaultHeaders: {
         "User-Agent": getAnythingLLMUserAgent(),
       },
     });
-    this.model =
-      modelPreference ?? process.env.GENERIC_OPEN_AI_MODEL_PREF ?? null;
-    this.maxTokens = process.env.GENERIC_OPEN_AI_MAX_TOKENS
-      ? toValidNumber(process.env.GENERIC_OPEN_AI_MAX_TOKENS, 1024)
+    this.model = modelPreference ?? customProviderConfig?.model ?? process.env.GENERIC_OPEN_AI_MODEL_PREF ?? null;
+    this.maxTokens = maxTokens
+      ? toValidNumber(maxTokens, 1024)
       : 1024;
     if (!this.model)
       throw new Error("GenericOpenAI must have a valid model set.");
@@ -41,6 +47,7 @@ class GenericOpenAiLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
+    this.customConfig = customProviderConfig;
     this.embedder = embedder ?? new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.log(`Inference API: ${this.basePath} Model: ${this.model}`);
@@ -64,6 +71,7 @@ class GenericOpenAiLLM {
 
   streamingEnabled() {
     if (process.env.GENERIC_OPENAI_STREAMING_DISABLED === "true") return false;
+    if (this.customConfig?.streamingDisabled) return false;
     return "streamGetChatCompletion" in this;
   }
 

@@ -173,6 +173,7 @@ function buildProposalContext(workspace) {
   };
 
   // Inject products/services if available
+  let productsSection = "";
   if (workspace.products) {
     try {
       const products =
@@ -188,10 +189,10 @@ function buildProposalContext(workspace) {
           };
         });
 
-        context += "\n\n## AVAILABLE PRODUCTS & SERVICES\n";
-        context +=
+        productsSection += "\n\n## AVAILABLE PRODUCTS & SERVICES\n";
+        productsSection +=
           "Use these exact prices when creating proposals. Do NOT invent or hallucinate prices.\n";
-        context += JSON.stringify(normalizedProducts, null, 2);
+        productsSection += JSON.stringify(normalizedProducts, null, 2);
       }
     } catch (e) {
       // Invalid JSON, skip
@@ -199,6 +200,7 @@ function buildProposalContext(workspace) {
   }
 
   // Inject rate card if available
+  let rateCardSection = "";
   if (workspace.rateCard) {
     try {
       const rateCard =
@@ -217,12 +219,32 @@ function buildProposalContext(workspace) {
           };
         });
 
-        context += "\n\n## HOURLY RATE CARD\n";
-        context +=
+        rateCardSection += "\n\n## HOURLY RATE CARD\n";
+        rateCardSection +=
           "All rates are in AUD (ex GST) unless explicitly stated otherwise.\n";
-        context +=
+        rateCardSection +=
           "Use these exact role names and hourly rates for time & materials estimates. Do NOT invent, rename, or substitute roles/rates.\n";
-        context += JSON.stringify(normalizedRateCard, null, 2);
+        rateCardSection += JSON.stringify(normalizedRateCard, null, 2);
+        
+        // Comprehensive debug logging for Rate Card injection
+        console.log("=".repeat(80));
+        console.log("[Rate Card Injection] DETAILED DEBUG INFO");
+        console.log("=".repeat(80));
+        console.log(`[Rate Card Injection] Raw rateCard entries count: ${rateCard.length}`);
+        console.log(`[Rate Card Injection] Normalized entries count: ${normalizedRateCard.length}`);
+        console.log(`[Rate Card Injection] Rate Card section length: ${rateCardSection.length} chars`);
+        console.log(`[Rate Card Injection] Products section present: ${!!productsSection}`);
+        console.log(`[Rate Card Injection] Products section length: ${productsSection.length} chars`);
+        console.log(`[Rate Card Injection] Total proposal context length: ${context.length} chars`);
+        console.log(`[Rate Card Injection] Full Rate Card JSON being injected:`);
+        console.log("---START OF RATE CARD JSON---");
+        console.log(JSON.stringify(normalizedRateCard, null, 2));
+        console.log("---END OF RATE CARD JSON---");
+        console.log(`[Rate Card Injection] Full Rate Card section:`);
+        console.log("---START OF RATE CARD SECTION---");
+        console.log(rateCardSection);
+        console.log("---END OF RATE CARD SECTION---");
+        console.log("=".repeat(80));
       }
     } catch (e) {
       // Invalid JSON, skip
@@ -230,7 +252,9 @@ function buildProposalContext(workspace) {
   }
 
   // Add instruction if we have any proposal context
-  if (context) {
+  if (productsSection || rateCardSection) {
+    context += productsSection;
+    context += rateCardSection;
     context += "\n\n## PROPOSAL INSTRUCTIONS\n";
     context += "When asked to create a proposal, estimate, or quote:\n";
     context += "1. ONLY use the products, services, and rates listed above.\n";

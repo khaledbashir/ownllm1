@@ -7,6 +7,7 @@ import ChatModelSelection from "./ChatModelSelection";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import paths from "@/utils/paths";
+import System from "@/models/system";
 
 // Some providers do not support model selection via /models.
 // In that case we allow the user to enter the model name manually and hope they
@@ -38,6 +39,7 @@ export default function WorkspaceLLMSelection({
   workspace,
   setHasChanges,
 }) {
+  const [customProviders, setCustomProviders] = useState([]);
   const [filteredLLMs, setFilteredLLMs] = useState([]);
   const [selectedLLM, setSelectedLLM] = useState(
     workspace?.chatProvider ?? "default"
@@ -63,12 +65,38 @@ export default function WorkspaceLLMSelection({
   }
 
   useEffect(() => {
-    const filtered = LLMS.filter((llm) =>
+    async function loadCustomProviders() {
+      const { providers } = await System.getCustomProviders();
+      setCustomProviders(providers || []);
+    }
+    loadCustomProviders();
+  }, []);
+
+  useEffect(() => {
+    const customProvidersList = customProviders.map((p) => ({
+      name: p.name,
+      value: p.id,
+      logo: AnythingLLMIcon,
+      description: `Custom: ${p.basePath}`,
+      isCustom: true,
+    }));
+
+    const allProviders = [...LLMS, ...customProvidersList];
+    const filtered = allProviders.filter((llm) =>
       llm.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredLLMs(filtered);
-  }, [LLMS, searchQuery, selectedLLM]);
-  const selectedLLMObject = LLMS.find((llm) => llm.value === selectedLLM);
+  }, [customProviders, searchQuery, selectedLLM]);
+
+  const customProvidersList = customProviders.map((p) => ({
+    name: p.name,
+    value: p.id,
+    logo: AnythingLLMIcon,
+    description: `Custom: ${p.basePath}`,
+    isCustom: true,
+  }));
+  const allProviders = [...LLMS, ...customProvidersList];
+  const selectedLLMObject = allProviders.find((llm) => llm.value === selectedLLM);
 
   return (
     <div className="border-b border-white/40 pb-8">
@@ -187,9 +215,14 @@ function ModelSelector({ selectedLLM, workspace, setHasChanges }) {
     return null;
   }
 
-  if (FREE_FORM_LLM_SELECTION.includes(selectedLLM)) {
+  if (FREE_FORM_LLM_SELECTION.includes(selectedLLM) || selectedLLM.startsWith("custom_")) {
     return (
-      <FreeFormLLMInput workspace={workspace} setHasChanges={setHasChanges} />
+      <FreeFormLLMInput
+        workspace={workspace}
+        setHasChanges={setHasChanges}
+        provider={selectedLLM}
+        customProviders={customProviders}
+      />
     );
   }
 
@@ -202,8 +235,10 @@ function ModelSelector({ selectedLLM, workspace, setHasChanges }) {
   );
 }
 
-function FreeFormLLMInput({ workspace, setHasChanges }) {
+function FreeFormLLMInput({ workspace, setHasChanges, provider, customProviders }) {
   const { t } = useTranslation();
+  const customProvider = customProviders?.find((p) => p.id === provider);
+
   return (
     <div className="mt-4 flex flex-col gap-y-1">
       <label className="block input-label">{t("chat.model.title")}</label>
@@ -213,7 +248,11 @@ function FreeFormLLMInput({ workspace, setHasChanges }) {
       <input
         type="text"
         name="chatModel"
-        defaultValue={workspace?.chatModel || ""}
+        defaultValue={
+          provider.startsWith("custom_")
+            ? customProvider?.model || workspace?.chatModel || ""
+            : workspace?.chatModel || ""
+        }
         onChange={() => setHasChanges(true)}
         className="border-none bg-theme-settings-input-bg text-white placeholder:text-theme-settings-input-placeholder text-sm rounded-lg focus:outline-primary-button active:outline-primary-button outline-none block w-full p-2.5"
         placeholder="Enter model name exactly as referenced in the API (e.g., gpt-3.5-turbo)"

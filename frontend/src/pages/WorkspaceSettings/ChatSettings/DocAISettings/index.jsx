@@ -10,7 +10,9 @@ import {
 } from "@phosphor-icons/react";
 import { AVAILABLE_LLM_PROVIDERS } from "@/pages/GeneralSettings/LLMPreference";
 import useGetProviderModels from "@/hooks/useGetProvidersModels";
+import System from "@/models/system";
 import AnythingLLMIcon from "@/media/logo/anything-llm-icon.png";
+import GenericOpenAiLogo from "@/media/llmprovider/generic-openai.png";
 
 // Some providers do not support model selection
 const FREE_FORM_LLM_SELECTION = ["bedrock", "azure", "generic-openai"];
@@ -29,7 +31,32 @@ const LLMS = [LLM_DEFAULT, ...AVAILABLE_LLM_PROVIDERS].filter(
 );
 
 // Inline AI Model Selection Component
-function InlineAIModelSelection({ provider, workspace, setHasChanges }) {
+function InlineAIModelSelection({ provider, workspace, setHasChanges, customProviders }) {
+  // Check if this is a custom provider
+  const customProvider = customProviders.find(p => p.id === provider);
+  
+  // For custom providers, show the configured model (no need to fetch)
+  if (customProvider) {
+    return (
+      <div>
+        <label className="block text-sm font-medium text-white/80 mb-2">
+          Model (from provider config)
+        </label>
+        <input
+          type="text"
+          name="inlineAiModel"
+          defaultValue={workspace?.inlineAiModel || customProvider.model || ""}
+          onChange={() => setHasChanges(true)}
+          className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+        />
+        <div className="text-xs text-white/50 mt-1">
+          Using default model from provider configuration: {customProvider.model}
+        </div>
+      </div>
+    );
+  }
+
+  // For standard providers, fetch models
   const { defaultModels, customModels, loading } = useGetProviderModels(provider);
 
   if (loading) {
@@ -130,6 +157,8 @@ export default function DocAISettings({ workspace, setHasChanges }) {
   const [selectedProvider, setSelectedProvider] = useState("default");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchMenuOpen, setSearchMenuOpen] = useState(false);
+  const [customProviders, setCustomProvidersState] = useState([]);
+  const [availableProviders, setAvailableProviders] = useState(LLMS);
 
   // Load existing settings
   useEffect(() => {
@@ -145,7 +174,34 @@ export default function DocAISettings({ workspace, setHasChanges }) {
         setCustomActions([]);
       }
     }
+    // Load custom providers from system settings
+    loadCustomProviders();
   }, [workspace]);
+
+  const loadCustomProviders = async () => {
+    try {
+      const response = await System.getCustomProviders();
+      if (response?.providers) {
+        setCustomProvidersState(response.providers);
+        // Add custom providers to available list
+        const customProviderLLMs = response.providers.map((p) => ({
+          name: p.name,
+          value: p.id,
+          logo: GenericOpenAiLogo,
+          description: `Custom OpenAI-compatible provider`,
+        }));
+        setAvailableProviders([LLM_DEFAULT, ...AVAILABLE_LLM_PROVIDERS, ...customProviderLLMs]);
+      }
+    } catch (error) {
+      console.error("Failed to load custom providers:", error);
+    }
+  };
+
+  // Set custom providers changes to parent for form submission
+  const setCustomProviders = (providers) => {
+    setCustomProvidersState(providers);
+    setHasChanges(true);
+  };
 
   const handleSystemPromptChange = (e) => {
     setSystemPrompt(e.target.value);
@@ -186,7 +242,21 @@ export default function DocAISettings({ workspace, setHasChanges }) {
     llm.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const selectedLLMObject = LLMS.find((llm) => llm.value === selectedProvider);
+  // Add custom providers to the list
+  const customProvidersList = customProviders.map((p) => ({
+    name: p.name,
+    value: p.id,
+    logo: AnythingLLMIcon,
+    description: `Custom: ${p.basePath}`,
+    isCustom: true,
+  }));
+
+  const allProviders = [...LLMS, ...customProvidersList];
+  const filteredAllProviders = allProviders.filter((llm) =>
+    llm.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const selectedLLMObject = allProviders.find((llm) => llm.value === selectedProvider);
 
   return (
     <div className="mt-4">
@@ -198,6 +268,11 @@ export default function DocAISettings({ workspace, setHasChanges }) {
         value={JSON.stringify(customActions)}
       />
       <input type="hidden" name="inlineAiProvider" value={selectedProvider} />
+      <input
+        type="hidden"
+        name="customLlmProviders"
+        value={JSON.stringify(customProviders)}
+      />
 
       {/* Collapsible Header */}
       <button
@@ -259,7 +334,7 @@ export default function DocAISettings({ workspace, setHasChanges }) {
                     <X size={16} />
                   </button>
                   <div className="absolute w-full mt-1 max-h-80 overflow-y-auto bg-theme-bg-secondary border border-white/10 rounded-lg shadow-lg z-20">
-                    {filteredLLMs.map((llm) => (
+                    {filteredAllProviders.map((llm) => (
                       <button
                         key={llm.value}
                         type="button"
@@ -322,17 +397,20 @@ export default function DocAISettings({ workspace, setHasChanges }) {
           {/* Model Selection */}
           {selectedProvider !== "default" &&
             !NO_MODEL_SELECTION.includes(selectedProvider) &&
-            !FREE_FORM_LLM_SELECTION.includes(selectedProvider) && (
+            !FREE_FORM_LLM_SELECTION.includes(selectedProvider) &&
+            !selectedProvider.startsWith("custom_") && (
               <InlineAIModelSelection
                 provider={selectedProvider}
                 workspace={workspace}
                 setHasChanges={setHasChanges}
+                customProviders={customProviders}
               />
             )}
 
           {/* Free Form Model Input */}
           {selectedProvider !== "default" &&
-            FREE_FORM_LLM_SELECTION.includes(selectedProvider) && (
+            (FREE_FORM_LLM_SELECTION.includes(selectedProvider) ||
+              selectedProvider.startsWith("custom_")) && (
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-2">
                   Model Name
@@ -340,7 +418,13 @@ export default function DocAISettings({ workspace, setHasChanges }) {
                 <input
                   type="text"
                   name="inlineAiModel"
-                  defaultValue={workspace?.inlineAiModel || ""}
+                  defaultValue={
+                    selectedProvider.startsWith("custom_")
+                      ? (customProviders.find((p) => p.id === selectedProvider)?.model ||
+                        workspace?.inlineAiModel ||
+                        "")
+                      : (workspace?.inlineAiModel || "")
+                  }
                   onChange={() => setHasChanges(true)}
                   placeholder="Enter model name exactly as referenced in the API"
                   className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-white/30"

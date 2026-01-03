@@ -5,6 +5,7 @@ const { WorkspaceParsedFiles } = require("../../models/workspaceParsedFiles");
 const { getVectorDbClass, getLLMProvider } = require("../helpers");
 const { writeResponseChunk } = require("../helpers/chat/responses");
 const { grepAgents } = require("./agents");
+const { SystemSettings } = require("../../models/systemSettings");
 const {
   grepCommand,
   VALID_COMMANDS,
@@ -50,9 +51,13 @@ async function streamChatWithWorkspace(
   });
   if (isAgentChat) return;
 
+  // Load custom provider configuration if needed
+  const customProviderConfig = await SystemSettings.getCustomProvider(workspace?.chatProvider);
+
   const LLMConnector = getLLMProvider({
     provider: workspace?.chatProvider,
     model: workspace?.chatModel,
+    customProviderConfig,
   });
   const VectorDb = getVectorDbClass();
 

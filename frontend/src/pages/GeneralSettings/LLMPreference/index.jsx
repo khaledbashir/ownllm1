@@ -73,12 +73,14 @@ import FoundryOptions from "@/components/LLMSelection/FoundryOptions";
 import GiteeAIOptions from "@/components/LLMSelection/GiteeAIOptions/index.jsx";
 
 import LLMItem from "@/components/LLMSelection/LLMItem";
-import { CaretUpDown, MagnifyingGlass, X, Microphone, SpeakerHigh, Robot } from "@phosphor-icons/react";
+import { CaretUpDown, MagnifyingGlass, X, Microphone, SpeakerHigh, Robot, Plus } from "@phosphor-icons/react";
 import CTAButton from "@/components/lib/CTAButton";
 
 import TranscriptionModelSelector from "@/components/TranscriptionSelection/TranscriptionModelSelector";
 import SpeechToTextSelector from "@/components/AudioSelection/SpeechToTextSelector";
 import TextToSpeechSelector from "@/components/AudioSelection/TextToSpeechSelector";
+
+import CustomProvidersManager from "./CustomProvidersManager";
 
 export const AVAILABLE_LLM_PROVIDERS = [
   {
@@ -488,6 +490,19 @@ export default function GeneralLLMPreference() {
                   </div>
                 </button>
                 <button
+                  onClick={() => setTab("custom")}
+                  type="button"
+                  className={`pb-2 text-sm font-medium transition-all duration-300 relative ${tab === "custom"
+                    ? "text-white border-b-2 border-primary-button"
+                    : "text-white text-opacity-60 hover:text-opacity-100"
+                    }`}
+                >
+                  <div className="flex items-center gap-x-2">
+                    <Plus size={18} />
+                    Custom Providers
+                  </div>
+                </button>
+                <button
                   onClick={() => setTab("transcription")}
                   type="button"
                   className={`pb-2 text-sm font-medium transition-all duration-300 relative ${tab === "transcription"
@@ -623,6 +638,8 @@ export default function GeneralLLMPreference() {
                   </div>
                 </form>
               )}
+
+              {tab === "custom" && <CustomProvidersManager />}
 
               {tab === "transcription" && (
                 <TranscriptionModelSelector settings={settings} />

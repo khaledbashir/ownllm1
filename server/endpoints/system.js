@@ -1896,6 +1896,125 @@ function systemEndpoints(app) {
       }
     }
   );
+
+  // Custom Generic OpenAI Providers Management
+  app.get(
+    "/system/custom-providers",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (_, response) => {
+      try {
+        const providers = await SystemSettings.get({ label: "customGenericProviders" });
+        const customProviders = providers
+          ? JSON.parse(providers.value)
+          : [];
+        response.status(200).json({ providers: customProviders });
+      } catch (error) {
+        console.error("Error fetching custom providers:", error);
+        response.status(500).json({
+          success: false,
+          error: "Failed to fetch custom providers.",
+        });
+      }
+    }
+  );
+
+  app.post(
+    "/system/custom-providers",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      try {
+        const body = reqBody(request);
+        const existingProviders = await SystemSettings.get({
+          label: "customGenericProviders",
+        });
+        let providers = existingProviders
+          ? JSON.parse(existingProviders.value)
+          : [];
+
+        if (body.action === "add") {
+          // Add new provider
+          const newProvider = {
+            id: `custom_${Date.now()}`,
+            name: body.name || "Custom Provider",
+            basePath: body.baseUrl || "", // GenericOpenAiLLM expects 'basePath'
+            apiKey: body.apiKey || "",
+            model: body.defaultModel || "",
+            maxTokens: body.maxTokens || null,
+            streamingDisabled: body.streamingDisabled || false,
+          };
+          providers.push(newProvider);
+        } else if (body.action === "update") {
+          // Update existing provider
+          providers = providers.map((p) =>
+            p.id === body.id
+              ? {
+                  ...p,
+                  name: body.name || p.name,
+                  basePath: body.baseUrl || p.basePath, // GenericOpenAiLLM expects 'basePath'
+                  apiKey: body.apiKey !== undefined ? body.apiKey : p.apiKey,
+                  model: body.defaultModel || p.model,
+                  maxTokens: body.maxTokens !== undefined ? body.maxTokens : p.maxTokens,
+                  streamingDisabled: body.streamingDisabled !== undefined ? body.streamingDisabled : p.streamingDisabled,
+                }
+              : p
+          );
+        }
+
+        await SystemSettings.updateSettings({
+          customGenericProviders: JSON.stringify(providers),
+        });
+
+        response.status(200).json({
+          success: true,
+          providers,
+        });
+      } catch (error) {
+        console.error("Error saving custom provider:", error);
+        response.status(500).json({
+          success: false,
+          error: "Failed to save custom provider.",
+        });
+      }
+    }
+  );
+
+  app.delete(
+    "/system/custom-providers/:id",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      try {
+        const { id } = request.params;
+        const existingProviders = await SystemSettings.get({
+          label: "customGenericProviders",
+        });
+
+        if (!existingProviders) {
+          return response.status(404).json({
+            success: false,
+            error: "No custom providers found.",
+          });
+        }
+
+        let providers = JSON.parse(existingProviders.value);
+        providers = providers.filter((p) => p.id !== id);
+
+        await SystemSettings.updateSettings({
+          customGenericProviders: JSON.stringify(providers),
+        });
+
+        response.status(200).json({
+          success: true,
+          providers,
+        });
+      } catch (error) {
+        console.error("Error deleting custom provider:", error);
+        response.status(500).json({
+          success: false,
+          error: "Failed to delete custom provider.",
+        });
+      }
+    }
+  );
 }
 
 module.exports = { systemEndpoints };
