@@ -5,7 +5,109 @@ import {
   Trash,
   CaretDown,
   CaretRight,
+  MagnifyingGlass,
+  X,
 } from "@phosphor-icons/react";
+import { AVAILABLE_LLM_PROVIDERS } from "@/pages/GeneralSettings/LLMPreference";
+import useGetProviderModels from "@/hooks/useGetProvidersModels";
+import AnythingLLMIcon from "@/media/logo/anything-llm-icon.png";
+
+// Some providers do not support model selection
+const FREE_FORM_LLM_SELECTION = ["bedrock", "azure", "generic-openai"];
+const NO_MODEL_SELECTION = ["default", "huggingface"];
+const DISABLED_PROVIDERS = [];
+
+const LLM_DEFAULT = {
+  name: "Workspace default",
+  value: "default",
+  logo: AnythingLLMIcon,
+  description: "Use the workspace LLM preference for Doc AI.",
+};
+
+const LLMS = [LLM_DEFAULT, ...AVAILABLE_LLM_PROVIDERS].filter(
+  (llm) => !DISABLED_PROVIDERS.includes(llm.value)
+);
+
+// Inline AI Model Selection Component
+function InlineAIModelSelection({ provider, workspace, setHasChanges }) {
+  const { defaultModels, customModels, loading } = useGetProviderModels(provider);
+
+  if (loading) {
+    return (
+      <div>
+        <label className="block text-sm font-medium text-white/80 mb-2">
+          Model
+        </label>
+        <select
+          name="inlineAiModel"
+          disabled={true}
+          className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none"
+        >
+          <option>-- waiting for models --</option>
+        </select>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-white/80 mb-2">
+        Model
+      </label>
+      <select
+        name="inlineAiModel"
+        onChange={() => setHasChanges(true)}
+        className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+      >
+        {defaultModels.length > 0 && (
+          <optgroup label="General models">
+            {defaultModels.map((model) => (
+              <option
+                key={model}
+                value={model}
+                selected={workspace?.inlineAiModel === model}
+              >
+                {model}
+              </option>
+            ))}
+          </optgroup>
+        )}
+        {Array.isArray(customModels) && customModels.length > 0 && (
+          <optgroup label="Discovered models">
+            {customModels.map((model) => (
+              <option
+                key={model.id}
+                value={model.id}
+                selected={workspace?.inlineAiModel === model.id}
+              >
+                {model.id}
+              </option>
+            ))}
+          </optgroup>
+        )}
+        {!Array.isArray(customModels) &&
+          Object.keys(customModels).length > 0 && (
+            <>
+              {Object.entries(customModels).map(([organization, models]) => (
+                <optgroup key={organization} label={organization}>
+                  {models.map((model) => (
+                    <option
+                      key={model.id}
+                      value={model.id}
+                      selected={workspace?.inlineAiModel === model.id}
+                    >
+                      {model.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </>
+          )}
+      </select>
+    </div>
+  );
+}
+
 
 /**
  * DocAISettings - Settings for the inline AI in the document editor
@@ -23,11 +125,17 @@ export default function DocAISettings({ workspace, setHasChanges }) {
     prompt: "",
     icon: "✨",
   });
+  
+  // Provider/Model selection state
+  const [selectedProvider, setSelectedProvider] = useState("default");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchMenuOpen, setSearchMenuOpen] = useState(false);
 
   // Load existing settings
   useEffect(() => {
     if (workspace) {
       setSystemPrompt(workspace.inlineAiSystemPrompt || "");
+      setSelectedProvider(workspace.inlineAiProvider || "default");
       try {
         const actions = workspace.inlineAiActions
           ? JSON.parse(workspace.inlineAiActions)
@@ -74,6 +182,12 @@ export default function DocAISettings({ workspace, setHasChanges }) {
     setHasChanges(true);
   };
 
+  const filteredLLMs = LLMS.filter((llm) =>
+    llm.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const selectedLLMObject = LLMS.find((llm) => llm.value === selectedProvider);
+
   return (
     <div className="mt-4">
       {/* Hidden inputs to include in form submission */}
@@ -83,6 +197,7 @@ export default function DocAISettings({ workspace, setHasChanges }) {
         name="inlineAiActions"
         value={JSON.stringify(customActions)}
       />
+      <input type="hidden" name="inlineAiProvider" value={selectedProvider} />
 
       {/* Collapsible Header */}
       <button
@@ -105,6 +220,134 @@ export default function DocAISettings({ workspace, setHasChanges }) {
       {/* Expanded Content */}
       {isExpanded && (
         <div className="mt-3 pl-6 space-y-4 border-l-2 border-white/10 ml-2">
+          {/* Provider Selection */}
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">
+              LLM Provider
+              <span className="text-xs text-white/50 ml-2">
+                (Optional - falls back to workspace provider)
+              </span>
+            </label>
+            <div className="relative">
+              {searchMenuOpen && (
+                <div
+                  className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 backdrop-blur-sm z-10"
+                  onClick={() => setSearchMenuOpen(false)}
+                />
+              )}
+              {searchMenuOpen ? (
+                <div className="relative">
+                  <div className="absolute left-3 top-2.5 pointer-events-none">
+                    <MagnifyingGlass size={16} className="text-white/50" />
+                  </div>
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Search LLM providers..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-9 py-2 bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-white/30"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchMenuOpen(false);
+                      setSearchQuery("");
+                    }}
+                    className="absolute right-3 top-2.5 text-white/50 hover:text-white"
+                  >
+                    <X size={16} />
+                  </button>
+                  <div className="absolute w-full mt-1 max-h-80 overflow-y-auto bg-theme-bg-secondary border border-white/10 rounded-lg shadow-lg z-20">
+                    {filteredLLMs.map((llm) => (
+                      <button
+                        key={llm.value}
+                        type="button"
+                        onClick={() => {
+                          setSelectedProvider(llm.value);
+                          setSearchMenuOpen(false);
+                          setSearchQuery("");
+                          setHasChanges(true);
+                        }}
+                        className={`w-full p-3 text-left hover:bg-theme-bg-primary transition-colors ${
+                          selectedProvider === llm.value ? "bg-theme-bg-primary" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={llm.logo}
+                            alt={llm.name}
+                            className="w-8 h-8 rounded"
+                          />
+                          <div>
+                            <div className="text-sm font-medium text-white">
+                              {llm.name}
+                            </div>
+                            <div className="text-xs text-white/50">
+                              {llm.description}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSearchMenuOpen(true)}
+                  className="w-full flex items-center justify-between gap-3 p-3 bg-theme-settings-input-bg text-white rounded-lg border border-white/10 hover:border-white/20 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={selectedLLMObject?.logo}
+                      alt={selectedLLMObject?.name}
+                      className="w-8 h-8 rounded"
+                    />
+                    <div className="text-left">
+                      <div className="text-sm font-medium">
+                        {selectedLLMObject?.name}
+                      </div>
+                      <div className="text-xs text-white/50">
+                        {selectedLLMObject?.description}
+                      </div>
+                    </div>
+                  </div>
+                  <CaretDown size={16} weight="bold" className="text-white/50" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Model Selection */}
+          {selectedProvider !== "default" &&
+            !NO_MODEL_SELECTION.includes(selectedProvider) &&
+            !FREE_FORM_LLM_SELECTION.includes(selectedProvider) && (
+              <InlineAIModelSelection
+                provider={selectedProvider}
+                workspace={workspace}
+                setHasChanges={setHasChanges}
+              />
+            )}
+
+          {/* Free Form Model Input */}
+          {selectedProvider !== "default" &&
+            FREE_FORM_LLM_SELECTION.includes(selectedProvider) && (
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">
+                  Model Name
+                </label>
+                <input
+                  type="text"
+                  name="inlineAiModel"
+                  defaultValue={workspace?.inlineAiModel || ""}
+                  onChange={() => setHasChanges(true)}
+                  placeholder="Enter model name exactly as referenced in the API"
+                  className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-white/30"
+                />
+              </div>
+            )}
+
           {/* System Prompt */}
           <div>
             <label className="block text-sm font-medium text-white/80 mb-2">

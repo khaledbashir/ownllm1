@@ -74,10 +74,10 @@ function inlineAIEndpoints(app) {
           }
         }
 
-        // Get LLM provider - use workspace settings if available
+        // Get LLM provider - use inline AI settings if available, fall back to workspace chat settings
         const LLMConnector = getLLMProvider({
-          provider: workspace?.chatProvider || null,
-          model: workspace?.chatModel || null,
+          provider: workspace?.inlineAiProvider || workspace?.chatProvider || null,
+          model: workspace?.inlineAiModel || workspace?.chatModel || null,
         });
         if (!LLMConnector) {
           return response.status(500).json({

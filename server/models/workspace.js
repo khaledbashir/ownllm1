@@ -60,6 +60,8 @@ const Workspace = {
     "enableProposalMode",
     "inlineAiSystemPrompt",
     "inlineAiActions",
+    "inlineAiProvider",
+    "inlineAiModel",
     "organizationId",
   ],
 
@@ -159,6 +161,14 @@ const Workspace = {
         return JSON.stringify(value);
       }
       return null;
+    },
+    inlineAiProvider: (value) => {
+      if (!value || typeof value !== "string" || value === "none") return null;
+      return String(value);
+    },
+    inlineAiModel: (value) => {
+      if (!value || typeof value !== "string") return null;
+      return String(value);
     },
     organizationId: (value) => {
       if (value === null || value === undefined) return null;
@@ -771,6 +781,8 @@ const Workspace = {
         enableProposalMode: sourceWorkspace.enableProposalMode,
         inlineAiSystemPrompt: sourceWorkspace.inlineAiSystemPrompt,
         inlineAiActions: sourceWorkspace.inlineAiActions,
+        inlineAiProvider: sourceWorkspace.inlineAiProvider,
+        inlineAiModel: sourceWorkspace.inlineAiModel,
       };
 
       // Create the new workspace
