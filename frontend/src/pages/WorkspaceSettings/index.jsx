@@ -14,7 +14,8 @@ import {
   Wrench,
   ShoppingBag,
   CurrencyDollar,
-} from "@phosphor-icons/react";
+} FileText,
+  from "@phosphor-icons/react";
 import paths from "@/utils/paths";
 import { Link } from "react-router-dom";
 import { NavLink } from "react-router-dom";
@@ -36,6 +37,7 @@ const TABS = {
   members: Members,
   "agent-config": WorkspaceAgentConfiguration,
   products: ProductsManager,
+  forms: FormsManager,
   "rate-card": RateCardManager,
 };
 
@@ -114,6 +116,11 @@ function ShowWorkspaceChat() {
             title="Rate Card"
             icon={<CurrencyDollar className="h-6 w-6" />}
             to={paths.workspace.settings.rateCard(slug)}
+          />
+          <TabItem
+            title="Forms"
+            icon={<FileText className="h-6 w-6" />}
+            to={paths.workspace.settings.forms(slug)}
           />
           <TabItem
             title={t("workspaces—settings.vector")}

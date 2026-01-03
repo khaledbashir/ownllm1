@@ -35,6 +35,7 @@ const { communityHubEndpoints } = require("./endpoints/communityHub");
 const { agentFlowEndpoints } = require("./endpoints/agentFlows");
 
 const { crmEndpoints } = require("./endpoints/crm");
+const { formsEndpoints } = require("./endpoints/forms");
 const { organizationEndpoints } = require("./endpoints/organization");
 const { mcpServersEndpoints } = require("./endpoints/mcpServers");
 const { artifactsEndpoints } = require("./endpoints/artifacts");
@@ -215,6 +216,8 @@ smartPluginsEndpoints(apiRouter);
 flowGenerationEndpoints(apiRouter);
 
 crmEndpoints(apiRouter);
+  formsEndpoints(apiRouter);
+formsEndpoints(apiRouter);
 vaultEndpoints(apiRouter);
 mobileEndpoints(apiRouter);
 agentTestLabEndpoints(apiRouter);
