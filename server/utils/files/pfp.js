@@ -1,7 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const { getType } = require("mime");
-const { User } = require("../../models/user");
+const User = require("../../models/user");
 const { normalizePath, isWithin } = require(".");
 const { Workspace } = require("../../models/workspace");
 

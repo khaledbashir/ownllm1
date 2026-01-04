@@ -1,4 +1,4 @@
-const { User } = require("../../../models/user");
+const User = require("../../../models/user");
 const { TemporaryAuthToken } = require("../../../models/temporaryAuthToken");
 const { multiUserMode } = require("../../../utils/http");
 const {

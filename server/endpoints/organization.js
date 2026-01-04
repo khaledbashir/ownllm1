@@ -1,6 +1,6 @@
 const { Organization } = require("../models/organization");
 console.log("!!! ORGANIZATION ENDPOINTS FILE LOADED !!!");
-const { User } = require("../models/user");
+const User = require("../models/user");
 const { EventLogs } = require("../models/eventLogs");
 const { reqBody, userFromSession } = require("../utils/http");
 const {

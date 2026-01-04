@@ -1,6 +1,6 @@
 const { EventLogs } = require("../models/eventLogs");
 const { Invite } = require("../models/invite");
-const { User } = require("../models/user");
+const User = require("../models/user");
 const { Organization } = require("../models/organization");
 const { reqBody } = require("../utils/http");
 const {

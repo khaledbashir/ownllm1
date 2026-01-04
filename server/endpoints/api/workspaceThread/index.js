@@ -11,7 +11,7 @@ const {
   convertToChatHistory,
 } = require("../../../utils/helpers/chat/responses");
 const { WorkspaceChats } = require("../../../models/workspaceChats");
-const { User } = require("../../../models/user");
+const User = require("../../../models/user");
 const { ApiChatHandler } = require("../../../utils/chats/apiChatHandler");
 const { getModelTag } = require("../../utils");
 
