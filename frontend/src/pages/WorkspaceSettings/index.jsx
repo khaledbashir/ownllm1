@@ -14,8 +14,8 @@ import {
   Wrench,
   ShoppingBag,
   CurrencyDollar,
-} FileText,
-  from "@phosphor-icons/react";
+  FileText,
+} from "@phosphor-icons/react";
 import paths from "@/utils/paths";
 import { Link } from "react-router-dom";
 import { NavLink } from "react-router-dom";

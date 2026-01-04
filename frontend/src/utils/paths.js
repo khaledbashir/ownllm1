@@ -97,12 +97,6 @@ export default {
         return `/workspace/${slug}/settings/agent-config`;
       },
       products: (slug) => {
-      forms: (slug) => {
-        return `/workspace/${slug}/settings/forms`;
-      forms: (slug) => {
-        return `/workspace/${slug}/settings/forms`;
-      },
-      },
         return `/workspace/${slug}/settings/products`;
       },
       rateCard: (slug) => {
