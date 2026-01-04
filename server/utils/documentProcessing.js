@@ -5,7 +5,7 @@ const { getVectorDbClass } = require("../utils/helpers");
 const prisma = require("../utils/prisma");
 const { Telemetry } = require("../../models/telemetry");
 const { EventLogs } = require("../../models/eventLogs");
-const { getModelTag } = require("../endpoints/utils");
+const { getModelTag } = require("../../endpoints/utils");
 
 const documentsPath =
   process.env.NODE_ENV === "development"
@@ -100,10 +100,7 @@ class ProcessDocument {
         );
 
         if (!vectorized) {
-          this.log(
-            `Failed to vectorize document: ${docData.title}`,
-            error
-          );
+          this.log(`Failed to vectorize document: ${docData.title}`, error);
         } else {
           this.log(`Document vectorized: ${docData.title}`);
         }
