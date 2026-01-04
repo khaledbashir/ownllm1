@@ -54,7 +54,7 @@ async function validateTablePragmas(force = false) {
       return;
     }
     const { SystemSettings } = require("../../models/systemSettings");
-    const User = require("../../models/user");
+    const { User } = require("../../models/user");
     const { Workspace } = require("../../models/workspace");
     const { WorkspaceUser } = require("../../models/workspaceUsers");
     const { Document } = require("../../models/documents");

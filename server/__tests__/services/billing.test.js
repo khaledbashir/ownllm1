@@ -5,7 +5,7 @@ const {
   PLAN_SEAT_LIMITS,
 } = require("../../services/billing");
 const { Organization } = require("../../models/organization");
-const User = require("../../models/user");
+const { User } = require("../../models/user");
 const prisma = require("../../utils/prisma");
 
 describe("Billing Service", () => {

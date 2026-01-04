@@ -3,7 +3,7 @@ const AgentPlugins = require("./aibitat/plugins");
 const {
   WorkspaceAgentInvocation,
 } = require("../models/workspaceAgentInvocation");
-const User = require("../models/user");
+const { User } = require("../models/user");
 const { WorkspaceChats } = require("../models/workspaceChats");
 const { safeJsonParse } = require("../http");
 const { USER_AGENT, WORKSPACE_AGENT } = require("./defaults");

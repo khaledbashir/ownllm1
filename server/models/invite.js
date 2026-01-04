@@ -126,7 +126,7 @@ const Invite = {
       
       // Filter invites by organizationId via the creating user
       if (organizationId !== null) {
-        const User = require("./user");
+        const { User } = require("./user");
         const orgUsers = await User.whereWithOrg({}, organizationId);
         const orgUserIds = orgUsers.map(u => u.id);
         where.createdBy = { in: orgUserIds };
@@ -144,7 +144,7 @@ const Invite = {
   },
 
   whereWithUsers: async function (clause = {}, limit) {
-    const User = require("./user");
+    const { User } = require("./user");
     try {
       const invites = await this.where(clause, limit);
       for (const invite of invites) {

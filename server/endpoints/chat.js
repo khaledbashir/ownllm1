@@ -14,7 +14,7 @@ const {
 } = require("../utils/middleware/validWorkspace");
 const { writeResponseChunk } = require("../utils/helpers/chat/responses");
 const { WorkspaceThread } = require("../models/workspaceThread");
-const User = require("../models/user");
+const { User } = require("../models/user");
 const truncate = require("truncate");
 const { getModelTag } = require("./utils");
 

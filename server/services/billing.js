@@ -6,7 +6,7 @@
  */
 
 const { Organization } = require("../models/organization");
-const User = require("../models/user");
+const { User } = require("../models/user");
 const { EventLogs } = require("../models/eventLogs");
 
 /**

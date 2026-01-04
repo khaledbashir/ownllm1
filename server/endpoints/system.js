@@ -19,7 +19,7 @@ const {
 } = require("../utils/files/multer");
 const { v4 } = require("uuid");
 const { SystemSettings } = require("../models/systemSettings");
-const User = require("../models/user");
+const { User } = require("../models/user");
 const { Organization } = require("../models/organization");
 const { EmailVerificationTokens } = require("../models/emailVerificationTokens");
 const { EmailService } = require("../utils/emailService");

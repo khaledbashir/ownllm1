@@ -239,8 +239,8 @@ const WorkspaceChats = {
     offset = null,
     orderBy = null
   ) {
-    const Workspace = require("./workspace");
-    const User = require("./user");
+    const { Workspace } = require("./workspace");
+    const { User } = require("./user");
 
     try {
       const results = await this.where(clause, limit, orderBy, offset);

@@ -1,4 +1,4 @@
-const User = require("../../../models/user");
+const { User } = require("../../../models/user");
 const { ROLES } = require("../../middleware/multiUserProtected");
 
 // When a user is updating or creating a user in multi-user, we need to check if they

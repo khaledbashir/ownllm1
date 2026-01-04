@@ -1,6 +1,6 @@
 const { MobileDevice } = require("../../../models/mobileDevice");
 const { SystemSettings } = require("../../../models/systemSettings");
-const User = require("../../../models/user");
+const { User } = require("../../../models/user");
 
 /**
  * Validates the device id from the request headers by checking if the device

@@ -1,5 +1,5 @@
 const { Organization } = require("../../models/organization");
-const User = require("../../models/user");
+const { User } = require("../../models/user");
 const prisma = require("../../utils/prisma");
 
 describe("Organization CRUD Operations", () => {

@@ -1,5 +1,5 @@
 const { SystemSettings } = require("../../models/systemSettings");
-const User = require("../../models/user");
+const { User } = require("../../models/user");
 const { EncryptionManager } = require("../EncryptionManager");
 const { decodeJWT } = require("../http");
 const EncryptionMgr = new EncryptionManager();

@@ -81,7 +81,7 @@ const ApiKey = {
       
       // Filter by organizationId via createdBy user
       if (organizationId !== null) {
-        const User = require("./user");
+        const { User } = require("./user");
         const orgUsers = await User.whereWithOrg({}, organizationId);
         const orgUserIds = orgUsers.map(u => u.id);
         where.createdBy = { in: orgUserIds };
@@ -100,7 +100,7 @@ const ApiKey = {
 
   whereWithUser: async function (clause = {}, limit) {
     try {
-      const User = require("./user");
+      const { User } = require("./user");
       const apiKeys = await this.where(clause, limit);
 
       for (const apiKey of apiKeys) {

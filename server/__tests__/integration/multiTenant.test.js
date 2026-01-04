@@ -1,5 +1,5 @@
 const { Organization } = require("../../models/organization");
-const User = require("../../models/user");
+const { User } = require("../../models/user");
 const { Workspace } = require("../../models/workspace");
 const { checkSeatLimit, updatePlan } = require("../../services/billing");
 const prisma = require("../../utils/prisma");
