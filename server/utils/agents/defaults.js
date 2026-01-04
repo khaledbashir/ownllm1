@@ -1,10 +1,10 @@
 const AgentPlugins = require("./aibitat/plugins");
-const { SystemSettings } = require("../models/systemSettings");
+const { SystemSettings } = require("../../models/systemSettings");
 const { safeJsonParse } = require("../http");
 const Provider = require("./aibitat/providers/ai-provider");
 const ImportedPlugin = require("./imported");
 const MCPCompatibilityLayer = require("../MCP");
-const { SystemPromptVariables } = require("../models/systemPromptVariables");
+const { SystemPromptVariables } = require("../../models/systemPromptVariables");
 
 // This is a list of skills that are built-in and default enabled.
 const DEFAULT_SKILLS = [

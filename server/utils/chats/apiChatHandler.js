@@ -13,9 +13,9 @@ const {
   EphemeralAgentHandler,
   EphemeralEventListener,
 } = require("../agents/ephemeral");
-const { Telemetry } = require("../models/telemetry");
+const { Telemetry } = require("../../models/telemetry");
 const { CollectorApi } = require("../collectorApi");
-const { SystemSettings } = require("../models/systemSettings");
+const { SystemSettings } = require("../../models/systemSettings");
 const fs = require("fs");
 const path = require("path");
 const { hotdirPath, normalizePath, isWithin } = require("../files");

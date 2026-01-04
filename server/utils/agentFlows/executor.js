@@ -3,7 +3,7 @@ const executeApiCall = require("./executors/api-call");
 const executeLLMInstruction = require("./executors/llm-instruction");
 const executeWebScraping = require("./executors/web-scraping");
 const executeAgent = require("./executors/execute-agent");
-const { Telemetry } = require("../models/telemetry");
+const { Telemetry } = require("../../models/telemetry");
 const { safeJsonParse } = require("../http");
 
 class FlowExecutor {
