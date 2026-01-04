@@ -384,4 +384,4 @@ function formsEndpoints(app) {
   );
 }
 
-module.exports = formsEndpoints;
+module.exports = { formsEndpoints };

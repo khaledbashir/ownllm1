@@ -216,7 +216,6 @@ smartPluginsEndpoints(apiRouter);
 flowGenerationEndpoints(apiRouter);
 
 crmEndpoints(apiRouter);
-  formsEndpoints(apiRouter);
 formsEndpoints(apiRouter);
 vaultEndpoints(apiRouter);
 mobileEndpoints(apiRouter);
