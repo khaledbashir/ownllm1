@@ -1,10 +1,10 @@
 const bcrypt = require("bcrypt");
 const { v4, validate } = require("uuid");
-const { User } = require("../../models/user");
+const { User } = require("../models/user");
 const {
   RecoveryCode,
   PasswordResetToken,
-} = require("../../models/passwordRecovery");
+} = require("../models/passwordRecovery");
 
 async function generateRecoveryCodes(userId) {
   const newRecoveryCodes = [];

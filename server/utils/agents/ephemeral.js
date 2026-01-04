@@ -4,8 +4,8 @@ const ImportedPlugin = require("./imported");
 const MCPCompatibilityLayer = require("../MCP");
 // AgentFlows is lazy-loaded where needed to avoid circular dependency
 const { httpSocket } = require("./aibitat/plugins/http-socket.js");
-const { User } = require("../../models/user");
-const { WorkspaceChats } = require("../../models/workspaceChats");
+const { User } = require("../models/user");
+const { WorkspaceChats } = require("../models/workspaceChats");
 const { safeJsonParse } = require("../http");
 const {
   USER_AGENT,
@@ -15,7 +15,7 @@ const {
 const { AgentHandler } = require(".");
 const {
   WorkspaceAgentInvocation,
-} = require("../../models/workspaceAgentInvocation");
+} = require("../models/workspaceAgentInvocation");
 
 /**
  * This is an instance and functional Agent handler, but it does not utilize

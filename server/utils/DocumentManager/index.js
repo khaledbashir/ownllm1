@@ -19,7 +19,7 @@ class DocumentManager {
 
   async pinnedDocuments() {
     if (!this.workspace) return [];
-    const { Document } = require("../../models/documents");
+    const { Document } = require("../models/documents");
     return await Document.where({
       workspaceId: Number(this.workspace.id),
       pinned: true,

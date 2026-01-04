@@ -41,7 +41,7 @@ class BackgroundService {
   }
 
   async boot() {
-    const { DocumentSyncQueue } = require("../../models/documentSyncQueue");
+    const { DocumentSyncQueue } = require("../models/documentSyncQueue");
     this.documentSyncEnabled = await DocumentSyncQueue.enabled();
     const jobsToRun = this.jobs();
 

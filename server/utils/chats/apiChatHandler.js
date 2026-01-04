@@ -13,9 +13,9 @@ const {
   EphemeralAgentHandler,
   EphemeralEventListener,
 } = require("../agents/ephemeral");
-const { Telemetry } = require("../../models/telemetry");
+const { Telemetry } = require("../models/telemetry");
 const { CollectorApi } = require("../collectorApi");
-const { SystemSettings } = require("../../models/systemSettings");
+const { SystemSettings } = require("../models/systemSettings");
 const fs = require("fs");
 const path = require("path");
 const { hotdirPath, normalizePath, isWithin } = require("../files");
@@ -206,13 +206,17 @@ async function chatSync({
 
   // Load custom provider configuration if needed
   let customProviderConfig = null;
-  if (workspace?.chatProvider?.startsWith('custom_')) {
+  if (workspace?.chatProvider?.startsWith("custom_")) {
     try {
-      const systemProviders = await SystemSettings.get({ label: "customGenericProviders" });
+      const systemProviders = await SystemSettings.get({
+        label: "customGenericProviders",
+      });
       const customProviders = systemProviders
         ? JSON.parse(systemProviders.value)
         : [];
-      customProviderConfig = customProviders.find(p => p.id === workspace.chatProvider);
+      customProviderConfig = customProviders.find(
+        (p) => p.id === workspace.chatProvider
+      );
     } catch (e) {
       console.warn("[chatSync] Failed to parse custom providers:", e);
     }
@@ -562,13 +566,17 @@ async function streamChat({
 
   // Load custom provider configuration if needed
   let customProviderConfig = null;
-  if (workspace?.chatProvider?.startsWith('custom_')) {
+  if (workspace?.chatProvider?.startsWith("custom_")) {
     try {
-      const systemProviders = await SystemSettings.get({ label: "customGenericProviders" });
+      const systemProviders = await SystemSettings.get({
+        label: "customGenericProviders",
+      });
       const customProviders = systemProviders
         ? JSON.parse(systemProviders.value)
         : [];
-      customProviderConfig = customProviders.find(p => p.id === workspace.chatProvider);
+      customProviderConfig = customProviders.find(
+        (p) => p.id === workspace.chatProvider
+      );
     } catch (e) {
       console.warn("[streamChat] Failed to parse custom providers:", e);
     }

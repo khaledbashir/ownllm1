@@ -2,9 +2,9 @@ const AIbitat = require("./aibitat");
 const AgentPlugins = require("./aibitat/plugins");
 const {
   WorkspaceAgentInvocation,
-} = require("../../models/workspaceAgentInvocation");
-const { User } = require("../../models/user");
-const { WorkspaceChats } = require("../../models/workspaceChats");
+} = require("../models/workspaceAgentInvocation");
+const { User } = require("../models/user");
+const { WorkspaceChats } = require("../models/workspaceChats");
 const { safeJsonParse } = require("../http");
 const { USER_AGENT, WORKSPACE_AGENT } = require("./defaults");
 const ImportedPlugin = require("./imported");
@@ -12,7 +12,7 @@ const ImportedPlugin = require("./imported");
 const MCPCompatibilityLayer = require("../MCP");
 const { getVectorDbClass, getLLMProvider } = require("../helpers");
 const { DocumentManager } = require("../DocumentManager");
-const { WorkspaceParsedFiles } = require("../../models/workspaceParsedFiles");
+const { WorkspaceParsedFiles } = require("../models/workspaceParsedFiles");
 const { sourceIdentifier } = require("../chats");
 
 class AgentHandler {

@@ -1,11 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const { getVectorDbClass } = require("../utils/helpers");
-const prisma = require("../utils/prisma");
-const { Telemetry } = require("../../models/telemetry");
-const { EventLogs } = require("../../models/eventLogs");
-const { getModelTag } = require("../../endpoints/utils");
+const { getVectorDbClass } = require("./helpers");
+const prisma = require("./prisma");
+const { Telemetry } = require("../models/telemetry");
+const { EventLogs } = require("../models/eventLogs");
+const { getModelTag } = require("../endpoints/utils");
 
 const documentsPath =
   process.env.NODE_ENV === "development"
