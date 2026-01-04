@@ -2,6 +2,7 @@
 # can build the repo without needing a custom Dockerfile path.
 #
 # It mirrors docker/Dockerfile and expects the build context to be the repo root.
+# Build version: 2025-01-04-v2 - added documentProcessing.js module
 
 # Setup base image
 FROM ubuntu:noble-20251013 AS base
