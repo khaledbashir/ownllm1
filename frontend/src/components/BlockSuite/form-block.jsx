@@ -138,6 +138,7 @@ export class FormBlockElement extends BlockElement {
 defineOnce("affine-embed-form", FormBlockElement);
 
 export const FormBlockSpec = {
+    schema: FormBlockSchema,
     view: {
         component: literal`affine-embed-form`,
     },
