@@ -102,6 +102,9 @@ export default {
       rateCard: (slug) => {
         return `/workspace/${slug}/settings/rate-card`;
       },
+      forms: (slug) => {
+        return `/workspace/${slug}/settings/forms`;
+      },
     },
     thread: (wsSlug, threadSlug) => {
       return `/workspace/${wsSlug}/t/${threadSlug}`;
