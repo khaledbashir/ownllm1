@@ -470,3 +470,110 @@ Do **not** implement custom serialization. Update props on the model, and the CR
 doc.updateBlock(model, { formId: 'new-id' }); // Automatically persisted
 ```
 
+---
+
+## 🎨 Edgeless Architecture & Isomorphic Data
+
+BlockSuite documents are **isomorphic**: a single block tree can be rendered in Page or Edgeless mode.
+
+### Surface Blocks vs. Elements
+In Edgeless mode, the **Surface Block** (`affine:surface`) is the mandatory container for graphical content.
+- **Block Children**: Standard blocks (images, notes) positioned anywhere.
+- **Elements**: Graphical primitives (brushes, shapes) stored in the `elements` field and rendered via HTML5 canvas.
+
+### Hierarchical Determination
+- **Page Mode**: Linear order.
+- **Edgeless Mode**: Hierarchy uses **Fractional Indexing** (`index` field). Layering is determined by comparing these indices.
+
+### Frames vs. Groups
+- **Frames**: Dynamic geometric containers. Dragging the frame moves its contents. Cannot nest.
+- **Groups**: Static associations of child IDs. Can nest. No inherent dimensions.
+
+---
+
+## 🖱️ Advanced Selection Management
+
+Managed by `std.selection` (SelectionManager). Critical for context-aware tools.
+
+### Selection Types
+- **TextSelection**: Character-level ranges.
+- **BlockSelection**: Structural nodes (for drag/delete).
+- **SurfaceSelection**: 2D graphical objects in Edgeless.
+- **CursorSelection**: Remote collaborator positions.
+
+### Data Structure
+`selection.value` objects contain:
+- `id`: Block ID
+- `path`: Sequence of IDs from root
+- `group`: Context identifier
+
+---
+
+## 🧩 Custom Widget Development Pattern
+
+Widgets (like Slash Menus) should inherit from `WidgetComponent`.
+
+### Implementation Pattern
+```javascript
+export class MyWidget extends WidgetComponent {
+  get host() { return this.std.blockComponent; }
+
+  connectedCallback() {
+      super.connectedCallback();
+      // Listen to UI changes
+  }
+  
+  changeLanguage(lang) {
+      // Logic execution
+      const block = this.host.model;
+      this.doc.updateBlock(block, { language: lang });
+  }
+}
+```
+*   **Access Host**: `this.blockComponent` interacts with the hosting block.
+*   **Logic**: Use `this.doc.updateBlock` or `this.std.command`.
+
+---
+
+## 🔄 Advanced Synchronization
+
+### Snapshot API (JSON)
+- **Use for**: Templates, file imports, structural exports.
+- **Nature**: Transactional, unidirectional conversion to JSON.
+
+### Document Streaming (Binary CRDT)
+- **Use for**: Real-time collaboration, persistence.
+- **Nature**: Yjs binary data streams from providers (IndexedDB, WebSockets).
+
+---
+
+## 🎭 Global Theming (ThemeSchema)
+
+Validated by Zod. Supports `light`, `dark`, and `normal` variants for CSS variable injection.
+
+```typescript
+const MyThemeSchema = z.object({
+    noteBackgroundColor: z.string(), // CSS var --note-background-color
+    connectorColor: z.string(),
+});
+```
+
+---
+
+## 🎓 Lessons Learned (Common Pitfalls)
+
+### 1. Property Validation (Auto-Math)
+**Pitfall**: Calculating fields when metadata is missing.
+**Fix**: Verify columns exist before math.
+```javascript
+if (!model.columns.find(c => c.name === 'Hours')) return;
+```
+
+### 2. Infinite Update Loops
+**Pitfall**: `doc.updateBlock` triggers `blockUpdated`, causing recursive logic.
+**Fix**: **Value Comparison Guard**.
+```javascript
+if (model.props.total !== newTotal) {
+    doc.updateBlock(model, { total: newTotal });
+}
+```
