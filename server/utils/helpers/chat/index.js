@@ -94,23 +94,28 @@ async function messageArrayCompressor(llm, messages = [], rawHistory = []) {
     // Match both products section and rate card section
     const rateCardRegex = /(## AVAILABLE PRODUCTS & SERVICES.*?)(?=\n\n## HOURLY RATE CARD|\n\n## PROPOSAL INSTRUCTIONS|\n\n## [A-Z]|$)/s;
     const rateCardRegex2 = /(## HOURLY RATE CARD.*?)(?=\n\n## PROPOSAL INSTRUCTIONS|\n\n## [A-Z]|$)/s;
-    
+
     const productsMatch = context.match(rateCardRegex);
     const rateCardMatch = context.match(rateCardRegex2);
-    
+
     let protectedRateCardSection = "";
     if (productsMatch) protectedRateCardSection += productsMatch[0];
     if (rateCardMatch) protectedRateCardSection += rateCardMatch[0];
-    
+
     console.log(
       `[Context Compression] Found protected sections: Products=${!!productsMatch}, RateCard=${!!rateCardMatch}. Total protected length: ${protectedRateCardSection.length} chars`
     );
-    
+
     if (protectedRateCardSection) {
       // Log the actual protected content for debugging
       console.log(`[Context Compression] Protected Rate Card content preview (first 500 chars):`);
       console.log(protectedRateCardSection.substring(0, 500));
     }
+
+    // Remove Rate Card section from context to get what we actually want to compress
+    const contextToCompress = protectedRateCardSection
+      ? context.replace(protectedRateCardSection, "")
+      : context;
 
     // If the user system prompt contribution's to the system prompt is more than
     // 25% of the system limit, we will cannonball it - this favors the context
@@ -168,9 +173,8 @@ async function messageArrayCompressor(llm, messages = [], rawHistory = []) {
       compressedContext = context;
     }
 
-    system.content = `${compressedPrompt}${
-      compressedContext ? `\nContext: ${compressedContext}` : ""
-    }`;
+    system.content = `${compressedPrompt}${compressedContext ? `\nContext: ${compressedContext}` : ""
+      }`;
     resolve(system);
   });
 
@@ -284,10 +288,10 @@ async function messageStringCompressor(llm, promptArgs = {}, rawHistory = []) {
     // Match both products section and rate card section
     const rateCardRegex = /(## AVAILABLE PRODUCTS & SERVICES.*?)(?=\n\n## HOURLY RATE CARD|\n\n## PROPOSAL INSTRUCTIONS|\n\n## [A-Z]|$)/s;
     const rateCardRegex2 = /(## HOURLY RATE CARD.*?)(?=\n\n## PROPOSAL INSTRUCTIONS|\n\n## [A-Z]|$)/s;
-    
+
     const productsMatch = system.match(rateCardRegex);
     const rateCardMatch = system.match(rateCardRegex2);
-    
+
     let protectedRateCardSection = "";
     if (productsMatch) protectedRateCardSection += productsMatch[0];
     if (rateCardMatch) protectedRateCardSection += rateCardMatch[0];
@@ -301,30 +305,30 @@ async function messageStringCompressor(llm, promptArgs = {}, rawHistory = []) {
       const maxRateCardTokens = Math.floor(llm.limits.system * 0.5);
       const remainingForOtherContext = llm.limits.system - rateCardTokens;
 
-    console.log(
-      `[String Compression] Protected Rate Card section: ${protectedRateCardSection.length} chars, ${rateCardTokens} tokens`
-    );
-    
-    // Log the actual protected content for debugging
-    if (protectedRateCardSection) {
-      console.log(`[String Compression] Protected Rate Card content preview (first 500 chars):`);
-      console.log(protectedRateCardSection.substring(0, 500));
-    }
-
-    if (rateCardTokens > maxRateCardTokens) {
-      console.warn(
-        `[String Compression] Rate Card (${rateCardTokens} tokens) exceeds recommended limit (${maxRateCardTokens} tokens). Consider reducing Rate Card size.`
+      console.log(
+        `[String Compression] Protected Rate Card section: ${protectedRateCardSection.length} chars, ${rateCardTokens} tokens`
       );
-    }
+
+      // Log the actual protected content for debugging
+      if (protectedRateCardSection) {
+        console.log(`[String Compression] Protected Rate Card content preview (first 500 chars):`);
+        console.log(protectedRateCardSection.substring(0, 500));
+      }
+
+      if (rateCardTokens > maxRateCardTokens) {
+        console.warn(
+          `[String Compression] Rate Card (${rateCardTokens} tokens) exceeds recommended limit (${maxRateCardTokens} tokens). Consider reducing Rate Card size.`
+        );
+      }
 
       const compressedWithoutRateCard =
         rateCardTokens >= llm.limits.system
           ? systemWithoutRateCard
           : cannonball({
-              input: systemWithoutRateCard,
-              targetTokenSize: Math.max(0, remainingForOtherContext),
-              tiktokenInstance: tokenManager,
-            });
+            input: systemWithoutRateCard,
+            targetTokenSize: Math.max(0, remainingForOtherContext),
+            tiktokenInstance: tokenManager,
+          });
 
       resolve(compressedWithoutRateCard + protectedRateCardSection);
     } else {
