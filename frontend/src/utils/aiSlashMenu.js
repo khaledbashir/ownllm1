@@ -111,6 +111,15 @@ export const createAISlashMenuItems = (onAIAction) => [
       },
     ],
   },
+  {
+    name: "Embed Form",
+    icon: AIStarIcon,
+    alias: ["form", "embed", "collect"],
+    description: "Embed an interactive form",
+    action: ({ rootElement, model }) => {
+      onAIAction("form", { rootElement, model });
+    },
+  },
 ];
 
 /**

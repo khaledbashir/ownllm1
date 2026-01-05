@@ -665,6 +665,15 @@ const Workspace = {
       .then((res) => res.json())
       .catch((e) => ({ success: false, error: e.message }));
   },
+  generateForm: async function (slug, data) {
+    return await fetch(`${API_BASE}/workspace/${slug}/forms/generate`, {
+      method: "POST",
+      headers: baseHeaders(),
+      body: JSON.stringify(data)
+    })
+      .then((res) => res.json())
+      .catch((e) => ({ success: false, error: e.message }));
+  },
   getForm: async function (slug, uuid) {
     return await fetch(`${API_BASE}/workspace/${slug}/forms/${uuid}`, {
       method: "GET",

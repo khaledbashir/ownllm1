@@ -13,6 +13,10 @@ import {
   PricingTableBlockSchema,
   PricingTableBlockSpec,
 } from "@/components/BlockSuite/pricing-table-block.jsx";
+import {
+  FormBlockSchema,
+  FormBlockSpec,
+} from "@/components/BlockSuite/form-block.jsx";
 import { setupDatabaseAutoMath } from "@/utils/blocksuite/databaseAutoMath";
 import "@blocksuite/presets/themes/affine.css";
 // Deep import for HtmlAdapter as it is not exposed in main entry
@@ -37,6 +41,7 @@ import { useEditorContext } from "./EditorContext";
 import { setupAISlashMenu } from "@/utils/aiSlashMenu";
 import { setupAIFormatBar } from "@/utils/aiFormatBar";
 import AIInputModal from "@/components/AIInputModal";
+import FormSelectorModal from "@/components/Modals/FormSelectorModal";
 import InlineAI from "@/models/inlineAI";
 import DOMPurify from "@/utils/chat/purify";
 import renderMarkdown from "@/utils/chat/markdown";
@@ -156,6 +161,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
   const [selectedBrandTemplate, setSelectedBrandTemplate] = useState(null);
 
   // Custom AI actions from workspace settings
+  const [showFormSelector, setShowFormSelector] = useState(false);
+  const [formActionContext, setFormActionContext] = useState(null);
   const [customAIActions, setCustomAIActions] = useState([]);
 
   // Fetch custom AI actions from workspace settings
@@ -208,6 +215,15 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // Open custom AI input modal
         setShowAIModal(true);
         break;
+
+      case "form": {
+        // Open form selection/generation modal
+        // We'll use a new state to control this
+        setShowFormSelector(true);
+        // Store context for when form is selected
+        setFormActionContext(context);
+        break;
+      }
 
       case "continue": {
         const contextText = getContextText();
@@ -660,6 +676,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         const schema = new Schema().register([
           ...AffineSchemas,
           PricingTableBlockSchema,
+          FormBlockSchema,
         ]);
         const collection = new DocCollection({ schema });
         collection.meta.initialize();
@@ -756,7 +773,11 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         // Create editor and attach document
         const editor = new AffineEditorContainer();
-        editor.pageSpecs = [...PageEditorBlockSpecs, PricingTableBlockSpec];
+        editor.pageSpecs = [
+          ...PageEditorBlockSpecs,
+          PricingTableBlockSpec,
+          FormBlockSpec,
+        ];
         editor.doc = doc;
 
         // Clear container and append editor
@@ -3030,6 +3051,39 @@ ${activeTemplateFooter}
     }
   };
 
+  const handleFormSelect = (formUuid) => {
+    try {
+      const doc = editorRef.current?.doc;
+      if (!doc) return;
+
+      // Find the parent note block
+      const noteBlocks = doc
+        .getBlocks()
+        .filter((b) => b.flavour === "affine:note");
+      const parentId =
+        noteBlocks.length > 0
+          ? noteBlocks[noteBlocks.length - 1].id
+          : doc.root.id;
+
+      doc.addBlock(
+        "form-embed",
+        {
+          formUuid: formUuid,
+          title: "Embedded Form",
+          isSubmittable: true,
+        },
+        parentId
+      );
+      toast.success("Form embedded!");
+    } catch (e) {
+      console.error("Failed to embed form:", e);
+      toast.error("Failed to embed form");
+    } finally {
+      setShowFormSelector(false);
+      setFormActionContext(null);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col h-full relative">
@@ -3240,59 +3294,47 @@ ${activeTemplateFooter}
           setAiLoading(true);
           try {
             toast.info(`🤖 Generating response...`);
-
-            // Get context from document
-            const context = (() => {
-              try {
-                const doc = editorRef.current?.doc;
-                if (!doc) return "";
-                const blocks = [];
-                const traverse = (block) => {
-                  if (block.text?.toString) blocks.push(block.text.toString());
-                  block.children?.forEach(traverse);
-                };
-                if (doc.root) traverse(doc.root);
-                return blocks.join("\n").slice(-2000); // Last 2000 chars
-              } catch {
-                return "";
-              }
-            })();
-
-            // Call AI API
             const result = await InlineAI.generate("ask", {
               query,
-              context,
+              context: (() => {
+                try {
+                  const doc = editorRef.current?.doc;
+                  if (!doc) return "";
+                  const blocks = [];
+                  const traverse = (block) => {
+                    if (block.text?.toString) blocks.push(block.text.toString());
+                    block.children?.forEach(traverse);
+                  };
+                  if (doc.root) traverse(doc.root);
+                  return blocks.join("\n").slice(-2000);
+                } catch {
+                  return "";
+                }
+              })(),
+              workspaceSlug,
             });
 
-            if (result.success && result.content) {
-              // Insert AI response into editor at cursor
-              const doc = editorRef.current?.doc;
-              if (doc) {
-                const noteBlocks = doc.getBlocksByFlavour("affine:note");
-                if (noteBlocks.length > 0) {
-                  const noteId = noteBlocks[0].id;
-                  // Add AI response as a new paragraph
-                  doc.addBlock(
-                    "affine:paragraph",
-                    {
-                      text: new Text(result.content),
-                    },
-                    noteId
-                  );
-                  toast.success("✨ AI response inserted!");
-                }
-              }
-              setShowAIModal(false);
-            } else {
-              toast.error(result.error || "AI generation failed");
+            if (result?.response) {
+              await serializeHtmlToDoc(
+                editorRef.current.doc,
+                renderMarkdown(result.response)
+              );
+              return true;
             }
-          } catch (error) {
-            console.error("[AI] Error:", error);
-            toast.error("AI generation failed");
+            throw new Error(result?.error || "No response from AI");
+          } catch (e) {
+            toast.error(e.message);
+            return false;
           } finally {
             setAiLoading(false);
           }
         }}
+      />
+      <FormSelectorModal
+        isOpen={showFormSelector}
+        onClose={() => setShowFormSelector(false)}
+        onSelect={handleFormSelect}
+        workspaceSlug={workspaceSlug}
       />
     </>
   );
