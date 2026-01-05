@@ -3,7 +3,7 @@ const { flexUserRoleValid, ROLES } = require("../utils/middleware/multiUserProte
 const { Form } = require("../models/forms");
 const { Workspace } = require("../models/workspace");
 const { v4: uuidv4 } = require("uuid");
-const { userFromRequest } = require("../utils/http");
+const { userFromSession } = require("../utils/http");
 
 function formsEndpoints(app) {
   if (!app) return;
@@ -43,7 +43,7 @@ function formsEndpoints(app) {
       try {
         const { slug } = request.params;
         const { title, description, fields = [], settings = {} } = request.body;
-        const user = userFromRequest(request);
+        const user = userFromSession(request);
 
         const workspace = await Workspace.get({ slug });
         if (!workspace) {
@@ -80,7 +80,7 @@ function formsEndpoints(app) {
       try {
         const { slug } = request.params;
         const { prompt } = request.body;
-        const user = userFromRequest(request);
+        const user = userFromSession(request);
 
         const workspace = await Workspace.get({ slug });
         if (!workspace) {
