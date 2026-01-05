@@ -706,7 +706,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // Try to restore from saved snapshot
         if (content) {
           try {
-            const parsed = JSON.parse(content);
+            // Handle both stringified JSON and direct object content
+            const parsed = typeof content === "string" ? JSON.parse(content) : content;
 
             if (parsed.type === "blocksuite-snapshot" && parsed.snapshot) {
               // Restore from full snapshot - this is the proper way
