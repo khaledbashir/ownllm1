@@ -707,17 +707,40 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         if (content) {
           try {
             // Handle both stringified JSON and direct object content
-            const parsed = typeof content === "string" ? JSON.parse(content) : content;
-
-            if (parsed.type === "blocksuite-snapshot" && parsed.snapshot) {
-              // Restore from full snapshot - this is the proper way
-              doc = await job.snapshotToDoc(parsed.snapshot);
-            } else if (parsed.type === "blocksuite" && parsed.snapshot) {
-              // Legacy format with snapshot (in case we saved it before)
-              doc = await job.snapshotToDoc(parsed.snapshot);
+            // First, validate the content is valid JSON string or object
+            let parsed;
+            if (typeof content === "string") {
+              // Check for common malformed JSON patterns before attempting parse
+              // e.g., "[object Object]" from incorrect stringification
+              if (content.startsWith("[object") || content.trim().startsWith("[object")) {
+                console.warn(
+                  "[BlockSuiteEditor] Detected malformed content (object stringified incorrectly), creating fresh doc"
+                );
+                doc = createEmptyDoc(collection);
+              } else {
+                parsed = JSON.parse(content);
+              }
             } else {
-              // Unknown format or old data - create fresh doc
-              doc = createEmptyDoc(collection);
+              parsed = content;
+            }
+
+            // Only proceed with parsing if we haven't already created a fresh doc
+            if (!doc) {
+              if (parsed && typeof parsed === "object") {
+                if (parsed.type === "blocksuite-snapshot" && parsed.snapshot) {
+                  // Restore from full snapshot - this is the proper way
+                  doc = await job.snapshotToDoc(parsed.snapshot);
+                } else if (parsed.type === "blocksuite" && parsed.snapshot) {
+                  // Legacy format with snapshot (in case we saved it before)
+                  doc = await job.snapshotToDoc(parsed.snapshot);
+                } else {
+                  // Unknown format or old data - create fresh doc
+                  doc = createEmptyDoc(collection);
+                }
+              } else {
+                // Invalid content structure - create fresh doc
+                doc = createEmptyDoc(collection);
+              }
             }
           } catch (parseError) {
             console.warn(
