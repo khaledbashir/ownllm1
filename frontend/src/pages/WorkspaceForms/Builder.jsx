@@ -1,31 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Workspace from "@/models/workspace";
 import Sidebar from "@/components/Sidebar";
 import { FullScreenLoader } from "@/components/Preloader";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import {
     Plus,
     Trash,
+    GripVertical,
+    Eye,
     FloppyDisk,
-    ArrowLeft,
-    MagicWand,
-    DotsSixVertical,
     ShareNetwork,
-    FilePdf,
     Table,
-    PencilSimple
+    PencilSimple,
+    FilePdf
 } from "@phosphor-icons/react";
-import paths from "@/utils/paths";
 import { isMobile } from "react-device-detect";
-import showToast from "@/utils/toast";
 import ShareFormModal from "@/components/Modals/ShareFormModal";
 import ExportPdfModal from "@/components/Modals/ExportPdfModal";
+import { getLLMProvider } from "@/utils/llm";
+import LLMConnector from "@/utils/LLMConnector";
 
 export default function WorkspaceFormBuilder() {
     const { slug, uuid } = useParams();
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
+    const [workspace, setWorkspace] = useState(null);
     const [saving, setSaving] = useState(false);
     const [form, setForm] = useState(null);
     const [fields, setFields] = useState([]);
@@ -33,30 +32,38 @@ export default function WorkspaceFormBuilder() {
     const [activeTab, setActiveTab] = useState("builder"); // builder | responses
 
     // AI & Modals
-    const [aiPrompt, setAiPrompt] = useState("");
-    const [showAiModal, setShowAiModal] = useState(false);
-    const [aiLoading, setAiLoading] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
-    const [selectedResponseId, setSelectedResponseId] = useState(null);
+    const [selectedResponse, setSelectedResponse] = useState(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
+            const _workspace = await Workspace.bySlug(slug);
+            if (!_workspace) return;
+            setWorkspace(_workspace);
+
             const _form = await Workspace.getForm(slug, uuid);
-            if (_form && _form.form) {
-                setForm(_form.form);
-                setFields(typeof _form.form.fields === 'string' ? JSON.parse(_form.form.fields) : (_form.form.fields || []));
+            if (!_form) return;
+            setForm(_form);
+            if (_form.fields) {
+                try {
+                    setFields(typeof _form.fields === 'string' ? JSON.parse(_form.fields) : _form.fields);
+                } catch (e) {
+                    console.error("Failed to parse form fields", e);
+                    setFields([]);
+                }
             }
+
+            if (activeTab === "responses") {
+                const _responses = await Workspace.getFormResponses(slug, uuid);
+                setResponses(_responses);
+            }
+
             setLoading(false);
         }
         fetchData();
-    }, [slug, uuid]);
-
-    useEffect(() => {
-        if (activeTab === "responses") {
-            loadResponses();
-        }
-    }, [activeTab]);
+    }, [slug, uuid, activeTab]);
 
     const loadResponses = async () => {
         const res = await Workspace.getFormResponses(slug, uuid);

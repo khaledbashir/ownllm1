@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Workspace from "@/models/workspace";
 import Sidebar from "@/components/Sidebar";
 import { FullScreenLoader } from "@/components/Preloader";
@@ -13,12 +13,17 @@ import {
 } from "@phosphor-icons/react";
 import paths from "@/utils/paths";
 import { isMobile } from "react-device-detect";
+import CreateFormModal from "@/components/Modals/CreateFormModal";
+import AIFormModal from "@/components/Modals/AIFormModal";
 
 export default function WorkspaceFormsDashboard() {
     const { slug } = useParams();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [apps, setApps] = useState([]);
     const [workspace, setWorkspace] = useState(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showAIModal, setShowAIModal] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -32,6 +37,20 @@ export default function WorkspaceFormsDashboard() {
         }
         fetchData();
     }, [slug]);
+
+    const handleCreateForm = async ({ title, description }) => {
+        const res = await Workspace.createForm(slug, { title, description });
+        if (res.success) {
+            navigate(paths.forms.builder(slug, res.form.uuid));
+        }
+    };
+
+    const handleAIGenerate = async (prompt) => {
+        const res = await Workspace.generateForm(slug, { prompt });
+        if (res.success) {
+            navigate(paths.forms.builder(slug, res.form.uuid));
+        }
+    };
 
     const handleDelete = async (uuid) => {
         if (!confirm("Are you sure you want to delete this form?")) return;
@@ -56,22 +75,15 @@ export default function WorkspaceFormsDashboard() {
                         <div className="flex gap-2">
                             <button
                                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white font-medium hover:opacity-90 transition-all"
-                                onClick={() => {
-                                    // Create logic or modal
-                                    const title = prompt("Enter form title:");
-                                    if (title) {
-                                        Workspace.createForm(slug, { title }).then(res => {
-                                            if (res.success) {
-                                                window.location.href = paths.forms.builder(res.form.uuid);
-                                            }
-                                        });
-                                    }
-                                }}
+                                onClick={() => setShowCreateModal(true)}
                             >
                                 <Plus weight="bold" />
                                 New Form
                             </button>
-                            <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 rounded-lg text-white font-medium hover:bg-slate-600 transition-all">
+                            <button
+                                className="flex items-center gap-2 px-4 py-2 bg-slate-700 rounded-lg text-white font-medium hover:bg-slate-600 transition-all"
+                                onClick={() => setShowAIModal(true)}
+                            >
                                 <MagicWand weight="fill" className="text-yellow-400" />
                                 AI Builder
                             </button>
@@ -86,7 +98,7 @@ export default function WorkspaceFormsDashboard() {
                                         <NotePencil size={24} className="text-blue-400" />
                                     </div>
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Link to={paths.forms.builder(form.uuid)} className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white">
+                                        <Link to={paths.forms.builder(slug, form.uuid)} className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white">
                                             <NotePencil />
                                         </Link>
                                         <button onClick={() => handleDelete(form.uuid)} className="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-400">
@@ -115,19 +127,11 @@ export default function WorkspaceFormsDashboard() {
                             </div>
                         ))}
 
-                        {/* Empty State / Create New Card */}
+                        {/* Empty State */}
                         {apps.length === 0 && (
-                            <div className="col-span-full py-12 text-center border-2 border-dashed border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer"
-                                onClick={() => {
-                                    const title = prompt("Enter form title:");
-                                    if (title) {
-                                        Workspace.createForm(slug, { title }).then(res => {
-                                            if (res.success) {
-                                                window.location.href = paths.forms.builder(res.form.uuid);
-                                            }
-                                        });
-                                    }
-                                }}
+                            <div
+                                className="col-span-full py-12 text-center border-2 border-dashed border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer"
+                                onClick={() => setShowCreateModal(true)}
                             >
                                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Plus size={32} className="text-slate-400" />
@@ -139,6 +143,18 @@ export default function WorkspaceFormsDashboard() {
                     </div>
                 </div>
             </div>
+
+            <CreateFormModal
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onCreate={handleCreateForm}
+            />
+
+            <AIFormModal
+                isOpen={showAIModal}
+                onClose={() => setShowAIModal(false)}
+                onGenerate={handleAIGenerate}
+            />
         </div>
     );
 }

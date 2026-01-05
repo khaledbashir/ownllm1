@@ -23,8 +23,9 @@ import SpeechRecognition, {
 import { ChatTooltips } from "./ChatTooltips";
 import { MetricsProvider } from "./ChatHistory/HistoricalMessage/Actions/RenderMetrics";
 import ThreadNotes from "../ThreadNotes";
-import { ChatText, FileText } from "@phosphor-icons/react";
+import { ChatText, FileText, NotePencil } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
+import WorkspaceForms from "../WorkspaceForms";
 
 // Event for AI to insert content into notes
 export const NOTE_INSERT_EVENT = "note-insert-content";
@@ -655,8 +656,8 @@ export default function ChatContainer({
     >
       {isMobile && <SidebarMobileHeader />}
 
-      {/* Tab Header - Only show when in a thread and NOT split screen and NOT chatOnly */}
-      {threadSlug && !externalEditorRef && !chatOnly && (
+      {/* Tab Header - Only show when NOT split screen and NOT chatOnly */}
+      {!externalEditorRef && !chatOnly && (
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
@@ -668,15 +669,27 @@ export default function ChatContainer({
             <ChatText size={18} />
             Chat
           </button>
+          {threadSlug && (
+            <button
+              onClick={() => setActiveTab("notes")}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+                }`}
+            >
+              <FileText size={18} />
+              Doc
+            </button>
+          )}
           <button
-            onClick={() => setActiveTab("notes")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
+            onClick={() => setActiveTab("forms")}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "forms"
               ? "border-theme-text-primary text-theme-text-primary"
               : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
               }`}
           >
-            <FileText size={18} />
-            Doc
+            <NotePencil size={18} />
+            Forms
           </button>
         </div>
       )}
@@ -704,8 +717,10 @@ export default function ChatContainer({
               attachments={files}
             />
           </DnDFileUploaderWrapper>
-        ) : (
+        ) : activeTab === "notes" ? (
           <ThreadNotes workspace={workspace} editorRef={notesEditorRef} />
+        ) : (
+          <WorkspaceForms workspace={workspace} />
         )}
       </div>
 

@@ -204,18 +204,6 @@ export default function ActiveWorkspaces() {
                                 </button>
                               </div>
                             )}
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                navigate(`/workspace/${workspace.slug}/forms`);
-                              }}
-                              className="border-none rounded-md flex items-center justify-center p-[2px] hover:bg-[#646768] text-[#A7A8A9] hover:text-white"
-                              aria-label="Forms"
-                              title="Forms"
-                            >
-                              <NotePencil className="h-[20px] w-[20px]" />
-                            </button>
                           </div>
                         </a>
                       </div>
