@@ -161,6 +161,64 @@ walker.setEnter(async (node, context) => {
 });
 ```
 
+
+## 7. Cookbook: Server-Side PDF Export
+To avoid browser inconsistencies, use a headless pipeline: `Snapshot` -> `HtmlAdapter` -> `Puppeteer`.
+
+### Node.js Implementation Pattern
+```javascript
+import { Job } from '@blocksuite/store';
+import { HtmlAdapter } from '@blocksuite/blocks';
+import puppeteer from 'puppeteer';
+
+async function generatePDF(jsonSnapshot) {
+  const job = new Job();
+  const adapter = new HtmlAdapter(job);
+
+  // 1. Custom Visitor for Pricing Table
+  adapter.astWalker.setEnter(async (o, context) => {
+    if (o.node.flavour === 'affine:embed-pricing-table') {
+      const { title, rows } = o.node.props;
+      // Manually construct HTML
+      const tableHtml = `<h3>${title}</h3><table>...</table>`;
+      context.openNode({ type: 'div', content: tableHtml }, 'children');
+    }
+  });
+
+  // 2. Convert to HTML
+  const { html } = await adapter.fromDocSnapshot({
+    snapshot: jsonSnapshot.snapshot,
+    assets: job.assetsManager 
+  });
+
+  // 3. Render with Puppeteer
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.setContent(html);
+  const pdfBuffer = await page.pdf({ format: 'A4' });
+  await browser.close();
+  return pdfBuffer;
+}
+```
+
+## 8. Cookbook: REST-based Yjs Persistence
+**Problem**: JSON Snapshots cause data loss in collaboration (Last Write Wins).
+**Solution**: Use Binary CRDT Data even over REST.
+
+### Strategy
+1.  **Initialize**: Client creates empty `doc`.
+2.  **Load**: `GET /api/doc` returns binary blob. Apply with `Y.applyUpdate(doc.spaceDoc, blob)`.
+3.  **Save**: On change, `Y.encodeStateAsUpdate(doc.spaceDoc)` -> `PUT /api/doc`. Backend merges updates or appends to log.
+
+## 9. Cookbook: AI Prompting for Snapshots
+To force precise SOW generation, bypass Markdown and request a **JSON Snapshot** directly.
+
+**Prompt Pattern:**
+1.  **Global Envelope**: "Output a JSON object with `type: 'blocksuite-snapshot'`..."
+2.  **Hierarchy**: "Root is `affine:page`, child is `affine:note`."
+3.  **Strict Props**: "For `affine:embed-pricing-table`, props MUST be `{ rows: [], total: number }`."
+4.  **No Markdown**: "Output raw JSON only. Do not interpret as text."
+
 ---
 
 # Part 2: OwnLLM Implementation Details
