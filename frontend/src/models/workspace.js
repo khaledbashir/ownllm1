@@ -659,7 +659,7 @@ const Workspace = {
   createForm: async function (slug, data) {
     return await fetch(`${API_BASE}/workspace/${slug}/forms`, {
       method: "POST",
-      headers: baseHeaders(),
+      headers: { ...baseHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify(data)
     })
       .then((res) => res.json())
@@ -668,7 +668,7 @@ const Workspace = {
   generateForm: async function (slug, data) {
     return await fetch(`${API_BASE}/workspace/${slug}/forms/generate`, {
       method: "POST",
-      headers: baseHeaders(),
+      headers: { ...baseHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify(data)
     })
       .then((res) => res.json())
@@ -685,7 +685,7 @@ const Workspace = {
   updateForm: async function (slug, uuid, data) {
     return await fetch(`${API_BASE}/workspace/${slug}/forms/${uuid}`, {
       method: "PUT",
-      headers: baseHeaders(),
+      headers: { ...baseHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify(data)
     })
       .then((res) => res.json())
