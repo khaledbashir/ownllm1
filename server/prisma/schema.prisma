@@ -118,6 +118,7 @@ model users {
   workspace_parsed_files      workspace_parsed_files[]
   threads                     workspace_threads[]
   workspace_users             workspace_users[]
+  forms                       forms[]
 
   @@index([organizationId])
 }
@@ -213,6 +214,7 @@ model workspaces {
   workspace_users              workspace_users[]
   defaultProposalPipeline      crm_pipelines?                 @relation("WorkspaceDefaultPipeline", fields: [defaultProposalPipelineId], references: [id])
   organization                 organizations?                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  forms                        forms[]
 
   @@index([defaultProposalPipelineId])
   @@index([organizationId])
@@ -696,4 +698,35 @@ model block_templates {
 
   @@unique([workspaceId, name])
   @@index([workspaceId])
+}
+
+model forms {
+  id             Int              @id @default(autoincrement())
+  uuid           String           @unique @default(uuid())
+  title          String
+  description    String?
+  workspaceId    Int
+  createdBy      Int?
+  isPublic       Boolean          @default(false)
+  fields         String           @default("[]") // JSON string of fields
+  settings       String?          @default("{}") // JSON string of settings
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  workspace      workspaces       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user           users?           @relation(fields: [createdBy], references: [id])
+  responses      form_responses[]
+
+  @@index([workspaceId])
+  @@index([createdBy])
+}
+
+model form_responses {
+  id         Int      @id @default(autoincrement())
+  formId     Int
+  response   String   // JSON string of response data
+  metadata   String?  // JSON string of metadata (ip, user agent, etc)
+  createdAt  DateTime @default(now())
+  form       forms    @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
 }

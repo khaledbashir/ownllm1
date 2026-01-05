@@ -138,6 +138,30 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "workspace/:slug/forms/:uuid/builder",
+        lazy: async () => {
+          const { default: WorkspaceFormBuilder } =
+            await import("@/pages/WorkspaceForms/Builder");
+          return { element: <PrivateRoute Component={WorkspaceFormBuilder} /> };
+        },
+      },
+      {
+        path: "forms/:uuid",
+        lazy: async () => {
+          const { default: PublicForm } =
+            await import("@/pages/PublicForm");
+          return { element: <PublicForm /> };
+        },
+      },
+      {
+        path: "workspace/:slug/forms",
+        lazy: async () => {
+          const { default: WorkspaceFormsDashboard } =
+            await import("@/pages/WorkspaceForms/Dashboard");
+          return { element: <PrivateRoute Component={WorkspaceFormsDashboard} /> };
+        },
+      },
+      {
         path: "workspace/:slug",
         lazy: async () => {
           const { default: WorkspaceChat } =

@@ -268,4 +268,9 @@ export default {
       manage: () => `/settings/beta-features/live-document-sync/manage`,
     },
   },
+  forms: {
+    dashboard: (slug) => `/workspace/${slug}/forms`,
+    builder: (slug, uuid) => `/workspace/${slug}/forms/${uuid}/builder`,
+    public: (uuid) => `/forms/${uuid}`,
+  },
 };

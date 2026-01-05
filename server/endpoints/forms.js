@@ -1,384 +1,386 @@
-const prisma = require("../utils/prisma");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
-const {
-  flexUserRoleValid,
-  ROLES,
-} = require("../utils/middleware/multiUserProtected");
-const { ProcessDocument } = require("../utils/documentProcessing");
+const { flexUserRoleValid, ROLES } = require("../utils/middleware/multiUserProtected");
+const { Form } = require("../models/forms");
+const { Workspace } = require("../models/workspace");
 const { v4: uuidv4 } = require("uuid");
+const { userFromRequest } = require("../utils/http");
 
 function formsEndpoints(app) {
   if (!app) return;
 
   // ============================================
-  // WORKSPACE FORMS
+  // WORKSPACE FORMS (NATIVE)
   // ============================================
 
-  // Get all forms connected to a workspace
+  // Get all forms for a workspace
   app.get(
     "/workspace/:slug/forms",
     [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager, ROLES.default])],
     async (request, response) => {
       try {
         const { slug } = request.params;
-        const workspace = await prisma.workspaces.findUnique({
-          where: { slug },
-        });
+        const workspace = await Workspace.get({ slug });
 
         if (!workspace) {
-          return response.status(404).json({
-            success: false,
-            error: "Workspace not found",
-          });
+          return response.status(404).json({ success: false, error: "Workspace not found" });
         }
 
-        // Check user has access
-        const user = response.locals.user;
-        const hasAccess =
-          user?.role === "admin" ||
-          (await prisma.workspace_users.findFirst({
-            where: {
-              user_id: user?.id || null,
-              workspace_id: workspace.id,
-            },
-          }));
+        const forms = await Form.where({ workspaceId: workspace.id }, null, { updatedAt: 'desc' });
 
-        if (!hasAccess) {
-          return response.status(403).json({
-            success: false,
-            error: "Access denied",
-          });
-        }
-
-        // Parse forms from workspace metadata
-        const forms = workspace.forms ? JSON.parse(workspace.forms) : [];
-
-        return response.status(200).json({
-          success: true,
-          forms,
-        });
+        return response.status(200).json({ success: true, forms });
       } catch (error) {
         console.error("Error listing forms:", error);
-        return response.status(500).json({
-          success: false,
-          error: error.message,
-        });
+        return response.status(500).json({ success: false, error: error.message });
       }
     }
   );
 
-  // Connect a form to workspace
+  // Create a new form
   app.post(
     "/workspace/:slug/forms",
     [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
     async (request, response) => {
       try {
         const { slug } = request.params;
-        const { formId, formTitle, formUrl, aiAnalysis = false } = request.body;
+        const { title, description, fields = [], settings = {} } = request.body;
+        const user = userFromRequest(request);
 
-        const workspace = await prisma.workspaces.findUnique({
-          where: { slug },
-        });
-
+        const workspace = await Workspace.get({ slug });
         if (!workspace) {
-          return response.status(404).json({
-            success: false,
-            error: "Workspace not found",
-          });
+          return response.status(404).json({ success: false, error: "Workspace not found" });
         }
 
-        // Get existing forms
-        const existingForms = workspace.forms ? JSON.parse(workspace.forms) : [];
+        const { form, message } = await Form.create({
+          title: title || "New Form",
+          description,
+          workspaceId: workspace.id,
+          createdBy: user?.id,
+          uuid: uuidv4(),
+          fields: JSON.stringify(fields),
+          settings: JSON.stringify(settings)
+        });
 
-        // Check if form already connected
-        if (existingForms.find((f) => f.formId === formId)) {
-          return response.status(400).json({
-            success: false,
-            error: "Form already connected to workspace",
-          });
+        if (!form) {
+          return response.status(500).json({ success: false, error: message });
         }
 
-        // Add new form
-        const newForm = {
-          formId,
-          formTitle,
-          formUrl,
-          aiAnalysis,
-          connectedAt: new Date().toISOString(),
-          responseCount: 0,
-        };
-
-        const updatedForms = [...existingForms, newForm];
-
-        // Update workspace
-        await prisma.workspaces.update({
-          where: { id: workspace.id },
-          data: { forms: JSON.stringify(updatedForms) },
-        });
-
-        return response.status(200).json({
-          success: true,
-          form: newForm,
-        });
+        return response.status(200).json({ success: true, form });
       } catch (error) {
-        console.error("Error connecting form:", error);
-        return response.status(500).json({
-          success: false,
-          error: error.message,
-        });
+        console.error("Error creating form:", error);
+        return response.status(500).json({ success: false, error: error.message });
       }
     }
   );
 
-  // Disconnect a form from workspace
-  app.delete(
-    "/workspace/:slug/forms/:formId",
-    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
-    async (request, response) => {
-      try {
-        const { slug, formId } = request.params;
-
-        const workspace = await prisma.workspaces.findUnique({
-          where: { slug },
-        });
-
-        if (!workspace) {
-          return response.status(404).json({
-            success: false,
-            error: "Workspace not found",
-          });
-        }
-
-        // Get existing forms
-        const existingForms = workspace.forms ? JSON.parse(workspace.forms) : [];
-
-        // Remove form
-        const updatedForms = existingForms.filter((f) => f.formId !== formId);
-
-        // Update workspace
-        await prisma.workspaces.update({
-          where: { id: workspace.id },
-          data: { forms: JSON.stringify(updatedForms) },
-        });
-
-        return response.status(200).json({
-          success: true,
-        });
-      } catch (error) {
-        console.error("Error disconnecting form:", error);
-        return response.status(500).json({
-          success: false,
-          error: error.message,
-        });
-      }
-    }
-  );
-
-  // ============================================
-  // FORM RESPONSES
-  // ============================================
-
-  // Webhook: Receive form responses from OpenForm
+  // AI Generate Form
   app.post(
-    "/workspace/:slug/forms/webhook",
-    [validatedRequest],
+    "/workspace/:slug/forms/generate",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
     async (request, response) => {
       try {
         const { slug } = request.params;
-        const { formId, responseId, responseData, sendToKnowledgeBase = true } = request.body;
+        const { prompt } = request.body;
+        const user = userFromRequest(request);
 
-        const workspace = await prisma.workspaces.findUnique({
-          where: { slug },
-        });
-
+        const workspace = await Workspace.get({ slug });
         if (!workspace) {
-          return response.status(404).json({
-            success: false,
-            error: "Workspace not found",
-          });
+          return response.status(404).json({ success: false, error: "Workspace not found" });
         }
 
-        // Update form response count
-        const existingForms = workspace.forms ? JSON.parse(workspace.forms) : [];
-        const updatedForms = existingForms.map((f) => {
-          if (f.formId === formId) {
-            return { ...f, responseCount: (f.responseCount || 0) + 1, lastResponseAt: new Date().toISOString() };
-          }
-          return f;
+        const { getLLMProvider } = require("../utils/helpers");
+        const LLMConnector = getLLMProvider({
+          provider: workspace?.chatProvider,
+          model: workspace?.chatModel,
         });
 
-        await prisma.workspaces.update({
-          where: { id: workspace.id },
-          data: { forms: JSON.stringify(updatedForms) },
+        const systemPrompt = `You are an expert form builder AI. Your goal is to generate a JSON structure for a form based on the user's description.
+The output MUST be a valid JSON array of form fields.
+Each field object should have:
+- id: string (unique)
+- label: string
+- type: string (text, textarea, number, email, date, select, checkbox, radio)
+- required: boolean
+- options: array of strings (only for select, checkbox, radio)
+- placeholder: string (optional)
+
+Example Output:
+[
+    { "id": "name", "label": "Full Name", "type": "text", "required": true, "placeholder": "John Doe" },
+    { "id": "email", "label": "Email Address", "type": "email", "required": true, "placeholder": "john@example.com" }
+]
+
+Do not include any markdown formatting or explanation. Just return the JSON array.`;
+
+        const messages = [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Create a form for: ${prompt}` }
+        ];
+
+        const { textResponse } = await LLMConnector.getChatCompletion(messages, {
+          temperature: 0.7,
+          user: user
         });
 
-        // If enabled, send response to workspace documents for RAG
-        if (sendToKnowledgeBase) {
-          try {
-            // Create a document from the form response
-            const responseText = JSON.stringify(responseData, null, 2);
-
-            // Create a file-like object for processing
-            const docData = {
-              title: `Form Response - ${new Date().toISOString()}`,
-              content: responseText,
-              size: Buffer.byteLength(responseText, "utf8"),
-              mime: "application/json",
-            };
-
-            // Process and store the document
-            const processDoc = new ProcessDocument({
-              workspaceId: workspace.id,
-              userId: response.locals.user?.id || null,
-            });
-
-            const { document: uploadedDoc } = await processDoc.uploadDocument(
-              docData,
-              `form-response-${Date.now()}.json`,
-              {
-                from: "webhook",
-                formId,
-                responseId,
-              }
-            );
-
-            if (uploadedDoc) {
-              console.log(`Form response uploaded to workspace ${slug}`);
-            }
-          } catch (docError) {
-            console.error("Error uploading form response to workspace:", docError);
-            // Don't fail the webhook if doc upload fails
-          }
+        // Parse response
+        let fields = [];
+        try {
+          // Strip markdown code blocks if present
+          const cleanText = textResponse.replace(/```json/g, "").replace(/```/g, "").trim();
+          fields = JSON.parse(cleanText);
+        } catch (e) {
+          console.error("Failed to parse AI response:", textResponse);
+          return response.status(500).json({ success: false, error: "Failed to generate valid form structure" });
         }
 
-        return response.status(200).json({
-          success: true,
-          message: "Form response received and processed",
+        // Create the form
+        const { form, message } = await Form.create({
+          title: prompt.slice(0, 50) + (prompt.length > 50 ? "..." : ""),
+          description: `Generated from prompt: "${prompt}"`,
+          workspaceId: workspace.id,
+          createdBy: user?.id,
+          uuid: uuidv4(),
+          fields: JSON.stringify(fields),
+          settings: JSON.stringify({})
         });
+
+        if (!form) return response.status(500).json({ success: false, error: message });
+
+        return response.status(200).json({ success: true, form });
+
       } catch (error) {
-        console.error("Error processing form webhook:", error);
-        return response.status(500).json({
-          success: false,
-          error: error.message,
-        });
+        console.error("Error generating form:", error);
+        return response.status(500).json({ success: false, error: error.message });
       }
     }
   );
 
-  // Get form responses in workspace
+  // Get specific form details
   app.get(
-    "/workspace/:slug/forms/:formId/responses",
+    "/workspace/:slug/forms/:uuid",
     [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager, ROLES.default])],
     async (request, response) => {
       try {
-        const { slug, formId } = request.params;
-        const { limit = 50 } = request.query;
+        const { slug, uuid } = request.params;
 
-        const workspace = await prisma.workspaces.findUnique({
-          where: { slug },
-        });
+        // ensure workspace exists and user has access (middleware handles role check but we need workspace id consistency)
+        const workspace = await Workspace.get({ slug });
+        if (!workspace) return response.status(404).json({ success: false, error: "Workspace not found" });
 
-        if (!workspace) {
-          return response.status(404).json({
-            success: false,
-            error: "Workspace not found",
-          });
-        }
+        const form = await Form.get({ uuid, workspaceId: workspace.id });
+        if (!form) return response.status(404).json({ success: false, error: "Form not found" });
 
-        // Check access
-        const user = response.locals.user;
-        const hasAccess =
-          user?.role === "admin" ||
-          (await prisma.workspace_users.findFirst({
-            where: {
-              user_id: user?.id || null,
-              workspace_id: workspace.id,
-            },
-          }));
-
-        if (!hasAccess) {
-          return response.status(403).json({
-            success: false,
-            error: "Access denied",
-          });
-        }
-
-        // Find documents created from form responses
-        const formDocs = await prisma.workspace_documents.findMany({
-          where: {
-            workspace_id: workspace.id,
-            metadata: {
-              path: ["from"],
-              equals: "webhook",
-            },
-          },
-          take: parseInt(limit),
-          orderBy: { created_at: "desc" },
-        });
-
-        // Filter by formId
-        const filteredDocs = formDocs.filter((doc) => {
-          const metadata = doc.metadata ? JSON.parse(doc.metadata) : {};
-          return metadata.formId === formId;
-        });
-
-        return response.status(200).json({
-          success: true,
-          responses: filteredDocs,
-        });
+        return response.status(200).json({ success: true, form });
       } catch (error) {
-        console.error("Error listing form responses:", error);
-        return response.status(500).json({
-          success: false,
-          error: error.message,
-        });
+        console.error("Error getting form:", error);
+        return response.status(500).json({ success: false, error: error.message });
       }
     }
   );
 
-  // Update form settings
-  app.patch(
-    "/workspace/:slug/forms/:formId",
+  // Update form
+  app.put(
+    "/workspace/:slug/forms/:uuid",
     [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
     async (request, response) => {
       try {
-        const { slug, formId } = request.params;
-        const { aiAnalysis } = request.body;
+        const { slug, uuid } = request.params;
+        const updates = request.body;
 
-        const workspace = await prisma.workspaces.findUnique({
-          where: { slug },
-        });
+        const workspace = await Workspace.get({ slug });
+        if (!workspace) return response.status(404).json({ success: false, error: "Workspace not found" });
 
-        if (!workspace) {
-          return response.status(404).json({
-            success: false,
-            error: "Workspace not found",
-          });
-        }
+        const currentForm = await Form.get({ uuid, workspaceId: workspace.id });
+        if (!currentForm) return response.status(404).json({ success: false, error: "Form not found" });
 
-        // Update form settings
-        const existingForms = workspace.forms ? JSON.parse(workspace.forms) : [];
-        const updatedForms = existingForms.map((f) => {
-          if (f.formId === formId) {
-            return { ...f, aiAnalysis };
-          }
-          return f;
-        });
+        const { form, message } = await Form.update(currentForm.id, updates);
+        if (!form) return response.status(500).json({ success: false, error: message });
 
-        await prisma.workspaces.update({
-          where: { id: workspace.id },
-          data: { forms: JSON.stringify(updatedForms) },
-        });
-
-        return response.status(200).json({
-          success: true,
-        });
+        return response.status(200).json({ success: true, form });
       } catch (error) {
         console.error("Error updating form:", error);
-        return response.status(500).json({
-          success: false,
-          error: error.message,
+        return response.status(500).json({ success: false, error: error.message });
+      }
+    }
+  );
+
+  // Delete form
+  app.delete(
+    "/workspace/:slug/forms/:uuid",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const { slug, uuid } = request.params;
+        const workspace = await Workspace.get({ slug });
+        if (!workspace) return response.status(404).json({ success: false, error: "Workspace not found" });
+
+        const success = await Form.delete({ uuid, workspaceId: workspace.id });
+        if (!success) return response.status(500).json({ success: false, error: "Failed to delete form" });
+
+        return response.status(200).json({ success: true });
+      } catch (error) {
+        console.error("Error deleting form:", error);
+        return response.status(500).json({ success: false, error: error.message });
+      }
+    }
+  );
+
+  // ============================================
+  // PUBLIC FORM SUBMISSION & VIEW
+  // ============================================
+
+  // Get public form
+  app.get(
+    "/forms/:uuid",
+    async (request, response) => {
+      try {
+        const { uuid } = request.params;
+        const form = await Form.get({ uuid });
+
+        if (!form) return response.status(404).json({ success: false, error: "Form not found" });
+        if (!form.isPublic) return response.status(403).json({ success: false, error: "Form is not public" });
+
+        return response.status(200).json({
+          success: true, form: {
+            title: form.title,
+            description: form.description,
+            fields: form.fields,
+            settings: form.settings,
+            uuid: form.uuid
+          }
         });
+      } catch (error) {
+        console.error("Error fetching public form:", error);
+        return response.status(500).json({ success: false, error: error.message });
+      }
+    }
+  );
+
+  // Submit form response
+  app.post(
+    "/forms/:uuid/submit",
+    async (request, response) => {
+      try {
+        const { uuid } = request.params;
+        const { response: responseData } = request.body;
+
+        const form = await Form.get({ uuid });
+        if (!form) return response.status(404).json({ success: false, error: "Form not found" });
+
+        const { response: log, message } = await Form.logResponse(form.id, responseData, {
+          ip: request.ip,
+          userAgent: request.get('User-Agent')
+        });
+
+        if (!log) return response.status(500).json({ success: false, error: message });
+
+        return response.status(200).json({ success: true });
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        return response.status(500).json({ success: false, error: error.message });
+      }
+    }
+  );
+
+  // Get Form Responses
+  app.get(
+    "/workspace/:slug/forms/:uuid/responses",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager, ROLES.default])],
+    async (request, response) => {  // Export Response as PDF
+      try {
+        const { slug, uuid } = request.params;
+        const { limit = 50, offset = 0 } = request.query;
+
+        const workspace = await Workspace.get({ slug });
+        if (!workspace) return response.status(404).json({ success: false, error: "Workspace not found" });
+
+        const form = await Form.get({ uuid, workspaceId: workspace.id });
+        if (!form) return response.status(404).json({ success: false, error: "Form not found" });
+
+        const responses = await Form.getResponses(form.id, parseInt(limit), parseInt(offset));
+
+        return response.status(200).json({ success: true, responses });
+      } catch (error) {
+        console.error("Error getting form responses:", error);
+        return response.status(500).json({ success: false, error: error.message });
+      }
+    }
+  );
+
+  // Export Response as PDF
+  app.post(
+    "/workspace/:slug/forms/:uuid/responses/:responseId/export",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const { responseId } = request.params;
+        const { templateId } = request.body;
+        const prisma = require("../utils/prisma");
+        const { generatePdf } = require("../utils/pdfExport");
+
+        const formResponse = await Form.getResponse(responseId);
+        if (!formResponse) {
+          return response.status(404).json({ success: false, error: "Response not found" });
+        }
+
+        const template = await prisma.pdf_templates.findUnique({
+          where: { id: parseInt(templateId) }
+        });
+
+        if (!template) {
+          return response.status(404).json({ success: false, error: "Template not found" });
+        }
+
+        // Parse response data
+        let responseData = {};
+        try {
+          responseData = typeof formResponse.response === 'string'
+            ? JSON.parse(formResponse.response)
+            : formResponse.response;
+        } catch (e) {
+          console.error("Failed to parse response JSON", e);
+        }
+
+        // Get Template HTML
+        let html = template.cssOverrides || `
+            <!DOCTYPE html>
+            <html>
+            <head><style>body { font-family: ${template.fontFamily}; color: ${template.secondaryColor}; }</style></head>
+            <body>
+                <h1 style="color: ${template.primaryColor}">${template.headerText || 'Document'}</h1>
+                <div class="content">{{content}}</div>
+                <footer>${template.footerText || ''}</footer>
+            </body>
+            </html>
+        `;
+
+        // Perform Substitution
+        // 1. Standard keys
+        html = html.replace(/{{date}}/g, new Date().toLocaleDateString());
+
+        // 2. Form Fields
+        Object.keys(responseData).forEach(key => {
+          const val = responseData[key];
+          const displayVal = Array.isArray(val) ? val.join(", ") : (val || "");
+          const regex = new RegExp(`{{${key}}}`, 'g');
+          html = html.replace(regex, displayVal);
+        });
+
+        const pdfBuffer = await generatePdf(html, {
+          format: "A4",
+          printBackground: true,
+          margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" },
+        });
+
+        response.setHeader("Content-Type", "application/pdf");
+        response.setHeader(
+          "Content-Disposition",
+          `attachment; filename="submission-${responseId}.pdf"`
+        );
+        return response.send(pdfBuffer);
+
+      } catch (error) {
+        console.error("Error exporting PDF:", error);
+        return response.status(500).json({ success: false, error: error.message });
       }
     }
   );
