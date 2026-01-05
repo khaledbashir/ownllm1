@@ -3519,40 +3519,25 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
         break;
 
       case "affine:embed-pricing-table": {
-        // CRITICAL: BlockSuite embed blocks can store props on block, block.model, or block.props
-        // We need to check all locations to find the rows data
+        // Use job.blockToSnapshot() to get normalized data
+        // This converts the live block to a clean JSON snapshot
+        let blockSnapshot = null;
+        try {
+          blockSnapshot = await job.blockToSnapshot(block);
+        } catch (snapshotError) {
+          console.warn("[PDF Export] Failed to create block snapshot:", snapshotError);
+          // Fallback to direct model access
+        }
+
+        // Helper to read props from snapshot or fallback to model
         const readProp = (key) => {
-          try {
-            // Check direct block property first (most common for custom embeds)
-            if (block[key] !== undefined) return block[key];
-            // Check model (if it exists)
-            if (model && model[key] !== undefined) return model[key];
-            // Check block.props
-            if (block.props && block.props[key] !== undefined)
-              return block.props[key];
-            // Check model.props
-            if (model && model.props) {
-              if (model.props[key] !== undefined) return model.props[key];
-              if (typeof model.props.get === "function")
-                return model.props.get(key);
-            }
-            // Check block.yBlock (Yjs-backed properties)
-            if (block.yBlock) {
-              const yProps =
-                block.yBlock.get("prop:props") || block.yBlock.get("props");
-              if (yProps && typeof yProps.get === "function") {
-                return yProps.get(key);
-              }
-              // Direct key on yBlock
-              const yVal =
-                block.yBlock.get(`prop:${key}`) || block.yBlock.get(key);
-              if (yVal !== undefined) return yVal;
-            }
-            return undefined;
-          } catch (e) {
-            console.warn(`[PDF Export] Error reading prop '${key}':`, e);
-            return undefined;
+          // Try snapshot first (normalized data)
+          if (blockSnapshot?.props && blockSnapshot.props[key] !== undefined) {
+            return blockSnapshot.props[key];
           }
+          // Fallback to model (live data)
+          if (model && model[key] !== undefined) return model[key];
+          return undefined;
         };
 
         const toPlain = (value) => {
