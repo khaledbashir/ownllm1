@@ -87,7 +87,7 @@ function formsEndpoints(app) {
           return response.status(404).json({ success: false, error: "Workspace not found" });
         }
 
-        const { getLLMProvider } = require("../core/ai/modelMap");
+        const { getLLMProvider } = require("../utils/helpers");
         const LLMConnector = getLLMProvider({
           provider: workspace?.chatProvider,
           model: workspace?.chatModel,
