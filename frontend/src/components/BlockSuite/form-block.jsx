@@ -4,6 +4,7 @@ import { BlockModel } from "@blocksuite/store";
 import { createEmbedBlockSchema, defineEmbedModel } from "@blocksuite/blocks";
 import { BlockElement } from "@blocksuite/block-std";
 import { html } from "lit";
+import { literal } from "lit/static-html.js";
 import Workspace from "@/models/workspace";
 import { NotePencil, Spinner } from "@phosphor-icons/react";
 
@@ -138,6 +139,6 @@ defineOnce("affine-embed-form", FormBlockElement);
 
 export const FormBlockSpec = {
     view: {
-        component: literal("affine-embed-form"),
+        component: literal`affine-embed-form`,
     },
 };
