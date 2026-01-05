@@ -25,7 +25,7 @@ import { MetricsProvider } from "./ChatHistory/HistoricalMessage/Actions/RenderM
 import ThreadNotes from "../ThreadNotes";
 import { ChatText, FileText, NotePencil } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
-import WorkspaceForms from "../WorkspaceForms";
+import WorkspaceForms from "../../WorkspaceForms";
 
 // Event for AI to insert content into notes
 export const NOTE_INSERT_EVENT = "note-insert-content";

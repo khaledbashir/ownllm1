@@ -94,7 +94,7 @@ export default function ExportPdfModal({
                     ) : templates.length === 0 ? (
                         <div className="text-center p-4 text-slate-400">
                             <p>No document templates found.</p>
-                            <p className="text-sm mt-2">Create templates in Settings > Document Templates first.</p>
+                            <p className="text-sm mt-2">Create templates in Settings &gt; Document Templates first.</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
