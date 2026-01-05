@@ -82,6 +82,10 @@ function formsEndpoints(app) {
         const { prompt } = request.body;
         const user = userFromSession(request);
 
+        if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+          return response.status(400).json({ success: false, error: "Prompt is required" });
+        }
+
         const workspace = await Workspace.get({ slug });
         if (!workspace) {
           return response.status(404).json({ success: false, error: "Workspace not found" });

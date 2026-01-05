@@ -19,7 +19,7 @@ export default function FormSelectorModal({ isOpen, onClose, onSelect, workspace
     async function fetchForms() {
         setLoading(true);
         try {
-            const { forms: fetchedForms } = await Workspace.forms(workspaceSlug);
+            const fetchedForms = await Workspace.getForms(workspaceSlug);
             setForms(fetchedForms || []);
         } catch (e) {
             console.error("Failed to fetch forms:", e);
