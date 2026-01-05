@@ -407,3 +407,66 @@ The `assetsManager` is passed into `fromDocSnapshot`.
 | **Adapter-Based** | **Structural/Content** | Fast, headless, runs in Node.js. Good for Markdown/raw HTML. |
 | **Visual Export** | **High-Fidelity UI** | Requires a browser to render Web Components and themes. Essential for specific visual layouts (e.g., Page vs Edgeless mode). |
 
+---
+
+## 🏗️ Custom Embed Blocks & React Integration (Best Practices)
+
+Derived from architectural analysis for `form-embed` implementation.
+
+### 1. Defining Embed Blocks
+Use the **2-step definition process** to avoid schema errors:
+1. **Model**: Extend `defineEmbedModel(BlockModel)` to type safely.
+2. **Schema**: Use `createEmbedBlockSchema`. This creates the "contract".
+
+```typescript
+// 1. Model
+export class MyBlockModel extends defineEmbedModel(BlockModel) {}
+
+// 2. Schema
+export const MyBlockSchema = createEmbedBlockSchema({
+  name: 'my-embed', // matching flavour!
+  toModel: () => new MyBlockModel(),
+  props: () => ({ status: 'active' }),
+});
+```
+
+### 2. The Spec Structure (CRITICAL)
+A `BlockSpec` is a bundle. It **MUST** include the schema.
+**Correct Structure:**
+```javascript
+export const MyBlockSpec = {
+  schema: MyBlockSchema, // <-- DO NOT FORGET THIS
+  view: {
+    component: literal`my-web-component-tag`
+  }
+};
+```
+*Failure to include `schema` results in editor crashes (Cannot read property 'model' of undefined).*
+
+### 3. React Integration Pattern
+While BlockSuite is native Web Components, the "Practical Implementation" for React is to use a wrapper Web Component that manages the React Root.
+
+**Pattern:**
+```javascript
+class MyBlockElement extends BlockElement {
+  connectedCallback() {
+      super.connectedCallback();
+      // Mount React Root
+      this._root = createRoot(this); 
+      this._root.render(<MyReactComponent model={this.model} />);
+  }
+  disconnectedCallback() {
+      // Unmount to prevent leaks
+      if (this._root) this._root.unmount();
+      super.disconnectedCallback();
+  }
+}
+defineOnce('my-web-component-tag', MyBlockElement);
+```
+
+### 4. Persistence
+Do **not** implement custom serialization. Update props on the model, and the CRDT-backed Block Tree handles binary serialization automatically.
+```javascript
+doc.updateBlock(model, { formId: 'new-id' }); // Automatically persisted
+```
+
