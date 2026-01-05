@@ -776,7 +776,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         editor.pageSpecs = [
           ...PageEditorBlockSpecs,
           PricingTableBlockSpec,
-          FormBlockSpec,
+          // FormBlockSpec, // Temporarily disabled - needs proper BlockSuite integration
         ];
         editor.doc = doc;
 
