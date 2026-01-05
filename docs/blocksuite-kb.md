@@ -470,6 +470,66 @@ Do **not** implement custom serialization. Update props on the model, and the CR
 doc.updateBlock(model, { formId: 'new-id' }); // Automatically persisted
 ```
 
+### 5. Detailed Code Pattern: React Wrapper
+
+The canonical way to wrap React components safely:
+
+```javascript
+/* implementation of BlockElement */
+connectedCallback() {
+  super.connectedCallback();
+  // 1. Create root 
+  // 2. Listen to propsUpdated
+  this._sub = this.model.propsUpdated.on(() => this._render());
+}
+
+_render() {
+  // Pass model DOWN to React. 
+  // React should NOT write back to model directly during render.
+  this._root.render(<MyReactComponent model={this.model} />);
+}
+
+disconnectedCallback() {
+  this._sub?.dispose();
+  this._root?.unmount();
+  super.disconnectedCallback();
+}
+```
+
+---
+
+## 📄 PDF/HTML Export Adapter Pattern
+
+To render custom blocks (like forms) in exports, extend the `BaseAdapter`.
+
+```typescript
+import { BaseAdapter, ASTWalker } from '@blocksuite/store';
+
+class CustomHtmlAdapter extends BaseAdapter {
+  async fromDocSnapshot({ snapshot }) {
+    const walker = new ASTWalker();
+    
+    walker.setEnter(async (node, context) => {
+      if (node.flavour === 'affine:embed-form') {
+        // Transform to HTML table or div
+        context.openNode(
+          { type: 'div', content: `<div class="form-placeholder">Form: ${node.props.title}</div>` }, 
+          'children'
+        );
+      }
+    });
+
+    walker.setLeave(async (node, context) => {
+       if (node.flavour === 'affine:embed-form') {
+         context.closeNode();
+       }
+    });
+
+    // ... walk logic
+  }
+}
+```
+
 ---
 
 ## 🎨 Edgeless Architecture & Isomorphic Data

@@ -120,16 +120,39 @@ export class FormBlockElement extends BlockElement {
 
     connectedCallback() {
         super.connectedCallback();
-        const container = this.querySelector(".form-block-container");
-        if (container) {
-            this._root = createRoot(container);
+        // Lit's firstUpdated or layout timing might vary, but in BlockSuite 
+        // connectedCallback is a safe place to setup if we wait for first render or use a container.
+        // However, standard Lit pattern often uses `firstUpdated`. 
+        // For simplicity with this current setup, we'll keep the logic but add the listener.
+
+        // Use a slight timeout or requestAnimationFrame to ensure the div exists from the lit render
+        setTimeout(() => {
+            const container = this.querySelector(".form-block-container");
+            if (container && !this._root) {
+                this._root = createRoot(container);
+                this._render();
+            }
+        }, 0);
+
+        // Listen for props updates (Undo/Redo, collab)
+        this._sub = this.model.propsUpdated.on(() => {
+            this._render();
+        });
+    }
+
+    _render() {
+        if (this._root) {
             this._root.render(<FormBlockWidget model={this.model} />);
         }
     }
 
     disconnectedCallback() {
+        if (this._sub) {
+            this._sub.dispose();
+        }
         if (this._root) {
             this._root.unmount();
+            this._root = null;
         }
         super.disconnectedCallback();
     }
