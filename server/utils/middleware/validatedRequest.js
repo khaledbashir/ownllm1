@@ -85,7 +85,7 @@ async function validateMultiUserRequest(request, response, next) {
 
   const valid = decodeJWT(token);
   if (!valid || !valid.id) {
-    console.warn("[AUTH] 401 Blocked: Invalid auth token (decode failed) in validateMultiUserRequest.");
+    console.warn(`[AUTH] 401 Blocked: Invalid auth token in validateMultiUserRequest. Token keys: ${Object.keys(valid || {}).join(', ')}`);
     response.status(401).json({
       error: "Invalid auth token.",
     });

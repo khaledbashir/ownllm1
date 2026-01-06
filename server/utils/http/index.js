@@ -75,7 +75,9 @@ async function userFromSession(request, response = null) {
 function decodeJWT(jwtToken) {
   try {
     return JWT.verify(jwtToken, process.env.JWT_SECRET);
-  } catch {}
+  } catch (e) {
+    console.warn("[JWT Debug] Decode failed:", e.message);
+  }
   return { p: null, id: null, username: null };
 }
 
