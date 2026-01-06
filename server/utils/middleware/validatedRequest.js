@@ -85,6 +85,10 @@ async function validateMultiUserRequest(request, response, next) {
 
   const valid = decodeJWT(token);
 
+  if (valid) {
+      console.log(`[AUTH DEBUG] Decoded token: keys=[${Object.keys(valid).join(',')}], id=${valid.id}, p=${!!valid.p}`);
+  }
+
   // Fallback: If token has 'p' (Single User Token) but no 'id', check if valid password token
   // This allows single-user sessions to work even if Multi-User Mode was just enabled
   if (valid && valid.p && !valid.id) {
