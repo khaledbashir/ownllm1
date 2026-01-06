@@ -21,7 +21,7 @@ export class FormBlockModel extends defineEmbedModel(BlockModel) { }
  * FormBlockSchema - Defines the schema for the form block
  */
 export const FormBlockSchema = createEmbedBlockSchema({
-    name: "form-embed",
+    name: "form",
     version: 1,
     toModel: () => new FormBlockModel(),
     props: (internal) => ({
