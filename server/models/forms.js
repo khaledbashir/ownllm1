@@ -29,11 +29,34 @@ const Form = {
                     }
                 }
             });
-            if (form && form.fields) {
-                form.fields = JSON.parse(form.fields || "[]");
-            }
-            if (form && form.settings) {
-                form.settings = JSON.parse(form.settings || "{}");
+            if (form) {
+                // Safe parse with fallback to empty array/object
+                if (form.fields) {
+                    try {
+                        form.fields = typeof form.fields === 'string'
+                            ? JSON.parse(form.fields)
+                            : (form.fields || []);
+                        if (!Array.isArray(form.fields)) form.fields = [];
+                    } catch (e) {
+                        console.warn(`[Form.get] Failed to parse fields for form ${form.id || form.uuid}:`, e);
+                        form.fields = [];
+                    }
+                } else {
+                    form.fields = [];
+                }
+                if (form.settings) {
+                    try {
+                        form.settings = typeof form.settings === 'string'
+                            ? JSON.parse(form.settings)
+                            : (form.settings || {});
+                        if (typeof form.settings !== 'object') form.settings = {};
+                    } catch (e) {
+                        console.warn(`[Form.get] Failed to parse settings for form ${form.id || form.uuid}:`, e);
+                        form.settings = {};
+                    }
+                } else {
+                    form.settings = {};
+                }
             }
             return form || null;
         } catch (error) {
@@ -54,11 +77,30 @@ const Form = {
                 ...(orderBy !== null ? { orderBy } : {}),
             });
 
-            return results.map(form => ({
-                ...form,
-                fields: JSON.parse(form.fields || "[]"),
-                settings: JSON.parse(form.settings || "{}")
-            }));
+            return results.map(form => {
+                // Safe parse each form's fields and settings
+                let parsedFields = [];
+                let parsedSettings = {};
+                try {
+                    parsedFields = typeof form.fields === 'string'
+                        ? JSON.parse(form.fields)
+                        : (form.fields || []);
+                    if (!Array.isArray(parsedFields)) parsedFields = [];
+                } catch (e) {
+                    console.warn(`[Form.where] Failed to parse fields for form ${form.id}:`, e);
+                    parsedFields = [];
+                }
+                try {
+                    parsedSettings = typeof form.settings === 'string'
+                        ? JSON.parse(form.settings)
+                        : (form.settings || {});
+                    if (typeof parsedSettings !== 'object') parsedSettings = {};
+                } catch (e) {
+                    console.warn(`[Form.where] Failed to parse settings for form ${form.id}:`, e);
+                    parsedSettings = {};
+                }
+                return { ...form, fields: parsedFields, settings: parsedSettings };
+            });
         } catch (error) {
             console.error(error.message);
             return [];

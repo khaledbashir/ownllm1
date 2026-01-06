@@ -148,7 +148,14 @@ export default function FormSelectorModal({ isOpen, onClose, onSelect, workspace
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="font-semibold text-white group-hover:text-blue-400 transition-colors line-clamp-1">{form.title}</span>
                                             <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-slate-500 uppercase tracking-tighter">
-                                                {form.fields ? JSON.parse(form.fields).length : 0} fields
+                                                {(() => {
+                                                    try {
+                                                        const fields = typeof form.fields === 'string' ? JSON.parse(form.fields) : (form.fields || []);
+                                                        return Array.isArray(fields) ? fields.length : 0;
+                                                    } catch {
+                                                        return 0;
+                                                    }
+                                                })()} fields
                                             </span>
                                         </div>
                                         {form.description && (

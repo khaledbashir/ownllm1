@@ -243,12 +243,13 @@ Do not include any markdown formatting or explanation. Just return the JSON arra
         if (!form) return response.status(404).json({ success: false, error: "Form not found" });
         if (!form.isPublic) return response.status(403).json({ success: false, error: "Form is not public" });
 
+        // Normalize fields/settings to JSON before sending (Form.get() already parses them to objects)
         return response.status(200).json({
           success: true, form: {
             title: form.title,
             description: form.description,
-            fields: form.fields,
-            settings: form.settings,
+            fields: typeof form.fields === 'string' ? form.fields : JSON.stringify(form.fields || []),
+            settings: typeof form.settings === 'string' ? form.settings : JSON.stringify(form.settings || {}),
             uuid: form.uuid
           }
         });
