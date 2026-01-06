@@ -172,7 +172,18 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       try {
         const workspace = await Workspace.bySlug(workspaceSlug);
         if (workspace?.inlineAiActions) {
-          const actions = JSON.parse(workspace.inlineAiActions);
+          // Check for malformed content before attempting to parse
+          const actionsStr = workspace.inlineAiActions;
+          if (typeof actionsStr !== 'string') {
+            console.warn("[BlockSuiteEditor] inlineAiActions is not a string:", typeof actionsStr);
+            return;
+          }
+          // Check for common malformed patterns
+          if (actionsStr.startsWith('[object') || actionsStr.trim().startsWith('[object')) {
+            console.warn("[BlockSuiteEditor] inlineAiActions contains malformed content, skipping");
+            return;
+          }
+          const actions = JSON.parse(actionsStr);
           setCustomAIActions(Array.isArray(actions) ? actions : []);
           console.log("[BlockSuiteEditor] Loaded custom AI actions:", actions);
         }
@@ -2360,9 +2371,17 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       let activeTemplateFooter = "";
 
       if (selectedTemplate) {
-        const overrides = selectedTemplate.cssOverrides
-          ? JSON.parse(selectedTemplate.cssOverrides)
-          : {};
+        let overrides = {};
+        if (selectedTemplate.cssOverrides) {
+          try {
+            const overridesStr = selectedTemplate.cssOverrides;
+            if (typeof overridesStr === 'string' && !overridesStr.startsWith('[object')) {
+              overrides = JSON.parse(overridesStr);
+            }
+          } catch (e) {
+            console.warn("[BlockSuiteEditor] Failed to parse cssOverrides:", e);
+          }
+        }
         const logoHeight = overrides.logoHeight || 40;
         const logoAlignment = overrides.logoAlignment || "flex-start";
         const isRightAligned = logoAlignment === "flex-end";
@@ -3262,10 +3281,18 @@ ${activeTemplateFooter}
                   alt="Logo"
                   className="h-10 object-contain"
                   style={{
-                    height: selectedBrandTemplate.cssOverrides
-                      ? JSON.parse(selectedBrandTemplate.cssOverrides)
-                        .logoHeight || 40
-                      : 40,
+                    height: (() => {
+                      if (!selectedBrandTemplate.cssOverrides) return 40;
+                      try {
+                        const overridesStr = selectedBrandTemplate.cssOverrides;
+                        if (typeof overridesStr === 'string' && !overridesStr.startsWith('[object')) {
+                          return JSON.parse(overridesStr).logoHeight || 40;
+                        }
+                      } catch (e) {
+                        console.warn("[BlockSuiteEditor] Failed to parse brand cssOverrides:", e);
+                      }
+                      return 40;
+                    })(),
                   }}
                 />
               )}

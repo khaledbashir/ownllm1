@@ -166,11 +166,16 @@ export default function DocAISettings({ workspace, setHasChanges }) {
       setSystemPrompt(workspace.inlineAiSystemPrompt || "");
       setSelectedProvider(workspace.inlineAiProvider || "default");
       try {
-        const actions = workspace.inlineAiActions
-          ? JSON.parse(workspace.inlineAiActions)
-          : [];
-        setCustomActions(actions);
+        let actions = [];
+        if (workspace.inlineAiActions) {
+          const actionsStr = workspace.inlineAiActions;
+          if (typeof actionsStr === 'string' && !actionsStr.startsWith('[object')) {
+            actions = JSON.parse(actionsStr);
+          }
+        }
+        setCustomActions(Array.isArray(actions) ? actions : []);
       } catch (e) {
+        console.warn("[DocAISettings] Failed to parse inlineAiActions:", e);
         setCustomActions([]);
       }
     }
