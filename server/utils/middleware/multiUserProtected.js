@@ -66,10 +66,13 @@ function flexUserRoleValid(allowedRoles = DEFAULT_ROLES) {
 
     const user =
       response.locals?.user ?? (await userFromSession(request, response));
+    
     if (allowedRoles.includes(user?.role)) {
       next();
       return;
     }
+
+    console.warn(`[AUTH] 401 Blocked. User: ${user?.id} Role: ${user?.role}. Allowed: ${allowedRoles}. MUM: ${multiUserMode}`);
     return response.sendStatus(401).end();
   };
 }

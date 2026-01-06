@@ -80,7 +80,7 @@ function formsEndpoints(app) {
       try {
         const { slug } = request.params;
         const { prompt } = request.body;
-        const user = userFromSession(request);
+        const user = await userFromSession(request, response);
 
         if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
           return response.status(400).json({ success: false, error: "Prompt is required" });
