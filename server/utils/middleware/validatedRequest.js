@@ -32,6 +32,7 @@ async function validatedRequest(request, response, next) {
   const token = auth ? auth.split(" ")[1] : null;
 
   if (!token) {
+    console.warn("[AUTH] 401 Blocked: No auth token found in validRequest.");
     response.status(401).json({
       error: "No auth token found.",
     });
@@ -42,6 +43,7 @@ async function validatedRequest(request, response, next) {
   const { p } = decodeJWT(token);
 
   if (p === null || !/\w{32}:\w{32}/.test(p)) {
+    console.warn("[AUTH] 401 Blocked: Token expired or failed validation in validRequest.");
     response.status(401).json({
       error: "Token expired or failed validation.",
     });
@@ -74,6 +76,7 @@ async function validateMultiUserRequest(request, response, next) {
   const token = auth ? auth.split(" ")[1] : null;
 
   if (!token) {
+    console.warn("[AUTH] 401 Blocked: No auth token found in validateMultiUserRequest.");
     response.status(401).json({
       error: "No auth token found.",
     });
@@ -82,6 +85,7 @@ async function validateMultiUserRequest(request, response, next) {
 
   const valid = decodeJWT(token);
   if (!valid || !valid.id) {
+    console.warn("[AUTH] 401 Blocked: Invalid auth token (decode failed) in validateMultiUserRequest.");
     response.status(401).json({
       error: "Invalid auth token.",
     });
@@ -90,6 +94,7 @@ async function validateMultiUserRequest(request, response, next) {
 
   const user = await User.get({ id: valid.id });
   if (!user) {
+    console.warn(`[AUTH] 401 Blocked: Invalid auth for user found in validateMultiUserRequest. ID: ${valid.id}`);
     response.status(401).json({
       error: "Invalid auth for user.",
     });
@@ -97,6 +102,7 @@ async function validateMultiUserRequest(request, response, next) {
   }
 
   if (user.suspended) {
+    console.warn(`[AUTH] 401 Blocked: User suspended in validateMultiUserRequest. ID: ${user.id}`);
     response.status(401).json({
       error: "User is suspended from system",
     });

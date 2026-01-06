@@ -66,13 +66,16 @@ function flexUserRoleValid(allowedRoles = DEFAULT_ROLES) {
 
     const user =
       (response.locals && response.locals.user) ? response.locals.user : (await userFromSession(request, response));
-    
+
+    // Debug logging for permissions
+    // console.log(`[AUTH CHECK] User: ${user?.username} (${user?.role}) attempting access. Allowed: [${allowedRoles.join(', ')}]`);
+
     if (allowedRoles.includes(user && user.role)) {
       next();
       return;
     }
     
-    console.warn(`[AUTH] 401 Blocked. User: ${user ? user.id : 'null'} Role: ${user ? user.role : 'null'}. Allowed: ${allowedRoles}. MUM: ${multiUserMode}`);
+    console.warn(`[AUTH] 401 Blocked in flexUserRoleValid. User ID: ${user ? user.id : 'null'}, Role: ${user ? user.role : 'null'}. Allowed: ${allowedRoles}. MUM: ${multiUserMode}`);
     return response.sendStatus(401).end();
   };
 }
