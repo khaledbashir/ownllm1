@@ -84,8 +84,33 @@ async function validateMultiUserRequest(request, response, next) {
   }
 
   const valid = decodeJWT(token);
+
+  // Fallback: If token has 'p' (Single User Token) but no 'id', check if valid password token
+  // This allows single-user sessions to work even if Multi-User Mode was just enabled
+  if (valid && valid.p && !valid.id) {
+    const bcrypt = require("bcrypt");
+    if (
+        !/\w{32}:\w{32}/.test(valid.p) || 
+        (process.env.HASHED_AUTH_TOKEN && !bcrypt.compareSync(EncryptionMgr.decrypt(valid.p), process.env.HASHED_AUTH_TOKEN))
+    ) {
+        console.warn("[AUTH] 401 Blocked: Invalid Single-User token in Multi-User Context.");
+        response.status(401).json({ error: "Invalid auth." });
+        return;
+    }
+    
+    // Mock an admin user for this request
+    response.locals.user = {
+      id: 0,
+      username: "admin",
+      role: "admin",
+      suspended: false
+    };
+    next();
+    return;
+  }
+
   if (!valid || !valid.id) {
-    console.warn(`[AUTH] 401 Blocked: Invalid auth token in validateMultiUserRequest. Token keys: ${Object.keys(valid || {}).join(', ')}`);
+    console.warn(`[AUTH] 401 Blocked: Invalid auth token under strict check. Token keys: ${Object.keys(valid || {}).join(', ')}`);
     response.status(401).json({
       error: "Invalid auth token.",
     });
