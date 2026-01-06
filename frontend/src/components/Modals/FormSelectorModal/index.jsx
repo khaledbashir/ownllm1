@@ -52,7 +52,7 @@ export default function FormSelectorModal({ isOpen, onClose, onSelect, workspace
 
     if (!isOpen) return null;
 
-    const filteredForms = forms.filter(f =>
+    const filteredForms = (forms || []).filter(f =>
         f.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (f.description && f.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );

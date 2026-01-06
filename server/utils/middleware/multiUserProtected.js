@@ -54,9 +54,11 @@ function flexUserRoleValid(allowedRoles = DEFAULT_ROLES) {
     }
 
     // Bypass if not in multi-user mode
-    const multiUserMode =
-      response.locals?.multiUserMode ??
-      (await SystemSettings.isMultiUserMode());
+    // Check response.locals.multiUserMode first (set by validatedRequest), fall back to DB check
+    let multiUserMode = response.locals?.multiUserMode;
+    if (multiUserMode === undefined) {
+      multiUserMode = await SystemSettings.isMultiUserMode();
+    }
     if (!multiUserMode) {
       next();
       return;
