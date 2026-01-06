@@ -24,9 +24,9 @@ export const FormBlockSchema = createEmbedBlockSchema({
     name: "form-embed",
     version: 1,
     toModel: () => new FormBlockModel(),
-    props: () => ({
+    props: (internal) => ({
         formUuid: null,
-        title: "Embedded Form",
+        title: internal.Text("Embedded Form"),
         isSubmittable: true,
     }),
 });

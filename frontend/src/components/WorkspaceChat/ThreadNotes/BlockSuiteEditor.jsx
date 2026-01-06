@@ -3109,7 +3109,7 @@ ${activeTemplateFooter}
           : doc.root.id;
 
       doc.addBlock(
-        "form-embed",
+        "affine:embed-form",
         {
           formUuid: formUuid,
           title: "Embedded Form",
