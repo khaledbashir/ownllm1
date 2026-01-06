@@ -75,11 +75,12 @@ function formsEndpoints(app) {
   // AI Generate Form
   app.post(
     "/workspace/:slug/forms/generate",
-    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager, ROLES.default])],
     async (request, response) => {
       try {
         const { slug } = request.params;
         const { prompt } = request.body;
+        console.log(`[Forms] Generating form for slug: ${slug} with prompt: ${prompt ? prompt.slice(0, 50) : 'null'}`);
         const user = await userFromSession(request, response);
 
         if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {

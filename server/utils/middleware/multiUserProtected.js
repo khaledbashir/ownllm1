@@ -55,7 +55,7 @@ function flexUserRoleValid(allowedRoles = DEFAULT_ROLES) {
 
     // Bypass if not in multi-user mode
     // Check response.locals.multiUserMode first (set by validatedRequest), fall back to DB check
-    let multiUserMode = response.locals?.multiUserMode;
+    let multiUserMode = response.locals && response.locals.multiUserMode;
     if (multiUserMode === undefined) {
       multiUserMode = await SystemSettings.isMultiUserMode();
     }
@@ -65,14 +65,14 @@ function flexUserRoleValid(allowedRoles = DEFAULT_ROLES) {
     }
 
     const user =
-      response.locals?.user ?? (await userFromSession(request, response));
+      (response.locals && response.locals.user) ? response.locals.user : (await userFromSession(request, response));
     
-    if (allowedRoles.includes(user?.role)) {
+    if (allowedRoles.includes(user && user.role)) {
       next();
       return;
     }
-
-    console.warn(`[AUTH] 401 Blocked. User: ${user?.id} Role: ${user?.role}. Allowed: ${allowedRoles}. MUM: ${multiUserMode}`);
+    
+    console.warn(`[AUTH] 401 Blocked. User: ${user ? user.id : 'null'} Role: ${user ? user.role : 'null'}. Allowed: ${allowedRoles}. MUM: ${multiUserMode}`);
     return response.sendStatus(401).end();
   };
 }
