@@ -25,7 +25,7 @@ async function fetchNew(endpoint, options = {}) {
       console.error(`fetchNew error for ${endpoint}:`, e);
       return { success: false, error: e.message };
     });
-};
+}
 
 const System = {
   fetchNew,
@@ -190,17 +190,79 @@ const System = {
         return { success: false, error: e.message };
       });
   },
+
+  _readJsonSafely: async (res) => {
+    const text = await res.text().catch(() => "");
+    const data = safeJsonParse(text, null);
+    return { text, data };
+  },
+
   getCustomProviders: async function () {
-    return await fetch(`${API_BASE}/api/system/custom-providers`, {
+    return await fetch(`${API_BASE}/system/custom-providers`, {
       headers: baseHeaders(),
     })
       .then(async (res) => {
-        if (!res.ok) throw await res.json();
-        return await res.json();
+        const { data } = await System._readJsonSafely(res);
+        if (!res.ok) {
+          return {
+            success: false,
+            providers: data?.providers || [],
+            error: data?.error || data?.message || res.statusText,
+            status: res.status,
+          };
+        }
+        return { success: true, providers: data?.providers || [] };
       })
       .catch((e) => {
         console.error(e);
-        return { providers: [] };
+        return { success: false, providers: [], error: e.message };
+      });
+  },
+
+  saveCustomProvider: async function (payload = {}) {
+    return await fetch(`${API_BASE}/system/custom-providers`, {
+      method: "POST",
+      headers: { ...baseHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then(async (res) => {
+        const { data } = await System._readJsonSafely(res);
+        if (!res.ok) {
+          return {
+            success: false,
+            providers: data?.providers || [],
+            error: data?.error || data?.message || res.statusText,
+            status: res.status,
+          };
+        }
+        return data || { success: true };
+      })
+      .catch((e) => {
+        console.error(e);
+        return { success: false, error: e.message };
+      });
+  },
+
+  deleteCustomProvider: async function (providerId) {
+    return await fetch(`${API_BASE}/system/custom-providers/${providerId}`, {
+      method: "DELETE",
+      headers: baseHeaders(),
+    })
+      .then(async (res) => {
+        const { data } = await System._readJsonSafely(res);
+        if (!res.ok) {
+          return {
+            success: false,
+            providers: data?.providers || [],
+            error: data?.error || data?.message || res.statusText,
+            status: res.status,
+          };
+        }
+        return data || { success: true };
+      })
+      .catch((e) => {
+        console.error(e);
+        return { success: false, error: e.message };
       });
   },
   setupMultiUser: async (data) => {

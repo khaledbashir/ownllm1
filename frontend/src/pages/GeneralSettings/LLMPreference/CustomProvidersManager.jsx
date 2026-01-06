@@ -29,11 +29,16 @@ export default function CustomProvidersManager() {
 
   const loadCustomProviders = async () => {
     try {
-      const response = await fetch("/api/system/custom-providers");
-      const data = await response.json();
-      if (data.providers) {
-        setCustomProviders(data.providers);
+      const res = await System.getCustomProviders();
+      if (res?.success === false) {
+        if (res.status === 401) {
+          showToast("Unauthorized. Please sign in again.", "error");
+          return;
+        }
+        showToast(res.error || "Failed to load custom providers", "error");
+        return;
       }
+      setCustomProviders(res.providers || []);
     } catch (error) {
       console.error("Failed to load custom providers:", error);
       showToast("Failed to load custom providers", "error");
@@ -42,22 +47,21 @@ export default function CustomProvidersManager() {
 
   const handleSaveProvider = async (e) => {
     e.preventDefault();
-    
+
     try {
-      const response = await fetch("/api/system/custom-providers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: editingProvider ? "update" : "add",
-          id: editingProvider?.id,
-          ...newProvider,
-          apiKey: newProvider.apiKey || "",
-          maxTokens: newProvider.maxTokens ? parseInt(newProvider.maxTokens) : null,
-        }),
+      const data = await System.saveCustomProvider({
+        action: editingProvider ? "update" : "add",
+        id: editingProvider?.id,
+        name: newProvider.name,
+        baseUrl: newProvider.basePath,
+        defaultModel: newProvider.model,
+        apiKey: newProvider.apiKey || "",
+        maxTokens: newProvider.maxTokens
+          ? parseInt(newProvider.maxTokens)
+          : null,
+        streamingDisabled: !!newProvider.streamingDisabled,
       });
 
-      const data = await response.json();
-      
       if (data.success) {
         setCustomProviders(data.providers);
         setEditingProvider(null);
@@ -71,7 +75,9 @@ export default function CustomProvidersManager() {
           streamingDisabled: false,
         });
         showToast(
-          editingProvider ? "Provider updated successfully" : "Provider added successfully",
+          editingProvider
+            ? "Provider updated successfully"
+            : "Provider added successfully",
           "success"
         );
       } else {
@@ -89,12 +95,8 @@ export default function CustomProvidersManager() {
     }
 
     try {
-      const response = await fetch(`/api/system/custom-providers/${providerId}`, {
-        method: "DELETE",
-      });
+      const data = await System.deleteCustomProvider(providerId);
 
-      const data = await response.json();
-      
       if (data.success) {
         setCustomProviders(data.providers);
         showToast("Provider deleted successfully", "success");
@@ -142,7 +144,8 @@ export default function CustomProvidersManager() {
             Custom OpenAI Providers
           </div>
           <div className="text-sm text-white/60 mt-1">
-            Add multiple custom OpenAI-compatible providers (LMStudio, Ollama, DeepSeek, etc.)
+            Add multiple custom OpenAI-compatible providers (LMStudio, Ollama,
+            DeepSeek, etc.)
           </div>
         </div>
         <button
@@ -182,7 +185,9 @@ export default function CustomProvidersManager() {
                 <input
                   type="text"
                   value={newProvider.name}
-                  onChange={(e) => setNewProvider({ ...newProvider, name: e.target.value })}
+                  onChange={(e) =>
+                    setNewProvider({ ...newProvider, name: e.target.value })
+                  }
                   placeholder="e.g., LMStudio, Ollama, DeepSeek"
                   required
                   className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-white/30"
@@ -197,13 +202,16 @@ export default function CustomProvidersManager() {
                 <input
                   type="url"
                   value={newProvider.basePath}
-                  onChange={(e) => setNewProvider({ ...newProvider, basePath: e.target.value })}
+                  onChange={(e) =>
+                    setNewProvider({ ...newProvider, basePath: e.target.value })
+                  }
                   placeholder="e.g., http://localhost:1234/v1"
                   required
                   className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-white/30"
                 />
                 <div className="text-xs text-white/50 mt-1">
-                  The base URL of your OpenAI-compatible API (usually ends with /v1)
+                  The base URL of your OpenAI-compatible API (usually ends with
+                  /v1)
                 </div>
               </div>
 
@@ -215,7 +223,9 @@ export default function CustomProvidersManager() {
                 <input
                   type="password"
                   value={newProvider.apiKey}
-                  onChange={(e) => setNewProvider({ ...newProvider, apiKey: e.target.value })}
+                  onChange={(e) =>
+                    setNewProvider({ ...newProvider, apiKey: e.target.value })
+                  }
                   placeholder="Enter API key if required"
                   className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-white/30"
                 />
@@ -229,7 +239,9 @@ export default function CustomProvidersManager() {
                 <input
                   type="text"
                   value={newProvider.model}
-                  onChange={(e) => setNewProvider({ ...newProvider, model: e.target.value })}
+                  onChange={(e) =>
+                    setNewProvider({ ...newProvider, model: e.target.value })
+                  }
                   placeholder="e.g., gpt-3.5-turbo, llama-2-7b"
                   required
                   className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-white/30"
@@ -244,7 +256,12 @@ export default function CustomProvidersManager() {
                 <input
                   type="number"
                   value={newProvider.maxTokens}
-                  onChange={(e) => setNewProvider({ ...newProvider, maxTokens: e.target.value })}
+                  onChange={(e) =>
+                    setNewProvider({
+                      ...newProvider,
+                      maxTokens: e.target.value,
+                    })
+                  }
                   placeholder="e.g., 4096"
                   min="1"
                   className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-white/30"
@@ -257,7 +274,12 @@ export default function CustomProvidersManager() {
                   type="checkbox"
                   id="streamingDisabled"
                   checked={newProvider.streamingDisabled}
-                  onChange={(e) => setNewProvider({ ...newProvider, streamingDisabled: e.target.checked })}
+                  onChange={(e) =>
+                    setNewProvider({
+                      ...newProvider,
+                      streamingDisabled: e.target.checked,
+                    })
+                  }
                   className="w-5 h-5 rounded border-white/10 bg-theme-settings-input-bg text-purple-500 focus:ring-2 focus:ring-purple-500"
                 />
                 <label
@@ -324,7 +346,8 @@ export default function CustomProvidersManager() {
                   </div>
                   <div className="text-xs text-white/40 mt-1">
                     Model: {provider.model}
-                    {provider.maxTokens && ` • Max tokens: ${provider.maxTokens}`}
+                    {provider.maxTokens &&
+                      ` • Max tokens: ${provider.maxTokens}`}
                   </div>
                 </div>
 
@@ -340,7 +363,9 @@ export default function CustomProvidersManager() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDeleteProvider(provider.id, provider.name)}
+                    onClick={() =>
+                      handleDeleteProvider(provider.id, provider.name)
+                    }
                     className="p-2 text-red-400 hover:text-red-300 transition-colors"
                     title="Delete provider"
                   >
@@ -364,7 +389,8 @@ export default function CustomProvidersManager() {
                 No custom providers configured
               </div>
               <div className="text-sm text-white/60 mb-4">
-                Add multiple OpenAI-compatible providers like LMStudio, Ollama, or DeepSeek
+                Add multiple OpenAI-compatible providers like LMStudio, Ollama,
+                or DeepSeek
               </div>
               <button
                 type="button"

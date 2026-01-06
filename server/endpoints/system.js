@@ -21,7 +21,9 @@ const { v4 } = require("uuid");
 const { SystemSettings } = require("../models/systemSettings");
 const { User } = require("../models/user");
 const { Organization } = require("../models/organization");
-const { EmailVerificationTokens } = require("../models/emailVerificationTokens");
+const {
+  EmailVerificationTokens,
+} = require("../models/emailVerificationTokens");
 const { EmailService } = require("../utils/emailService");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
 const { checkSeatLimit } = require("../services/billing");
@@ -224,7 +226,7 @@ function systemEndpoints(app) {
           });
           return;
         }
- 
+
         // Check if user's email is verified (if email exists)
         if (existingUser.email && !existingUser.emailVerified) {
           await EventLogs.logEvent(
@@ -241,7 +243,8 @@ function systemEndpoints(app) {
             requiresEmailVerification: true,
             email: existingUser.email,
             token: null,
-            message: "[005] Please verify your email address before logging in.",
+            message:
+              "[005] Please verify your email address before logging in.",
           });
           return;
         }
@@ -264,7 +267,12 @@ function systemEndpoints(app) {
         // Generate a session token for the user then check if they have seen the recovery codes
         // and if not, generate recovery codes and return them to the frontend.
         const sessionToken = makeJWT(
-          { id: existingUser.id, username: existingUser.username, role: existingUser.role, organizationId: existingUser.organizationId },
+          {
+            id: existingUser.id,
+            username: existingUser.username,
+            role: existingUser.role,
+            organizationId: existingUser.organizationId,
+          },
           process.env.JWT_EXPIRY
         );
         if (!existingUser.seen_recovery_codes) {
@@ -504,8 +512,9 @@ function systemEndpoints(app) {
         );
 
         // Create email verification token
-        const { token: verifyToken, error: tokenError } = await EmailVerificationTokens.create(user.id);
-        
+        const { token: verifyToken, error: tokenError } =
+          await EmailVerificationTokens.create(user.id);
+
         if (tokenError || !verifyToken) {
           console.error("Failed to create verification token:", tokenError);
         }
@@ -519,9 +528,12 @@ function systemEndpoints(app) {
             username: user.username,
             appUrl,
           });
-          
+
           if (emailResult.error) {
-            console.error("Failed to send verification email:", emailResult.error);
+            console.error(
+              "Failed to send verification email:",
+              emailResult.error
+            );
           }
         }
 
@@ -531,7 +543,8 @@ function systemEndpoints(app) {
           user: User.filterFields(user),
           token: null, // Token will be issued after email verification
           requiresEmailVerification: true,
-          message: "Registration successful. Please check your email to verify your account.",
+          message:
+            "Registration successful. Please check your email to verify your account.",
         });
       } catch (error) {
         console.error("Error registering user:", error);
@@ -540,102 +553,104 @@ function systemEndpoints(app) {
     }
   );
 
-  app.post(
-    "/public-signup",
-    [isMultiUserSetup],
-    async (request, response) => {
-      try {
-        const { username, password, email, orgName, orgSlug, plan } = reqBody(request);
+  app.post("/public-signup", [isMultiUserSetup], async (request, response) => {
+    try {
+      const { username, password, email, orgName, orgSlug, plan } =
+        reqBody(request);
 
-        // 1. Create Organization
-        const { organization, error: orgError } = await Organization.create({
-          name: orgName,
-          slug: orgSlug,
-          plan: plan || "free",
-          status: "active",
-          seatLimit: plan === "free" ? 5 : plan === "pro" ? 25 : 100,
-        });
+      // 1. Create Organization
+      const { organization, error: orgError } = await Organization.create({
+        name: orgName,
+        slug: orgSlug,
+        plan: plan || "free",
+        status: "active",
+        seatLimit: plan === "free" ? 5 : plan === "pro" ? 25 : 100,
+      });
 
-        if (orgError) {
-          return response.status(400).json({ success: false, message: orgError });
-        }
-
-        // 2. Create User as Admin of that Organization
-        const { user, error: userError } = await User.create({
-          username,
-          password,
-          email,
-          role: "admin",
-          organizationId: organization.id,
-        });
-
-        if (userError) {
-          // Cleanup organization if user creation fails
-          await prisma.organizations.delete({ where: { id: organization.id } });
-          return response.status(400).json({ success: false, message: userError });
-        }
-
-        // 3. Log and Telemetry
-        await EventLogs.logEvent(
-          "public_signup_event",
-          {
-            ip: request.ip || "Unknown IP",
-            username: username,
-            organizationId: organization.id,
-          },
-          user.id
-        );
-
-        await Telemetry.sendTelemetry(
-          "public_signup_event",
-          { multiUserMode: true },
-          user.id
-        );
-
-        // 4. Email Verification (if enabled)
-        const { token: verifyToken, error: tokenError } = await EmailVerificationTokens.create(user.id);
-        
-        if (verifyToken && user.email) {
-          const appUrl = process.env.APP_URL || `http://${request.get("host")}`;
-          await EmailService.sendVerificationEmail({
-            to: user.email,
-            token: verifyToken,
-            username: user.username,
-            appUrl,
-          });
-        }
-
-        response.status(200).json({
-          success: true,
-          user: User.filterFields(user),
-          requiresEmailVerification: !!verifyToken,
-          message: verifyToken 
-            ? "Registration successful. Please check your email to verify your account."
-            : "Registration successful. You can now log in.",
-        });
-      } catch (error) {
-        console.error("Error in public signup:", error);
-        response.status(500).json({ success: false, message: error.message });
+      if (orgError) {
+        return response.status(400).json({ success: false, message: orgError });
       }
+
+      // 2. Create User as Admin of that Organization
+      const { user, error: userError } = await User.create({
+        username,
+        password,
+        email,
+        role: "admin",
+        organizationId: organization.id,
+      });
+
+      if (userError) {
+        // Cleanup organization if user creation fails
+        await prisma.organizations.delete({ where: { id: organization.id } });
+        return response
+          .status(400)
+          .json({ success: false, message: userError });
+      }
+
+      // 3. Log and Telemetry
+      await EventLogs.logEvent(
+        "public_signup_event",
+        {
+          ip: request.ip || "Unknown IP",
+          username: username,
+          organizationId: organization.id,
+        },
+        user.id
+      );
+
+      await Telemetry.sendTelemetry(
+        "public_signup_event",
+        { multiUserMode: true },
+        user.id
+      );
+
+      // 4. Email Verification (if enabled)
+      const { token: verifyToken, error: tokenError } =
+        await EmailVerificationTokens.create(user.id);
+
+      if (verifyToken && user.email) {
+        const appUrl = process.env.APP_URL || `http://${request.get("host")}`;
+        await EmailService.sendVerificationEmail({
+          to: user.email,
+          token: verifyToken,
+          username: user.username,
+          appUrl,
+        });
+      }
+
+      response.status(200).json({
+        success: true,
+        user: User.filterFields(user),
+        requiresEmailVerification: !!verifyToken,
+        message: verifyToken
+          ? "Registration successful. Please check your email to verify your account."
+          : "Registration successful. You can now log in.",
+      });
+    } catch (error) {
+      console.error("Error in public signup:", error);
+      response.status(500).json({ success: false, message: error.message });
     }
-  );
+  });
 
   // Verify email with token
   app.get("/api/verify-email", async (request, response) => {
     try {
       const { token } = queryParams(request);
-      
+
       if (!token) {
-        response.status(400).json({ success: false, message: "Token is required" });
+        response
+          .status(400)
+          .json({ success: false, message: "Token is required" });
         return;
       }
 
       const { success, error } = await EmailVerificationTokens.verify(token);
-      
+
       if (success) {
         response.status(200).json({
           success: true,
-          message: "Email verified successfully. You can now log in."
+          message: "Email verified successfully. You can now log in.",
         });
       } else {
         response.status(400).json({ success: false, message: error });
@@ -655,7 +670,9 @@ function systemEndpoints(app) {
         const { email } = reqBody(request);
 
         if (!email) {
-          response.status(400).json({ success: false, message: "Email is required" });
+          response
+            .status(400)
+            .json({ success: false, message: "Email is required" });
           return;
         }
 
@@ -667,7 +684,7 @@ function systemEndpoints(app) {
         if (!user) {
           response.status(404).json({
             success: false,
-            message: "No account found with this email address"
+            message: "No account found with this email address",
           });
           return;
         }
@@ -675,30 +692,32 @@ function systemEndpoints(app) {
         if (user.emailVerified) {
           response.status(400).json({
             success: false,
-            message: "Email is already verified"
+            message: "Email is already verified",
           });
           return;
         }
 
         // Create verification token
-        const { token, error: tokenError } = await EmailVerificationTokens.create(user.id);
-        
+        const { token, error: tokenError } =
+          await EmailVerificationTokens.create(user.id);
+
         if (tokenError || !token) {
           response.status(500).json({
             success: false,
-            message: "Failed to create verification token"
+            message: "Failed to create verification token",
           });
           return;
         }
 
         // Send verification email
         const appUrl = process.env.APP_URL || request.get("host");
-        const { success, error: emailError } = await EmailService.sendVerificationEmail({
-          to: user.email,
-          token,
-          username: user.username,
-          appUrl,
-        });
+        const { success, error: emailError } =
+          await EmailService.sendVerificationEmail({
+            to: user.email,
+            token,
+            username: user.username,
+            appUrl,
+          });
 
         if (success) {
           response.status(200).json({
@@ -709,7 +728,7 @@ function systemEndpoints(app) {
         } else {
           response.status(500).json({
             success: false,
-            message: emailError || "Failed to send verification email"
+            message: emailError || "Failed to send verification email",
           });
         }
       } catch (error) {
@@ -734,7 +753,7 @@ function systemEndpoints(app) {
         if (!user.email) {
           response.status(400).json({
             success: false,
-            message: "User email is not set"
+            message: "User email is not set",
           });
           return;
         }
@@ -759,12 +778,12 @@ function systemEndpoints(app) {
         if (success) {
           response.status(200).json({
             success: true,
-            message: "Welcome email sent successfully"
+            message: "Welcome email sent successfully",
           });
         } else {
           response.status(500).json({
             success: false,
-            message: error || "Failed to send welcome email"
+            message: error || "Failed to send welcome email",
           });
         }
       } catch (error) {
@@ -1903,10 +1922,10 @@ function systemEndpoints(app) {
     [validatedRequest, flexUserRoleValid([ROLES.admin])],
     async (_, response) => {
       try {
-        const providers = await SystemSettings.get({ label: "customGenericProviders" });
-        const customProviders = providers
-          ? JSON.parse(providers.value)
-          : [];
+        const providers = await SystemSettings.get({
+          label: "customGenericProviders",
+        });
+        const customProviders = providers ? JSON.parse(providers.value) : [];
         response.status(200).json({ providers: customProviders });
       } catch (error) {
         console.error("Error fetching custom providers:", error);
@@ -1936,9 +1955,9 @@ function systemEndpoints(app) {
           const newProvider = {
             id: `custom_${Date.now()}`,
             name: body.name || "Custom Provider",
-            basePath: body.baseUrl || "", // GenericOpenAiLLM expects 'basePath'
+            basePath: body.baseUrl || body.basePath || "", // GenericOpenAiLLM expects 'basePath'
             apiKey: body.apiKey || "",
-            model: body.defaultModel || "",
+            model: body.defaultModel || body.model || "",
             maxTokens: body.maxTokens || null,
             streamingDisabled: body.streamingDisabled || false,
           };
@@ -1950,11 +1969,15 @@ function systemEndpoints(app) {
               ? {
                   ...p,
                   name: body.name || p.name,
-                  basePath: body.baseUrl || p.basePath, // GenericOpenAiLLM expects 'basePath'
+                  basePath: body.baseUrl || body.basePath || p.basePath, // GenericOpenAiLLM expects 'basePath'
                   apiKey: body.apiKey !== undefined ? body.apiKey : p.apiKey,
-                  model: body.defaultModel || p.model,
-                  maxTokens: body.maxTokens !== undefined ? body.maxTokens : p.maxTokens,
-                  streamingDisabled: body.streamingDisabled !== undefined ? body.streamingDisabled : p.streamingDisabled,
+                  model: body.defaultModel || body.model || p.model,
+                  maxTokens:
+                    body.maxTokens !== undefined ? body.maxTokens : p.maxTokens,
+                  streamingDisabled:
+                    body.streamingDisabled !== undefined
+                      ? body.streamingDisabled
+                      : p.streamingDisabled,
                 }
               : p
           );
