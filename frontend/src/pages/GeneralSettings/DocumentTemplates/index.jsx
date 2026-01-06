@@ -201,9 +201,26 @@ function TemplatePreview({ template }) {
 // --- EDITOR FORM ---
 function TemplateEditor({ template: initialTemplate, onSave, onCancel }) {
   // Parse existing overrides or defaults
-  const initialOverrides = initialTemplate?.cssOverrides
-    ? JSON.parse(initialTemplate.cssOverrides)
-    : { logoHeight: 40, logoAlignment: "flex-start" };
+  const initialOverrides = (() => {
+    if (!initialTemplate?.cssOverrides) {
+      return { logoHeight: 40, logoAlignment: "flex-start" };
+    }
+    try {
+      const overridesStr = initialTemplate.cssOverrides;
+      if (typeof overridesStr !== 'string') {
+        console.warn("[TemplateEditor] cssOverrides is not a string");
+        return { logoHeight: 40, logoAlignment: "flex-start" };
+      }
+      if (overridesStr.startsWith('[object')) {
+        console.warn("[TemplateEditor] cssOverrides contains malformed content");
+        return { logoHeight: 40, logoAlignment: "flex-start" };
+      }
+      return JSON.parse(overridesStr);
+    } catch (e) {
+      console.warn("[TemplateEditor] Failed to parse cssOverrides:", e);
+      return { logoHeight: 40, logoAlignment: "flex-start" };
+    }
+  })();
 
   const [template, setTemplate] = useState(
     initialTemplate || {

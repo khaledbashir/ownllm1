@@ -19,7 +19,9 @@ class ContextWindowFinder {
     xai: "xai",
     deepseek: "deepseek",
     moonshot: "moonshot",
-    zai: "vercel_ai_gateway", // Vercel has correct context windows for Z.AI models
+    // ZAI can be surfaced either via Vercel AI Gateway or directly as "zai" in LiteLLM's model map.
+    // Pulling both ensures newer models (e.g. glm-4.7) are cached even if Vercel hasn't added them yet.
+    zai: ["vercel_ai_gateway", "zai"],
   };
   static expiryMs = 1000 * 60 * 60 * 24 * 3; // 3 days
   static remoteUrl =
@@ -166,17 +168,25 @@ You can fix this by restarting AnythingLLM so the model map is re-pulled.
       ContextWindowFinder.trackedProviders
     )) {
       formattedModelMap[provider] = {};
-      const matches = Object.entries(modelMap).filter(
-        ([_key, config]) => config.litellm_provider === liteLLMProviderTag
-      );
-      for (const [key, config] of matches) {
-        const contextWindow = Number(config.max_input_tokens);
-        if (isNaN(contextWindow)) continue;
 
-        // Some models have a provider/model-tag format, so we need to get the last part since we dont do paths
-        // for names with the exception of some router-providers like OpenRouter or Together.
-        const modelName = key.split("/").pop();
-        formattedModelMap[provider][modelName] = contextWindow;
+      const providerTags = Array.isArray(liteLLMProviderTag)
+        ? liteLLMProviderTag
+        : [liteLLMProviderTag];
+
+      // Process tags in-order; later tags can overwrite earlier entries.
+      for (const tag of providerTags) {
+        const matches = Object.entries(modelMap).filter(
+          ([_key, config]) => config.litellm_provider === tag
+        );
+        for (const [key, config] of matches) {
+          const contextWindow = Number(config.max_input_tokens);
+          if (isNaN(contextWindow)) continue;
+
+          // Some models have a provider/model-tag format, so we need to get the last part since we dont do paths
+          // for names with the exception of some router-providers like OpenRouter or Together.
+          const modelName = key.split("/").pop();
+          formattedModelMap[provider][modelName] = contextWindow;
+        }
       }
     }
     return formattedModelMap;
@@ -225,7 +235,9 @@ You can fix this by restarting AnythingLLM so the model map is re-pulled.
       provider,
       model,
     });
-    return 4096; // Hard fallback for safety
+    // Returning null allows provider-specific defaults (via ??) to work correctly.
+    // Call sites that need a hard fallback should provide it themselves (e.g. `|| 4096`).
+    return null;
   }
 }
 
