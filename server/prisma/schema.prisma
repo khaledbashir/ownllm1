@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -197,6 +197,9 @@ model workspaces {
   enableProposalMode           Boolean                        @default(false)
   inlineAiSystemPrompt         String?
   inlineAiActions              String?
+  inlineAiProvider             String?
+  inlineAiModel                String?
+  customLlmProviders           String?
   defaultProposalPipelineId    Int?
   enableProposalCrmIntegration Boolean                        @default(true)
   artifacts                    artifacts[]
