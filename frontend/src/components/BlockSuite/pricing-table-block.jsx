@@ -79,9 +79,18 @@ const formatCurrency = (value) => {
   });
 };
 
-const calcTotals = ({ rows, discountPercent, gstPercent }) => {
+const calcTotals = ({ rows, discountPercent, gstPercent, tableType = "agency" }) => {
   const subtotal = (rows || []).reduce((sum, row) => {
     if (row.isHeader) return sum;
+    
+    // ANC: unitPrice * quantity
+    if (tableType === "anc") {
+      const unitPrice = Number(row.unitPrice) || 0;
+      const quantity = Number(row.quantity) || 1;
+      return sum + Math.round(unitPrice * quantity);
+    }
+    
+    // Agency: hours * baseRate
     const hours = Number(row.hours) || 0;
     const rate = Number(row.baseRate) || 0;
     return sum + Math.round(hours * rate);
@@ -105,7 +114,7 @@ export class PricingTableModel extends defineEmbedModel(BlockModel) { }
 // We implement as an embed block so affine:note allows it.
 export const PricingTableBlockSchema = createEmbedBlockSchema({
   name: "pricing-table",
-  version: 1,
+  version: 2, // Bumped version for tableType support
   toModel: () => new PricingTableModel(),
   props: (internal) => ({
     caption: null,
@@ -116,6 +125,7 @@ export const PricingTableBlockSchema = createEmbedBlockSchema({
     gstPercent: 10,
     rows: DEFAULT_ROWS,
     showTotals: true, // "Total Price Toggle"
+    tableType: "agency", // "agency" for hours/rate, "anc" for dimensions/price
   }),
 });
 
@@ -168,6 +178,7 @@ const PricingTableWidget = ({ model }) => {
   const discountPercent = onNumberInput(getProp("discountPercent", 0));
   const gstPercent = onNumberInput(getProp("gstPercent", 10));
   const showTotals = getProp("showTotals", true);
+  const tableType = getProp("tableType", "agency"); // "agency" or "anc"
   const rawRows = getProp("rows", []);
   const rows = Array.isArray(rawRows) ? rawRows : [];
 
@@ -190,9 +201,9 @@ const PricingTableWidget = ({ model }) => {
   };
 
   const totals = useMemo(
-    () => calcTotals({ rows, discountPercent, gstPercent }),
+    () => calcTotals({ rows, discountPercent, gstPercent, tableType }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [localTick, discountPercent, gstPercent, rows]
+    [localTick, discountPercent, gstPercent, rows, tableType]
   );
 
   const rolesToUse = useMemo(() => {
@@ -219,14 +230,25 @@ const PricingTableWidget = ({ model }) => {
   };
 
   const addRow = (isHeader = false) => {
-    const newRow = {
-      id: `new-${Date.now()}`,
-      role: isHeader ? "NEW SECTION" : "",
-      description: "",
-      hours: 0,
-      baseRate: 0,
-      isHeader,
-    };
+    const newRow = tableType === "anc"
+      ? {
+          id: `new-${Date.now()}`,
+          productName: isHeader ? "NEW SECTION" : "",
+          category: "",
+          description: "",
+          dimensions: { width: 0, height: 0, area: 0 },
+          unitPrice: 0,
+          quantity: 1,
+          isHeader,
+        }
+      : {
+          id: `new-${Date.now()}`,
+          role: isHeader ? "NEW SECTION" : "",
+          description: "",
+          hours: 0,
+          baseRate: 0,
+          isHeader,
+        };
     updateModel({ rows: [...rows, newRow] });
   };
 
@@ -252,40 +274,63 @@ const PricingTableWidget = ({ model }) => {
   };
 
   const downloadCSV = () => {
-    const headers = ["Role", "Description", "Hours", "Rate", "Line Total"];
+    const headers = tableType === "anc"
+      ? ["Product", "Category", "Description", "Width", "Height", "Quantity", "Unit Price", "Total"]
+      : ["Role", "Description", "Hours", "Rate", "Line Total"];
     const csvRows = [headers.join(",")];
 
     rows.forEach((row) => {
       if (row.isHeader) {
-        csvRows.push(`${row.role.toUpperCase()},,,,`);
+        const name = tableType === "anc" ? (row.productName || row.role) : row.role;
+        csvRows.push(`${name.toUpperCase()},${tableType === "anc" ? "" : ""}${tableType === "anc" ? ",,,,,,," : ",,,,"}`);
         return;
       }
-      const lineTotal = clampNumber(row.hours) * clampNumber(row.baseRate);
+
       const clean = (text) =>
         `"${String(text || "")
           .replace(/"/g, '""')
           .replace(/\n/g, " ")}"`;
-      csvRows.push(
-        [
+
+      if (tableType === "anc") {
+        const width = row.dimensions?.width || 0;
+        const height = row.dimensions?.height || 0;
+        const quantity = row.quantity || 1;
+        const unitPrice = row.unitPrice || 0;
+        const lineTotal = unitPrice * quantity;
+        csvRows.push([
+          clean(row.productName || row.role),
+          clean(row.category),
+          clean(row.description),
+          width,
+          height,
+          quantity,
+          unitPrice.toFixed(2),
+          lineTotal.toFixed(2),
+        ].join(","));
+      } else {
+        const lineTotal = clampNumber(row.hours) * clampNumber(row.baseRate);
+        csvRows.push([
           clean(row.role),
           clean(row.description),
           row.hours,
           row.baseRate,
           lineTotal.toFixed(2),
-        ].join(",")
-      );
+        ].join(","));
+      }
     });
 
     // Add totals
-    csvRows.push(",,,,");
-    csvRows.push(`,,,"Subtotal",${totals.subtotal.toFixed(2)}`);
+    const totalCols = tableType === "anc" ? 8 : 5;
+    const totalPrefix = ",".repeat(totalCols - 1);
+    csvRows.push(totalPrefix);
+    csvRows.push(`${totalPrefix},Subtotal,${totals.subtotal.toFixed(2)}`);
     if (discountPercent > 0) {
       csvRows.push(
-        `,,,"Discount (-${discountPercent}%)",-${totals.discount.toFixed(2)}`
+        `${totalPrefix},Discount (-${discountPercent}%),-${totals.discount.toFixed(2)}`
       );
     }
-    csvRows.push(`,,,"GST (${gstPercent}%)",${totals.gst.toFixed(2)}`);
-    csvRows.push(`,,,"Total Investment",${totals.total.toFixed(2)}`);
+    csvRows.push(`${totalPrefix},GST (${gstPercent}%),${totals.gst.toFixed(2)}`);
+    csvRows.push(`${totalPrefix},Total Investment,${totals.total.toFixed(2)}`);
 
     const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
@@ -371,11 +416,295 @@ const PricingTableWidget = ({ model }) => {
         </div>
       </div>
 
-      {/* Using CSS Grid instead of HTML table for react-beautiful-dnd compatibility */}
-      <div className="overflow-x-auto overflow-y-visible">
-        {(() => {
-          const readonlyColumns = "180px minmax(0, 1fr) 80px 100px 120px";
-          const editColumns = "180px minmax(0, 1fr) 80px 100px 120px 44px";
+      {/* ANC-SPECIFIC TABLE RENDERING */}
+      {tableType === "anc" && (
+        <div className="overflow-x-auto overflow-y-visible">
+          {(() => {
+            const readonlyColumns = "200px 100px minmax(0, 1fr) 80px 80px 80px 120px";
+            const editColumns = "200px 100px minmax(0, 1fr) 80px 80px 80px 120px 44px";
+
+            return (
+              <>
+                <div
+                  className="grid text-left text-[10px] text-white/40 border-b border-white/5 py-3"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: !isReadonly ? editColumns : readonlyColumns,
+                    width: "100%",
+                  }}
+                >
+                  <div className="pr-3 font-bold uppercase tracking-wider">Product</div>
+                  <div className="pr-3 font-bold uppercase tracking-wider">Category</div>
+                  <div style={{ paddingRight: 15 }} className="font-bold uppercase tracking-wider">Description</div>
+                  <div className="pr-3 text-right font-bold uppercase tracking-wider">W</div>
+                  <div className="pr-3 text-right font-bold uppercase tracking-wider">H</div>
+                  <div className="pr-3 text-right font-bold uppercase tracking-wider">Qty</div>
+                  <div className="text-right font-bold uppercase tracking-wider">Total</div>
+                  {!isReadonly && <div></div>}
+                </div>
+
+                <DragDropContext
+                  onDragEnd={(result) => {
+                    if (isReadonly) return;
+                    const destinationIndex = result?.destination?.index;
+                    if (destinationIndex === undefined || destinationIndex === null) return;
+                    moveRow({
+                      fromIndex: result.source.index,
+                      toIndex: destinationIndex,
+                    });
+                  }}
+                >
+                  <Droppable droppableId="pricing-table-rows">
+                    {(droppableProvided) => (
+                      <div
+                        ref={droppableProvided.innerRef}
+                        {...droppableProvided.droppableProps}
+                      >
+                        {(rows.length === 0 ? [] : rows).map((row, idx) => {
+                          const isHeader = !!row.isHeader;
+
+                          if (isHeader) {
+                            return (
+                              <Draggable
+                                key={row.id || `row-${idx}`}
+                                draggableId={String(row.id || `row-${idx}`)}
+                                index={idx}
+                                isDragDisabled={isReadonly}
+                              >
+                                {(draggableProvided, snapshot) => (
+                                  <div
+                                    ref={draggableProvided.innerRef}
+                                    {...draggableProvided.draggableProps}
+                                    className={`flex items-center gap-2 py-4 px-2 border-b-2 border-white/10 group ${snapshot.isDragging ? "opacity-60 bg-white/5" : ""}`}
+                                    style={{
+                                      ...draggableProvided.draggableProps.style,
+                                      width: "100%",
+                                      background: snapshot.isDragging ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)",
+                                      marginTop: idx === 0 ? 0 : 24,
+                                      marginBottom: 8,
+                                      borderRadius: "8px 8px 0 0",
+                                    }}
+                                  >
+                                    {!isReadonly && (
+                                      <div
+                                        {...draggableProvided.dragHandleProps}
+                                        className="drag-handle cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 px-2 select-none"
+                                        title="Drag section"
+                                      >
+                                        ⋮⋮
+                                      </div>
+                                    )}
+                                    <div className="flex-1 flex items-center gap-3">
+                                      <div className="h-6 w-1 bg-blue-500 rounded-full" />
+                                      {isReadonly ? (
+                                        <span className="text-sm font-black tracking-[0.1em] uppercase text-white/95">
+                                          {row.productName || row.role}
+                                        </span>
+                                      ) : (
+                                        <input
+                                          className="flex-1 bg-transparent border-none font-black tracking-[0.1em] uppercase text-white/95 focus:ring-0 p-0 placeholder:text-white/20"
+                                          type="text"
+                                          value={row.productName || row.role || ""}
+                                          onChange={(e) =>
+                                            updateRow(idx, {
+                                              productName: e.target.value,
+                                              role: e.target.value,
+                                            })
+                                          }
+                                          placeholder="SECTION TITLE..."
+                                        />
+                                      )}
+                                    </div>
+                                    {!isReadonly && (
+                                      <button
+                                        onClick={() => removeRow(idx)}
+                                        className="text-red-400/40 hover:text-red-400 px-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Remove section"
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </Draggable>
+                            );
+                          }
+
+                          const width = clampNumber(row.dimensions?.width || 0);
+                          const height = clampNumber(row.dimensions?.height || 0);
+                          const quantity = clampNumber(row.quantity || 1);
+                          const unitPrice = clampNumber(row.unitPrice || 0);
+                          const lineTotal = unitPrice * quantity;
+
+                          return (
+                            <Draggable
+                              key={row.id || `row-${idx}`}
+                              draggableId={String(row.id || `row-${idx}`)}
+                              index={idx}
+                              isDragDisabled={isReadonly}
+                            >
+                              {(draggableProvided, snapshot) => (
+                                <div
+                                  ref={draggableProvided.innerRef}
+                                  {...draggableProvided.draggableProps}
+                                  className={`grid items-start border-b border-white/5 py-2 text-sm text-white/80 group ${snapshot.isDragging ? "opacity-60 bg-white/10 rounded" : ""}`}
+                                  style={{
+                                    display: "grid",
+                                    gridTemplateColumns: !isReadonly ? editColumns : readonlyColumns,
+                                    width: "100%",
+                                    ...draggableProvided.draggableProps.style,
+                                    ...(snapshot.isDragging ? { display: "grid", background: "#252525", opacity: 0.9 } : {}),
+                                  }}
+                                >
+                                  {/* Product Column */}
+                                  <div className="pr-3">
+                                    {isReadonly ? (
+                                      <span className="font-medium">{row.productName || row.role}</span>
+                                    ) : (
+                                      <input
+                                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                                        type="text"
+                                        value={row.productName || row.role || ""}
+                                        onChange={(e) =>
+                                          updateRow(idx, {
+                                            productName: e.target.value,
+                                            role: e.target.value,
+                                          })
+                                        }
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Category Column */}
+                                  <div className="pr-3">
+                                    {isReadonly ? (
+                                      <span className="text-white/60">{row.category || ""}</span>
+                                    ) : (
+                                      <input
+                                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/60"
+                                        type="text"
+                                        value={row.category || ""}
+                                        onChange={(e) =>
+                                          updateRow(idx, { category: e.target.value })
+                                        }
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Description Column */}
+                                  <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", overflowWrap: "break-word", paddingRight: 15, minWidth: 0 }}>
+                                    {isReadonly ? (
+                                      <div className="prose prose-invert prose-sm max-w-none">
+                                        <ReactMarkdown>{row.description || ""}</ReactMarkdown>
+                                      </div>
+                                    ) : (
+                                      <textarea
+                                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 resize-vertical min-h-[40px]"
+                                        value={row.description || ""}
+                                        onChange={(e) =>
+                                          updateRow(idx, { description: e.target.value })
+                                        }
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Width Column */}
+                                  <div className="pr-3 text-right">
+                                    {isReadonly ? (
+                                      <span>{width}</span>
+                                    ) : (
+                                      <input
+                                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 text-right"
+                                        type="number"
+                                        min={0}
+                                        value={width}
+                                        onChange={(e) => {
+                                          const dims = row.dimensions || {};
+                                          updateRow(idx, {
+                                            dimensions: { ...dims, width: clampNumber(e.target.value) }
+                                          });
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Height Column */}
+                                  <div className="pr-3 text-right">
+                                    {isReadonly ? (
+                                      <span>{height}</span>
+                                    ) : (
+                                      <input
+                                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 text-right"
+                                        type="number"
+                                        min={0}
+                                        value={height}
+                                        onChange={(e) => {
+                                          const dims = row.dimensions || {};
+                                          updateRow(idx, {
+                                            dimensions: { ...dims, height: clampNumber(e.target.value) }
+                                          });
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Quantity Column */}
+                                  <div className="pr-3 text-right">
+                                    {isReadonly ? (
+                                      <span>{quantity}</span>
+                                    ) : (
+                                      <input
+                                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 text-right"
+                                        type="number"
+                                        min={1}
+                                        value={quantity}
+                                        onChange={(e) =>
+                                          updateRow(idx, { quantity: clampNumber(e.target.value) })
+                                        }
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Total Column */}
+                                  <div className="text-right font-medium whitespace-nowrap">
+                                    {formatCurrency(lineTotal, currency)}
+                                  </div>
+
+                                  {/* Actions Column */}
+                                  {!isReadonly && (
+                                    <div className="flex items-center justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => removeRow(idx)}
+                                        className="text-red-400 hover:bg-red-900/30 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Remove row"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                        {droppableProvided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* AGENCY TABLE RENDERING (Original) */}
+      {tableType !== "anc" && (
+        <div className="overflow-x-auto overflow-y-visible">
+          {(() => {
+            const readonlyColumns = "180px minmax(0, 1fr) 80px 100px 120px";
+            const editColumns = "180px minmax(0, 1fr) 80px 100px 120px 44px";
 
           return (
             <>

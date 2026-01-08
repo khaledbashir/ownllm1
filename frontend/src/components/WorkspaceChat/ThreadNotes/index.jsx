@@ -253,13 +253,32 @@ export default function ThreadNotes({
         const markdownHasPricingTable = /\n\s*\|.*(?:Role|Rate|Price|Cost|Hours|Qty|Quantity).*\|\s*\n\s*\|\s*[-:|\s]+\|/mi.test(
           markdown
         );
+        
+        // Smart Detection: Determine if we're inserting Agency or ANC data
+        // ANC data has: productName, category, dimensions (width, height, quantity)
+        // Agency data has: role, description, hours, baseRate
+        const hasANCData = (rows) => {
+          if (!Array.isArray(rows) || rows.length === 0) return false;
+          const sampleRow = rows.find(r => !r.isHeader);
+          return sampleRow && (
+            (sampleRow.productName || sampleRow.category) ||
+            (sampleRow.dimensions && (sampleRow.dimensions.width || sampleRow.dimensions.height))
+          );
+        };
+        
+        const isANC = hasANCData(res?.pricingTable?.rows);
+        
         if (
           action === "draft_sow" &&
           res?.pricingTable &&
           editorRef.current?.insertPricingTableWithData &&
           !markdownHasPricingTable
         ) {
-          editorRef.current.insertPricingTableWithData(res.pricingTable);
+          // Pass tableType based on detected data structure
+          editorRef.current.insertPricingTableWithData({
+            ...res.pricingTable,
+            tableType: isANC ? "anc" : "agency"
+          });
         }
 
         showToast("Inserted into notes.", "success");
