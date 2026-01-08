@@ -125,7 +125,8 @@ export const PricingTableBlockSchema = createEmbedBlockSchema({
     gstPercent: 10,
     rows: DEFAULT_ROWS,
     showTotals: true, // "Total Price Toggle"
-    tableType: "agency", // "agency" for hours/rate, "anc" for dimensions/price
+    tableType: "agency", // "agency" for hours/rate, "anc" for dimensions/price, "anc_estimate" for dual-table layout
+    ancEstimateData: null, // Holds structured { specs: {}, pricing: {} } for ANC estimates
   }),
 });
 
@@ -178,7 +179,8 @@ const PricingTableWidget = ({ model }) => {
   const discountPercent = onNumberInput(getProp("discountPercent", 0));
   const gstPercent = onNumberInput(getProp("gstPercent", 10));
   const showTotals = getProp("showTotals", true);
-  const tableType = getProp("tableType", "agency"); // "agency" or "anc"
+  const tableType = getProp("tableType", "agency"); // "agency", "anc", or "anc_estimate"
+  const ancEstimateData = getProp("ancEstimateData", null);
   const rawRows = getProp("rows", []);
   const rows = Array.isArray(rawRows) ? rawRows : [];
 
@@ -415,6 +417,82 @@ const PricingTableWidget = ({ model }) => {
           All prices in {currency}, excluding GST
         </div>
       </div>
+
+      {/* ANC ESTIMATE (PROPOSAL MODE) RENDERING */}
+      {tableType === "anc_estimate" && ancEstimateData && (
+        <div className="flex flex-col gap-8 mb-4">
+          {/* Specs Table */}
+          <div className="border border-white/10 rounded-xl overflow-hidden bg-black/20 shadow-xl">
+            <div className="bg-[#0055b8] px-4 py-3 flex justify-between items-center border-b border-white/10">
+              <h3 className="text-sm font-black uppercase tracking-widest text-white">Specifications</h3>
+              <div className="text-[10px] text-white/70 font-bold uppercase tracking-widest">
+                {ancEstimateData.specs?.productName || "LED Display"}
+              </div>
+            </div>
+            <div className="p-5 grid grid-cols-2 md:grid-cols-6 gap-6 text-xs">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Item</span>
+                <span className="text-white font-medium text-sm truncate" title={ancEstimateData.specs?.productName}>
+                  {ancEstimateData.specs?.productName || "LED Display"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Pitch</span>
+                <span className="text-white font-medium text-sm">
+                  {ancEstimateData.specs?.pitch || (ancEstimateData.specs?.resolution?.includes("10mm") ? "10mm" : "6mm")}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Qty</span>
+                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.qty || 1}</span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Height</span>
+                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.height}'</span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Width</span>
+                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.width}'</span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-right">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Resolution</span>
+                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.resolution || "TBD"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Table */}
+          <div className="border border-white/10 rounded-xl overflow-hidden bg-black/20 shadow-xl">
+            <div className="bg-white/10 px-4 py-3 border-b border-white/10">
+              <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Pricing Breakdown</h3>
+            </div>
+            <div className="p-0 divide-y divide-white/5">
+              {[
+                { label: "LED Display System", value: ancEstimateData.pricing?.base },
+                {
+                  label: "Structural Materials, Labor & Install",
+                  value: (ancEstimateData.pricing?.structural || 0) + (ancEstimateData.pricing?.labor || 0),
+                },
+                { label: "Project Management, Engineering & Data", value: ancEstimateData.pricing?.pm },
+              ].map((row, i) => (
+                <div key={i} className="px-6 py-4 flex justify-between items-center hover:bg-white/5 transition-colors">
+                  <span className="text-sm text-white/70 font-medium">{row.label}</span>
+                  <span className="font-mono text-sm text-white font-semibold">{formatCurrency(row.value)}</span>
+                </div>
+              ))}
+              <div className="px-6 py-6 bg-purple-500/10 flex justify-between items-center border-t border-purple-500/20">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-purple-400">Total Project Value</span>
+                  <span className="text-[9px] text-white/30 italic">Excluding GST ({currency})</span>
+                </div>
+                <span className="text-2xl font-black text-white tracking-tighter decoration-purple-500/50 underline underline-offset-8 decoration-4">
+                  {formatCurrency(ancEstimateData.pricing?.total)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ANC-SPECIFIC TABLE RENDERING */}
       {tableType === "anc" && (

@@ -266,7 +266,8 @@ export default function ThreadNotes({
           );
         };
         
-        const isANC = hasANCData(res?.pricingTable?.rows);
+        const isAncEstimate = res?.pricingTable?.type === "anc_estimate" || (res?.pricingTable?.specs && res?.pricingTable?.pricing);
+        const isANC = !isAncEstimate && hasANCData(res?.pricingTable?.rows);
         
         if (
           action === "draft_sow" &&
@@ -274,11 +275,22 @@ export default function ThreadNotes({
           editorRef.current?.insertPricingTableWithData &&
           !markdownHasPricingTable
         ) {
-          // Pass tableType based on detected data structure
-          editorRef.current.insertPricingTableWithData({
-            ...res.pricingTable,
-            tableType: isANC ? "anc" : "agency"
-          });
+          // Pass tableType and specialized data for ANC Estimates
+          if (isAncEstimate) {
+            editorRef.current.insertPricingTableWithData({
+              tableType: "anc_estimate",
+              title: res.pricingTable.title || "ANC Project Proposal",
+              ancEstimateData: {
+                 specs: res.pricingTable.specs,
+                 pricing: res.pricingTable.pricing
+              }
+            });
+          } else {
+            editorRef.current.insertPricingTableWithData({
+              ...res.pricingTable,
+              tableType: isANC ? "anc" : "agency"
+            });
+          }
         }
 
         showToast("Inserted into notes.", "success");

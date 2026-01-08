@@ -233,9 +233,23 @@ async function streamChatWithWorkspace(
 
   // Compress & Assemble message to ensure prompt passes token limit with room for response
   // and build system messages based on inputs and history.
+  let systemPrompt = await chatPrompt(workspace, user);
+
+  // ANC Mode Guardrail: Force interviewer logic if keywords are missing
+  if (workspace?.activeLogicModule === "anc") {
+    const keywords = ["indoor", "outdoor", "front", "rear", "curved", "straight"];
+    const messageLower = updatedMessage.toLowerCase();
+    const hasKeywords = keywords.some((k) => messageLower.includes(k));
+
+    if (!hasKeywords) {
+      systemPrompt +=
+        "\n\nCRITICAL INSTRUCTION: You are in 'Interviewer Mode'. The user has not provided all necessary variables (Environment, Service Access, or Curvature). YOU MUST STOP AND ASK for these details before performing any calculations or generating a quote. Do not provide estimates yet.";
+    }
+  }
+
   const messages = await LLMConnector.compressMessages(
     {
-      systemPrompt: await chatPrompt(workspace, user),
+      systemPrompt,
       userPrompt: updatedMessage,
       contextTexts,
       chatHistory,

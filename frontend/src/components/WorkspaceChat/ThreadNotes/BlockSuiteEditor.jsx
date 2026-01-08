@@ -2003,6 +2003,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       const gstPercent = toNumber(payload.gstPercent, 10);
       const rows = normalizeRows(payload.rows);
       const tableType = typeof payload.tableType === "string" ? payload.tableType : "agency";
+      const ancEstimateData = payload.ancEstimateData || null;
 
       try {
         doc.addBlock(
@@ -2014,6 +2015,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             gstPercent,
             rows,
             tableType,
+            ancEstimateData,
           },
           noteBlock.id
         );
