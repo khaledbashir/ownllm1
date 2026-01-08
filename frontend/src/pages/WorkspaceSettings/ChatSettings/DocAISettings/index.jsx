@@ -13,6 +13,7 @@ import useGetProviderModels from "@/hooks/useGetProvidersModels";
 import System from "@/models/system";
 import AnythingLLMIcon from "@/media/logo/anything-llm-icon.png";
 import GenericOpenAiLogo from "@/media/llmprovider/generic-openai.png";
+import LogicModuleSelector from "./LogicModuleSelector";
 
 // Some providers do not support model selection
 const FREE_FORM_LLM_SELECTION = ["bedrock", "azure", "generic-openai"];
@@ -453,6 +454,9 @@ export default function DocAISettings({ workspace, setHasChanges }) {
               className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-white/30"
             />
           </div>
+
+          {/* Active Logic Module */}
+          <LogicModuleSelector workspace={workspace} setHasChanges={setHasChanges} />
 
           {/* Custom Actions */}
           <div>

@@ -277,8 +277,51 @@ function buildProposalContext(workspace) {
  */
 async function chatPrompt(workspace, user = null) {
   const { SystemSettings } = require("../../models/systemSettings");
-  const basePrompt =
-    workspace?.openAiPrompt ?? SystemSettings.saneDefaultSystemPrompt;
+  const { SYSTEM_PROMPTS } = require("../../prompts/systemPrompts");
+  
+  // Check Active Logic Module for Context Switching
+  const activeModule = workspace?.activeLogicModule || "agency";
+  
+  let basePrompt;
+  let contextAppendix = "";
+  
+  if (activeModule === "anc") {
+    // ANC Sports Mode: Use ANC-specific system prompt and inject ANC Product Catalog
+    basePrompt = SYSTEM_PROMPTS.anc || SYSTEM_PROMPTS.agency;
+    
+    // Inject ANC Product Catalog context
+    if (workspace?.ancProductCatalog) {
+      try {
+        const catalog = JSON.parse(workspace.ancProductCatalog);
+        const catalogSummary = catalog
+          .slice(0, 5) // Limit to first 5 products to save tokens
+          .map(p => `- ${p.category || "General"}: ${p.productName} ($${p.baseCostPerSqFt}/sqft)`)
+          .join("\n");
+        contextAppendix = `\n\nAVAILABLE ANC PRODUCTS:\n${catalogSummary}`;
+      } catch (e) {
+        console.error("[chatPrompt] Failed to parse ANC catalog:", e);
+      }
+    }
+  } else {
+    // Agency Mode: Use default prompt and inject Rate Card
+    basePrompt =
+      workspace?.openAiPrompt ?? SystemSettings.saneDefaultSystemPrompt;
+    
+    // Inject Rate Card context for Agency Mode
+    if (workspace?.rateCard) {
+      try {
+        const rateCard = JSON.parse(workspace.rateCard);
+        const rateCardSummary = rateCard
+          .slice(0, 5) // Limit to first 5 entries
+          .map(r => `- ${r.role || r.name}: $${r.rate}/hr`)
+          .join("\n");
+        contextAppendix = `\n\nAVAILABLE RATES:\n${rateCardSummary}`;
+      } catch (e) {
+        console.error("[chatPrompt] Failed to parse rate card:", e);
+      }
+    }
+  }
+
   const expanded = await SystemPromptVariables.expandSystemPromptVariables(
     basePrompt,
     user?.id,
@@ -290,7 +333,7 @@ async function chatPrompt(workspace, user = null) {
     ? buildProposalContext(workspace)
     : "";
 
-  return `${expanded}${proposalContext}${smartPluginsAppendix}`;
+  return `${expanded}${contextAppendix}${proposalContext}${smartPluginsAppendix}`;
 }
 
 // We use this util function to deduplicate sources from similarity searching

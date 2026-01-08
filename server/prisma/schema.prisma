@@ -195,6 +195,7 @@ model workspaces {
   products                     String?
   rateCard                     String?
   ancProductCatalog            String?
+  activeLogicModule           String?                        @default("agency")
   enableProposalMode           Boolean                        @default(false)
   inlineAiSystemPrompt         String?
   inlineAiActions              String?
