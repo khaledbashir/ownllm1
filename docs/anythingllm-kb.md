@@ -115,7 +115,14 @@ Upload → Collector (parse/OCR) → Chunking → Embedding → Vector DB → Wo
 **Required Files:**
 
 1. `plugin.json` - Metadata, config, params, examples
+   - `hubId`: Must match folder name
+   - `version`: Semver version
+   - `entrypoint`: Handler function name
+   - `setup_args`: Runtime configuration
 2. `handler.js` - JavaScript execution logic
+   - Exports `runtime` object with `handler` function
+   - Must return string value
+   - Access `this.introspect()`, `this.logger()`, `this.config`
 
 ---
 
@@ -170,3 +177,162 @@ const row = db.prepare('SELECT products, rateCard FROM workspaces WHERE id = ?')
 ```
 
 **Auth:** Bearer token in `Authorization` header
+
+---
+
+## 🔗 MCP Integration
+
+**MCP Servers Config:** `plugins/anythingllm_mcp_servers.json`
+
+**Schema:**
+```json
+{
+  "servers": {
+    "server-id": {
+      "name": "Display Name",
+      "description": "What this server does",
+      "url": "http://localhost:3000/sse",  // SSE endpoint
+      "apiKey": "optional-key",
+      "enabled": true
+    }
+  }
+}
+```
+
+**Usage:**
+- MCP servers expose tools via SSE
+- Agent can call MCP tools like native skills
+- Requires MCP-compatible server running separately
+
+---
+
+## 🛒 Product Import (Custom Implementation)
+
+**Backend:** `server/utils/productImport.js`
+
+**Flow:**
+1. User provides URL or search query
+2. (Optional) Web search via `web-browsing` plugin
+3. Scrape URL via `web-scraping` plugin
+4. Extract products via `product-extraction` plugin (LLM-based)
+5. Parse JSON and normalize products
+
+**API Endpoint:**
+```javascript
+POST /api/workspace/:slug/import-products
+Body: { 
+  "url": "https://example.com/products",  // Optional
+  "query": "SaaS pricing plans"      // Optional, one required
+}
+```
+
+**Response:**
+```json
+{
+  "products": [
+    {
+      "id": "prod-123",
+      "name": "Pro Plan",
+      "description": "...",
+      "price": 99,
+      "pricingType": "monthly",
+      "category": "Subscription"
+    }
+  ]
+}
+```
+
+**Frontend Component:** `ProductsManager/index.jsx`
+- Smart input detection: URL vs search query
+- Calls `Workspace.importProducts(slug, url, query)`
+
+---
+
+## 🔌 Agent Plugin Development (Updated)
+
+**Agent Plugins Location:** `server/utils/agents/aibitat/plugins/`
+
+**Built-in Plugins:**
+- `web-browsing.js` - DuckDuckGo/Google/SerpApi search
+- `web-scraping.js` - URL content scraping via CollectorApi
+- `product-extraction.js` - LLM-based product & price extraction
+
+**Plugin Structure:**
+```javascript
+const pluginName = {
+  name: "web-browsing",
+  plugin: function() {
+    return {
+      name: this.name,
+      setup(aibitat) {
+        aibitat.function({
+          name: this.name,
+          description: "...",
+          parameters: { /* JSON Schema */ },
+          handler: async function({ query }) {
+            // Logic here
+            return result; // Must return string
+          },
+          
+          // Optional: Custom methods
+          search: async function(query) { ... }
+        });
+      }
+    };
+  }
+};
+module.exports = { pluginName };
+```
+
+**Headless Plugin Execution:**
+```javascript
+const { webBrowsing } = require("./agents/aibitat/plugins/web-browsing");
+const mockAibitat = {
+  handlerProps: { log: ... },
+  introspect: ...,
+  caller: "ProductImport",
+  provider: settings.LLMProvider,
+  model: settings.LLMModel,
+  function: function(funcConfig) { this.currentFunction = funcConfig; }
+};
+
+const pluginConfig = webBrowsing.plugin();
+pluginConfig.setup(mockAibitat);
+const result = await mockAibitat.currentFunction.handler({ query: "search term" });
+```
+
+---
+
+## 🔑 Environment Variables (Critical)
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `STORAGE_DIR` | Path to data folder | `./storage` |
+| `DB_CONNECTION_STRING` | PostgreSQL URL | Required for Docker |
+| `JWT_SECRET` | Token signing | Auto-generated |
+| `DISABLE_TELEMETRY` | Disable analytics | `false` |
+| `GENERIC_OPENAI_STREAMING_DISABLED` | Disable streaming | `false` |
+
+**Easypanel Environment Variables:**
+Add via Easypanel container environment settings - no file editing needed.
+
+---
+
+## 📦 Docker Deployment (Easypanel)
+
+**Image:** `mintplexlabs/anythingllm:latest`
+
+**Auto-Build Workflow:**
+1. Push to GitHub (`main` or `master` branch)
+2. Easypanel webhook triggers
+3. Docker Compose rebuilds container
+4. Zero-downtime deployment (if configured)
+
+**Health Checks:**
+- Frontend: `http://your-domain.com` (port 80)
+- Backend: `http://your-domain.com:3001` (port 3001)
+- Collector: `http://your-domain.com:8888` (port 8888)
+
+**Volume Mounts:**
+- `/app/server/storage` → PostgreSQL data persists
+- `/app/frontend/dist` → Built frontend assets

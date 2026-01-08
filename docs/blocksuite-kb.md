@@ -226,6 +226,61 @@ To force precise SOW generation, bypass Markdown and request a **JSON Snapshot**
 ## 🏛️ Project Specific Architecture
 
 ### 1. Workspace Thread Notes
+
+**Integration Pattern:** AnythingLLM + BlockSuite Thread Notes
+
+**Backend Storage:**
+- Table: `workspace_threads.notes` (TEXT/JSONB)
+- Format: BlockSuite JSON snapshot
+
+**Frontend Integration:**
+- Component: `frontend/src/components/BlockSuite/ThreadNotesEditor.jsx`
+- Pattern: Hybrid React + BlockSuite blocks
+
+**REST API:**
+```javascript
+GET /api/workspace/:slug/thread/:threadSlug/notes
+PUT /api/workspace/:slug/thread/:threadSlug/notes
+Body: { "notes": "<blocksuite-snapshot json>" }
+```
+
+**Usage Flow:**
+1. User opens thread
+2. Fetch existing notes snapshot from DB
+3. Initialize BlockSuite editor with snapshot
+4. Auto-save on change (debounced 500ms)
+5. Convert to Markdown/PDF on export
+
+### 2. Custom Blocks: Pricing Table
+
+**Flavour:** `affine:embed-pricing-table`
+
+**Props Schema:**
+```typescript
+{
+  title: internal.Text(),
+  rows: internal.Boxed([{
+    id: string,
+    role: string,
+    description: string,
+    hours: number,
+    baseRate: number
+  }])
+}
+```
+
+**React Component:** `pricing-table-block.jsx`
+- Wrapper pattern: Lit component mounts React root
+- Subscribes to `model.props.rows$` signal
+- Renders table with inline editing
+
+**Export Integration:**
+- Custom `HtmlAdapter` visitor for pricing table
+- Generates `<table>` HTML for PDF export
+
+---
+
+### 1. Workspace Thread Notes (Legacy - DEPRECATED)
 This repo uses BlockSuite to power **Workspace Chat → Thread Notes**. Notes are stored per thread in the DB as a single `TEXT` field containing JSON.
 
 **Storage Format:**
