@@ -65,7 +65,6 @@ IMPORTANT: Return ONLY the JSON array. No markdown, no explanations, no backtick
   });
 
   // Establish event listener that emulates websocket calls
-  const { EphemeralEventListener } = require("./agents");
   const eventListener = new EphemeralEventListener();
 
   // Initialize agent
