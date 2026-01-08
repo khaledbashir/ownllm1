@@ -87,8 +87,9 @@ else
     # VIBE CODER MOD: We use db push to ensure schema is always in sync with code,
     # bypassing the need for migration files in git.
     npx prisma db push --schema=./prisma/schema.prisma --accept-data-loss
+fi
 
-    echo "✅ Database is ready."
+echo "✅ Database is ready."
 
 # --- Start Services ---
 {
