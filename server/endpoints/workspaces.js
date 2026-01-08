@@ -287,12 +287,25 @@ function workspaceEndpoints(app) {
     [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
     async (request, response) => {
       try {
+        const user = await userFromSession(request, response);
+        const { slug = null } = request.params;
         const { url, query } = reqBody(request);
+        
         if (!url && !query) {
           return response.status(400).json({ error: "URL or query is required" });
         }
 
-        const products = await importProductsFromUrl(url, query);
+        // Fetch workspace for context (LLM settings, etc.)
+        const currWorkspace = multiUserMode(response)
+          ? await Workspace.getWithUser(user, { slug })
+          : await Workspace.get({ slug });
+
+        if (!currWorkspace) {
+          response.sendStatus(400).end();
+          return;
+        }
+
+        const products = await importProductsFromUrl(url, query, currWorkspace);
         response.status(200).json({ products });
       } catch (e) {
         console.error(e.message, e);
