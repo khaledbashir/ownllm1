@@ -11,6 +11,7 @@ import WorkspaceLLMSelection from "./WorkspaceLLMSelection";
 import ChatQueryRefusalResponse from "./ChatQueryRefusalResponse";
 import ProposalModeSelection from "./ProposalModeSelection";
 import DocAISettings from "./DocAISettings";
+import LogicModuleSelector from "./LogicModuleSelector";
 import CTAButton from "@/components/lib/CTAButton";
 
 export default function ChatSettings({ workspace }) {
@@ -85,6 +86,10 @@ export default function ChatSettings({ workspace }) {
           workspace={workspace}
           setHasChanges={setHasChanges}
           hasChanges={hasChanges}
+        />
+        <LogicModuleSelector
+          workspace={workspace}
+          setHasChanges={setHasChanges}
         />
         <ChatQueryRefusalResponse
           workspace={workspace}
