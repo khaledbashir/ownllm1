@@ -138,6 +138,14 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "workspace/:slug/anc-estimator",
+        lazy: async () => {
+          const { default: ANCEstimator } =
+            await import("@/pages/ANCEstimator");
+          return { element: <PrivateRoute Component={ANCEstimator} /> };
+        },
+      },
+      {
         path: "workspace/:slug/forms/:uuid/builder",
         lazy: async () => {
           const { default: WorkspaceFormBuilder } =

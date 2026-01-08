@@ -194,6 +194,7 @@ model workspaces {
   vectorSearchMode             String?                        @default("default")
   products                     String?
   rateCard                     String?
+  ancProductCatalog            String?
   enableProposalMode           Boolean                        @default(false)
   inlineAiSystemPrompt         String?
   inlineAiActions              String?

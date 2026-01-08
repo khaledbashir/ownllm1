@@ -83,22 +83,12 @@ else
         npx prisma migrate reset --force --schema=./prisma/schema.prisma || echo "⚠️  Reset failed, but trying to continue..."
     fi
 
-    echo "🚀 Running SQLite migrations (deploy)..."
-    if ! npx prisma migrate deploy --schema=./prisma/schema.prisma; then
-        echo "================================================================"
-        echo "❌ CRITICAL ERROR: DATABASE MIGRATION FAILED!"
-        echo "Prisma Error P3009 detected (failed migration state)."
-        echo ""
-        echo "FIX: In Easypanel, add the environment variable:"
-        echo "RESET_DB=\"true\""
-        echo "Then restart the service to wipe and re-initialize the database."
-        echo "================================================================"
-        sleep 60
-        exit 1
-    fi
-fi
+    echo "🚀 Running Database Synchronization (db push)..."
+    # VIBE CODER MOD: We use db push to ensure schema is always in sync with code,
+    # bypassing the need for migration files in git.
+    npx prisma db push --schema=./prisma/schema.prisma --accept-data-loss
 
-echo "✅ Database is ready."
+    echo "✅ Database is ready."
 
 # --- Start Services ---
 {
