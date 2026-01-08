@@ -34,13 +34,14 @@ export default function ProductsManager({ workspace }) {
   const [saving, setSaving] = useState(false);
   const [newProduct, setNewProduct] = useState(null);
   const [importUrl, setImportUrl] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
   const handleImport = async () => {
-    if (!importUrl) return;
+    if (!importUrl && !searchQuery) return;
     setIsImporting(true);
     const { products: importedProducts, error } =
-      await Workspace.importProducts(workspace.slug, importUrl);
+      await Workspace.importProducts(workspace.slug, importUrl, searchQuery);
     if (error) {
       showToast(error, "error");
     } else if (importedProducts?.length > 0) {
@@ -48,12 +49,13 @@ export default function ProductsManager({ workspace }) {
       const updated = [...products, ...importedProducts];
       await saveProducts(updated);
       setImportUrl("");
+      setSearchQuery("");
       showToast(
         `Imported ${importedProducts.length} products successfully!`,
         "success"
       );
     } else {
-      showToast("No products found on that page", "warning");
+      showToast("No products found", "warning");
     }
     setIsImporting(false);
   };
@@ -141,20 +143,30 @@ export default function ProductsManager({ workspace }) {
       {/* Import Block */}
       <div className="bg-theme-bg-secondary border border-theme-border rounded-lg p-4">
         <label className="block text-white/60 text-xs uppercase font-bold mb-2">
-          Auto-Fill from Website
+          Enter URL or Search Query
         </label>
         <div className="flex gap-2">
           <input
-            type="url"
-            placeholder="https://your-agency.com/pricing"
+            type="text"
+            placeholder="https://your-agency.com/pricing OR 'ANC Sports Pricing'"
             className="flex-1 bg-theme-bg-primary text-white text-sm rounded-lg px-3 py-2 border border-theme-border focus:ring-2 focus:ring-blue-500 outline-none"
-            value={importUrl}
-            onChange={(e) => setImportUrl(e.target.value)}
+            value={importUrl || searchQuery}
+            onChange={(e) => {
+              const value = e.target.value;
+              // Detect if it's a URL or search query
+              if (value.startsWith('http://') || value.startsWith('https://')) {
+                setImportUrl(value);
+                setSearchQuery("");
+              } else {
+                setSearchQuery(value);
+                setImportUrl("");
+              }
+            }}
             onKeyDown={(e) => e.key === "Enter" && handleImport()}
           />
           <button
             onClick={handleImport}
-            disabled={isImporting || !importUrl}
+            disabled={isImporting || (!importUrl && !searchQuery)}
             className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
           >
             {isImporting ? (
@@ -162,11 +174,11 @@ export default function ProductsManager({ workspace }) {
             ) : (
               <Globe className="w-4 h-4" />
             )}
-            {isImporting ? "Analyzing..." : "Import"}
+            {isImporting ? "Processing..." : "Import"}
           </button>
         </div>
         <p className="text-white/40 text-xs mt-2">
-          Enter a URL. The AI will scrape products and estimate missing prices.
+          Enter a direct URL, or type a search query like "ANC Sports Pricing" to find their page.
         </p>
       </div>
 

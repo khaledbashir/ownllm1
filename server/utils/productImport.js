@@ -1,89 +1,82 @@
-const { CollectorApi } = require("./collectorApi");
-const { PromptTemplate } = require("@langchain/core/prompts");
-const Provider = require("./agents/aibitat/providers/ai-provider");
+const { AgentFlow } = require("./agentFlows");
 const { SystemSettings } = require("../models/systemSettings");
 const { getLLMProvider } = require("./helpers");
 
-async function importProductsFromUrl(url) {
-  // 1. Scrape Content
-  const { success, content } = await new CollectorApi().getLinkContent(url);
+/**
+ * Import products from URL or web search query
+ * @param {string} url - Direct URL to scrape (optional)
+ * @param {string} query - Search query to find products (optional)
+ * @returns {Promise<Array>} - Array of imported products
+ */
+async function importProductsFromUrl(url, query = null) {
+  const AgentFlow = require("./agentFlows");
+  const { SystemSettings } = require("../models/systemSettings");
 
-  if (!success || !content || content.length === 0) {
-    throw new Error(`Could not scrape content from ${url}`);
+  let targetUrl = url;
+  
+  // Step 1: Web Search if query provided (but no URL)
+  if (query && !url) {
+    console.log(`[ProductImport] Searching for products with query: "${query}"`);
+    
+    const settings = await SystemSettings.currentSettings();
+    const searchResults = await AgentFlow.executeAgentStep({
+      type: "WEB_BROWSING",
+      agentFunction: "web-browsing",
+      agentInputs: { 
+        query,
+        engine: "duckduckgo-engine"
+      }
+    });
+    
+    if (!searchResults || searchResults.length === 0) {
+      throw new Error(`No search results found for query: "${query}"`);
+    }
+    
+    targetUrl = searchResults[0].link;
+    console.log(`[ProductImport] Found URL from search: ${targetUrl}`);
   }
-
-  // 2. Prepare LLM
-  // Get the configured LLM provider from system settings
+  
+  // Step 2: Scrape content using Agent's web-scraping skill
+  console.log(`[ProductImport] Scraping content from: ${targetUrl}`);
+  
+  const scrapedContent = await AgentFlow.executeAgentStep({
+    type: "WEB_SCRAPING",
+    agentFunction: "web-scraping",
+    agentInputs: { url: targetUrl }
+  });
+  
+  if (!scrapedContent || scrapedContent.length === 0) {
+    throw new Error(`No content found at ${targetUrl}`);
+  }
+  
+  // Step 3: Extract products using Agent's product-extraction skill
+  console.log(`[ProductImport] Extracting products from scraped content (${scrapedContent.length} chars)`);
+  
   const settings = await SystemSettings.currentSettings();
   const provider = settings?.LLMProvider || "openai";
-  const model = settings?.LLMModel || "gpt-3.5-turbo"; // Fallback
-
-  const llm = Provider.LangChainChatModel(provider, {
-    temperature: 0.7,
-    model: model,
+  const model = settings?.LLMModel || "gpt-3.5-turbo";
+  
+  const extractedData = await AgentFlow.executeAgentStep({
+    type: "AGENT_FUNCTION_CALL",
+    agentFunction: "product-extraction",
+    agentInputs: {
+      context: scrapedContent,
+      objective: "Extract products and their prices from provided website content"
+    }
   });
-
-  const truncatedContent = content.slice(0, 15000);
-
-  const promptTemplate = new PromptTemplate({
-    template: `
-      You are an expert pricing analyst. 
-      Analyze the following website content from {url}.
-      
-      GOAL: Extract a list of products/services and their prices.
-      
-      RULES:
-      1. If explicit prices are found, use them (remove symbols like $).
-      2. If NO prices are found, ESTIMATE a realistic market price based on the service description. 
-      3. If you estimate a price, set a boolean flag "isEstimated": true.
-      4. If you really cannot estimate, use 1.
-      5. Return ONLY a valid JSON array. No markdown, no explanations.
-
-      SCHEMA:
-      [
-        {{
-          "id": "uuid",
-          "name": "Product Name",
-          "description": "Short description",
-          "price": 1000, 
-          "pricingType": "fixed" | "hourly",
-          "category": "Service Category",
-          "features": ["feature 1", "feature 2"],
-          "isEstimated": boolean
-        }}
-      ]
-
-      WEBSITE CONTENT:
-      {content}
-
-      JSON OUTPUT:
-    `,
-    inputVariables: ["url", "content"],
-  });
-
-  const formattedPrompt = await promptTemplate.format({
-    url: url,
-    content: truncatedContent,
-  });
-
-  const response = await llm.invoke(formattedPrompt);
-
-  let text = response.content || "";
-  text = text
-    .replace(/```json/g, "")
-    .replace(/```/g, "")
-    .trim();
-
+  
   try {
-    const products = JSON.parse(text);
-    // Add UUIDs if missing
+    const products = JSON.parse(extractedData);
+    console.log(`[ProductImport] Successfully extracted ${products.length} products`);
+    
     return products.map((p) => ({
       ...p,
       id: p.id || Math.random().toString(36).substring(7),
-      isEstimated: p.isEstimated || false,
+      isEstimated: p.isEstimated || false
     }));
   } catch (e) {
-    throw new Error("Failed to parse AI response into JSON products.");
+    console.error(`[ProductImport] Failed to parse extracted data:`, e.message);
+    throw new Error("Failed to extract products from scraped content. " + e.message);
   }
 }
 

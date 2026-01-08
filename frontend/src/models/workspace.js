@@ -604,12 +604,12 @@ const Workspace = {
     return response;
   },
 
-  importProducts: async function (slug, url) {
+  importProducts: async function (slug, url, query = null) {
     const { products, error } = await fetch(
       `${API_BASE}/workspace/${slug}/import-products`,
       {
         method: "POST",
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, query }),
         headers: baseHeaders(),
       }
     )

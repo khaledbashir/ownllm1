@@ -287,12 +287,12 @@ function workspaceEndpoints(app) {
     [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
     async (request, response) => {
       try {
-        const { url } = reqBody(request);
-        if (!url) {
-          return response.status(400).json({ error: "URL is required" });
+        const { url, query } = reqBody(request);
+        if (!url && !query) {
+          return response.status(400).json({ error: "URL or query is required" });
         }
 
-        const products = await importProductsFromUrl(url);
+        const products = await importProductsFromUrl(url, query);
         response.status(200).json({ products });
       } catch (e) {
         console.error(e.message, e);
