@@ -1,0 +1,31 @@
+DOCUMENTATION SEARCH QUERIES FOR RAG KB
+============================================================
+
+1. AnythingLLM architecture documentation
+2. AnythingLLM API reference endpoints
+3. AnythingLLM agent system plugins skills
+4. AnythingLLM multi-tenant architecture
+5. AnythingLLM workspace settings configuration
+6. BlockSuite editor documentation
+7. BlockSuite block types API
+8. BlockSuite PDF export implementation
+9. BlockSuite custom blocks development
+10. AIbitat agent system architecture
+11. AIbitat plugin development guide
+12. AnythingLLM agent skills handler.js
+13. AnythingLLM web-browsing web-scraping plugins
+14. AnythingLLM Prisma schema workspaces
+15. AnythingLLM database migrations guide
+16. PostgreSQL vector database pgvector
+17. AnythingLLM Docker deployment Easypanel
+18. AnythingLLM environment variables configuration
+19. AnythingLLM production deployment guide
+20. AnythingLLM contributor guide
+21. AnythingLLM frontend React components
+22. AnythingLLM backend endpoints development
+23. AnythingLLM MCP server integration
+24. AnythingLLM document collectors
+25. AnythingLLM embedding providers configuration
+26. AnythingLLM LLM providers OpenAI Anthropic
+27. AnythingLLM authentication system
+28. AnythingLLM user roles permissions

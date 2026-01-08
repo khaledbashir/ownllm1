@@ -1,0 +1,16 @@
+{
+  "models": [{
+    "title": "GLM-4.7",
+    "provider": "openai",
+    "model": "glm-4.7",
+    "apiBase": "https://api.z.ai/api/coding/paas/v4",
+    "apiKey": "8c313c111b47423aa91781479cf0af6e.LfWV1laJpyWEHH1z"
+  }],
+  "tabAutocompleteModel": {
+    "title": "GLM-4.7",
+    "provider": "openai",
+    "model": "glm-4.7",
+    "apiBase": "https://api.z.ai/api/coding/paas/v4",
+    "apiKey": "8c313c111b47423aa91781479cf0af6e.LfWV1laJpyWEHH1z"
+  }
+}

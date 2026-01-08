@@ -4,6 +4,89 @@ import Workspace from "@/models/workspace";
 import { toast } from "react-toastify";
 import Sidebar from "@/components/Sidebar";
 
+const DEMO_PRODUCTS = [
+  {
+    productName: "10mm Outdoor Ribbon (Standard)",
+    category: "Ribbon",
+    baseCostPerSqFt: 250.00,
+    structuralMargin: 0.15,
+    laborMargin: 0.20,
+    fixedCosts: 5000
+  },
+  {
+    productName: "16mm Outdoor Ribbon (Budget)",
+    category: "Ribbon",
+    baseCostPerSqFt: 180.00,
+    structuralMargin: 0.15,
+    laborMargin: 0.18,
+    fixedCosts: 4000
+  },
+  {
+    productName: "6mm Outdoor High-Res Scoreboard",
+    category: "Scoreboard",
+    baseCostPerSqFt: 450.00,
+    structuralMargin: 0.15,
+    laborMargin: 0.22,
+    fixedCosts: 7500
+  },
+  {
+    productName: "10mm Outdoor Scoreboard (Pro)",
+    category: "Scoreboard",
+    baseCostPerSqFt: 280.00,
+    structuralMargin: 0.15,
+    laborMargin: 0.20,
+    fixedCosts: 5000
+  },
+  {
+    productName: "16mm Outdoor Mesh (Transparent)",
+    category: "Facade",
+    baseCostPerSqFt: 140.00,
+    structuralMargin: 0.25,
+    laborMargin: 0.25,
+    fixedCosts: 3000
+  },
+  {
+    productName: "4mm Indoor Center Hung (Premium)",
+    category: "Arena",
+    baseCostPerSqFt: 600.00,
+    structuralMargin: 0.10,
+    laborMargin: 0.15,
+    fixedCosts: 8000
+  },
+  {
+    productName: "2.5mm Indoor Fine Pitch (VIP Suite)",
+    category: "Indoor",
+    baseCostPerSqFt: 950.00,
+    structuralMargin: 0.05,
+    laborMargin: 0.10,
+    fixedCosts: 2500
+  },
+  {
+    productName: "Custom Curved Facade (Flexible)",
+    category: "Architectural",
+    baseCostPerSqFt: 550.00,
+    structuralMargin: 0.35,
+    laborMargin: 0.30,
+    fixedCosts: 12000
+  },
+  {
+    productName: "Perimeter Field Board (FIFA Std)",
+    category: "Perimeter",
+    baseCostPerSqFt: 320.00,
+    structuralMargin: 0.10,
+    laborMargin: 0.12,
+    fixedCosts: 3500
+  },
+  {
+    productName: "Concours Digital Signage (LCD Video Wall)",
+    category: "Signage",
+    baseCostPerSqFt: 120.00,
+    structuralMargin: 0.05,
+    laborMargin: 0.15,
+    fixedCosts: 1000
+  }
+];
+
 export default function ANCEstimator() {
   const { slug } = useParams();
   const [activeTab, setActiveTab] = useState("estimator");
@@ -28,15 +111,22 @@ export default function ANCEstimator() {
       try {
         const ws = await Workspace.bySlug(slug);
         setWorkspace(ws);
+        let parsedCatalog = [];
         if (ws.ancProductCatalog) {
             try {
-                const parsed = JSON.parse(ws.ancProductCatalog);
-                setCatalog(Array.isArray(parsed) ? parsed : []);
+                parsedCatalog = JSON.parse(ws.ancProductCatalog);
             } catch (e) {
                 console.error("Failed to parse catalog", e);
-                setCatalog([]);
             }
         }
+        
+        // Auto-seed with demo products if catalog is empty
+        if (!Array.isArray(parsedCatalog) || parsedCatalog.length === 0) {
+            parsedCatalog = DEMO_PRODUCTS;
+            toast.info("Seeded demo products for ANC Estimator.");
+        }
+        
+        setCatalog(Array.isArray(parsedCatalog) ? parsedCatalog : []);
       } catch (error) {
         console.error(error);
         toast.error("Failed to load workspace");
@@ -56,6 +146,7 @@ export default function ANCEstimator() {
   const addProduct = () => {
       const newProduct = {
           productName: "New Product",
+          category: "General",
           baseCostPerSqFt: 0,
           structuralMargin: 0.15,
           laborMargin: 0.20,
@@ -155,6 +246,7 @@ export default function ANCEstimator() {
                         <thead className="bg-gray-900 text-gray-400 uppercase tracking-wider">
                             <tr>
                                 <th className="p-3 font-medium">Product Name</th>
+                                <th className="p-3 font-medium">Category</th>
                                 <th className="p-3 font-medium">Base Cost / SqFt ($)</th>
                                 <th className="p-3 font-medium">Struct. Margin (0.15 = 15%)</th>
                                 <th className="p-3 font-medium">Labor Margin (0.20 = 20%)</th>
@@ -165,12 +257,13 @@ export default function ANCEstimator() {
                         <tbody className="divide-y divide-gray-700">
                             {catalog.length === 0 && (
                                 <tr>
-                                    <td colSpan="6" className="p-8 text-center text-gray-500">No products in catalog. Add one to get started.</td>
+                                    <td colSpan="7" className="p-8 text-center text-gray-500">No products in catalog. Add one to get started.</td>
                                 </tr>
                             )}
                             {catalog.map((product, idx) => (
                                 <tr key={idx} className="hover:bg-gray-750 transition">
                                     <td className="p-3"><input type="text" value={product.productName} onChange={(e) => handleCatalogChange(idx, 'productName', e.target.value)} className="bg-gray-700 border border-gray-600 px-2 py-1 rounded w-full text-white focus:border-blue-500 outline-none" placeholder="Product Name" /></td>
+                                    <td className="p-3"><input type="text" value={product.category} onChange={(e) => handleCatalogChange(idx, 'category', e.target.value)} className="bg-gray-700 border border-gray-600 px-2 py-1 rounded w-full text-white focus:border-blue-500 outline-none" placeholder="Category" /></td>
                                     <td className="p-3"><input type="number" step="0.01" value={product.baseCostPerSqFt} onChange={(e) => handleCatalogChange(idx, 'baseCostPerSqFt', parseFloat(e.target.value))} className="bg-gray-700 border border-gray-600 px-2 py-1 rounded w-32 text-white focus:border-blue-500 outline-none" /></td>
                                     <td className="p-3"><input type="number" step="0.01" value={product.structuralMargin} onChange={(e) => handleCatalogChange(idx, 'structuralMargin', parseFloat(e.target.value))} className="bg-gray-700 border border-gray-600 px-2 py-1 rounded w-32 text-white focus:border-blue-500 outline-none" /></td>
                                     <td className="p-3"><input type="number" step="0.01" value={product.laborMargin} onChange={(e) => handleCatalogChange(idx, 'laborMargin', parseFloat(e.target.value))} className="bg-gray-700 border border-gray-600 px-2 py-1 rounded w-32 text-white focus:border-blue-500 outline-none" /></td>

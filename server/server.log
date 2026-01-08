@@ -1,0 +1,286 @@
+
+> anything-llm-server@1.9.2 dev
+> cross-env NODE_ENV=development nodemon --ignore documents --ignore vector-cache --ignore storage --ignore swagger --trace-warnings index.js
+
+[33m[nodemon] 2.0.22[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,json[39m
+[32m[nodemon] starting `node --trace-warnings index.js`[39m
+sh: 1: yarn: not found
+[36m[EncryptionManager][0m Loaded existing key & salt for encrypting arbitrary data.
+[35m[TokenManager][0m Initialized new TokenManager instance for model: gpt-3.5-turbo
+[35m[TokenManager][0m Returning existing instance for model: gpt-3.5-turbo
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting child process[39m
+[32m[nodemon] starting `node --trace-warnings index.js`[39m
+sh: 1: yarn: not found
+sh: 1: yarn: not found
+[32m[nodemon] restarting child process[39m
+sh: 1: yarn: not found
+[36m[EncryptionManager][0m Loaded existing key & salt for encrypting arbitrary data.
+[35m[TokenManager][0m Initialized new TokenManager instance for model: gpt-3.5-turbo
+[35m[TokenManager][0m Returning existing instance for model: gpt-3.5-turbo
+!!! ORGANIZATION ENDPOINTS FILE LOADED !!!
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for JokeAPI: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for Chuck Norris API: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for Quotable: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for Useless Facts: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for Cat Facts: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for Dog CEO: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for ipify: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for JSONPlaceholder: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for Bored API: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seeded 0 APIs
+!!! SERVER STARTUP CHECK - POST-FIX !!!
+!!! IF YOU SEE THIS, SERVER CODE IS UPDATED !!!
+node:events:495
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3001
+    at Server.setupListenHandle [as _listen2] (node:net:1811:16)
+    at listenInCluster (node:net:1859:12)
+    at Server.listen (node:net:1947:7)
+    at Function.serverListen [as listen] (/root/everythingllm/ownllm1/server/node_modules/@mintplex-labs/express-ws/dist/index.js:91:21)
+    at bootHTTP (/root/everythingllm/ownllm1/server/utils/boot/index.js:60:6)
+    at /root/everythingllm/ownllm1/server/index.js:321:5
+Emitted 'error' event on WebSocketServer instance at:
+    at Server.emit (node:events:529:35)
+    at emitErrorNT (node:net:1838:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '::',
+  port: 3001
+}
+
+Node.js v18.19.1
+try.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seed failed for Bored API: 
+Invalid `prisma.public_api_registry.upsert()` invocation in
+/root/everythingllm/ownllm1/server/models/publicApiRegistry.js:192:42
+
+  189 let created = 0;
+  190 for (const api of apis) {
+  191   try {
+→ 192     await prisma.public_api_registry.upsert(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[PublicApiRegistry] Seeded 0 APIs
+!!! SERVER STARTUP CHECK - POST-FIX !!!
+!!! IF YOU SEE THIS, SERVER CODE IS UPDATED !!!
+[33m[TELEMETRY STUBBED][0m Anonymous Telemetry stubbed in development.
+[36m[CommunicationKey][0m RSA key pair generated for signed payloads within AnythingLLM services.
+[36m[EncryptionManager][0m Loaded existing key & salt for encrypting arbitrary data.
+Primary server in HTTP mode listening on port 3001
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.system_settings.findFirst()` invocation in
+/root/everythingllm/ownllm1/server/models/systemSettings.js:347:52
+
+  344 
+  345 get: async function (clause = {}) {
+  346   try {
+→ 347     const setting = await prisma.system_settings.findFirst(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+
+Invalid `prisma.system_settings.findFirst()` invocation in
+/root/everythingllm/ownllm1/server/models/systemSettings.js:347:52
+
+  344 
+  345 get: async function (clause = {}) {
+  346   try {
+→ 347     const setting = await prisma.system_settings.findFirst(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[36m[BackgroundWorkerService][0m Starting...
+[36m[BackgroundWorkerService][0m Service started with 1 jobs [ 'cleanup-orphan-documents' ]
+[36m[EncryptionManager][0m Loaded existing key & salt for encrypting arbitrary data.
+prisma:info Starting a sqlite pool with 17 connections.
+prisma:error 
+Invalid `prisma.workspace_parsed_files.findMany()` invocation in
+/root/everythingllm/ownllm1/server/models/workspaceParsedFiles.js:65:57
+
+  62   select = null
+  63 ) {
+  64   try {
+→ 65     const files = await prisma.workspace_parsed_files.findMany(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+
+Invalid `prisma.workspace_parsed_files.findMany()` invocation in
+/root/everythingllm/ownllm1/server/models/workspaceParsedFiles.js:65:57
+
+  62   select = null
+  63 ) {
+  64   try {
+→ 65     const files = await prisma.workspace_parsed_files.findMany(
+Error querying the database: unable to open database file: /root/everythingllm/ownllm1/server/prisma/./storage/anythingllm.db
+[33m[65918:66417][0m: No direct uploads path found - exiting.
+[33m[65918:66417][0m: No direct uploads path found - exiting. { service: 'bg-worker', origin: 'cleanup-orphan-documents' }
+Child process exited with code 0 and signal null
+Worker for job "cleanup-orphan-documents" exited with code 0 undefined
+Gracefully exiting { code: 'SIGTERM', ignore_hook: true, hide_meta: true }
+Gracefully exited { code: 'SIGTERM', ignore_hook: true, hide_meta: true }

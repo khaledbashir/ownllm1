@@ -13,7 +13,8 @@
     "dev": "cross-env NODE_ENV=development nodemon --ignore documents --ignore vector-cache --ignore storage --ignore swagger --trace-warnings index.js",
     "start": "cross-env NODE_ENV=production node index.js",
     "lint": "yarn prettier --ignore-path ../.prettierignore --write ./endpoints ./models ./utils index.js",
-    "swagger": "node ./swagger/init.js"
+    "swagger": "node ./swagger/init.js",
+    "seed:anc": "node scripts/seedANCProducts.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -39,7 +40,7 @@
     "@xenova/transformers": "^2.14.0",
     "@zilliz/milvus2-sdk-node": "^2.3.5",
     "adm-zip": "^0.5.16",
-    "apache-arrow": "19.0.0",
+    "apache-arrow": "18.1.0",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.3",
     "chalk": "^4",
@@ -58,7 +59,7 @@
     "fix-path": "^4.0.0",
     "graphql": "^16.7.1",
     "ip": "^2.0.1",
-    "isomorphic-dompurify": "^2.35.0",
+    "isomorphic-dompurify": "2.26.0",
     "joi": "^17.11.0",
     "joi-password-complexity": "^5.2.0",
     "js-tiktoken": "^1.0.8",
