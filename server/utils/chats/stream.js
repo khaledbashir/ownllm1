@@ -235,8 +235,14 @@ async function streamChatWithWorkspace(
   // and build system messages based on inputs and history.
   let systemPrompt = await chatPrompt(workspace, user);
 
-  // ANC Mode Guardrail: Force interviewer logic if keywords are missing
+  // ANC Mode Logic: Inject Catalog & Guardrails
   if (workspace?.activeLogicModule === "anc") {
+    // 1. Inject Catalog if exists
+    if (workspace?.ancProductCatalog) {
+      systemPrompt += `\n\n### UPDATED ANC PRODUCT CATALOG (OVERRIDE)\n${workspace.ancProductCatalog}\nUse this data for products instead of any other previous context.`;
+    }
+
+    // 2. Guardrail: Force interviewer logic if keywords are missing
     const keywords = ["indoor", "outdoor", "front", "rear", "curved", "straight"];
     const messageLower = updatedMessage.toLowerCase();
     const hasKeywords = keywords.some((k) => messageLower.includes(k));

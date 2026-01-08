@@ -142,6 +142,71 @@ const PricingTableWidget = ({ model }) => {
   const [rolePickerOpenIndex, setRolePickerOpenIndex] = useState(null);
   const closeRolePickerTimeoutRef = useRef(null);
 
+  // ANC: Add Excel Export Function
+  const exportToExcel = () => {
+    // 1. Collect Data
+    const rows = getProp("rows", []);
+    const tableType = getProp("tableType", "agency"); // "anc" or "agency"
+    const title = model.title?.toString?.() ?? "Project Pricing";
+    
+    // 2. Build CSV Content
+    let csvContent = "";
+    
+    if (tableType === "anc") {
+      // ANC Format: Product, Category, Description, W, H, Qty, Total
+      csvContent += "Product,Category,Description,Width,Height,Quantity,Total\n";
+      rows.forEach(row => {
+        const lineTotal = (row.unitPrice || 0) * (row.quantity || 1);
+        csvContent += `"${row.productName || ""}","${row.category || ""}","${(row.description || "").replace(/"/g, '""')}","${row.dimensions?.width}","${row.dimensions?.height}","${row.quantity}","${lineTotal}"\n`;
+      });
+    } else {
+      // Agency Format: Role, Description, Hours, Rate, Total
+      csvContent += "Role,Description,Hours,Rate,Total\n";
+      rows.forEach(row => {
+        const lineTotal = (row.hours || 0) * (row.baseRate || 0);
+        csvContent += `"${row.role || ""}","${(row.description || "").replace(/"/g, '""')}","${row.hours}","${row.baseRate}","${lineTotal}"\n`;
+      });
+    }
+
+    // Add Totals
+    // calcTotals is defined later or imported, but we can reuse the logic here or access the calculated state if available.
+    // Looking at the code below, 'totals' is a useMemo state.
+    // However, 'totals' might not be available inside this callback if it's stale. 
+    // Safest to recalculate or use the memoized value if exportToExcel is wrapped in useCallback/dep array.
+    // For simplicity in this patch, we'll re-implement the basic math to avoid dependency issues.
+    
+    let subtotal = 0;
+    if (tableType === "anc") {
+      subtotal = rows.reduce((acc, row) => acc + ((row.unitPrice || 0) * (row.quantity || 1)), 0);
+    } else {
+      subtotal = rows.reduce((acc, row) => acc + ((row.hours || 0) * (row.baseRate || 0)), 0);
+    }
+    
+    // Apply discount
+    const discountAmount = subtotal * (discountPercent / 100);
+    const afterDiscount = subtotal - discountAmount;
+    
+    // Apply Tax
+    const taxAmount = afterDiscount * (gstPercent / 100);
+    const finalTotal = afterDiscount + taxAmount;
+
+    csvContent += `\n,,,Subtotal,,${subtotal.toFixed(2)}\n`;
+    if (discountPercent > 0) csvContent += `,,,Discount (${discountPercent}%),,-${discountAmount.toFixed(2)}\n`;
+    csvContent += `,,,Tax (${gstPercent}%),,${taxAmount.toFixed(2)}\n`;
+    csvContent += `,,,TOTAL,,${finalTotal.toFixed(2)}\n`;
+
+    // 3. Trigger Download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${title.replace(/\s+/g, "_")}_Audit.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
     let mounted = true;
     const fetchRoles = async () => {
@@ -429,8 +494,8 @@ const PricingTableWidget = ({ model }) => {
                 {ancEstimateData.specs?.productName || "LED Display"}
               </div>
             </div>
-            <div className="p-5 grid grid-cols-2 md:grid-cols-6 gap-6 text-xs">
-              <div className="flex flex-col gap-1.5">
+            <div className="p-5 grid grid-cols-2 md:grid-cols-8 gap-6 text-xs">
+              <div className="flex flex-col gap-1.5 col-span-2 md:col-span-1">
                 <span className="text-white/40 uppercase tracking-tighter font-bold">Item</span>
                 <span className="text-white font-medium text-sm truncate" title={ancEstimateData.specs?.productName}>
                   {ancEstimateData.specs?.productName || "LED Display"}
@@ -439,51 +504,65 @@ const PricingTableWidget = ({ model }) => {
               <div className="flex flex-col gap-1.5 md:text-center">
                 <span className="text-white/40 uppercase tracking-tighter font-bold">Pitch</span>
                 <span className="text-white font-medium text-sm">
-                  {ancEstimateData.specs?.pitch || (ancEstimateData.specs?.resolution?.includes("10mm") ? "10mm" : "6mm")}
+                  {ancEstimateData.specs?.pitch || "10mm"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Size (H'xW')</span>
+                <span className="text-white font-medium text-sm">
+                  {ancEstimateData.specs?.height}' x {ancEstimateData.specs?.width}'
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Pixel Count</span>
+                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.resolution || "TBD"}</span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Service</span>
+                <span className="text-white font-medium text-sm truncate">{ancEstimateData.specs?.service || "Front/Rear"}</span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">Sq Ft</span>
+                <span className="text-white font-medium text-sm">
+                  {Math.round((ancEstimateData.specs?.height || 0) * (ancEstimateData.specs?.width || 0))}
                 </span>
               </div>
               <div className="flex flex-col gap-1.5 md:text-center">
                 <span className="text-white/40 uppercase tracking-tighter font-bold">Qty</span>
                 <span className="text-white font-medium text-sm">{ancEstimateData.specs?.qty || 1}</span>
               </div>
-              <div className="flex flex-col gap-1.5 md:text-center">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Height</span>
-                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.height}'</span>
-              </div>
-              <div className="flex flex-col gap-1.5 md:text-center">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Width</span>
-                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.width}'</span>
-              </div>
-              <div className="flex flex-col gap-1.5 md:text-right">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Resolution</span>
-                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.resolution || "TBD"}</span>
-              </div>
             </div>
           </div>
 
           {/* Pricing Table */}
           <div className="border border-white/10 rounded-xl overflow-hidden bg-black/20 shadow-xl">
-            <div className="bg-white/10 px-4 py-3 border-b border-white/10">
+            <div className="bg-white/10 px-4 py-3 border-b border-white/10 flex justify-between items-center">
               <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Pricing Breakdown</h3>
+              <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">
+                Selling @ {formatCurrency(ancEstimateData.pricing?.total / ((ancEstimateData.specs?.height || 1) * (ancEstimateData.specs?.width || 1) * (ancEstimateData.specs?.qty || 1)))} /sqft
+              </div>
             </div>
             <div className="p-0 divide-y divide-white/5">
               {[
-                { label: "LED Display System", value: ancEstimateData.pricing?.base },
+                { label: "LED Display System (Materials)", value: ancEstimateData.pricing?.base },
                 {
-                  label: "Structural Materials, Labor & Install",
+                  label: "Structural & Installation",
                   value: (ancEstimateData.pricing?.structural || 0) + (ancEstimateData.pricing?.labor || 0),
                 },
-                { label: "Project Management, Engineering & Data", value: ancEstimateData.pricing?.pm },
+                { label: "Engineering & Project Management", value: ancEstimateData.pricing?.pm },
+                { label: "Shipping & Logistics", value: ancEstimateData.pricing?.shipping },
+                { label: "Bonding Cost ($16.67/sf)", value: ancEstimateData.pricing?.bond },
+                { label: "Strategic ANC Margin (10%)", value: ancEstimateData.pricing?.margin, isProfit: true },
               ].map((row, i) => (
-                <div key={i} className="px-6 py-4 flex justify-between items-center hover:bg-white/5 transition-colors">
-                  <span className="text-sm text-white/70 font-medium">{row.label}</span>
-                  <span className="font-mono text-sm text-white font-semibold">{formatCurrency(row.value)}</span>
+                <div key={i} className={`px-6 py-4 flex justify-between items-center hover:bg-white/5 transition-colors ${row.isProfit ? "bg-emerald-500/5 whitespace-nowrap" : ""}`}>
+                  <span className={`text-sm font-medium ${row.isProfit ? "text-emerald-400" : "text-white/70"}`}>{row.label}</span>
+                  <span className={`font-mono text-sm font-semibold ${row.isProfit ? "text-emerald-400" : "text-white"}`}>{formatCurrency(row.value)}</span>
                 </div>
               ))}
               <div className="px-6 py-6 bg-purple-500/10 flex justify-between items-center border-t border-purple-500/20">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-purple-400">Total Project Value</span>
-                  <span className="text-[9px] text-white/30 italic">Excluding GST ({currency})</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-purple-400">Total Contract Value</span>
+                  <span className="text-[9px] text-white/30 italic">Includes Margin & Bond ({currency})</span>
                 </div>
                 <span className="text-2xl font-black text-white tracking-tighter decoration-purple-500/50 underline underline-offset-8 decoration-4">
                   {formatCurrency(ancEstimateData.pricing?.total)}
@@ -1305,6 +1384,17 @@ const PricingTableWidget = ({ model }) => {
                       {formatCurrency(totals.total)}
                     </div>
                   </div>
+                </div>
+                
+                {/* ANC Audit Download Button */}
+                <div className="pt-2 flex justify-end">
+                   <button 
+                     onClick={exportToExcel}
+                     className="text-xs text-white/40 hover:text-white underline"
+                     title="Download raw data for Excel audit"
+                   >
+                     Download Excel (CSV)
+                   </button>
                 </div>
               </div>
             </div>
