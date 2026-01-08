@@ -13,7 +13,7 @@ import useGetProviderModels from "@/hooks/useGetProvidersModels";
 import System from "@/models/system";
 import AnythingLLMIcon from "@/media/logo/anything-llm-icon.png";
 import GenericOpenAiLogo from "@/media/llmprovider/generic-openai.png";
-import LogicModuleSelector from "./LogicModuleSelector";
+import LogicModuleSelector from "../LogicModuleSelector";
 
 // Some providers do not support model selection
 const FREE_FORM_LLM_SELECTION = ["bedrock", "azure", "generic-openai"];
