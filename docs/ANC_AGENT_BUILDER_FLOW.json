@@ -1,0 +1,95 @@
+{
+  "name": "ANC Estimator Questionnaire",
+  "description": "Multi-turn interview flow to collect all required ANC quote variables",
+  "variables": {
+    "clientName": null,
+    "clientAddress": null,
+    "productType": null,
+    "height": null,
+    "width": null,
+    "environment": null,
+    "serviceAccess": null,
+    "curvature": null,
+    "quantity": 1
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "type": "START",
+      "nextNodeId": "ask_client",
+      "onEnter": "Welcome to ANC Sports Estimator. I'll help you get an accurate Sales Quotation for your LED display needs. Let me ask you a few questions."
+    },
+    {
+      "id": "ask_client",
+      "type": "LLM_INSTRUCTION",
+      "prompt": "Ask the user: 'What is the client company name and address for this quotation?'",
+      "outputVariable": "clientName, clientAddress",
+      "nextNodeId": "ask_product",
+      "condition": "clientName != null"
+    },
+    {
+      "id": "ask_product",
+      "type": "LLM_INSTRUCTION",
+      "prompt": "Ask the user: 'What type of LED display are you looking for? Options: Ribbon 10mm, Ribbon 6mm, Scoreboard Main, Center Hung, or Custom.'",
+      "outputVariable": "productType",
+      "nextNodeId": "ask_dimensions",
+      "condition": "productType != null"
+    },
+    {
+      "id": "ask_dimensions",
+      "type": "LLM_INSTRUCTION",
+      "prompt": "Ask the user: 'What are the dimensions? Please provide height and width in feet (e.g., 20 feet high by 40 feet wide).'",
+      "outputVariable": "dimensions",
+      "nextNodeId": "parse_dimensions",
+      "condition": "dimensions != null"
+    },
+    {
+      "id": "parse_dimensions",
+      "type": "LLM_INSTRUCTION",
+      "prompt": "Extract the height and width from the user's response. Store as height and width variables. If unclear, ask for clarification.",
+      "outputVariable": "height, width",
+      "nextNodeId": "ask_environment",
+      "condition": "height != null && width != null"
+    },
+    {
+      "id": "ask_environment",
+      "type": "LLM_INSTRUCTION",
+      "prompt": "Ask the user: 'Will this be installed indoors or outdoors?'",
+      "outputVariable": "environment",
+      "nextNodeId": "ask_service_access",
+      "condition": "environment != null"
+    },
+    {
+      "id": "ask_service_access",
+      "type": "LLM_INSTRUCTION",
+      "prompt": "Ask the user: 'What service access configuration do you need? Options: Front, Rear, or Both.'",
+      "outputVariable": "serviceAccess",
+      "nextNodeId": "ask_curvature",
+      "condition": "serviceAccess != null"
+    },
+    {
+      "id": "ask_curvature",
+      "type": "LLM_INSTRUCTION",
+      "prompt": "Ask the user: 'What is the display shape? Options: Straight, Curved, Concave, or Convex.'",
+      "outputVariable": "curvature",
+      "nextNodeId": "ask_quantity",
+      "condition": "curvature != null"
+    },
+    {
+      "id": "ask_quantity",
+      "type": "LLM_INSTRUCTION",
+      "prompt": "Ask the user: 'How many units do you need? (Default is 1 if not specified)'",
+      "outputVariable": "quantity",
+      "nextNodeId": "calculate_quote",
+      "condition": "quantity != null"
+    },
+    {
+      "id": "calculate_quote",
+      "type": "LLM_INSTRUCTION",
+      "prompt": "Now that we have all the details, calculate the ANC quote using the Golden Formula rules. Use these variables:\n\nProduct Type: ${productType}\nHeight: ${height} feet\nWidth: ${width} feet\nEnvironment: ${environment}\nService Access: ${serviceAccess}\nCurvature: ${curvature}\nQuantity: ${quantity}\n\nShow your calculations step-by-step in the required format.",
+      "outputVariable": "quote",
+      "nextNodeId": null,
+      "condition": "true"
+    }
+  ]
+}

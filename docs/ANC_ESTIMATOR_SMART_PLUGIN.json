@@ -1,0 +1,65 @@
+{
+  "name": "ANC Estimator Logic",
+  "description": "ANC Senior Estimator calculation rules and Golden Formula enforcement",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "productType": {
+        "type": "string",
+        "title": "Product Type",
+        "description": "Type of LED display (e.g., Ribbon, Scoreboard, Center Hung)",
+        "enum": ["Ribbon 10mm", "Ribbon 6mm", "Scoreboard Main", "Center Hung", "Custom"],
+        "default": "Ribbon 10mm"
+      },
+      "height": {
+        "type": "number",
+        "title": "Height (feet)",
+        "description": "Display height in feet",
+        "minimum": 1,
+        "default": 10
+      },
+      "width": {
+        "type": "number",
+        "title": "Width (feet)",
+        "description": "Display width in feet",
+        "minimum": 1,
+        "default": 20
+      },
+      "environment": {
+        "type": "string",
+        "title": "Environment",
+        "description": "Installation environment",
+        "enum": ["Indoor", "Outdoor"],
+        "default": "Indoor"
+      },
+      "serviceAccess": {
+        "type": "string",
+        "title": "Service Access",
+        "description": "Service access configuration",
+        "enum": ["Front", "Rear", "Both"],
+        "default": "Rear"
+      },
+      "curvature": {
+        "type": "string",
+        "title": "Curvature",
+        "description": "Display shape",
+        "enum": ["Straight", "Curved", "Concave", "Convex"],
+        "default": "Straight"
+      },
+      "quantity": {
+        "type": "number",
+        "title": "Quantity",
+        "description": "Number of units",
+        "minimum": 1,
+        "default": 1
+      }
+    },
+    "required": ["productType", "height", "width", "environment", "serviceAccess", "curvature", "quantity"]
+  },
+  "uiConfig": {
+    "prompt": "### ANC ESTIMATOR CALCULATION RULES\n\nYou MUST follow these strict rules when calculating ANC Sales Quotations:\n\n**1. AREA CALCULATION**\n- Area (sqft) = Height (ft) × Width (ft)\n\n**2. RESOLUTION CALCULATION**\n- 10mm pitch: 30.5 pixels per foot\n- 6mm pitch: 50.8 pixels per foot\n- Total Resolution = (Height × pixels/ft) × (Width × pixels/ft)\n\n**3. PRICING BREAKDOWN (ANC SALES QUOTATION FORMAT)**\n\n**LED Display System** = Area × Base Cost Per SqFt\n- Ribbon 10mm: $325/sqft\n- Ribbon 6mm: $550/sqft\n- Scoreboard Main: $310/sqft\n\n**Structural Materials** = LED Display System × 0.25\n- Increase to 0.35 IF Curvature ≠ 'Straight'\n\n**Structural Labor and LED Installation** = LED Display System × 0.15\n- Increase to 0.20 IF Environment = 'Outdoor' OR Service Access = 'Rear'\n\n**Electrical and Data - Materials and Subcontracting** = LED Display System × 0.08\n\n**Project Management, General Conditions, Travel & Expenses** = $4,500 (Fixed)\n\n**Submittals, Engineering, and Permits** = LED Display System × 0.05\n\n**Content Management System Equipment, Installation, and Commissioning** = $3,000 (Fixed)\n\n**SUBTOTAL** = Sum of all 7 line items above\n\n**TAX (9.5%)** = SUBTOTAL × 0.095\n\n**TOTAL** = SUBTOTAL + TAX\n\n**4. OUTPUT FORMAT REQUIREMENTS**\n\nYou MUST output the ANC Sales Quotation in this exact format:\n\n- **Header:** [CLIENT COMPANY NAME] SALES QUOTATION\n- **Contact Info:** www.anc.com/contact NY 914.696.2100 TX 940.464.2320\n- **Specifications Table:** MM Pitch, Quantity, Height, Width, Resolution (H) p, Resolution (W) p\n- **Legal Language:** Include exact contract language from ANC template\n- **Pricing Table:** 7 line items + SUBTOTAL + TAX (9.5%) + TOTAL\n- **Included Section:** List what's included\n- **Signatures Section:** ANC and Purchaser signature blocks\n- **Payment Terms:** 50% deposit, 25% delivery, 25% final acceptance\n\n**5. STRICT VALIDATION**\n- You MUST have ALL variables before providing ANY quote: Product Type, Dimensions, Environment, Service Access, Curvature, Client Name\n- If ANY variable is missing: STOP. Ask for missing details.\n- Show all calculations in the exact ANC Sales Quotation format.\n- Round all currency to 2 decimal places.\n- DO NOT guess or invent prices not in the catalog.\n- Use 9.5% tax rate on all quotes.\n\n**6. JSON OUTPUT (FOR SYSTEM)**\nAfter the quotation, include this exact JSON block:\n\n```json\n{\n  \"pricingTable\": {\n    \"type\": \"anc_estimate\",\n    \"title\": \"ANC Sales Quotation\",\n    \"clientName\": \"[CLIENT COMPANY NAME]\",\n    \"specs\": {\n      \"productType\": \"[Product Type]\",\n      \"description\": \"[Product Description]\",\n      \"pitch\": \"[Pitch]\",\n      \"qty\": [Qty],\n      \"height\": [Height],\n      \"width\": [Width],\n      \"resolutionH\": [ResH],\n      \"resolutionW\": [ResW]\n    },\n    \"pricing\": {\n      \"ledDisplaySystem\": [LED Display System],\n      \"structuralMaterials\": [Structural Materials],\n      \"structuralLabor\": [Structural Labor],\n      \"electricalAndData\": [Electrical and Data],\n      \"projectManagement\": [Project Management],\n      \"submittalsAndEngineering\": [Submittals and Engineering],\n      \"contentManagement\": [Content Management],\n      \"subtotal\": [SUBTOTAL],\n      \"tax\": [TAX],\n      \"total\": [TOTAL]\n    }\n  }\n}\n```",
+    "icon": "calculator",
+    "color": "#FF5722"
+  },
+  "active": true
+}
