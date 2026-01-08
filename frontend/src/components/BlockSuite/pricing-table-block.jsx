@@ -1093,6 +1093,7 @@ const PricingTableWidget = ({ model }) => {
           );
         })()}
       </div>
+    )}
 
       {
         !isReadonly && (
