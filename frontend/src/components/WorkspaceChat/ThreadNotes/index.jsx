@@ -245,15 +245,6 @@ export default function ThreadNotes({
           }
         }
 
-        editorRef.current.insertMarkdown(`\n\n${markdown}\n`);
-
-        // If the markdown contains pricing tables, BlockSuiteEditor.insertMarkdown will convert them
-        // into interactive pricing blocks automatically. Only insert the structured pricing payload
-        // as a fallback when the markdown contains no DETAILED pricing tables (summary tables are fine).
-        const markdownHasPricingTable = /\n\s*\|.*(?:Role|Rate|Price|Cost|Hours|Qty|Quantity).*\|\s*\n\s*\|\s*[-:|\s]+\|/mi.test(
-          markdown
-        );
-        
         // Smart Detection: Determine if we're inserting Agency or ANC data
         // ANC data has: productName, category, dimensions (width, height, quantity)
         // Agency data has: role, description, hours, baseRate
@@ -269,8 +260,15 @@ export default function ThreadNotes({
         const isAncEstimate = res?.pricingTable?.type === "anc_estimate" || (res?.pricingTable?.specs && res?.pricingTable?.pricing);
         const isANC = !isAncEstimate && hasANCData(res?.pricingTable?.rows);
         
+        // If the markdown contains pricing tables, BlockSuiteEditor.insertMarkdown will convert them
+        // into interactive pricing blocks automatically. Only insert the structured pricing payload
+        // as a fallback when the markdown contains no DETAILED pricing tables (summary tables are fine).
+        const markdownHasPricingTable = /\n\s*\|.*(?:Role|Rate|Price|Cost|Hours|Qty|Quantity).*\|\s*\n\s*\|\s*[-:|\s]+\|/mi.test(
+          markdown
+        );
+
+        // ANC MODE: AUTO-INSERT PRICING TABLE IF DATA DETECTED (regardless of action)
         if (
-          action === "draft_sow" &&
           res?.pricingTable &&
           editorRef.current?.insertPricingTableWithData &&
           !markdownHasPricingTable
@@ -285,12 +283,16 @@ export default function ThreadNotes({
                  pricing: res.pricingTable.pricing
               }
             });
-          } else {
+          } else if (isANC || action === "draft_sow") {
+            // Insert as ANC or Agency pricing table
             editorRef.current.insertPricingTableWithData({
               ...res.pricingTable,
               tableType: isANC ? "anc" : "agency"
             });
           }
+        } else {
+          // Fallback: insert as markdown if no pricing table detected
+          editorRef.current.insertMarkdown(`\n\n${markdown}\n`);
         }
 
         showToast("Inserted into notes.", "success");
