@@ -1,137 +1,115 @@
-const { SystemSettings } = require("../models/systemSettings");
-const { CollectorApi } = require("../collectorApi");
-const Provider = require("./agents/aibitat/providers/ai-provider");
-
-// Import Agent plugins
-const { webBrowsing } = require("./agents/aibitat/plugins/web-browsing");
-const { webScraping } = require("./agents/aibitat/plugins/web-scraping");
-const { productExtraction } = require("./agents/aibitat/plugins/product-extraction");
+const {
+  EphemeralAgentHandler,
+  EphemeralEventListener,
+} = require("./agents/ephemeral");
+const { Workspace } = require("../models/workspace");
+const { v4: uuidv4 } = require("uuid");
 
 /**
- * Mock aibitat object for plugin execution
- */
-function createMockAibitat() {
-  return {
-    handlerProps: {
-      log: (msg) => console.log(`[Agent] ${msg}`)
-    },
-    introspect: (msg) => console.log(`[Introspect] ${msg}`),
-    caller: "ProductImport",
-    provider: null, // Will be set later
-    model: null, // Will be set later
-    function: function(funcConfig) {
-      // This stores the function config on the aibitat instance
-      this.currentFunction = funcConfig;
-      return funcConfig;
-    }
-  };
-}
-
-/**
- * Import products from URL or web search query
+ * Import products from URL or web search query using Agent system
  * @param {string} url - Direct URL to scrape (optional)
  * @param {string} query - Search query to find products (optional)
+ * @param {import("@prisma/client").workspaces} workspace - Workspace object for context
  * @returns {Promise<Array>} - Array of imported products
  */
-async function importProductsFromUrl(url, query = null) {
-  let targetUrl = url;
-  
-  // Load system settings for LLM configuration
-  const settings = await SystemSettings.currentSettings();
-  const mockAibitat = createMockAibitat();
-  mockAibitat.provider = settings.LLMProvider;
-  mockAibitat.model = settings.LLMModel;
+async function importProductsFromUrl(url, query = null, workspace = null) {
+  console.log(`[ProductImport] Starting product import...`);
 
-  // Step 1: Web Search if query provided (but no URL)
-  if (query && !url) {
-    console.log(`[ProductImport] Searching for products with query: "${query}"`);
-    
-    // Setup web-browsing plugin
-    const pluginConfig = webBrowsing.plugin();
-    const browseSetup = pluginConfig.setup(mockAibitat);
-    
-    // Get the search function from the setup
-    const searchFunc = mockAibitat.currentFunction;
-    
-    // Execute the handler with the query
-    const searchResults = await searchFunc.handler({ query });
-    
-    if (!searchResults || typeof searchResults !== 'string') {
-      throw new Error(`Invalid search results for query: "${query}"`);
-    }
-    
-    // Parse search results
-    let parsedResults;
-    try {
-      parsedResults = JSON.parse(searchResults);
-    } catch (e) {
-      throw new Error(`Failed to parse search results: ${searchResults}`);
-    }
-    
-    if (!Array.isArray(parsedResults) || parsedResults.length === 0) {
-      throw new Error(`No search results found for query: "${query}"`);
-    }
-    
-    targetUrl = parsedResults[0].link;
-    console.log(`[ProductImport] Found URL from search: ${targetUrl}`);
+  // Build the agent prompt based on input
+  let agentPrompt = "";
+  if (url) {
+    agentPrompt = `Scrape the website at ${url} and extract all products/services with their prices. Return a JSON array with the following structure:
+[
+  {
+    "name": "Product/Service Name",
+    "description": "Short description",
+    "price": 1000,
+    "pricingType": "fixed" | "hourly",
+    "category": "Category"
   }
-  
-  if (!targetUrl) {
+]
+
+IMPORTANT: Return ONLY the JSON array. No markdown, no explanations, no backticks.`;
+  } else if (query) {
+    agentPrompt = `Search for "${query}" to find relevant products/services, then scrape the results and extract pricing information. Return a JSON array with the following structure:
+[
+  {
+    "name": "Product/Service Name",
+    "description": "Short description",
+    "price": 1000,
+    "pricingType": "fixed" | "hourly",
+    "category": "Category"
+  }
+]
+
+IMPORTANT: Return ONLY the JSON array. No markdown, no explanations, no backticks.`;
+  } else {
     throw new Error("Either URL or query must be provided");
   }
 
-  // Step 2: Scrape content using web-scraping plugin
-  console.log(`[ProductImport] Scraping content from: ${targetUrl}`);
-  
-  const scrapePluginConfig = webScraping.plugin();
-  scrapePluginConfig.setup(mockAibitat);
-  const scrapeFunc = mockAibitat.currentFunction;
-  
-  const scrapedContent = await scrapeFunc.handler({ url: targetUrl });
-  
-  if (!scrapedContent || typeof scrapedContent !== 'string') {
-    throw new Error(`Failed to scrape content from ${targetUrl}`);
+  // Get workspace if not provided
+  if (!workspace) {
+    workspace = await Workspace.get({ slug: "default" });
   }
-  
-  console.log(`[ProductImport] Content scraped: ${scrapedContent.length} chars`);
 
-  // Step 3: Extract products using product-extraction plugin
-  console.log(`[ProductImport] Extracting products from scraped content`);
-  
-  const extractPluginConfig = productExtraction.plugin();
-  extractPluginConfig.setup(mockAibitat);
-  const extractFunc = mockAibitat.currentFunction;
-  
-  const extractedData = await extractFunc.handler({ url: targetUrl });
-  
-  if (!extractedData || typeof extractedData !== 'string') {
-    throw new Error("Failed to extract products from content");
-  }
-  
+  console.log(`[ProductImport] Agent prompt: ${agentPrompt}`);
+
+  // Initialize EphemeralAgentHandler (same as chat interface)
+  const agentHandler = new EphemeralAgentHandler({
+    uuid: uuidv4(),
+    workspace,
+    prompt: agentPrompt,
+    userId: null,
+    threadId: null,
+    sessionId: uuidv4(),
+  });
+
+  // Establish event listener that emulates websocket calls
+  const { EphemeralEventListener } = require("./agents");
+  const eventListener = new EphemeralEventListener();
+
+  // Initialize agent
+  await agentHandler.init();
+  await agentHandler.createAIbitat({ handler: eventListener });
+  agentHandler.startAgentCluster();
+
+  // Wait for agent to complete (same pattern as apiChatHandler)
+  const { thoughts, textResponse } = await eventListener.waitForClose();
+
+  console.log(`[ProductImport] Agent completed. Response: ${textResponse.substring(0, 500)}...`);
+
+  // Parse JSON response from agent
   try {
-    // Clean and parse JSON response
-    let cleanedJson = extractedData
+    // Clean the response (remove markdown, backticks, etc.)
+    let cleanedJson = textResponse
       .replace(/```json/g, "")
       .replace(/```/g, "")
+      .replace(/\n/g, " ")
       .trim();
-    
-    const products = JSON.parse(cleanedJson);
-    
-    if (!Array.isArray(products)) {
-      throw new Error("Product extraction did not return an array");
+
+    // Try to find JSON array in response
+    const jsonMatch = cleanedJson.match(/\[[^\]]+\]/);
+    if (jsonMatch) {
+      cleanedJson = jsonMatch[0];
     }
-    
+
+    const products = JSON.parse(cleanedJson);
+
+    if (!Array.isArray(products)) {
+      throw new Error("Agent did not return an array of products");
+    }
+
     console.log(`[ProductImport] Successfully extracted ${products.length} products`);
-    
+
     return products.map((p) => ({
       ...p,
       id: p.id || Math.random().toString(36).substring(7),
-      isEstimated: p.isEstimated || false
+      isEstimated: p.isEstimated || false,
     }));
   } catch (e) {
-    console.error(`[ProductImport] Failed to parse extracted data:`, e.message);
-    console.error(`[ProductImport] Raw data:`, extractedData.substring(0, 500));
-    throw new Error("Failed to extract products from scraped content. " + e.message);
+    console.error(`[ProductImport] Failed to parse agent response:`, e.message);
+    console.error(`[ProductImport] Raw response:`, textResponse);
+    throw new Error("Failed to extract products. The agent may not have been able to scrape the URL or format the response correctly.");
   }
 }
 
