@@ -164,6 +164,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
   const [showFormSelector, setShowFormSelector] = useState(false);
   const [formActionContext, setFormActionContext] = useState(null);
   const [customAIActions, setCustomAIActions] = useState([]);
+  const [workspaceDetails, setWorkspaceDetails] = useState(null);
 
   // Fetch custom AI actions from workspace settings
   useEffect(() => {
@@ -171,6 +172,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       if (!workspaceSlug) return;
       try {
         const workspace = await Workspace.bySlug(workspaceSlug);
+        setWorkspaceDetails(workspace || null);
         if (workspace?.inlineAiActions) {
           // Check for malformed content before attempting to parse
           const actionsStr = workspace.inlineAiActions;
@@ -2668,10 +2670,22 @@ ${activeTemplateFooter}
       // No sanitization needed - Puppeteer handles UTF-8 correctly
       const sanitizedEditorHtml = editorHtml;
 
+      const pdfOptions =
+        workspaceDetails?.activeLogicModule === "anc"
+          ? {
+              preset: "pixelPerfect",
+              preferCSSPageSize: true,
+              // Keep margins in CSS for pixel-perfect templates.
+              margin: { top: "0", bottom: "0", left: "0", right: "0" },
+              format: "Letter",
+              scale: 1,
+            }
+          : {};
+
       const result = await WorkspaceThread.exportPdf(
         workspaceSlug,
         sanitizedEditorHtml,
-        {} // No separate header/footer templates - they're in body
+        pdfOptions
       );
 
       // Check if result is an error object

@@ -433,11 +433,39 @@ function apiWorkspaceEndpoints(app) {
       }
       */
       try {
-        const { html } = reqBody(request);
+        const { html, ...rawOptions } = reqBody(request);
         if (!html)
           return response.status(400).json({ error: "HTML content required" });
 
-        const pdfBuffer = await generatePdf(html);
+        // Whitelist only safe PDF options to avoid unexpected behavior.
+        const pdfOptions = {
+          preset: typeof rawOptions.preset === "string" ? rawOptions.preset : undefined,
+          format: typeof rawOptions.format === "string" ? rawOptions.format : undefined,
+          preferCSSPageSize:
+            typeof rawOptions.preferCSSPageSize === "boolean"
+              ? rawOptions.preferCSSPageSize
+              : undefined,
+          printBackground:
+            typeof rawOptions.printBackground === "boolean"
+              ? rawOptions.printBackground
+              : undefined,
+          scale: typeof rawOptions.scale === "number" ? rawOptions.scale : undefined,
+        };
+
+        if (rawOptions.margin && typeof rawOptions.margin === "object") {
+          const margin = rawOptions.margin;
+          const safeMargin = {
+            top: typeof margin.top === "string" ? margin.top : undefined,
+            bottom: typeof margin.bottom === "string" ? margin.bottom : undefined,
+            left: typeof margin.left === "string" ? margin.left : undefined,
+            right: typeof margin.right === "string" ? margin.right : undefined,
+          };
+          if (safeMargin.top || safeMargin.bottom || safeMargin.left || safeMargin.right) {
+            pdfOptions.margin = safeMargin;
+          }
+        }
+
+        const pdfBuffer = await generatePdf(html, pdfOptions);
 
         response.setHeader("Content-Type", "application/pdf");
         response.setHeader(

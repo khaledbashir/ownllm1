@@ -19,6 +19,8 @@ const DOMPurify = require("isomorphic-dompurify");
 async function generatePdf(htmlContent, options = {}) {
   if (!htmlContent) throw new Error("HTML content is required");
 
+  const preset = options.preset || "styled";
+
   // Lazy load puppeteer (only when needed)
   let puppeteer;
   try {
@@ -35,6 +37,59 @@ async function generatePdf(htmlContent, options = {}) {
 
   try {
     console.log(`[PDF Export] Starting Puppeteer job ${jobId}`);
+
+    const ensureHtmlDocument = (content) => {
+      const trimmed = String(content || "").trim();
+      if (/<!doctype\s+html/i.test(trimmed) || /<html[\s>]/i.test(trimmed)) {
+        return trimmed;
+      }
+
+      // Default to US Letter because ANC is US-based. Callers can override via @page in CSS.
+      const minimalPrintCss = `
+        <style>
+          @page { size: Letter; margin: 0; }
+          html, body { margin: 0; padding: 0; }
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        </style>
+      `;
+
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8">${minimalPrintCss}</head><body>${trimmed}</body></html>`;
+    };
+
+    const resolvePdfOptions = () => {
+      // Default behavior is the existing "styled" export.
+      const base = {
+        printBackground: options.printBackground !== false,
+        displayHeaderFooter: false,
+      };
+
+      if (preset === "pixelPerfect") {
+        return {
+          ...base,
+          // Use CSS @page size/margins from the template. This is the key to pixel-perfect.
+          preferCSSPageSize: options.preferCSSPageSize !== false,
+          // If preferCSSPageSize is true, margins should be handled in CSS.
+          margin: options.margin || { top: "0", bottom: "0", left: "0", right: "0" },
+          // Fall back to Letter only when template doesn't specify @page.
+          format: options.format || "Letter",
+          scale: options.scale || 1,
+        };
+      }
+
+      return {
+        ...base,
+        format: options.format || "A4",
+        margin: options.margin || {
+          top: "15mm",
+          bottom: "15mm",
+          left: "18mm",
+          right: "18mm",
+        },
+        preferCSSPageSize: false,
+        scale: options.scale || 1.1,
+        quality: 100,
+      };
+    };
 
     // STEP 1: GOD-TEACHING-GODS LEVEL CSS
     const printCSS = `
@@ -755,8 +810,10 @@ async function generatePdf(htmlContent, options = {}) {
       }
     );
 
-    // STEP 3: Combine CSS + HTML in proper document structure
-    const enhancedHtml = `
+    const enhancedHtml =
+      preset === "pixelPerfect"
+        ? ensureHtmlDocument(htmlContent)
+        : `
       <!DOCTYPE html>
       <html>
       <head>
@@ -772,8 +829,25 @@ async function generatePdf(htmlContent, options = {}) {
 
     // Write HTML to temp file (Sanitize one last time for safety)
     const finalSanitizedHtml = DOMPurify.sanitize(enhancedHtml, {
-      ADD_TAGS: ["style", "html", "head", "body", "meta"],
-      ADD_ATTR: ["name", "content", "charset", "viewport"],
+      ADD_TAGS: ["style", "html", "head", "body", "meta", "svg", "path"],
+      ADD_ATTR: [
+        "name",
+        "content",
+        "charset",
+        "viewport",
+        "class",
+        "id",
+        "style",
+        "src",
+        "href",
+        "alt",
+        "viewBox",
+        "fill",
+        "xmlns",
+        "d",
+        "fill-rule",
+        "clip-rule",
+      ],
       WHOLE_DOCUMENT: true,
     });
     await fs.promises.writeFile(inputPath, finalSanitizedHtml, "utf8");
@@ -791,8 +865,14 @@ async function generatePdf(htmlContent, options = {}) {
 
     const page = await browser.newPage();
 
-    // Set viewport for proper rendering (A4 width at 96 DPI = ~794px, use 1200 for better quality)
-    await page.setViewport({ width: 1200, height: 1600, deviceScaleFactor: 2 });
+    // Viewport affects layout for responsive content. For pixelPerfect, use Letter-ish viewport.
+    if (preset === "pixelPerfect") {
+      // US Letter at 96dpi ~= 816x1056
+      await page.setViewport({ width: 816, height: 1056, deviceScaleFactor: 2 });
+    } else {
+      // A4 width at 96 DPI = ~794px, use 1200 for better quality
+      await page.setViewport({ width: 1200, height: 1600, deviceScaleFactor: 2 });
+    }
 
     // STEP 4: Set content directly (better than file:// for print emulation)
     await page.setContent(enhancedHtml, {
@@ -807,20 +887,8 @@ async function generatePdf(htmlContent, options = {}) {
     await page.emulateMediaType('print');
 
     // STEP 6: Generate PDF with UNIVERSE-LEVEL settings
-    const pdfBuffer = await page.pdf({
-      format: options.format || "A4",
-      printBackground: options.printBackground !== false,
-      margin: options.margin || {
-        top: "15mm",
-        bottom: "15mm",
-        left: "18mm",
-        right: "18mm",
-      },
-      preferCSSPageSize: false,
-      displayHeaderFooter: false,
-      scale: 1.1, // Slightly larger for crisp rendering
-      quality: 100,
-    });
+    const pdfOptions = resolvePdfOptions();
+    const pdfBuffer = await page.pdf(pdfOptions);
 
     console.log(`[PDF Export] Puppeteer returned type: ${typeof pdfBuffer}, constructor: ${pdfBuffer?.constructor?.name}, length: ${pdfBuffer?.length}`);
     console.log(`[PDF Export] Successfully generated PDF ${jobId}, size: ${pdfBuffer.length} bytes`);

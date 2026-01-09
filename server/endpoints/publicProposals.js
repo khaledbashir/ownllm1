@@ -33,7 +33,11 @@ function publicProposalsEndpoints(app) {
           .json({ success: false, error: "This proposal has expired." });
       }
 
-      const pdfBuffer = await generatePdf(proposal.htmlContent);
+      const pdfBuffer = await generatePdf(proposal.htmlContent, {
+        preset: "pixelPerfect",
+        // Prefer template-defined @page rules; fallback is Letter in the generator.
+        preferCSSPageSize: true,
+      });
 
       response.setHeader("Content-Type", "application/pdf");
       response.setHeader(
