@@ -120,6 +120,16 @@ export const createAISlashMenuItems = (onAIAction) => [
       onAIAction("form", { rootElement, model });
     },
   },
+  { groupName: "HotelOS" },
+  {
+    name: "Hotel Rates",
+    icon: AIStarIcon,
+    alias: ["hotel", "rates", "hotel-rates", "schedule"],
+    description: "Insert Hotel Rate Block for contracts",
+    action: ({ rootElement, model }) => {
+      onAIAction("hotel-rates", { rootElement, model });
+    },
+  },
 ];
 
 /**

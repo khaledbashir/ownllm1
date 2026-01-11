@@ -16,6 +16,7 @@ const SMART_ACTIONS = {
   quick_quote: "quick_quote",
   draft_sow: "draft_sow",
   multi_scope_sow: "multi_scope_sow",
+  extract_hotel_contract: "extract_hotel_contract",
 };
 
 function isValidSmartAction(action) {
@@ -198,6 +199,29 @@ function smartActionUserPrompt(action) {
         "Avoid citations or source tags.",
       ].join("\n");
 
+    case SMART_ACTIONS.extract_hotel_contract:
+      return [
+        "You are a Hotel Contract Data Extraction Specialist for HotelOS.",
+        "Analyze provided contract text/images from a hotel contract document.",
+        "Extract Rate Table into a structured JSON format.",
+        "",
+        "RULES:",
+        "1. Identify Seasonality periods (e.g., High Season, Shoulder Season, Low Season).",
+        "2. Extract Room Categories (e.g., Deluxe, Standard, Suite).",
+        "3. Identify Meal Plans (BB, HB, FB, AI, RO).",
+        "4. Extract Single and Double rates for each combination.",
+        "5. Normalize Currency to ISO codes (USD, EUR, GBP, AED, EGP, etc.).",
+        "6. If data is ambiguous or missing, set value to 0 and mark remarks as \"REVIEW\".",
+        "",
+        "OUTPUT JSON ONLY (no markdown, no code fences):",
+        '{"blockType": "hotel-rate-block", "currency": "USD", "rows": [{"id": "uuid", "season": "...", "roomType": "...", "mealPlan": "...", "singleRate": 0, "doubleRate": 0, "remarks": "..."}]}',
+        "",
+        "Example output:",
+        '{"blockType": "hotel-rate-block", "currency": "USD", "rows": [{"id": "rate-1", "season": "High Season (Jul-Aug)", "roomType": "Deluxe Garden View", "mealPlan": "BB", "singleRate": 150, "doubleRate": 180, "remarks": ""}, {"id": "rate-2", "season": "Low Season (Jan-Mar)", "roomType": "Deluxe Garden View", "mealPlan": "BB", "singleRate": 90, "doubleRate": 110, "remarks": "REVIEW - verify rates"}]}',
+        "",
+        "Do not include any explanatory text. Output ONLY JSON object.",
+      ].join("\n");
+
     default:
       return "";
   }
@@ -235,6 +259,8 @@ async function runThreadSmartAction({
   const systemPrompt =
     action === SMART_ACTIONS.multi_scope_sow
       ? `${baseSystemPrompt}\n\nYou are OwnLLM in Proposal Workbench mode. Output strict JSON only.`
+      : action === SMART_ACTIONS.extract_hotel_contract
+      ? `${baseSystemPrompt}\n\nYou are OwnLLM in HotelOS mode. Output strict JSON only for hotel rate extraction.`
       : `${baseSystemPrompt}\n\nYou are OwnLLM in Proposal Workbench mode. Output markdown only.`;
   const userPrompt = smartActionUserPrompt(action);
 
@@ -343,6 +369,39 @@ async function runThreadSmartAction({
     });
 
     return { markdown, pricingTable: null };
+  }
+
+  // Hotel Contract Extraction for HotelOS
+  // Returns structured JSON for HotelRateBlock insertion
+  if (action === SMART_ACTIONS.extract_hotel_contract) {
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = null;
+    }
+
+    if (!parsed || typeof parsed !== "object") {
+      // If model didn't return JSON, pass-through as error
+      return {
+        error: "Failed to parse hotel contract data. Expected JSON format.",
+        raw: raw,
+      };
+    }
+
+    // Validate the structure matches hotel-rate-block format
+    if (parsed.blockType !== "hotel-rate-block") {
+      return {
+        error: "Invalid block type returned. Expected hotel-rate-block.",
+        raw: raw,
+      };
+    }
+
+    // Return structured data for frontend HotelRateBlock
+    return {
+      hotelRateBlock: parsed,
+      markdown: "# Hotel Contract Extraction Complete\n\nRate data has been extracted and inserted into the Hotel Rate Block.",
+    };
   }
 
   // For draft_sow we now expect pure markdown with embedded tables, so we just return the raw text.

@@ -19,7 +19,36 @@ async function main() {
       });
     }
   }
-}
+  // Seed HotelOS CRM Pipeline: Contract Processing
+  const contractPipelineExists = await prisma.crm_pipelines.findFirst({
+    where: { name: "Contract Processing" },
+  });
+
+  if (!contractPipelineExists) {
+    await prisma.crm_pipelines.create({
+      data: {
+        name: "Contract Processing",
+        description: "Pipeline for processing hotel contracts through AI extraction and human review",
+        type: "hotel_contract",
+        stages: JSON.stringify([
+          { id: "inbox", label: "Inbox", color: "#6366f1" },
+          {
+            id: "glm_extracted",
+            label: "GLM Extracted (Waiting for review)",
+            color: "#f59e0b",
+          },
+          {
+            id: "verified",
+            label: "Verified (Human approved)",
+            color: "#10b981",
+          },
+          { id: "live", label: "Live", color: "#3b82f6" },
+        ]),
+        color: "#8b5cf6",
+      },
+    });
+    console.log("✅ Created 'Contract Processing' CRM pipeline");
+  }}
 
 main()
   .catch((e) => {

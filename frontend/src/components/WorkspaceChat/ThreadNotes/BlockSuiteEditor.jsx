@@ -17,6 +17,10 @@ import {
   FormBlockSchema,
   FormBlockSpec,
 } from "@/components/BlockSuite/form-block.jsx";
+import {
+  HotelRateBlockSchema,
+  HotelRateBlockSpec,
+} from "@/components/BlockSuite/hotel-rate-block.jsx";
 import { setupDatabaseAutoMath } from "@/utils/blocksuite/databaseAutoMath";
 import "@blocksuite/presets/themes/affine.css";
 // Deep import for HtmlAdapter as it is not exposed in main entry
@@ -235,6 +239,129 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         setShowFormSelector(true);
         // Store context for when form is selected
         setFormActionContext(context);
+        break;
+      }
+
+      case "hotel-rates": {
+        // Insert Hotel Rate Block
+        try {
+          const doc = editorRef.current?.doc;
+          if (!doc) {
+            toast.error("Editor not ready");
+            break;
+          }
+
+          const noteBlocks = doc
+            .getBlocks()
+            .filter((b) => b.flavour === "affine:note");
+          if (noteBlocks.length > 0) {
+            const noteBlock = noteBlocks[noteBlocks.length - 1];
+            // Add hotel rate block
+            doc.addBlock(
+              "affine:embed-hotel-rate",
+              {
+                title: new Text("Hotel Rate Schedule"),
+                currency: "USD",
+                rows: [],
+              },
+              noteBlock.id
+            );
+            toast.success("✅ Hotel Rate Block added!");
+          }
+        } catch (e) {
+          console.error("[AI Action] Failed to insert hotel rate block:", e);
+          toast.error("❌ Failed to insert hotel rate block");
+        }
+        break;
+      }
+
+      case "extract-hotel-contract": {
+        // Extract hotel contract data using Z.ai and insert Hotel Rate Block
+        try {
+          const doc = editorRef.current?.doc;
+          if (!doc) {
+            toast.error("Editor not ready");
+            break;
+          }
+
+          // Get text content for context
+          const getContextText = () => {
+            try {
+              const doc = editorRef.current?.doc;
+              if (!doc) return "";
+
+              const blocks = [];
+              const traverse = (block) => {
+                if (block.text?.toString) {
+                  blocks.push(block.text.toString());
+                }
+                block.children?.forEach(traverse);
+              };
+
+              const pageBlock = doc.root;
+              if (pageBlock) traverse(pageBlock);
+              return blocks.join("\n");
+            } catch (e) {
+              return "";
+            }
+          };
+
+          const contextText = getContextText();
+
+          toast.promise(
+            (async () => {
+              // Call smart action for hotel contract extraction
+              const response = await fetch(
+                `/api/workspace/${workspaceSlug}/thread/${threadSlug}/smart-action/extract_hotel_contract`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ context: contextText }),
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error("Failed to extract hotel contract data");
+              }
+
+              const result = await response.json();
+
+              if (result.error) {
+                throw new Error(result.error);
+              }
+
+              // Insert hotel rate block with extracted data
+              const noteBlocks = doc
+                .getBlocks()
+                .filter((b) => b.flavour === "affine:note");
+              if (noteBlocks.length > 0 && result.hotelRateBlock) {
+                const noteBlock = noteBlocks[noteBlocks.length - 1];
+                doc.addBlock(
+                  "affine:embed-hotel-rate",
+                  {
+                    title: new Text(
+                      result.hotelRateBlock.title || "Hotel Rate Schedule"
+                    ),
+                    currency: result.hotelRateBlock.currency || "USD",
+                    rows: result.hotelRateBlock.rows || [],
+                  },
+                  noteBlock.id
+                );
+                return "Hotel contract data extracted and block added!";
+              }
+
+              throw new Error("No hotel rate data extracted");
+            })(),
+            {
+              pending: "🤖 Extracting hotel contract data using Z.ai...",
+              success: "✅ Hotel Rate Block added with extracted data!",
+              error: "❌ Failed to extract hotel contract",
+            }
+          );
+        } catch (e) {
+          console.error("[AI Action] Failed to extract hotel contract:", e);
+          toast.error("❌ Failed to extract hotel contract data");
+        }
         break;
       }
 
@@ -690,6 +817,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           ...AffineSchemas,
           PricingTableBlockSchema,
           FormBlockSchema,
+          HotelRateBlockSchema,
         ]);
         const collection = new DocCollection({ schema });
         collection.meta.initialize();
@@ -814,6 +942,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           ...PageEditorBlockSpecs,
           PricingTableBlockSpec,
           FormBlockSpec,
+          HotelRateBlockSpec,
         ];
         editor.doc = doc;
 
