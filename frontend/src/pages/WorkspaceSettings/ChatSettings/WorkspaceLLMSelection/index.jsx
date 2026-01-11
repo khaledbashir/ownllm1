@@ -190,13 +190,14 @@ export default function WorkspaceLLMSelection({
         selectedLLM={selectedLLM}
         workspace={workspace}
         setHasChanges={setHasChanges}
+        customProviders={customProviders}
       />
     </div>
   );
 }
 
 // TODO: Add this to agent selector as well as make generic component.
-function ModelSelector({ selectedLLM, workspace, setHasChanges }) {
+function ModelSelector({ selectedLLM, workspace, setHasChanges, customProviders }) {
   if (NO_MODEL_SELECTION.includes(selectedLLM)) {
     if (selectedLLM !== "default") {
       return (
