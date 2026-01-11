@@ -295,7 +295,13 @@ if (process.env.NODE_ENV !== "development") {
   });
 }
 
-app.all("*", function (_, response) {
+app.all("*", function (request, response) {
+  if (request.method === "GET" && !request.path.startsWith("/api/")) {
+    const { MetaGenerator } = require("./utils/boot/MetaGenerator");
+    const IndexPage = new MetaGenerator();
+    IndexPage.generate(response);
+    return;
+  }
   response.sendStatus(404);
 });
 

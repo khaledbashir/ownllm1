@@ -203,6 +203,9 @@ export default {
     templateBuilder: () => {
       return `/settings/template-builder`;
     },
+    hotelRate: () => {
+      return `/hotel-rate`;
+    },
     organizations: () => {
       return `/settings/organizations`;
     },

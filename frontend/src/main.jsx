@@ -44,6 +44,13 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "hotel-rate",
+        lazy: async () => {
+          const { default: HotelRates } = await import("@/pages/HotelRates");
+          return { element: <HotelRates /> };
+        },
+      },
+      {
         path: "portal/login",
         element: <ClientPortalLogin />,
       },
