@@ -42,9 +42,9 @@ export function Hero() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, delay: 0.4 }}
-                        className="text-lg md:text-2xl text-zinc-400 max-w-3xl mb-12 leading-relaxed font-normal"
+                        className="text-lg md:text-2xl text-zinc-300 max-w-3xl mb-12 leading-relaxed font-normal"
                     >
-                        The **Proposals And Invoices Deployment System**. **Your Brand**, **Your Logo**, and **Unlimited Workspaces**.
+                        The <strong className="text-white font-semibold">Proposals And Invoices Deployment System</strong>. <strong className="text-white font-semibold">Your Brand</strong>, <strong className="text-white font-semibold">Your Logo</strong>, and <strong className="text-white font-semibold">Unlimited Workspaces</strong>.
                         Aggregate 25+ AI models including GPT-4o, Claude 3.5, and Gemini into one secure, deterministic hub.
                     </motion.p>
 

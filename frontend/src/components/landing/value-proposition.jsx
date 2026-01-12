@@ -41,7 +41,7 @@ export function ValueProposition() {
                         The Business <br />
                         <span className="text-zinc-500 uppercase">OS for AI.</span>
                     </motion.h2>
-                    <p className="text-lg text-zinc-400 font-normal leading-relaxed">
+                    <p className="text-lg text-zinc-300 font-normal leading-relaxed">
                         P.A.I.D.S isn't just a chatbot—it's your private, branded infrastructure. Scale your intelligence across every department without the enterprise premium.
                     </p>
                 </div>
@@ -60,8 +60,8 @@ export function ValueProposition() {
                                 <prop.icon className="size-6" />
                             </div>
 
-                            <h3 className="text-2xl font-bold uppercase tracking-tight mb-4">{prop.title}</h3>
-                            <p className="text-sm text-zinc-500 font-normal leading-relaxed mb-8">
+                            <h3 className="text-2xl font-bold uppercase tracking-tight mb-4 text-white">{prop.title}</h3>
+                            <p className="text-sm text-zinc-400 font-normal leading-relaxed mb-8">
                                 {prop.desc}
                             </p>
 
@@ -69,7 +69,7 @@ export function ValueProposition() {
                                 {prop.details.map((detail, idx) => (
                                     <div key={idx} className="flex items-center gap-2">
                                         <div className="size-1 bg-white/20 rounded-full" />
-                                        <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-400">{detail}</span>
+                                        <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-300">{detail}</span>
                                     </div>
                                 ))}
                             </div>

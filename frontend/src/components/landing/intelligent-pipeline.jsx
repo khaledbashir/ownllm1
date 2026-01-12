@@ -49,8 +49,8 @@ export function IntelligentPipeline() {
                         P.A.I.D.S <br />
                         <span className="text-zinc-500 uppercase">Architecture.</span>
                     </motion.h2>
-                    <p className="text-lg text-zinc-400 font-normal leading-relaxed">
-                        The **Proposals And Invoices Deployment System** is not just a tool. It's an entire logic ecosystem designed to get you paid.
+                    <p className="text-lg text-zinc-300 font-normal leading-relaxed">
+                        The <strong className="text-white font-semibold">Proposals And Invoices Deployment System</strong> is not just a tool. It's an entire logic ecosystem designed to get you paid.
                     </p>
                 </div>
 
