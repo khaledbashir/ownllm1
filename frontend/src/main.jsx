@@ -51,6 +51,13 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "deal-checker",
+        lazy: async () => {
+          const { default: DealChecker } = await import("@/pages/DealChecker");
+          return { element: <DealChecker /> };
+        },
+      },
+      {
         path: "portal/login",
         element: <ClientPortalLogin />,
       },

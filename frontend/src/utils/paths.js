@@ -206,6 +206,9 @@ export default {
     hotelRate: () => {
       return `/hotel-rate`;
     },
+    dealChecker: () => {
+      return `/deal-checker`;
+    },
     organizations: () => {
       return `/settings/organizations`;
     },

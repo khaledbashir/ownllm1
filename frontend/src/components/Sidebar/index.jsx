@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { List, Plus } from "@phosphor-icons/react";
+import { List, Plus, MagnifyingGlass } from "@phosphor-icons/react";
 import NewWorkspaceModal, {
   useNewWorkspaceModal,
 } from "../Modals/NewWorkspace";
@@ -177,6 +177,7 @@ export function SidebarMobileHeader() {
                     user={user}
                     showNewWsModal={showNewWsModal}
                   />
+                  <DealCheckerButton />
                   <ActiveWorkspaces />
                 </div>
               </div>
@@ -208,6 +209,18 @@ function NewWorkspaceButton({ user, showNewWsModal }) {
         </p>
       </button>
     </div>
+  );
+}
+
+function DealCheckerButton() {
+  return (
+    <Link
+      to={paths.dealChecker()}
+      className="flex flex-grow w-[75%] h-[44px] gap-x-2 py-[5px] px-4 bg-blue-600 rounded-lg text-white justify-center items-center hover:bg-blue-500 transition-all duration-300 shadow-lg shadow-blue-900/40"
+    >
+      <MagnifyingGlass weight="bold" className="h-5 w-5" />
+      <p className="text-sm font-semibold uppercase tracking-tight">Deal Checker</p>
+    </Link>
   );
 }
 

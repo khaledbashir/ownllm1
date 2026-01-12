@@ -240,13 +240,13 @@ export default function MarketingHome() {
             to={paths.marketing()}
             className="flex items-center gap-3 hover:opacity-90 transition-opacity"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-button to-purple-600 flex items-center justify-center shadow-lg">
-              <span className="font-bold text-white text-lg">P</span>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg text-white font-bold text-xl">
+              ✓
             </div>
             <div className="leading-tight">
-              <div className="font-bold tracking-tight text-lg">PAID Platform</div>
-              <div className="text-xs text-theme-text-secondary">
-                Proposals And Invoices Delivered
+              <div className="font-bold tracking-tight text-lg text-white">IsGoodDeal.com</div>
+              <div className="text-xs text-zinc-400">
+                AI-Powered Apple Deal Checker
               </div>
             </div>
           </Link>
@@ -339,40 +339,40 @@ export default function MarketingHome() {
 
               <div className="mt-8 grid lg:grid-cols-2 gap-12 items-center">
                 <div>
-                  <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.1]">
-                    Turn scope into{" "}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-button to-purple-600">
-                      proposals
+                  <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.1] text-white">
+                    Know if it&apos;s a{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
+                      good deal
                     </span>
                     .
                     <br />
-                    Turn work into{" "}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-button to-purple-600">
-                      invoices
+                    Know your{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-600">
+                      selling price
                     </span>
                     .
                   </h1>
-                  <p className="mt-6 text-lg text-theme-text-secondary leading-relaxed max-w-xl">
-                    The PAID Platform combines a collaborative creation studio,
-                    high-fidelity PDF export, model-agnostic AI, and workflow
-                    automation to ship Proposals And Invoices Delivered.
+                  <p className="mt-6 text-lg text-zinc-400 leading-relaxed max-w-xl">
+                    The #1 AI tool for buyers and sellers of used Apple products. 
+                    Paste any listing from eBay or Facebook Marketplace and get a 
+                    valuation and recommendation in seconds.
                   </p>
 
                   <div className="mt-8 flex flex-col sm:flex-row gap-4">
                     <Link
-                      to={paths.login()}
-                      className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-primary-button to-purple-600 text-white font-bold hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
+                      to={paths.dealChecker()}
+                      className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all shadow-lg shadow-blue-900/30"
                     >
-                      <Rocket size={20} />
-                      Launch Workspace
+                      <Search size={20} />
+                      Try It Now (3 Free Checks)
                     </Link>
-                    <a
-                      href="#workflow"
-                      className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-theme-sidebar-border bg-theme-bg-primary text-theme-text-primary hover:bg-theme-bg-container transition-colors"
+                    <Link
+                      to={paths.login()}
+                      className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-zinc-700 bg-zinc-800 text-white hover:bg-zinc-700 transition-colors"
                     >
-                      Explore features
+                      Sign In / Register
                       <ArrowRight size={18} />
-                    </a>
+                    </Link>
                   </div>
 
                   <div className="mt-10 grid grid-cols-2 gap-4 text-sm">
