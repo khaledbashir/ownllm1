@@ -24,6 +24,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@tailwindcss/typography": "^0.5.19",
     "@tremor/react": "^3.15.1",
+    "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
     "dompurify": "^3.0.8",
     "file-saver": "^2.0.5",

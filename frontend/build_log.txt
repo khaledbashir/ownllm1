@@ -1,0 +1,51 @@
+
+> build
+> vite build && node scripts/postbuild.js
+
+▲ [WARNING] Duplicate key "secondary" in object literal [duplicate-object-key]
+
+    tailwind.config.js:65:8:
+      65 │         secondary: "#2C2F36",
+         ╵         ~~~~~~~~~
+
+  The original key "secondary" is here:
+
+    tailwind.config.js:36:8:
+      36 │         secondary: {
+         ╵         ~~~~~~~~~
+
+vite v4.5.14 building for production...
+transforming...
+
+warn - The class `duration-[200ms]` is ambiguous and matches multiple utilities.
+warn - If this is content and not a class, replace it with `duration-&lsqb;200ms&rsqb;` to silence this warning.
+
+warn - The class `ease-[cubic-bezier(0.25,1,0.5,1)]` is ambiguous and matches multiple utilities.
+warn - If this is content and not a class, replace it with `ease-&lsqb;cubic-bezier(0.25,1,0.5,1)&rsqb;` to silence this warning.
+[vite:css] @import must precede all other statements (besides @charset or empty @layer)
+1229|    opacity: 1;
+1230|  }
+1231|  @import "tailwindcss";
+   |   ^
+1232|  
+1233|  @theme {
+✓ 1882 modules transformed.
+✓ built in 12.26s
+[vite]: Rollup failed to resolve import "class-variance-authority" from "/root/ownllm1/frontend/src/components/ui/button.jsx".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`
+error during build:
+Error: [vite]: Rollup failed to resolve import "class-variance-authority" from "/root/ownllm1/frontend/src/components/ui/button.jsx".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`
+    at viteWarn (file:///root/ownllm1/frontend/node_modules/vite/dist/node/chunks/dep-827b23df.js:48272:27)
+    at onwarn (file:///root/ownllm1/frontend/node_modules/@vitejs/plugin-react/dist/index.js:90:7)
+    at onRollupWarning (file:///root/ownllm1/frontend/node_modules/vite/dist/node/chunks/dep-827b23df.js:48301:9)
+    at onwarn (file:///root/ownllm1/frontend/node_modules/vite/dist/node/chunks/dep-827b23df.js:48032:13)
+    at file:///root/ownllm1/frontend/node_modules/rollup/dist/es/shared/node-entry.js:24276:13
+    at Object.logger [as onLog] (file:///root/ownllm1/frontend/node_modules/rollup/dist/es/shared/node-entry.js:25950:9)
+    at ModuleLoader.handleInvalidResolvedId (file:///root/ownllm1/frontend/node_modules/rollup/dist/es/shared/node-entry.js:24862:26)
+    at file:///root/ownllm1/frontend/node_modules/rollup/dist/es/shared/node-entry.js:24822:26
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)

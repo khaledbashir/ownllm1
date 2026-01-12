@@ -24,6 +24,35 @@ export default {
         "360": "360deg"
       },
       colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        // popover: {
+        //   DEFAULT: "hsl(var(--popover))",
+        //   foreground: "hsl(var(--popover-foreground))",
+        // },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
         "black-900": "#141414",
         accent: "#3D4147",
         "sidebar-button": "#31353A",
@@ -33,7 +62,7 @@ export default {
         outline: "#4E5153",
         "primary-button": "var(--theme-button-primary)",
         "cta-button": "var(--theme-button-cta)",
-        secondary: "#2C2F36",
+        // secondary: "#2C2F36",
         "dark-input": "#18181B",
         "mobile-onboarding": "#2C2F35",
         "dark-highlight": "#1C1E21",
