@@ -199,7 +199,6 @@ workspaceEndpoints(apiRouter);
 workspaceThreadEndpoints(apiRouter);
 chatEndpoints(apiRouter);
 dealCheckerEndpoints(apiRouter);
-dealCheckerEndpoints(apiRouter);
 adminEndpoints(apiRouter);
 organizationEndpoints(apiRouter);
 billingEndpoints(apiRouter);
@@ -263,6 +262,12 @@ if (process.env.NODE_ENV !== "development") {
     return;
   });
 
+  // Explicit SPA routes
+  app.get(["/hotel-rate", "/deal-checker"], function (_, response) {
+    IndexPage.generate(response);
+    return;
+  });
+
   app.use("/", function (_, response) {
     IndexPage.generate(response);
     return;
@@ -300,11 +305,13 @@ if (process.env.NODE_ENV !== "development") {
 
 app.all("*", function (request, response) {
   if (request.method === "GET" && !request.path.startsWith("/api/")) {
+    console.log(`[SPA Routing] Serving index for GET ${request.path}`);
     const { MetaGenerator } = require("./utils/boot/MetaGenerator");
     const IndexPage = new MetaGenerator();
     IndexPage.generate(response);
     return;
   }
+  console.log(`[SPA Routing] 404 for ${request.method} ${request.path}`);
   response.sendStatus(404);
 });
 
