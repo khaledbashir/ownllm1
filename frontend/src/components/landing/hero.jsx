@@ -75,7 +75,7 @@ export function Hero() {
                             { label: "Data Safety", value: "100% Sovereign", icon: ShieldCheck },
                         ].map((stat, i) => (
                             <div key={i} className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2 text-zinc-500">
+                                <div className="flex items-center gap-2 text-zinc-400">
                                     <stat.icon className="size-3" />
                                     <span className="text-[9px] uppercase font-bold tracking-widest">{stat.label}</span>
                                 </div>

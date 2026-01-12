@@ -48,9 +48,9 @@ export function Pricing() {
                         className="text-4xl md:text-5xl font-bold tracking-tight uppercase mb-4"
                     >
                         Managed <br />
-                        <span className="text-zinc-500 uppercase">Sovereign Infrastructure.</span>
+                        <span className="text-zinc-300 uppercase">Sovereign Infrastructure.</span>
                     </motion.h2>
-                    <p className="text-zinc-500 font-normal">One-time build fee. Standard $400/mo retainer for hosting, monitoring, and models.</p>
+                    <p className="text-zinc-300 font-normal">One-time build fee. Standard $400/mo retainer for hosting, monitoring, and models.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -68,28 +68,28 @@ export function Pricing() {
                         >
                             <div className="flex flex-col h-full">
                                 <div className="mb-8">
-                                    <span className={`text-[10px] font-bold uppercase tracking-widest mb-4 block ${plan.featured ? "text-black/50" : "text-zinc-500"}`}>
+                                    <span className={`text-[10px] font-bold uppercase tracking-widest mb-4 block ${plan.featured ? "text-black/50" : "text-zinc-400"}`}>
                                         {plan.name}
                                     </span>
                                     <div className="flex flex-col gap-1 items-start">
                                         <div className="flex items-baseline gap-1">
                                             <span className="text-4xl font-bold leading-none">${plan.price}</span>
-                                            <span className={`text-[10px] font-bold uppercase tracking-widest ${plan.featured ? "text-black/50" : "text-zinc-500"}`}>Build Fee</span>
+                                            <span className={`text-[10px] font-bold uppercase tracking-widest ${plan.featured ? "text-black/50" : "text-zinc-400"}`}>Build Fee</span>
                                         </div>
-                                        <div className={`text-xs font-bold uppercase tracking-widest ${plan.featured ? "text-black/60" : "text-zinc-400"}`}>
+                                        <div className={`text-xs font-bold uppercase tracking-widest ${plan.featured ? "text-black/60" : "text-zinc-300"}`}>
                                             + $400/mo Infrastructure
                                         </div>
                                     </div>
                                 </div>
 
-                                <p className={`text-sm mb-10 min-h-[40px] ${plan.featured ? "text-black/60 font-medium" : "text-zinc-500 font-normal"}`}>
+                                <p className={`text-sm mb-10 min-h-[40px] ${plan.featured ? "text-black/60 font-medium" : "text-zinc-300 font-normal"}`}>
                                     {plan.desc}
                                 </p>
 
                                 <div className="space-y-4 mb-12 flex-1">
                                     {plan.features.map((feature, idx) => (
                                         <div key={idx} className="flex items-center gap-3">
-                                            <Check className={`size-4 shrink-0 ${plan.featured ? "text-black" : "text-zinc-500"}`} />
+                                            <Check className={`size-4 shrink-0 ${plan.featured ? "text-black" : "text-zinc-400"}`} />
                                             <span className="text-xs font-bold uppercase tracking-wide">{feature}</span>
                                         </div>
                                     ))}
@@ -109,28 +109,28 @@ export function Pricing() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="p-8 bg-white/[0.02] border border-white/5 rounded-lg">
                             <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-4">Support & Maintenance</h4>
-                            <p className="text-xs text-zinc-500 leading-relaxed mb-6">
+                            <p className="text-xs text-zinc-300 leading-relaxed mb-6">
                                 Post-launch, we ensure your infrastructure stays sharp. Choose between an active retainer for security and feature updates or pay-as-you-go hourly support.
                             </p>
                             <div className="flex gap-12">
                                 <div>
                                     <div className="text-lg font-bold text-white">$400/mo</div>
-                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Standard Retainer</div>
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Standard Retainer</div>
                                 </div>
                             </div>
                         </div>
                         <div className="p-8 bg-white/[0.02] border border-white/5 rounded-lg">
                             <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-4">We Handle The Noise</h4>
-                            <p className="text-xs text-zinc-500 leading-relaxed mb-6">
+                            <p className="text-xs text-zinc-300 leading-relaxed mb-6">
                                 You own the data. We own the uptime.
                             </p>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Hosting</div>
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Hosting</div>
                                     <div className="text-[11px] font-bold text-white">DigitalOcean / Hetzner (We Pay)</div>
                                 </div>
                                 <div className="space-y-1">
-                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Models</div>
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Models</div>
                                     <div className="text-[11px] font-bold text-white">Mid-Tier Pack (Included)</div>
                                 </div>
                             </div>

@@ -11,7 +11,7 @@ export function Footer() {
                             <Brain className="size-6 text-white" />
                             <span className="text-xl font-bold tracking-tight uppercase">P.A.I.D.S</span>
                         </div>
-                        <p className="text-sm text-zinc-500 font-normal leading-relaxed">
+                        <p className="text-sm text-zinc-400 font-normal leading-relaxed">
                             Enterprise intelligence infrastructure for the modern age. Scale your AI capabilities while maintaining total sovereignty.
                         </p>
                     </div>
@@ -37,7 +37,7 @@ export function Footer() {
                             <ul className="space-y-4">
                                 {group.links.map((link) => (
                                     <li key={link}>
-                                        <a href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">
+                                        <a href="#" className="text-sm text-zinc-400 hover:text-white transition-colors">
                                             {link}
                                         </a>
                                     </li>
@@ -48,13 +48,13 @@ export function Footer() {
                 </div>
 
                 <div className="flex flex-col md:flex-row items-center justify-between border-t border-white/5 pt-12 gap-8">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                         © 2026 P.A.I.D.S ARCHITECTURE. ALL RIGHTS RESERVED.
                     </p>
                     <div className="flex items-center gap-6">
-                        <a href="#" className="text-zinc-500 hover:text-white transition-colors"><Twitter className="size-4" /></a>
-                        <a href="#" className="text-zinc-500 hover:text-white transition-colors"><Github className="size-4" /></a>
-                        <a href="#" className="text-zinc-500 hover:text-white transition-colors"><Linkedin className="size-4" /></a>
+                        <a href="#" className="text-zinc-400 hover:text-white transition-colors"><Twitter className="size-4" /></a>
+                        <a href="#" className="text-zinc-400 hover:text-white transition-colors"><Github className="size-4" /></a>
+                        <a href="#" className="text-zinc-400 hover:text-white transition-colors"><Linkedin className="size-4" /></a>
                     </div>
                 </div>
             </div>

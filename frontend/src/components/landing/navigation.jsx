@@ -35,7 +35,7 @@ export function Navigation() {
                     </div>
                     <div className="flex flex-col -gap-1">
                         <span className="text-xl font-bold tracking-tight uppercase">P.A.I.D.S</span>
-                        <span className="text-[8px] font-bold tracking-[0.2em] uppercase text-zinc-500">Systems Architecture</span>
+                        <span className="text-[8px] font-bold tracking-[0.2em] uppercase text-zinc-400">Systems Architecture</span>
                     </div>
                 </Link>
 
@@ -49,7 +49,7 @@ export function Navigation() {
                         <a
                             key={item.name}
                             href={item.href}
-                            className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-white transition-colors"
+                            className="text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-white transition-colors"
                         >
                             {item.name}
                         </a>
@@ -89,7 +89,7 @@ export function Navigation() {
                         <a
                             key={item.name}
                             href={item.href}
-                            className="text-sm font-bold uppercase tracking-widest text-muted-foreground"
+                            className="text-sm font-bold uppercase tracking-widest text-zinc-300"
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             {item.name}

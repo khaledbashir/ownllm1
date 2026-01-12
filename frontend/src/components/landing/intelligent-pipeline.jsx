@@ -69,7 +69,7 @@ export function IntelligentPipeline() {
                             </div>
 
                             <h3 className="text-2xl font-bold uppercase tracking-tight mb-4">{feature.title}</h3>
-                            <p className="text-sm text-zinc-500 font-normal leading-relaxed mb-10">
+                            <p className="text-sm text-zinc-300 font-normal leading-relaxed mb-10">
                                 {feature.desc}
                             </p>
 
