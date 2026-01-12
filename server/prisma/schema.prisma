@@ -94,10 +94,15 @@ model users {
   organizationId              Int?
   email                       String?                       @unique
   emailVerified               Boolean?                      @default(false)
+  tier                        String                        @default("free") // 'free', 'smart-shopper', 'pro-flipper'
+  checks_today                Int                           @default(0)
+  last_check_reset            DateTime                      @default(now())
   artifacts                   artifacts[]
   block_templates             block_templates[]
   browser_extension_api_keys  browser_extension_api_keys[]
   crm_cards                   crm_cards[]
+  apple_deal_checks           apple_deal_checks[]
+  deal_alerts                 deal_alerts[]
   crm_pipelines               crm_pipelines[]
   desktop_mobile_devices      desktop_mobile_devices[]
   email_verification_tokens   email_verification_tokens[]
@@ -734,4 +739,44 @@ model form_responses {
   form       forms    @relation(fields: [formId], references: [id], onDelete: Cascade)
 
   @@index([formId])
+}
+
+model anonymous_checks {
+  id           Int      @id @default(autoincrement())
+  fingerprint  String   @unique
+  count        Int      @default(0)
+  lastCheck    DateTime @default(now())
+  createdAt    DateTime @default(now())
+}
+
+model apple_deal_checks {
+  id               Int      @id @default(autoincrement())
+  user_id          Int?
+  fingerprint      String?
+  mode             String   @default("buyer") // 'buyer' or 'seller'
+  listing_text     String?
+  asking_price     String?
+  estimated_value  Float?
+  value_range      String?
+  confidence_score Int?
+  recommendation   String?
+  metadata         String?  // JSON string for additional data
+  createdAt        DateTime @default(now())
+  user             users?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([fingerprint])
+}
+
+model deal_alerts {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  product_type String
+  model        String
+  max_price    Float?
+  is_active    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  user         users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
 }

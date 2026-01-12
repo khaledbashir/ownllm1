@@ -17,6 +17,8 @@ const SMART_ACTIONS = {
   draft_sow: "draft_sow",
   multi_scope_sow: "multi_scope_sow",
   extract_hotel_contract: "extract_hotel_contract",
+  check_apple_deal: "check_apple_deal",
+  seller_pricing_strategy: "seller_pricing_strategy",
 };
 
 function isValidSmartAction(action) {
@@ -222,6 +224,47 @@ function smartActionUserPrompt(action) {
         "Do not include any explanatory text. Output ONLY JSON object.",
       ].join("\n");
 
+    case SMART_ACTIONS.check_apple_deal:
+      return [
+        "You are an expert at evaluating used Apple product prices.",
+        "Analyze the provided listing text or conversation details.",
+        "Provide JSON response with recommendation, confidence score, and values.",
+        "",
+        "RULES:",
+        '- recommendation: "yes" | "maybe" | "no"',
+        "- confidence_score: 0-100",
+        "- asking_price: extracted from listing (string)",
+        "- estimated_value: your best estimate of fair market value (number)",
+        '- value_range: "low-high" price range based on condition (string)',
+        "- reasoning: why you think this (string)",
+        '- red_flags: ["issue1", "issue2"]',
+        '- green_flags: ["good1", "good2"]',
+        "- comparable_sales: recent similar sales [{price: number, condition: string, date: string}]",
+        "",
+        "OUTPUT JSON ONLY (no markdown, no code fences):",
+        '{ "blockType": "apple-deal-block", "recommendation": "yes", "confidence_score": 87, "asking_price": "$450", "estimated_value": 525, "value_range": "$480-$550", "reasoning": "...", "red_flags": [], "green_flags": [], "comparable_sales": [] }',
+      ].join("\n");
+
+    case SMART_ACTIONS.seller_pricing_strategy:
+      return [
+        "You are an expert at pricing used Apple products for sale.",
+        "Analyze the provided product details.",
+        "Provide JSON response with pricing strategies.",
+        "",
+        "RULES:",
+        "- quick_sale_price: price for fast sale (string)",
+        "- optimal_price: best balance of speed and profit (string)",
+        "- max_price: highest realistic asking price (string)",
+        "- estimated_time_to_sell: days at optimal price (string)",
+        "- pricing_strategy: brief explanation (string)",
+        '- listing_tips: ["tip1", "tip2", "tip3"]',
+        '- market_demand: "high" | "medium" | "low"',
+        "- comparable_listings: current competing listings [{price: number, condition: string, days_listed: number}]",
+        "",
+        "OUTPUT JSON ONLY (no markdown, no code fences):",
+        '{ "blockType": "apple-seller-block", "quick_sale_price": "$480", "optimal_price": "$525", "max_price": "$560", "estimated_time_to_sell": "3-5 days", "pricing_strategy": "...", "listing_tips": [], "market_demand": "high", "comparable_listings": [] }',
+      ].join("\n");
+
     default:
       return "";
   }
@@ -261,6 +304,11 @@ async function runThreadSmartAction({
       ? `${baseSystemPrompt}\n\nYou are OwnLLM in Proposal Workbench mode. Output strict JSON only.`
       : action === SMART_ACTIONS.extract_hotel_contract
       ? `${baseSystemPrompt}\n\nYou are OwnLLM in HotelOS mode. Output strict JSON only for hotel rate extraction.`
+      : [
+          SMART_ACTIONS.check_apple_deal,
+          SMART_ACTIONS.seller_pricing_strategy,
+        ].includes(action)
+      ? `${baseSystemPrompt}\n\nYou are OwnLLM in IsGoodDeal mode. Output strict JSON only for Apple product analysis.`
       : `${baseSystemPrompt}\n\nYou are OwnLLM in Proposal Workbench mode. Output markdown only.`;
   const userPrompt = smartActionUserPrompt(action);
 
@@ -401,6 +449,34 @@ async function runThreadSmartAction({
     return {
       hotelRateBlock: parsed,
       markdown: "# Hotel Contract Extraction Complete\n\nRate data has been extracted and inserted into the Hotel Rate Block.",
+    };
+  }
+
+  // Apple Deal Analysis for IsGoodDeal.com
+  if (
+    action === SMART_ACTIONS.check_apple_deal ||
+    action === SMART_ACTIONS.seller_pricing_strategy
+  ) {
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = null;
+    }
+
+    if (!parsed || typeof parsed !== "object") {
+      return {
+        error: "Failed to parse deal analysis data. Expected JSON format.",
+        raw: raw,
+      };
+    }
+
+    return {
+      appleDealBlock: parsed,
+      markdown:
+        action === SMART_ACTIONS.check_apple_deal
+          ? "# Deal Analysis Complete\n\nThe AI has evaluated this listing. See the deal block below for details."
+          : "# Seller Strategy Complete\n\nThe AI has generated a pricing strategy for your item.",
     };
   }
 
