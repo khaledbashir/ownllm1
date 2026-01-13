@@ -157,7 +157,7 @@ export default function BlockList({
   const renderBlockConfig = (block) => {
     const isLastConfigurableBlock = blocks[blocks.length - 2]?.id === block.id;
     const props = {
-      config: block.config,
+      config: block?.config || {},
       onConfigChange: (config) => updateBlockConfig(block.id, config),
       renderVariableSelect,
       onDeleteVariable,

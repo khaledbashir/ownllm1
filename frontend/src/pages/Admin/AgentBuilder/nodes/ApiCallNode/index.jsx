@@ -1,8 +1,78 @@
 import React, { useRef, useState } from "react";
 import { Plus, X, CaretDown } from "@phosphor-icons/react";
 
+function normalizeKeyValueRows(input) {
+  // Always return an array
+  if (input === null || input === undefined) return [];
+  if (typeof input !== 'object' && typeof input !== 'string') return [];
+
+  // Expected shape: [{ key: string, value: string }]
+  if (Array.isArray(input)) {
+    return input
+      .map((item) => {
+        if (!item) return null;
+        if (typeof item === "string") {
+          const parts = item.split(":");
+          if (parts.length < 2) return null;
+          const key = parts.shift()?.trim();
+          const value = parts.join(":").trim();
+          if (!key) return null;
+          return { key, value };
+        }
+        if (Array.isArray(item) && item.length >= 2) {
+          const [key, value] = item;
+          if (!key) return null;
+          return {
+            key: String(key),
+            value: value == null ? "" : String(value),
+          };
+        }
+        if (typeof item === "object") {
+          const key = item.key ?? item.name ?? item.header ?? item[0];
+          const value = item.value ?? item.val ?? item[1];
+          if (!key) return null;
+          return {
+            key: String(key),
+            value: value == null ? "" : String(value),
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  // Common AI output: { Authorization: "Bearer ..." }
+  if (typeof input === "object") {
+    return Object.entries(input)
+      .map(([key, value]) => ({
+        key: String(key),
+        value: value == null ? "" : String(value),
+      }))
+      .filter((h) => h.key);
+  }
+
+  // Also accept a newline-delimited string of headers
+  if (typeof input === "string") {
+    return input
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const idx = line.indexOf(":");
+        if (idx === -1) return null;
+        const key = line.slice(0, idx).trim();
+        const value = line.slice(idx + 1).trim();
+        if (!key) return null;
+        return { key, value };
+      })
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 export default function ApiCallNode({
-  config,
+  config = {},
   onConfigChange,
   renderVariableSelect,
 }) {
@@ -10,21 +80,22 @@ export default function ApiCallNode({
   const [showVarMenu, setShowVarMenu] = useState(false);
   const varButtonRef = useRef(null);
 
+  const headers = normalizeKeyValueRows(config?.headers);
+  const formData = normalizeKeyValueRows(config?.formData);
+
   const handleHeaderChange = (index, field, value) => {
-    const newHeaders = [...(config.headers || [])];
+    const newHeaders = [...headers];
     newHeaders[index] = { ...newHeaders[index], [field]: value };
     onConfigChange({ headers: newHeaders });
   };
 
   const addHeader = () => {
-    const newHeaders = [...(config.headers || []), { key: "", value: "" }];
+    const newHeaders = [...headers, { key: "", value: "" }];
     onConfigChange({ headers: newHeaders });
   };
 
   const removeHeader = (index) => {
-    const newHeaders = [...(config.headers || [])].filter(
-      (_, i) => i !== index
-    );
+    const newHeaders = [...headers].filter((_, i) => i !== index);
     onConfigChange({ headers: newHeaders });
   };
 
@@ -130,7 +201,7 @@ export default function ApiCallNode({
           </button>
         </div>
         <div className="space-y-2">
-          {(config.headers || []).map((header, index) => (
+          {headers.map((header, index) => (
             <div key={index} className="flex gap-2">
               <input
                 type="text"
@@ -208,14 +279,14 @@ export default function ApiCallNode({
               />
             ) : config.bodyType === "form" ? (
               <div className="space-y-2">
-                {(config.formData || []).map((item, index) => (
+                {formData.map((item, index) => (
                   <div key={index} className="flex gap-2">
                     <input
                       type="text"
                       placeholder="Key"
                       value={item.key}
                       onChange={(e) => {
-                        const newFormData = [...(config.formData || [])];
+                        const newFormData = [...formData];
                         newFormData[index] = { ...item, key: e.target.value };
                         onConfigChange({ formData: newFormData });
                       }}
@@ -228,7 +299,7 @@ export default function ApiCallNode({
                       placeholder="Value"
                       value={item.value}
                       onChange={(e) => {
-                        const newFormData = [...(config.formData || [])];
+                        const newFormData = [...formData];
                         newFormData[index] = { ...item, value: e.target.value };
                         onConfigChange({ formData: newFormData });
                       }}
@@ -238,7 +309,7 @@ export default function ApiCallNode({
                     />
                     <button
                       onClick={() => {
-                        const newFormData = [...(config.formData || [])].filter(
+                        const newFormData = [...formData].filter(
                           (_, i) => i !== index
                         );
                         onConfigChange({ formData: newFormData });
@@ -252,10 +323,7 @@ export default function ApiCallNode({
                 ))}
                 <button
                   onClick={() => {
-                    const newFormData = [
-                      ...(config.formData || []),
-                      { key: "", value: "" },
-                    ];
+                    const newFormData = [...formData, { key: "", value: "" }];
                     onConfigChange({ formData: newFormData });
                   }}
                   className="w-full p-2.5 rounded-lg border-none bg-theme-settings-input-bg text-theme-text-primary hover:bg-theme-action-menu-item-hover transition-colors duration-300 text-sm"

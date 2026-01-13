@@ -12,6 +12,127 @@ import paths from "@/utils/paths";
 import PublishEntityModal from "@/components/CommunityHub/PublishEntityModal";
 import FlowBuilderChat from "@/components/FlowBuilderChat";
 
+function normalizeKeyValueRows(input) {
+  // Always return an array - defensive check
+  if (input === null || input === undefined) return [];
+  if (typeof input !== 'object' && typeof input !== 'string') return [];
+
+  if (Array.isArray(input)) {
+    return input
+      .map((item) => {
+        if (!item) return null;
+
+        if (typeof item === "string") {
+          const parts = item.split(":");
+          if (parts.length < 2) return null;
+          const key = parts.shift()?.trim();
+          const value = parts.join(":").trim();
+          if (!key) return null;
+          return { key, value };
+        }
+
+        if (Array.isArray(item) && item.length >= 2) {
+          const [key, value] = item;
+          if (!key) return null;
+          return {
+            key: String(key),
+            value: value == null ? "" : String(value),
+          };
+        }
+
+        if (typeof item === "object") {
+          const key = item.key ?? item.name ?? item.header ?? item[0];
+          const value = item.value ?? item.val ?? item[1];
+          if (!key) return null;
+          return {
+            key: String(key),
+            value: value == null ? "" : String(value),
+          };
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  if (typeof input === "object" && !Array.isArray(input)) {
+    return Object.entries(input)
+      .map(([key, value]) => ({
+        key: String(key),
+        value: value == null ? "" : String(value),
+      }))
+      .filter((h) => h.key);
+  }
+
+  if (typeof input === "string") {
+    return input
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const idx = line.indexOf(":");
+        if (idx === -1) return null;
+        const key = line.slice(0, idx).trim();
+        const value = line.slice(idx + 1).trim();
+        if (!key) return null;
+        return { key, value };
+      })
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function normalizeVariables(input) {
+  if (!input) return [{ name: "", value: "" }];
+
+  if (Array.isArray(input)) {
+    const cleaned = input
+      .map((v) => {
+        if (!v) return null;
+        if (typeof v === "object") {
+          const name = v.name ?? v.key ?? "";
+          const value = v.value ?? "";
+          return { name: String(name || ""), value: String(value || "") };
+        }
+        return null;
+      })
+      .filter(Boolean);
+    return cleaned.length ? cleaned : [{ name: "", value: "" }];
+  }
+
+  if (typeof input === "object") {
+    const rows = Object.entries(input).map(([name, value]) => ({
+      name: String(name),
+      value: value == null ? "" : String(value),
+    }));
+    return rows.length ? rows : [{ name: "", value: "" }];
+  }
+
+  return [{ name: "", value: "" }];
+}
+
+function normalizeStepConfig(stepType, config, blockInfo) {
+  // Defensive checks
+  if (!stepType || typeof stepType !== 'string') {
+    return {};
+  }
+
+  const defaults = (blockInfo && blockInfo[stepType] && blockInfo[stepType].defaultConfig) ? blockInfo[stepType].defaultConfig : {};
+  const merged = { ...defaults, ...(config || {}) };
+
+  if (stepType === "apiCall") {
+    merged.headers = normalizeKeyValueRows(merged.headers);
+    merged.formData = normalizeKeyValueRows(merged.formData);
+  }
+
+  if (stepType === "start") {
+    merged.variables = normalizeVariables(merged.variables);
+  }
+
+  return merged;
+}
+
 const DEFAULT_BLOCKS = [
   {
     id: "flow_info",
@@ -89,21 +210,26 @@ export default function AgentBuilder() {
       const { success, error, flow } = await AgentFlows.getFlow(uuid);
       if (!success) throw new Error(error);
 
+      // Defensive check for flow structure
+      if (!flow || !flow.config) {
+        throw new Error("Invalid flow data");
+      }
+
       // Convert steps to blocks with IDs, ensuring finish block is at the end
       const flowBlocks = [
         {
           id: "flow_info",
           type: BLOCK_TYPES.FLOW_INFO,
           config: {
-            name: flow.config.name,
-            description: flow.config.description,
+            name: flow.config.name || "",
+            description: flow.config.description || "",
           },
           isExpanded: true,
         },
-        ...flow.config.steps.map((step, index) => ({
+        ...(flow.config.steps || []).map((step, index) => ({
           id: index === 0 ? "start" : `block_${index}`,
-          type: step.type,
-          config: step.config,
+          type: step?.type || "unknown",
+          config: normalizeStepConfig(step?.type, step?.config, BLOCK_INFO),
           isExpanded: true,
         })),
       ];
@@ -413,21 +539,28 @@ export default function AgentBuilder() {
               id: "start",
               type: BLOCK_TYPES.START,
               config: {
-                variables: generatedFlow.variables || [{ name: "", value: "" }],
+                variables: normalizeVariables(generatedFlow.variables),
               },
               isExpanded: true,
             },
           ];
 
           // Add generated blocks
-          if (generatedFlow.blocks) {
+          if (generatedFlow.blocks && Array.isArray(generatedFlow.blocks)) {
             generatedFlow.blocks.forEach((block, idx) => {
+              if (!block || !block.type) return; // Skip invalid blocks
+
               const blockType = block.type?.toUpperCase().replace(/-/g, "_");
               if (BLOCK_TYPES[blockType]) {
+                const stepType = BLOCK_TYPES[blockType];
                 newBlocks.push({
                   id: `block_${idx + 1}`,
-                  type: BLOCK_TYPES[blockType],
-                  config: block.config || {},
+                  type: stepType,
+                  config: normalizeStepConfig(
+                    stepType,
+                    block?.config || {},
+                    BLOCK_INFO
+                  ),
                   isExpanded: true,
                 });
               }
