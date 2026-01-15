@@ -24,38 +24,67 @@ class AncPricingEngine {
    * @param {number} width - Width in feet
    * @param {number} height - Height in feet
    * @param {string} environment - 'indoor' or 'outdoor'
+   * @param {object} rfpSpecs - Optional specifications from RFP processing
    */
-  calculate(width, height, environment = 'indoor') {
-    // 1. Validation (Don't calculate garbage)
+  calculate(width, height, environment = 'indoor', rfpSpecs = {}) {
+    // 1. Validation
     if (!width || !height || width <= 0 || height <= 0) {
       throw new Error("Invalid dimensions provided.");
     }
 
     const area = width * height;
-    const isOutdoor = environment.toLowerCase().includes('outdoor');
+    const env = environment.toLowerCase().includes('outdoor') ? 'outdoor' : 'indoor';
 
-    // 2. Line Item Calculations
-    const hardwareRate = isOutdoor ? this.RATES.OUTDOOR_HARDWARE : this.RATES.INDOOR_HARDWARE;
-    const hardwareCost = area * hardwareRate;
+    // 1. LED Hardware Logic
+    const hardware = {
+      base: area * (env === 'outdoor' ? 2500 : 1200),
+      spares: area * 50,
+      processing: 15000
+    };
 
-    const laborCost = area * this.RATES.LABOR_UNION;
-    
-    // Structural = Base Fee + Variable based on size
-    const structuralCost = this.RATES.STRUCTURAL_BASE + (area * this.RATES.STRUCTURAL_VAR);
+    // 2. Structural Requirements Logic
+    const structural = {
+      materials: area * 60,
+      engineering: 5000,
+      fabrication: area * 20
+    };
 
-    // Electrical (Estimated at 5% of hardware)
-    const electricalCost = hardwareCost * 0.05;
+    // 3. Labor Analysis Logic
+    const labor = {
+      install: area * 150,
+      supervision: 7500,
+      travel: 3000
+    };
 
-    // Subtotal for PM Calculation
-    const constructionSubtotal = hardwareCost + laborCost + structuralCost + electricalCost;
-    const pmCost = constructionSubtotal * this.RATES.PM_FEE;
+    // 4. Electrical Systems Logic (Estimated)
+    const electrical = {
+      distribution: area * 25,
+      backup: 12000,
+      connectivity: 5000
+    };
 
-    // 3. Totals
-    const costBasis = constructionSubtotal + pmCost;
-    
-    // Margin Calculation (Sell Price = Cost / (1 - Margin%))
-    // This is the standard "Gross Margin" formula, NOT a simple markup.
-    const sellPrice = costBasis / (1 - this.RATES.MARGIN);
+    // 5. Professional Services Logic
+    const proServices = {
+      pm: (hardware.base + structural.materials + labor.install) * 0.15,
+      commissioning: 4500,
+      training: 2500
+    };
+
+    // 6. Installation Assessment (Placeholder logic)
+    const installAssessment = {
+      scaffolding: env === 'outdoor' ? 12000 : 5000,
+      freight: 4500,
+      storage: 2000
+    };
+
+    const costBasis = hardware.base + hardware.spares + hardware.processing + 
+                      structural.materials + structural.engineering + structural.fabrication +
+                      labor.install + labor.supervision + labor.travel +
+                      electrical.distribution + electrical.backup + electrical.connectivity +
+                      proServices.pm + proServices.commissioning + proServices.training +
+                      installAssessment.scaffolding + installAssessment.freight + installAssessment.storage;
+
+    const sellPrice = costBasis / (1 - this.RATES.MARGIN); // 30% Margin
     const grossProfit = sellPrice - costBasis;
 
     return {
@@ -63,20 +92,18 @@ class AncPricingEngine {
         timestamp: new Date(),
         dimensions: `${width}' x ${height}'`,
         area: area,
-        type: isOutdoor ? "Outdoor LED" : "Indoor LED"
+        type: env === 'outdoor' ? "Outdoor LED" : "Indoor LED",
+        environment: env
       },
-      lineItems: {
-        hardware: hardwareCost,
-        labor: laborCost,
-        structural: structuralCost,
-        electrical: electricalCost,
-        projectManagement: pmCost
-      },
-      financials: {
-        costBasis: costBasis,
-        sellPrice: sellPrice,
-        marginAmt: grossProfit,
-        marginPct: this.RATES.MARGIN * 100
+      tabs: {
+        summary: { costBasis, sellPrice, grossProfit, marginPct: this.RATES.MARGIN * 100 },
+        hardware,
+        structural,
+        labor,
+        electrical,
+        installAssessment,
+        proServices,
+        screenDetails: { width, height, area, resolution: "Custom" }
       }
     };
   }

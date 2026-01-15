@@ -31,10 +31,10 @@ module.exports.runtime = {
         status: "success",
         pricing: {
           configuration: quote.meta.type,
-          total_price: quote.financials.sellPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+          total_price: quote.tabs.summary.sellPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
         },
         audit_file: downloadUrl,
-        message: `Quote generated successfully. Total Project Sell Price: $${quote.financials.sellPrice.toFixed(2)}. Internal audit file available for download: ${downloadUrl}`
+        message: `Quote generated successfully. Total Project Sell Price: $${quote.tabs.summary.sellPrice.toFixed(2)}. This includes 8 detailed tabs: Executive Summary, LED Hardware, Structural, Labor, Electrical, Assessment, Professional Services, and Screen Details. Internal audit file: ${downloadUrl}`
       });
 
     } catch (error) {
