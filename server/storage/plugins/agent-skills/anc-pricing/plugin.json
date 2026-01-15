@@ -1,30 +1,29 @@
 {
   "hubId": "anc-pricing",
-  "name": "ANC Sports Pricing Engine",
-  "description": "Calculates the quote for an LED screen. Requires 'width' and 'height' in feet. Optional 'environment' (indoor/outdoor).",
-  "author": "ANC Tech",
-  "version": "1.0.0",
-  "entrypoint": "handler.js",
+  "name": "ANC Pricing Tool",
   "active": true,
-  "inputs": [
+  "imported": true,
+  "entrypoint": {
+    "file": "handler.js",
+    "params": {
+      "width": {
+        "description": "The width of the screen in feet (e.g. 10.5)",
+        "type": "string"
+      },
+      "height": {
+        "description": "The height of the screen in feet (e.g. 20.0)",
+        "type": "string"
+      },
+      "environment": {
+        "description": "The environment (indoor or outdoor)",
+        "type": "string"
+      }
+    }
+  },
+  "examples": [
     {
-      "name": "width",
-      "type": "number",
-      "description": "The width of the screen in feet (e.g. 13.5)",
-      "required": true
-    },
-    {
-      "name": "height",
-      "type": "number",
-      "description": "The height of the screen in feet (e.g. 42.1)",
-      "required": true
-    },
-    {
-      "name": "environment",
-      "type": "string",
-      "description": "The installation environment ('indoor' or 'outdoor')",
-      "required": false,
-      "defaultValue": "indoor"
+      "prompt": "Calculate the price for a screen with width 10 and height 20 feet",
+      "call": "{\"width\": \"10\", \"height\": \"20\", \"environment\": \"indoor\"}"
     }
   ]
 }

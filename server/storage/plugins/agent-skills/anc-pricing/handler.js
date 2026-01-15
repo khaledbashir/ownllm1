@@ -6,15 +6,17 @@ const AncPricingEngine = require('../../../../utils/AncPricingEngine');
 const AncDocumentService = require('../../../../utils/AncDocumentService');
 
 module.exports.runtime = {
-  handler: async function (params) {
-    const { width, height, environment } = params;
-
+  handler: async function ({ width, height, environment }) {
     try {
-      this.logger(`[ANC Custom Skill] Calculating: ${width}x${height} ${environment}`);
-      this.introspect(`Calculating hardware and construction costs for a ${width}x${height} ${environment} display...`);
+      if (!width || !height) {
+        return "Error: Missing width or height parameters. Please provide dimensions in feet.";
+      }
 
-      // 1. Run Math
-      const quote = AncPricingEngine.calculate(width, height, environment || 'indoor');
+      this.logger(`[ANC Custom Skill] Calculating: ${width}x${height} ${environment}`);
+      this.introspect(`Calculating hardware and construction costs for a ${width}x${height} ${environment || 'indoor'} display...`);
+
+      // 1. Run Math (Ensure numbers)
+      const quote = AncPricingEngine.calculate(Number(width), Number(height), environment || 'indoor');
 
       // 2. Generate File
       this.introspect(`Generating detailed internal audit Excel file...`);
@@ -37,7 +39,7 @@ module.exports.runtime = {
 
     } catch (error) {
       this.logger(`ANC Skill Error: ${error.message}`);
-      return JSON.stringify({ error: error.message });
+      return `Error in calculation: ${error.message}`;
     }
   }
 };
