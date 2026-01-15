@@ -14,6 +14,9 @@ const {
   sourceIdentifier,
 } = require("./index");
 
+const AncPricingEngine = require('../AncPricingEngine');
+const AncDocumentService = require('../AncDocumentService');
+
 const VALID_CHAT_MODE = ["chat", "query"];
 
 async function streamChatWithWorkspace(
@@ -26,7 +29,54 @@ async function streamChatWithWorkspace(
   attachments = []
 ) {
   const uuid = uuidv4();
-  const updatedMessage = await grepCommand(message, user);
+  let updatedMessage = await grepCommand(message, user);
+
+  // --- ANC PRODUCTION INTERCEPTOR START ---
+  // Detect "Quote Intent" via Regex.
+  // Matches: "10x20", "10 by 20", "10 x 20", followed optionally by "outdoor"
+  const quoteRegex = /(\d+)\s*(?:x|by)\s*(\d+)/i;
+  const match = updatedMessage.match(quoteRegex);
+
+  if (match) {
+    try {
+      console.log(`[ANC] Quote Request Detected: ${match[0]}`);
+      const width = parseInt(match[1]);
+      const height = parseInt(match[2]);
+      const isOutdoor = updatedMessage.toLowerCase().includes('outdoor');
+
+      // 1. Run Math
+      const quote = AncPricingEngine.calculate(width, height, isOutdoor ? 'outdoor' : 'indoor');
+
+      // 2. Generate Audit File
+      const filename = await AncDocumentService.generateAuditFile(quote, workspace.slug);
+
+      // NOTE: In your real deployment, you need a route to serve this file.
+      // For now, we assume /api/download/{filename} exists or we will map it.
+      const downloadUrl = `${process.env.BASE_URL || 'http://localhost:3001'}/api/system/download/${filename}`;
+
+      // 3. Inject Context
+      const systemInjection = \`
+      \n\n[SYSTEM: STRICT PRICING DATA]
+      The user requested a quote. I have calculated the binding financial data.
+      YOU MUST USE THESE NUMBERS. DO NOT RE-CALCULATE.
+
+      - Configuration: \${quote.meta.type} (\${quote.meta.dimensions})
+      - Total Client Price: \$\${quote.financials.sellPrice.toLocaleString('en-US', {maximumFractionDigits: 2})}
+      - Internal Audit File: \${downloadUrl}
+
+      Instructions: Present the Total Price clearly. Inform the user that the detailed internal audit file has been generated at the link provided.
+      \`;
+
+      // Append to the prompt variable that gets sent to OpenAI/LLM
+      // (Ensure you find the variable name, usually 'prompt' or 'history')
+      updatedMessage += systemInjection;
+
+    } catch (err) {
+      console.error("[ANC] Calculation Error:", err.message);
+      // Silent fail: If math fails, let the AI handle it normally, don't crash.
+    }
+  }
+  // --- ANC PRODUCTION INTERCEPTOR END ---
 
   if (Object.keys(VALID_COMMANDS).includes(updatedMessage)) {
     const data = await VALID_COMMANDS[updatedMessage](

@@ -52,6 +52,7 @@
     "docx": "^8.0.0",
     "dotenv": "^16.0.3",
     "elevenlabs": "^0.5.0",
+    "exceljs": "^4.4.0",
     "express": "^4.21.2",
     "express-rate-limit": "^8.2.1",
     "extract-json-from-string": "^1.0.1",

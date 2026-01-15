@@ -41,6 +41,7 @@ const { organizationEndpoints } = require("./endpoints/organization");
 const { mcpServersEndpoints } = require("./endpoints/mcpServers");
 const { artifactsEndpoints } = require("./endpoints/artifacts");
 const { billingEndpoints } = require("./endpoints/billing");
+const { systemDownloadEndpoints } = require("./endpoints/download");
 
 const { vaultEndpoints } = require("./endpoints/vault");
 const { smartPluginsEndpoints } = require("./endpoints/smartPlugins");
@@ -194,6 +195,7 @@ apiRouter.post("/export/pdf", async (req, res) => {
 apiRouter.use("/exports", express.static(path.join(__dirname, "storage/exports")));
 
 systemEndpoints(apiRouter);
+apiRouter.use("/system", systemDownloadEndpoints);
 extensionEndpoints(apiRouter);
 workspaceEndpoints(apiRouter);
 workspaceThreadEndpoints(apiRouter);
