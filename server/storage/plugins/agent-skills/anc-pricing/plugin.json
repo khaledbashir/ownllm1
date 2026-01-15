@@ -1,11 +1,30 @@
 {
   "hubId": "anc-pricing",
   "name": "ANC Sports Pricing Engine",
-  "description": "Deterministic CPQ calculator for LED displays. Generates price and audit Excel file.",
+  "description": "Calculates the quote for an LED screen. Requires 'width' and 'height' in feet. Optional 'environment' (indoor/outdoor).",
   "author": "ANC Tech",
   "version": "1.0.0",
   "entrypoint": "handler.js",
   "active": true,
-  "imported": true,
-  "setupArgs": {}
+  "inputs": [
+    {
+      "name": "width",
+      "type": "number",
+      "description": "The width of the screen in feet (e.g. 13.5)",
+      "required": true
+    },
+    {
+      "name": "height",
+      "type": "number",
+      "description": "The height of the screen in feet (e.g. 42.1)",
+      "required": true
+    },
+    {
+      "name": "environment",
+      "type": "string",
+      "description": "The installation environment ('indoor' or 'outdoor')",
+      "required": false,
+      "defaultValue": "indoor"
+    }
+  ]
 }
