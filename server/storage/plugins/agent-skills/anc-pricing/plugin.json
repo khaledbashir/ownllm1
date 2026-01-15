@@ -1,0 +1,11 @@
+{
+  "hubId": "anc-pricing",
+  "name": "ANC Sports Pricing Engine",
+  "description": "Deterministic CPQ calculator for LED displays. Generates price and audit Excel file.",
+  "author": "ANC Tech",
+  "version": "1.0.0",
+  "entrypoint": "handler.js",
+  "active": true,
+  "imported": true,
+  "setupArgs": {}
+}
