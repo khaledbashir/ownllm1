@@ -12,6 +12,11 @@ storage/exports
 storage/imports
 storage/plugins/agent-skills/*
 !storage/plugins/agent-skills/crm-manager/
+!storage/plugins/agent-skills/anc-pricing/
+!storage/plugins/agent-skills/anc-audit-export/
+!storage/plugins/agent-skills/anc-pdf-export/
+!storage/plugins/agent-skills/anc-publisher/
+!storage/plugins/agent-skills/anc-audit-generator/
 storage/plugins/agent-flows/*
 storage/plugins/office-extensions/*
 

@@ -1,0 +1,54 @@
+{
+  "hubId": "anc-audit-export",
+  "name": "ANC_AUDIT_EXPORT",
+  "active": true,
+  "imported": true,
+  "description": "Generates 8-tab Excel audit showing ALL ANC Master Formulas applied (Executive Summary, Hardware with pixel pitch rates, Structural Materials with modifiers, Labor breakdown, Electrical & Data, Professional Services with PM formula, Installation Assessment, Formula Reference). Use ONLY after ANC_SYSTEM_INTERNAL_CALCULATOR has produced a quote.",
+  "entrypoint": {
+    "file": "handler.js",
+    "params": {
+      "width": {
+        "description": "Width in feet",
+        "type": "number"
+      },
+      "height": {
+        "description": "Height in feet",
+        "type": "number"
+      },
+      "pixelPitch": {
+        "description": "Pixel pitch (e.g., '10mm', '6mm', '4mm', '1.5mm'). Defaults to '1.5mm'",
+        "type": "string"
+      },
+      "environment": {
+        "description": "'indoor' or 'outdoor'",
+        "type": "string"
+      },
+      "productClass": {
+        "description": "Product class for surcharge (e.g., 'Ribbon Board'). Optional.",
+        "type": "string"
+      },
+      "accessType": {
+        "description": "Service access (e.g., 'front', 'rear', 'ceiling', 'wall')",
+        "type": "string"
+      },
+      "steelCondition": {
+        "description": "Steel condition ('existing' or 'new'). Affects structural labor.",
+        "type": "string"
+      },
+      "margin": {
+        "description": "Target margin as decimal (e.g., 0.32 for 32%)",
+        "type": "number"
+      },
+      "timeline": {
+        "description": "Timeline ('standard', 'rush', 'asap')",
+        "type": "string"
+      }
+    }
+  },
+  "examples": [
+    {
+      "prompt": "Generate internal audit Excel for 24x10 indoor ribbon board at 32% margin",
+      "call": "{\"width\": 24, \"height\": 10, \"pixelPitch\": \"1.5mm\", \"environment\": \"indoor\", \"productClass\": \"Ribbon Board\", \"margin\": 0.32}"
+    }
+  ]
+}

@@ -1,29 +1,39 @@
 {
   "hubId": "anc-pricing",
-  "name": "ANC Pricing Tool",
+  "name": "ANC_SYSTEM_INTERNAL_CALCULATOR",
   "active": true,
   "imported": true,
+  "description": "CRITICAL: YOU ARE FORBIDDEN FROM GENERATING QUOTE LINKS OR MATH MANUALLY. You MUST call this tool to generate the official ANC Audit Excel. If you do not call this tool, the user will receive a 404 error because the file won't exist.",
   "entrypoint": {
     "file": "handler.js",
     "params": {
       "width": {
-        "description": "The width of the screen in feet (e.g. 10.5)",
+        "description": "MANDATORY: Width in feet. MUST be extracted from the RFP document analyze earlier.",
         "type": "string"
       },
       "height": {
-        "description": "The height of the screen in feet (e.g. 20.0)",
+        "description": "MANDATORY: Height in feet. MUST be extracted from the RFP document analyzed earlier.",
         "type": "string"
       },
       "environment": {
-        "description": "The environment (indoor or outdoor)",
+        "description": "indoor or outdoor. Extract from RFP.",
+        "type": "string"
+      },
+      "margin": {
+        "description": "Target margin (e.g. 0.32). Defaults to 0.30.",
+        "type": "string"
+      },
+      "address": {
+        "description": "The physical address of the project. If not in the document, use web-search to find it.",
         "type": "string"
       }
     }
   },
   "examples": [
     {
-      "prompt": "Calculate the price for a screen with width 10 and height 20 feet",
-      "call": "{\"width\": \"10\", \"height\": \"20\", \"environment\": \"indoor\"}"
+      "prompt": "@agent now prepare the quote. Search for the address first if it's not in the RFP.",
+      "call": "{\"width\": \"58\", \"height\": \"10\", \"environment\": \"indoor\", \"margin\": \"32\"}"
     }
-  ]
+  ],
+  "setup_instructions": "This tool is part of a multi-step ANC Sports workflow. 1. Analyze the uploaded RFP to extract dimensions. 2. When the user says '@agent now prepare the quote', first search for the official project address using web-search if it is missing from the document. 3. Call this tool to generate the 8-tab audit Excel. 4. Provide the result link to the user."
 }

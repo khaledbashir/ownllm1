@@ -14,82 +14,119 @@ class AncDocumentService {
     const headerFont = { bold: true, color: { argb: 'FFFFFFFF' } };
     const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: ancBlue } };
 
-    const formatHeader = (sheet) => {
-      sheet.getRow(1).font = headerFont;
-      sheet.getRow(1).fill = headerFill;
+    const formatHeader = (sheet, rowNum = 1) => {
+      sheet.getRow(rowNum).font = headerFont;
+      sheet.getRow(rowNum).fill = headerFill;
       sheet.columns.forEach(col => col.width = 30);
     };
 
     // --- Tab 1: Executive Summary ---
     const summary = workbook.addWorksheet('Executive Summary');
-    summary.columns = [{ header: 'Category', key: 'category' }, { header: 'Value', key: 'value', style: { numFmt: '"$"#,##0.00' } }];
-    summary.addRow({ category: 'Project Type', value: quoteData.meta.type });
-    summary.addRow({ category: 'Total Area (SqFt)', value: quoteData.meta.area });
-    summary.addRow({ category: 'Grand Total Sell Price', value: quoteData.tabs.summary.sellPrice });
-    summary.addRow({ category: 'Total Cost Basis', value: quoteData.tabs.summary.costBasis });
-    summary.addRow({ category: 'Gross Margin Amount', value: quoteData.tabs.summary.grossProfit });
-    summary.addRow({ category: 'Margin Percentage', value: `${quoteData.tabs.summary.marginPct}%` });
-    formatHeader(summary);
+    
+    // Add Branding Row
+    summary.mergeCells('A1:F1');
+    summary.getCell('A1').value = 'ANC SPORTS ENTERPRISES - PROJECT SUMMARY';
+    summary.getCell('A1').font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    summary.getCell('A1').fill = headerFill;
+    summary.getCell('A1').alignment = { horizontal: 'center' };
+
+    summary.addRow(['Project Address:', quoteData.meta.address || 'Not Provided']);
+    summary.getRow(2).font = { italic: true };
+    summary.addRow([]);
+
+    summary.getRow(4).values = ['Screen #', 'Product Type', 'Dimensions', 'Pixel Pitch', 'Total Cost', 'Annual Service'];
+    formatHeader(summary, 4);
+
+    summary.addRow([1, quoteData.meta.type, quoteData.meta.dimensions, '10.0mm', quoteData.tabs.summary.sellPrice, quoteData.tabs.summary.sellPrice * 0.15]);
+    summary.getCell('E5').numFmt = '"$"#,##0';
+    summary.getCell('F5').numFmt = '"$"#,##0';
+
+    summary.addRow([]);
+    const totalRow = summary.addRow(['PROJECT TOTAL', '', '', '', quoteData.tabs.summary.sellPrice]);
+    summary.getCell(`E${totalRow.number}`).font = { bold: true };
+    summary.getCell(`E${totalRow.number}`).numFmt = '"$"#,##0';
 
     // --- Tab 2: LED Hardware ---
     const hw = workbook.addWorksheet('LED Hardware');
-    hw.columns = [{ header: 'Component', key: 'name' }, { header: 'Cost', key: 'cost', style: { numFmt: '"$"#,##0.00' } }];
-    hw.addRow({ name: 'LED Panels (Primary)', cost: quoteData.tabs.hardware.base });
-    hw.addRow({ name: 'Spare Parts Kit', cost: quoteData.tabs.hardware.spares });
-    hw.addRow({ name: 'Video Processing / Controllers', cost: quoteData.tabs.hardware.processing });
-    formatHeader(hw);
+    hw.addRow(['LED HARDWARE BREAKDOWN']);
+    hw.getRow(1).font = { bold: true, size: 14 };
+    hw.addRow(['Component', 'Description', 'Internal Cost']);
+    formatHeader(hw, 2);
+    hw.addRow(['Primary Panels', `${quoteData.meta.area} sqft @ Panel Rate`, quoteData.tabs.hardware.base]);
+    hw.addRow(['Spare Parts', 'Maintenance Kit', quoteData.tabs.hardware.spares]);
+    hw.addRow(['Processing', 'Video Controllers', quoteData.tabs.hardware.processing]);
+    hw.getColumn(3).numFmt = '"$"#,##0.00';
 
     // --- Tab 3: Structural Requirements ---
     const struc = workbook.addWorksheet('Structural Requirements');
-    struc.columns = [{ header: 'Item', key: 'item' }, { header: 'Cost', key: 'cost', style: { numFmt: '"$"#,##0.00' } }];
-    struc.addRow({ item: 'Steel Materials & Mounts', cost: quoteData.tabs.structural.materials });
-    struc.addRow({ item: 'Structural Engineering Review', cost: quoteData.tabs.structural.engineering });
-    struc.addRow({ item: 'Custom Fabrication', cost: quoteData.tabs.structural.fabrication });
-    formatHeader(struc);
+    struc.addRow(['STRUCTURAL & MOUNTING']);
+    struc.getRow(1).font = { bold: true, size: 14 };
+    struc.addRow(['Item', 'Details', 'Cost']);
+    formatHeader(struc, 2);
+    struc.addRow(['Steel Materials', 'Mounts & Brackets', quoteData.tabs.structural.materials]);
+    struc.addRow(['Engineering', 'PE Stamped Drawings', quoteData.tabs.structural.engineering]);
+    struc.addRow(['Fabrication', 'Custom Steel Work', quoteData.tabs.structural.fabrication]);
+    struc.getColumn(3).numFmt = '"$"#,##0.00';
 
     // --- Tab 4: Labor Analysis ---
     const labor = workbook.addWorksheet('Labor Analysis');
-    labor.columns = [{ header: 'Labor Type', key: 'type' }, { header: 'Cost', key: 'cost', style: { numFmt: '"$"#,##0.00' } }];
-    labor.addRow({ type: 'Field Installation (Union)', cost: quoteData.tabs.labor.install });
-    labor.addRow({ type: 'On-site Supervision', cost: quoteData.tabs.labor.supervision });
-    labor.addRow({ type: 'Travel & Per Diem', cost: quoteData.tabs.labor.travel });
-    formatHeader(labor);
+    labor.addRow(['LABOR & INSTALLATION']);
+    labor.getRow(1).font = { bold: true, size: 14 };
+    labor.addRow(['Role', 'Unit', 'Cost']);
+    formatHeader(labor, 2);
+    labor.addRow(['Union Installers', 'Field Labor', quoteData.tabs.labor.install]);
+    labor.addRow(['Supervision', 'Lead Technician', quoteData.tabs.labor.supervision]);
+    labor.addRow(['Travel', 'Mobilization', quoteData.tabs.labor.travel]);
+    labor.getColumn(3).numFmt = '"$"#,##0.00';
 
     // --- Tab 5: Electrical Systems ---
     const elect = workbook.addWorksheet('Electrical Systems');
-    elect.columns = [{ header: 'Requirement', key: 'desc' }, { header: 'Cost', key: 'cost', style: { numFmt: '"$"#,##0.00' } }];
-    elect.addRow({ desc: 'Power Distribution Units', cost: quoteData.tabs.electrical.distribution });
-    elect.addRow({ desc: 'Backup Systems / UPS', cost: quoteData.tabs.electrical.backup });
-    elect.addRow({ desc: 'Connectivity & Data Cabling', cost: quoteData.tabs.electrical.connectivity });
-    formatHeader(elect);
+    elect.addRow(['ELECTRICAL REQUIREMENTS']);
+    elect.getRow(1).font = { bold: true, size: 14 };
+    elect.addRow(['Service', 'Spec', 'Cost']);
+    formatHeader(elect, 2);
+    elect.addRow(['Power Distribution', 'PDUs', quoteData.tabs.electrical.distribution]);
+    elect.addRow(['Backup', 'UPS Systems', quoteData.tabs.electrical.backup]);
+    elect.addRow(['Data', 'Fiber/Cat6', quoteData.tabs.electrical.connectivity]);
+    elect.getColumn(3).numFmt = '"$"#,##0.00';
 
     // --- Tab 6: Installation Assessment ---
     const assess = workbook.addWorksheet('Installation Assessment');
-    assess.columns = [{ header: 'Service', key: 'service' }, { header: 'Cost', key: 'cost', style: { numFmt: '"$"#,##0.00' } }];
-    assess.addRow({ service: 'Scaffolding / Specialized Lift', cost: quoteData.tabs.installAssessment.scaffolding });
-    assess.addRow({ service: 'Freight & Logistics', cost: quoteData.tabs.installAssessment.freight });
-    assess.addRow({ service: 'On-site Storage', cost: quoteData.tabs.installAssessment.storage });
-    formatHeader(assess);
+    assess.addRow(['SITE ASSESSMENT']);
+    assess.getRow(1).font = { bold: true, size: 14 };
+    assess.addRow(['Requirement', 'Notes', 'Cost']);
+    formatHeader(assess, 2);
+    assess.addRow(['Scaffolding', 'Access Equipment', quoteData.tabs.installAssessment.scaffolding]);
+    assess.addRow(['Freight', 'Shipping & Delivery', quoteData.tabs.installAssessment.freight]);
+    assess.addRow(['Storage', 'Site Storage', quoteData.tabs.installAssessment.storage]);
+    assess.getColumn(3).numFmt = '"$"#,##0.00';
 
     // --- Tab 7: Professional Services ---
     const prof = workbook.addWorksheet('Professional Services');
-    prof.columns = [{ header: 'Service', key: 'service' }, { header: 'Cost', key: 'cost', style: { numFmt: '"$"#,##0.00' } }];
-    prof.addRow({ service: 'Project Management (15%)', cost: quoteData.tabs.proServices.pm });
-    prof.addRow({ service: 'System Commissioning', cost: quoteData.tabs.proServices.commissioning });
-    prof.addRow({ service: 'Operator Training', cost: quoteData.tabs.proServices.training });
-    formatHeader(prof);
+    prof.addRow(['PROFESSIONAL SERVICES']);
+    prof.getRow(1).font = { bold: true, size: 14 };
+    prof.addRow(['Service', 'Rate', 'Cost']);
+    formatHeader(prof, 2);
+    prof.addRow(['Project Management', '15% Construction', quoteData.tabs.proServices.pm]);
+    prof.addRow(['Commissioning', 'System Turn-on', quoteData.tabs.proServices.commissioning]);
+    prof.addRow(['Training', 'Operator Training', quoteData.tabs.proServices.training]);
+    prof.getColumn(3).numFmt = '"$"#,##0.00';
 
     // --- Tab 8: Screen Details ---
     const details = workbook.addWorksheet('Screen Details');
-    details.columns = [{ header: 'Parameter', key: 'param' }, { header: 'Value', key: 'val' }];
-    details.addRow({ param: 'Width (ft)', val: quoteData.tabs.screenDetails.width });
-    details.addRow({ param: 'Height (ft)', val: quoteData.tabs.screenDetails.height });
-    details.addRow({ param: 'Total Area (sqft)', val: quoteData.tabs.screenDetails.area });
-    details.addRow({ param: 'Target Environment', val: quoteData.meta.environment });
-    formatHeader(details);
+    details.addRow(['TECHNICAL SPECIFICATIONS']);
+    details.getRow(1).font = { bold: true, size: 14 };
+    details.addRow(['Parameter', 'Value']);
+    formatHeader(details, 2);
+    details.addRow(['Width', `${quoteData.tabs.screenDetails.width} ft`]);
+    details.addRow(['Height', `${quoteData.tabs.screenDetails.height} ft`]);
+    details.addRow(['Total Area', `${quoteData.tabs.screenDetails.area} sqft`]);
+    details.addRow(['Project Address', quoteData.meta.address || 'N/A']);
+    details.addRow(['Resolution', 'Custom']);
+    details.getColumn(2).width = 40;
 
     // --- SAVE FILE ---
-    const outputDir = path.resolve(__dirname, '../../storage/documents');
+    const outputDir = '/app/server/storage/documents';
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
@@ -97,6 +134,7 @@ class AncDocumentService {
     const filename = `ANC_Audit_${Date.now()}_${workspaceSlug}.xlsx`;
     const filepath = path.join(outputDir, filename);
 
+    console.log(`[ANC Service] Saving audit file to: ${filepath}`);
     await workbook.xlsx.writeFile(filepath);
     
     return filename;

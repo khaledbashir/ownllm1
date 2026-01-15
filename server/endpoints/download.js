@@ -12,7 +12,7 @@ router.get('/download/:filename', async (request, response) => {
     
     // SECURITY: Prevent directory traversal
     const safeName = path.basename(filename);
-    const filepath = path.resolve(__dirname, '../storage/documents', safeName);
+    const filepath = path.join('/app/server/storage/documents', safeName);
 
     if (fs.existsSync(filepath)) {
       response.download(filepath, safeName, (err) => {
