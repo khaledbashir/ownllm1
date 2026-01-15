@@ -11,9 +11,9 @@
 | CRS Requirement | Status | Effort | Risk | Start File |
 |---|---|---|---|---|
 | 1. **Split-Screen UI** (Live Proposal Preview) | ⚠️ PARTIAL | **HARD** | Medium | `frontend/src/components/WorkspaceChat/ChatContainer/index.jsx` |
-| 2. **Deterministic Math Engine** | ⚠️ PARTIAL | **MEDIUM** | High | `server/utils/chats/index.js` → Smart Plugins system |
+| 2. **Deterministic Math Engine** | ✅ COMPLETE | **MEDIUM** | High | `server/utils/AncPricingEngine.js` (Production Core) |
 | 3. **Branded PDF Export** | ✅ READY | **EASY** | Low | `server/utils/pdfExport.js` (already 935 lines, production-ready) |
-| 4. **Excel Audit File Export** | ❌ MISSING | **MEDIUM** | Low | New: `server/endpoints/exports.js` (need xlsx library) |
+| 4. **Excel Audit File Export** | ✅ COMPLETE | **MEDIUM** | Low | `server/utils/AncDocumentService.js` + `server/endpoints/download.js` |
 | 5. **Multimodal Vision (RFPs/Blueprints)** | ✅ READY | **EASY** | None | `server/core/ai/anthropic/index.js` (Claude, GPT-4o support) |
 | 6. **RBAC Margin-Hiding** | ⚠️ PARTIAL | **MEDIUM** | Medium | `server/utils/middleware/multiUserProtected.js` + Response filtering |
 

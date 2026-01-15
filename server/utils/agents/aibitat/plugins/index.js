@@ -11,6 +11,7 @@ const { productExtraction } = require("./product-extraction.js");
 const { apiTester } = require("./api-tester.js");
 const { browserQA } = require("./browser-qa.js");
 const { crmManager } = require("./crm-manager.js");
+const { ancPricing } = require("./anc-pricing.js");
 
 module.exports = {
   webScraping,
@@ -26,6 +27,7 @@ module.exports = {
   apiTester,
   browserQA,
   crmManager,
+  ancPricing,
 
   // Plugin name aliases so they can be pulled by slug as well.
   [webScraping.name]: webScraping,
@@ -41,5 +43,6 @@ module.exports = {
   [apiTester.name]: apiTester,
   [browserQA.name]: browserQA,
   [crmManager.name]: crmManager,
+  [ancPricing.name]: ancPricing,
 };
 
