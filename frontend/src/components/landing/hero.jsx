@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import { ArrowRight, ShieldCheck, Zap, Laptop, Brain, Users, Globe, Layout } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,7 +25,7 @@ export function Hero() {
                         transition={{ duration: 0.8 }}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md"
                     >
-                        <ShieldCheck className="size-4 text-primary" />
+                        <ShieldCheck className="size-4 text-white" />
                         <span className="text-[10px] uppercase font-bold tracking-widest text-white/70">Fully Customizable White-Label AI v1.9.1</span>
                     </motion.div>
 
@@ -54,12 +55,16 @@ export function Hero() {
                         transition={{ duration: 0.8, delay: 0.6 }}
                         className="flex flex-col sm:flex-row items-center gap-6"
                     >
-                        <Button size="lg" className="h-16 px-12 rounded-lg bg-white text-black hover:bg-zinc-200 font-bold uppercase tracking-widest text-[11px] group">
-                            Start Your Workspace <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                        <Button size="lg" variant="outline" className="h-16 px-12 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 font-bold uppercase tracking-widest text-[11px]">
-                            View Enterprise Demo
-                        </Button>
+                        <Link to="/register">
+                            <Button size="lg" className="h-16 px-12 rounded-lg bg-white text-black hover:bg-zinc-200 font-bold uppercase tracking-widest text-[11px] group">
+                                Start Your Workspace <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
+                            </Button>
+                        </Link>
+                        <a href="#pricing">
+                            <Button size="lg" variant="outline" className="h-16 px-12 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 font-bold uppercase tracking-widest text-[11px]">
+                                View Enterprise Demo
+                            </Button>
+                        </a>
                     </motion.div>
 
                     <motion.div

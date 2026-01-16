@@ -57,12 +57,16 @@ export function Navigation() {
                 </nav>
 
                 <div className="hidden lg:flex items-center gap-4">
-                    <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest opacity-60 hover:opacity-100">
-                        Sign In
-                    </Button>
-                    <Button className="h-11 px-6 rounded-none bg-white text-black hover:bg-zinc-200 font-bold uppercase tracking-widest text-[10px]">
-                        Deploy Now <ArrowRight className="ml-2 size-3" />
-                    </Button>
+                    <Link to="/login">
+                        <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-white/70 hover:text-white hover:bg-white/5">
+                            Sign In
+                        </Button>
+                    </Link>
+                    <Link to="/register">
+                        <Button className="h-11 px-6 rounded-none bg-white text-black hover:bg-zinc-200 font-bold uppercase tracking-widest text-[10px]">
+                            Deploy Now <ArrowRight className="ml-2 size-3" />
+                        </Button>
+                    </Link>
                 </div>
 
                 <button
@@ -95,9 +99,11 @@ export function Navigation() {
                             {item.name}
                         </a>
                     ))}
-                    <Button className="w-full bg-white text-black font-black uppercase tracking-widest text-xs h-12">
-                        Get Started
-                    </Button>
+                    <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+                        <Button className="w-full bg-white text-black font-black uppercase tracking-widest text-xs h-12">
+                            Get Started
+                        </Button>
+                    </Link>
                 </motion.div>
             )}
         </motion.header>

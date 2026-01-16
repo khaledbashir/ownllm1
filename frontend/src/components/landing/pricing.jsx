@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Check, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -95,12 +96,14 @@ export function Pricing() {
                                     ))}
                                 </div>
 
-                                <Button className={`w-full h-14 rounded-lg font-bold uppercase tracking-widest text-[10px] group ${plan.featured
-                                    ? "bg-black text-white hover:bg-zinc-800"
-                                    : "bg-white text-black hover:bg-zinc-200"
-                                    }`}>
-                                    {plan.button} <ArrowRight className="ml-2 size-3 group-hover:translate-x-1 transition-transform" />
-                                </Button>
+                                <Link to="/register">
+                                    <Button className={`w-full h-14 rounded-lg font-bold uppercase tracking-widest text-[10px] group ${plan.featured
+                                        ? "bg-black text-white hover:bg-zinc-800"
+                                        : "bg-white text-black hover:bg-zinc-200"
+                                        }`}>
+                                        {plan.button} <ArrowRight className="ml-2 size-3 group-hover:translate-x-1 transition-transform" />
+                                    </Button>
+                                </Link>
                             </div>
                         </motion.div>
                     ))}

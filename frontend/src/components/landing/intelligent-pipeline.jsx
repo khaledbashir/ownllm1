@@ -74,7 +74,7 @@ export function IntelligentPipeline() {
                             </p>
 
                             <div className="flex items-center gap-3 bg-white/5 p-4 rounded-lg border border-white/10">
-                                <ShieldCheck className="size-4 text-primary shrink-0" />
+                                <ShieldCheck className="size-4 text-cyan-400 shrink-0" />
                                 <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 leading-tight">
                                     Audit Verified: {feature.auditDetail}
                                 </span>

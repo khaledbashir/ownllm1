@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 import { Brain, Twitter, Github, Linkedin } from "lucide-react"
 
 export function Footer() {
@@ -19,15 +20,30 @@ export function Footer() {
                     {[
                         {
                             title: "Product",
-                            links: ["Features", "Security", "Roadmap", "Pricing"]
+                            links: [
+                                { name: "Features", href: "/#vprop" },
+                                { name: "Security", href: "/#editor" },
+                                { name: "Roadmap", href: "/" },
+                                { name: "Pricing", href: "/#pricing" }
+                            ]
                         },
                         {
                             title: "Company",
-                            links: ["About", "Blog", "Careers", "Contact"]
+                            links: [
+                                { name: "About", href: "/" },
+                                { name: "Blog", href: "/" },
+                                { name: "Careers", href: "/" },
+                                { name: "Contact", href: "/" }
+                            ]
                         },
                         {
                             title: "Legal",
-                            links: ["Privacy", "Terms", "Cookie Policy", "SLA"]
+                            links: [
+                                { name: "Privacy", href: "/" },
+                                { name: "Terms", href: "/" },
+                                { name: "Cookie Policy", href: "/" },
+                                { name: "SLA", href: "/" }
+                            ]
                         }
                     ].map((group, i) => (
                         <div key={i}>
@@ -36,15 +52,15 @@ export function Footer() {
                             </h4>
                             <ul className="space-y-4">
                                 {group.links.map((link) => (
-                                    <li key={link}>
-                                        <a href="#" className="text-sm text-zinc-400 hover:text-white transition-colors">
-                                            {link}
+                                    <li key={link.name}>
+                                        <a href={link.href} className="text-sm text-zinc-400 hover:text-white transition-colors">
+                                            {link.name}
                                         </a>
                                     </li>
                                 ))}
                             </ul>
                         </div>
-                    ))}
+                    ))
                 </div>
 
                 <div className="flex flex-col md:flex-row items-center justify-between border-t border-white/5 pt-12 gap-8">
