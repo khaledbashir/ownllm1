@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, FileText, X } from '@phosphor-icons/react';
+import { CaretLeft, Download, FileText, X } from '@phosphor-icons/react';
 import { toast } from 'react-toastify';
 
 export const ProposalPreviewSlider = ({
@@ -67,7 +67,7 @@ export const ProposalPreviewSlider = ({
             className="absolute -left-10 top-4 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-l-lg transition-colors"
             title="Open proposal preview"
           >
-            <ChevronLeft size={20} weight="bold" />
+            <CaretLeft size={20} weight="bold" />
           </button>
         )}
 
