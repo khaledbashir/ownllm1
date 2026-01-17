@@ -6,6 +6,7 @@ import {
   ArrowsClockwise,
   Copy,
   NotePencil,
+  FileArrowDown,
 } from "@phosphor-icons/react";
 import Workspace from "@/models/workspace";
 import { EditMessageAction } from "./EditMessage";
@@ -63,6 +64,9 @@ const Actions = ({
             />
           )}
           {role !== "user" && !isEditing && <SaveToNotes message={message} />}
+          {role !== "user" && !isEditing && (
+            <DownloadExcel message={message} slug={slug} />
+          )}
           <ActionMenu
             chatId={chatId}
             forkThread={forkThread}
@@ -179,6 +183,81 @@ function SaveToNotes({ message }) {
         aria-label="Save to Notes"
       >
         <NotePencil color="currentColor" size={20} className="mb-1" />
+      </button>
+    </div>
+  );
+}
+
+function DownloadExcel({ message, slug }) {
+  const { t } = useTranslation();
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadExcel = async () => {
+    try {
+      setIsDownloading(true);
+
+      // Extract quote data from message if it contains JSON
+      // Try to parse message as JSON to get quote data
+      let quoteData = {};
+      try {
+        // Try to find JSON in the message text
+        const jsonMatch = message.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          quoteData = JSON.parse(jsonMatch[0]);
+        }
+      } catch (e) {
+        // If no JSON found, create minimal quote data from message
+        quoteData = {
+          clientName: "Client",
+          screenWidth: 0,
+          screenHeight: 0,
+          screenArea: 0,
+          productType: "Display",
+          basePricePerSqFt: 0,
+          desiredMargin: 0.30,
+          totalCost: 0,
+          finalPrice: 0,
+          grossProfit: 0,
+        };
+      }
+
+      if (!slug) {
+        alert("Workspace slug not available");
+        return;
+      }
+
+      const result = await Workspace.downloadAuditExcel(slug, quoteData);
+
+      if (!result.success) {
+        alert("Failed to download Excel: " + result.message);
+      }
+      // Success message handled by browser download
+    } catch (error) {
+      console.error("Error downloading Excel:", error);
+      alert("Error downloading Excel file");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 relative">
+      <button
+        onClick={handleDownloadExcel}
+        disabled={isDownloading}
+        data-tooltip-id="download-excel"
+        data-tooltip-content="Download Excel Audit"
+        className={`text-zinc-300 ${
+          isDownloading ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        aria-label="Download Excel Audit"
+      >
+        <FileArrowDown
+          color="var(--theme-sidebar-footer-icon-fill)"
+          size={20}
+          className="mb-1"
+          weight={isDownloading ? "fill" : "regular"}
+        />
       </button>
     </div>
   );
