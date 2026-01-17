@@ -39,7 +39,7 @@ model api_keys {
 
 model workspace_documents {
   id                   Int                   @id @default(autoincrement())
-  docId                String                @unique
+  docId                String
   filename             String
   docpath              String
   workspaceId          Int
@@ -53,6 +53,7 @@ model workspace_documents {
   organization         organizations?        @relation(fields: [organizationId], references: [id])
   workspace            workspaces            @relation(fields: [workspaceId], references: [id])
 
+  @@unique([docId, workspaceId])
   @@index([organizationId])
 }
 
