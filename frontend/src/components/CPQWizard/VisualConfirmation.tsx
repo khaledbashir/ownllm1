@@ -1,6 +1,7 @@
 import { CPQInput } from "@/utils/cpqCalculator";
 import { Send, FileDown } from "lucide-react";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import Workspace from "@/models/workspace";
 import { calculateCPQ } from "@/utils/cpqCalculator";
 
@@ -15,6 +16,7 @@ export default function VisualConfirmation({
   onConfirm,
   onRegenerate,
 }: VisualConfirmationProps) {
+  const { slug = "anc" } = useParams<{ slug: string }>();
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownloadExcel = async () => {
@@ -79,10 +81,8 @@ export default function VisualConfirmation({
         powerAmps: calculation.powerAmps,
       };
 
-      // For now, use a default workspace slug - in production, this would come from context
-      const workspaceSlug = "anc"; // Default workspace for ANC
-
-      const result = await Workspace.downloadAuditExcel(workspaceSlug, quoteData);
+      // Use the workspace slug from the URL route
+      const result = await Workspace.downloadAuditExcel(slug, quoteData);
 
       if (!result.success) {
         console.error("Failed to download Excel:", result.message);

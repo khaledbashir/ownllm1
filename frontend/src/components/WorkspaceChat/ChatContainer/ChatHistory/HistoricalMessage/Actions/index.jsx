@@ -197,28 +197,34 @@ function DownloadExcel({ message, slug }) {
       setIsDownloading(true);
 
       // Extract quote data from message if it contains JSON
-      // Try to parse message as JSON to get quote data
-      let quoteData = {};
+      let quoteData = null;
       try {
         // Try to find JSON in the message text
         const jsonMatch = message.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          quoteData = JSON.parse(jsonMatch[0]);
+          const parsed = JSON.parse(jsonMatch[0]);
+          // Verify essential fields exist with valid values
+          if (parsed.totalCost && parsed.totalCost > 0 && 
+              parsed.screenWidth && parsed.screenWidth > 0 &&
+              parsed.screenHeight && parsed.screenHeight > 0) {
+            quoteData = parsed;
+          }
         }
       } catch (e) {
-        // If no JSON found, create minimal quote data from message
-        quoteData = {
-          clientName: "Client",
-          screenWidth: 0,
-          screenHeight: 0,
-          screenArea: 0,
-          productType: "Display",
-          basePricePerSqFt: 0,
-          desiredMargin: 0.30,
-          totalCost: 0,
-          finalPrice: 0,
-          grossProfit: 0,
-        };
+        console.warn("Could not extract quote data from message:", e.message);
+      }
+
+      // If we couldn't get valid quote data from message, show helpful error
+      if (!quoteData) {
+        alert(
+          "Unable to extract quote pricing data from this message. " +
+          "The quote data may not have been fully calculated. " +
+          "Please try:\n\n" +
+          "1. Using the CPQ Wizard 'Generate Proposal' button\n" +
+          "2. Regenerating the quote in chat\n" +
+          "3. Checking that all pricing calculations are complete"
+        );
+        return;
       }
 
       if (!slug) {
@@ -234,7 +240,7 @@ function DownloadExcel({ message, slug }) {
       // Success message handled by browser download
     } catch (error) {
       console.error("Error downloading Excel:", error);
-      alert("Error downloading Excel file");
+      alert("Error downloading Excel file: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsDownloading(false);
     }
