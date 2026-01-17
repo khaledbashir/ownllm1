@@ -953,17 +953,15 @@ export default function ChatContainer({
         </div>
       )}
 
-      {/* ANC Proposal Preview Slider - Only show in ANC workspaces */}
-      {isANCWorkspace && (
-        <ProposalPreviewSlider
-          quoteData={quoteData}
-          isOpen={previewSliderOpen}
-          onToggle={() => setPreviewSliderOpen(!previewSliderOpen)}
-          onGenerateExcel={handleGenerateExcel}
-          onDownloadPdf={handleDownloadPdf}
-          isGenerating={generatingProposal}
-        />
-      )}
+      {/* ANC Proposal Preview Slider - Show for testing */}
+      <ProposalPreviewSlider
+        quoteData={quoteData}
+        isOpen={previewSliderOpen}
+        onToggle={() => setPreviewSliderOpen(!previewSliderOpen)}
+        onGenerateExcel={handleGenerateExcel}
+        onDownloadPdf={handleDownloadPdf}
+        isGenerating={generatingProposal}
+      />
     </div>
   );
 }
