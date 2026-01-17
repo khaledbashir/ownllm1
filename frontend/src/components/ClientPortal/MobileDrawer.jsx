@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   Menu,
@@ -6,8 +6,8 @@ import {
   MessageSquare,
   Clock,
   ChevronRight,
-  ChevronDown
-} from 'lucide-react';
+  ChevronDown,
+} from "lucide-react";
 
 /**
  * MobileDrawer Component
@@ -24,7 +24,7 @@ const MobileDrawer = ({
   onClose,
   contents = [],
   recentActivity = [],
-  onSectionClick
+  onSectionClick,
 }) => {
   const [expandedSection, setExpandedSection] = useState(null);
   const drawerRef = useRef(null);
@@ -54,25 +54,25 @@ const MobileDrawer = ({
   // Close on escape key
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -116,7 +116,7 @@ const MobileDrawer = ({
           bg-white dark:bg-gray-800 z-50
           transform transition-transform duration-300 ease-in-out
           flex flex-col md:hidden
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
         {/* Header */}
@@ -218,13 +218,14 @@ const MobileDrawer = ({
                     <div
                       className={`
                         p-1.5 rounded-lg flex-shrink-0
-                        ${activity.type === 'comment'
-                          ? 'bg-blue-100 dark:bg-blue-900/30'
-                          : 'bg-green-100 dark:bg-green-900/30'
+                        ${
+                          activity.type === "comment"
+                            ? "bg-blue-100 dark:bg-blue-900/30"
+                            : "bg-green-100 dark:bg-green-900/30"
                         }
                       `}
                     >
-                      {activity.type === 'comment' ? (
+                      {activity.type === "comment" ? (
                         <MessageSquare className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                       ) : (
                         <Clock className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />

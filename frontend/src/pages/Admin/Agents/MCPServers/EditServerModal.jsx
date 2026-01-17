@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { X, PlusCircle, Check, Warning, Info, FloppyDisk } from "@phosphor-icons/react";
+import {
+  X,
+  PlusCircle,
+  Check,
+  Warning,
+  Info,
+  FloppyDisk,
+} from "@phosphor-icons/react";
 import MCPServers from "@/models/mcpServers";
 import showToast from "@/utils/toast";
 import { titleCase } from "text-case";
@@ -37,10 +44,11 @@ export default function EditServerModal({ server, onClose, onEdit }) {
         env: Object.entries(server.env || {}).map(([key, value]) => ({
           key,
           value,
-          isSecret: key.toLowerCase().includes("key") ||
-                    key.toLowerCase().includes("secret") ||
-                    key.toLowerCase().includes("token") ||
-                    key.toLowerCase().includes("password"),
+          isSecret:
+            key.toLowerCase().includes("key") ||
+            key.toLowerCase().includes("secret") ||
+            key.toLowerCase().includes("token") ||
+            key.toLowerCase().includes("password"),
         })),
         autoStart: server.autoStart !== false,
       });
@@ -134,7 +142,9 @@ export default function EditServerModal({ server, onClose, onEdit }) {
       onEdit();
       onClose();
     } else {
-      showToast(error || "Failed to update MCP server", "error", { clear: true });
+      showToast(error || "Failed to update MCP server", "error", {
+        clear: true,
+      });
     }
   };
 
@@ -177,12 +187,15 @@ export default function EditServerModal({ server, onClose, onEdit }) {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               placeholder="my-custom-mcp"
               className="w-full bg-theme-bg-primary border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-theme-text-secondary focus:outline-none focus:border-cta-button focus:ring-1 focus:ring-cta-button transition-all"
             />
             <p className="text-xs text-theme-text-secondary mt-1">
-              Unique identifier for this server (letters, numbers, hyphens, underscores only)
+              Unique identifier for this server (letters, numbers, hyphens,
+              underscores only)
             </p>
           </div>
 
@@ -196,7 +209,9 @@ export default function EditServerModal({ server, onClose, onEdit }) {
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setFormData({ ...formData, connectionType: type })}
+                  onClick={() =>
+                    setFormData({ ...formData, connectionType: type })
+                  }
                   className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
                     formData.connectionType === type
                       ? "border-cta-button bg-cta-button/10 text-cta-button"
@@ -208,9 +223,11 @@ export default function EditServerModal({ server, onClose, onEdit }) {
               ))}
             </div>
             <p className="text-xs text-theme-text-secondary mt-1">
-              {formData.connectionType === "stdio" && "Command-line based (recommended for most MCP servers)"}
+              {formData.connectionType === "stdio" &&
+                "Command-line based (recommended for most MCP servers)"}
               {formData.connectionType === "http" && "REST API endpoint"}
-              {formData.connectionType === "sse" && "Server-Sent Events (real-time streaming)"}
+              {formData.connectionType === "sse" &&
+                "Server-Sent Events (real-time streaming)"}
             </p>
           </div>
 
@@ -222,18 +239,24 @@ export default function EditServerModal({ server, onClose, onEdit }) {
             <input
               type="text"
               value={formData.command}
-              onChange={(e) => setFormData({ ...formData, command: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, command: e.target.value })
+              }
               placeholder="npx"
               className="w-full bg-theme-bg-primary border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-theme-text-secondary focus:outline-none focus:border-cta-button focus:ring-1 focus:ring-cta-button transition-all font-mono"
             />
             <p className="text-xs text-theme-text-secondary mt-1">
-              The command to execute (e.g., <code className="bg-white/10 px-1.5 py-0.5 rounded">npx</code>, <code className="bg-white/10 px-1.5 py-0.5 rounded">node</code>)
+              The command to execute (e.g.,{" "}
+              <code className="bg-white/10 px-1.5 py-0.5 rounded">npx</code>,{" "}
+              <code className="bg-white/10 px-1.5 py-0.5 rounded">node</code>)
             </p>
           </div>
 
           {/* Arguments */}
           <div>
-            <label className="block text-sm font-medium text-white mb-2">Arguments</label>
+            <label className="block text-sm font-medium text-white mb-2">
+              Arguments
+            </label>
             {formData.args.map((arg, index) => (
               <div key={index} className="flex gap-2 mb-2">
                 <input
@@ -250,7 +273,9 @@ export default function EditServerModal({ server, onClose, onEdit }) {
                 {index === formData.args.length - 1 && (
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, args: [...formData.args, "" ] })}
+                    onClick={() =>
+                      setFormData({ ...formData, args: [...formData.args, ""] })
+                    }
                     className="p-3 rounded-lg border-2 border-dashed border-white/30 text-theme-text-secondary hover:border-cta-button hover:text-cta-button transition-all"
                   >
                     <PlusCircle className="w-5 h-5" />
@@ -382,23 +407,24 @@ export default function EditServerModal({ server, onClose, onEdit }) {
             </div>
           )}
 
-          {validationResult.warnings && validationResult.warnings.length > 0 && (
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-              <div className="flex items-start gap-2">
-                <Info className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-yellow-500 mb-1">Warnings:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    {validationResult.warnings.map((warning, index) => (
-                      <li key={index} className="text-sm text-yellow-500">
-                        {warning}
-                      </li>
-                    ))}
-                  </ul>
+          {validationResult.warnings &&
+            validationResult.warnings.length > 0 && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <Info className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-yellow-500 mb-1">Warnings:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {validationResult.warnings.map((warning, index) => (
+                        <li key={index} className="text-sm text-yellow-500">
+                          {warning}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {validationResult.valid && (
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">

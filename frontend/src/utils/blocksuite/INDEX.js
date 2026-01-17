@@ -1,6 +1,6 @@
 /**
  * INDEX: Database Auto-Math Implementation Package
- * 
+ *
  * Complete reference for the auto-calculation system for affine:database blocks.
  * Start here, then navigate to the files you need.
  */
@@ -10,7 +10,7 @@ const INDEX = {
   version: "1.0.0",
   status: "✅ Production Ready",
   created: "2025-12-22",
-  
+
   purpose: `
     Automatically calculates totals (Hours × Rate = Total) for affine:database blocks
     without creating infinite loops or breaking collaborative features.
@@ -227,7 +227,7 @@ const INDEX = {
   // =========================================================================
 
   location: "/root/ownllm/frontend/src/utils/blocksuite/",
-  
+
   allFiles: [
     "README.md",
     "DELIVERY_SUMMARY.md",
@@ -244,8 +244,10 @@ const INDEX = {
   // =========================================================================
 
   support: {
-    "Auto-calc not working?": "→ Check ARCHITECTURE.js 'Troubleshooting' section",
-    "Want to customize column names?": "→ See IMPLEMENTATION_EXAMPLES.js Example 2",
+    "Auto-calc not working?":
+      "→ Check ARCHITECTURE.js 'Troubleshooting' section",
+    "Want to customize column names?":
+      "→ See IMPLEMENTATION_EXAMPLES.js Example 2",
     "How do I debug?": "→ See IMPLEMENTATION_EXAMPLES.js Example 4",
     "Need exact code to copy?": "→ See IMPLEMENTATION_EXAMPLES.js",
     "Want to understand the design?": "→ See ARCHITECTURE.js",
@@ -272,16 +274,13 @@ const INDEX = {
 
   structure: {
     "Core Logic": "databaseAutoMath.ts",
-    "Tests": "databaseAutoMath.test.ts",
+    Tests: "databaseAutoMath.test.ts",
     "How-To Guides": [
       "README.md",
       "INTEGRATION_GUIDE.md",
       "IMPLEMENTATION_EXAMPLES.js",
     ],
-    "Technical Docs": [
-      "ARCHITECTURE.js",
-      "DELIVERY_SUMMARY.md",
-    ],
+    "Technical Docs": ["ARCHITECTURE.js", "DELIVERY_SUMMARY.md"],
     "This File": "INDEX.js",
   },
 
@@ -320,26 +319,26 @@ const INDEX = {
  * =========================================================================
  * HOW TO USE THIS INDEX
  * =========================================================================
- * 
+ *
  * This file serves as a roadmap to the entire auto-math implementation.
- * 
+ *
  * If you're new to this project:
  *   1. Read this entire INDEX.js (you're doing it!)
  *   2. Go to README.md for quick start
  *   3. Use INTEGRATION_GUIDE.md to add to your code
- * 
+ *
  * If you're debugging:
  *   1. Check TROUBLESHOOTING in ARCHITECTURE.js
  *   2. Look at IMPLEMENTATION_EXAMPLES.js Example 4 (Debugging)
- * 
+ *
  * If you're customizing:
  *   1. See IMPLEMENTATION_EXAMPLES.js Example 2 (Custom Config)
  *   2. Or read ARCHITECTURE.js (Configuration section)
- * 
+ *
  * If you're deploying:
  *   1. Check the deployment checklist in DELIVERY_SUMMARY.md
  *   2. Run testDatabaseAutoMath() to verify
- * 
+ *
  */
 
 module.exports = INDEX;

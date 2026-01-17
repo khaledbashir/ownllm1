@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Clock,
   GitCommit,
@@ -11,12 +11,12 @@ import {
   ChevronDown,
   ChevronRight,
   Diff,
-  AlertTriangle
-} from 'lucide-react';
+  AlertTriangle,
+} from "lucide-react";
 
 /**
  * VersionTimeline Component
- * 
+ *
  * Displays version history with:
  * - Vertical timeline layout
  * - Current version highlight
@@ -32,7 +32,7 @@ const VersionTimeline = ({
   onRevert,
   onAddNote,
   currentUser,
-  canRevert = true
+  canRevert = true,
 }) => {
   const [expandedVersion, setExpandedVersion] = useState(currentVersionId);
   const [showDiffModal, setShowDiffModal] = useState(false);
@@ -42,12 +42,12 @@ const VersionTimeline = ({
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -59,7 +59,7 @@ const VersionTimeline = ({
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
+    if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
@@ -67,8 +67,8 @@ const VersionTimeline = ({
   };
 
   const getVersionLabel = (version, index, total) => {
-    if (version.id === currentVersionId) return 'Current';
-    if (index === 0) return 'Latest';
+    if (version.id === currentVersionId) return "Current";
+    if (index === 0) return "Latest";
     return `v${total - index}`;
   };
 
@@ -77,7 +77,7 @@ const VersionTimeline = ({
     if (prevVersion) {
       setSelectedDiff({
         current: version,
-        previous: prevVersion
+        previous: prevVersion,
       });
       setShowDiffModal(true);
     }
@@ -97,9 +97,21 @@ const VersionTimeline = ({
   };
 
   const getVersionType = (version) => {
-    if (version.isMajor) return { label: 'MAJOR', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
-    if (version.isMinor) return { label: 'MINOR', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' };
-    return { label: 'PATCH', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
+    if (version.isMajor)
+      return {
+        label: "MAJOR",
+        color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+      };
+    if (version.isMinor)
+      return {
+        label: "MINOR",
+        color:
+          "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+      };
+    return {
+      label: "PATCH",
+      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    };
   };
 
   const DiffModal = () => {
@@ -136,7 +148,9 @@ const VersionTimeline = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-red-600 dark:text-red-400">Before</span>
+                    <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                      Before
+                    </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       {formatDate(selectedDiff.previous.createdAt)}
                     </span>
@@ -147,7 +161,10 @@ const VersionTimeline = ({
                     Changes Removed:
                   </div>
                   {selectedDiff.previous.changes?.map((change, idx) => (
-                    <div key={idx} className="text-sm text-gray-700 dark:text-gray-300 py-1 line-through opacity-70">
+                    <div
+                      key={idx}
+                      className="text-sm text-gray-700 dark:text-gray-300 py-1 line-through opacity-70"
+                    >
                       {change}
                     </div>
                   ))}
@@ -158,7 +175,9 @@ const VersionTimeline = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">After</span>
+                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                      After
+                    </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       {formatDate(selectedDiff.current.createdAt)}
                     </span>
@@ -169,7 +188,10 @@ const VersionTimeline = ({
                     Changes Added:
                   </div>
                   {selectedDiff.current.changes?.map((change, idx) => (
-                    <div key={idx} className="text-sm text-gray-700 dark:text-gray-300 py-1">
+                    <div
+                      key={idx}
+                      className="text-sm text-gray-700 dark:text-gray-300 py-1"
+                    >
                       {change}
                     </div>
                   ))}
@@ -253,15 +275,19 @@ const VersionTimeline = ({
               <div
                 key={version.id}
                 className={`relative pl-16 ${
-                  isCurrent ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 rounded-xl -mx-2 px-2 py-2' : ''
+                  isCurrent
+                    ? "ring-2 ring-purple-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 rounded-xl -mx-2 px-2 py-2"
+                    : ""
                 }`}
               >
                 {/* Version Indicator */}
-                <div className={`absolute left-6 top-4 w-5 h-5 rounded-full flex items-center justify-center ${
-                  isCurrent
-                    ? 'bg-purple-600 dark:bg-purple-500 text-white scale-110'
-                    : 'bg-white dark:bg-gray-800 border-2 border-purple-400 dark:border-purple-500'
-                }`}>
+                <div
+                  className={`absolute left-6 top-4 w-5 h-5 rounded-full flex items-center justify-center ${
+                    isCurrent
+                      ? "bg-purple-600 dark:bg-purple-500 text-white scale-110"
+                      : "bg-white dark:bg-gray-800 border-2 border-purple-400 dark:border-purple-500"
+                  }`}
+                >
                   {isCurrent ? (
                     <CheckCircle className="w-3 h-3" />
                   ) : (
@@ -270,17 +296,21 @@ const VersionTimeline = ({
                 </div>
 
                 {/* Version Card */}
-                <div className={`bg-white dark:bg-gray-800 rounded-lg border ${
-                  isCurrent
-                    ? 'border-purple-500 shadow-lg shadow-purple-500/10'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 transition-colors'
-                }`}>
+                <div
+                  className={`bg-white dark:bg-gray-800 rounded-lg border ${
+                    isCurrent
+                      ? "border-purple-500 shadow-lg shadow-purple-500/10"
+                      : "border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 transition-colors"
+                  }`}
+                >
                   {/* Version Header */}
                   <div className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => setExpandedVersion(isExpanded ? null : version.id)}
+                          onClick={() =>
+                            setExpandedVersion(isExpanded ? null : version.id)
+                          }
                           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                         >
                           {isExpanded ? (
@@ -292,7 +322,9 @@ const VersionTimeline = ({
 
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded ${versionType.color}`}>
+                            <span
+                              className={`text-xs font-bold px-2 py-0.5 rounded ${versionType.color}`}
+                            >
                               {versionType.label}
                             </span>
                             {isCurrent && (
@@ -307,7 +339,8 @@ const VersionTimeline = ({
                             )}
                           </div>
                           <div className="text-sm font-semibold text-gray-900 dark:text-white mt-1">
-                            {version.title || `Version ${versions.length - index}`}
+                            {version.title ||
+                              `Version ${versions.length - index}`}
                           </div>
                         </div>
                       </div>
@@ -345,8 +378,13 @@ const VersionTimeline = ({
                             </div>
                             <ul className="space-y-1">
                               {version.changes.map((change, idx) => (
-                                <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                                  <span className="text-purple-500 dark:text-purple-400 mt-0.5">•</span>
+                                <li
+                                  key={idx}
+                                  className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2"
+                                >
+                                  <span className="text-purple-500 dark:text-purple-400 mt-0.5">
+                                    •
+                                  </span>
                                   {change}
                                 </li>
                               ))}
@@ -429,7 +467,7 @@ const VersionTimeline = ({
               </div>
 
               <p className="text-gray-700 dark:text-gray-300 mb-6">
-                Are you sure you want to revert to version{' '}
+                Are you sure you want to revert to version{" "}
                 <span className="font-semibold text-gray-900 dark:text-white">
                   {versionToRevert?.title || versionToRevert?.id}
                 </span>

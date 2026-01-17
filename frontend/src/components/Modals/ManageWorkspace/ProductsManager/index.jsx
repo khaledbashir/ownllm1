@@ -154,7 +154,7 @@ export default function ProductsManager({ workspace }) {
             onChange={(e) => {
               const value = e.target.value;
               // Detect if it's a URL or search query
-              if (value.startsWith('http://') || value.startsWith('https://')) {
+              if (value.startsWith("http://") || value.startsWith("https://")) {
                 setImportUrl(value);
                 setSearchQuery("");
               } else {
@@ -178,7 +178,8 @@ export default function ProductsManager({ workspace }) {
           </button>
         </div>
         <p className="text-white/40 text-xs mt-2">
-          Enter a direct URL, or type a search query like "ANC Sports Pricing" to find their page.
+          Enter a direct URL, or type a search query like "ANC Sports Pricing"
+          to find their page.
         </p>
       </div>
 

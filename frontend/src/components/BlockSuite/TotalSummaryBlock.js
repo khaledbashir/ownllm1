@@ -1,5 +1,5 @@
-import { LitElement, html, css } from 'lit';
-import { BlockService } from '@blocksuite/blocks';
+import { LitElement, html, css } from "lit";
+import { BlockService } from "@blocksuite/blocks";
 
 export class TotalSummaryBlockService extends BlockService {
   mounted() {
@@ -28,18 +28,22 @@ export class TotalSummaryBlock extends LitElement {
   `;
 
   calculateTotal() {
-    const previousBlock = this.model.doc.getBlock(this.model.id)?.previousSibling;
-    if (!previousBlock || previousBlock.flavour !== 'affine:database') return 0;
+    const previousBlock = this.model.doc.getBlock(
+      this.model.id
+    )?.previousSibling;
+    if (!previousBlock || previousBlock.flavour !== "affine:database") return 0;
 
     let grandTotal = 0;
-    const totalCol = previousBlock.model.columns.find(c => c.name.toLowerCase().includes('total'));
+    const totalCol = previousBlock.model.columns.find((c) =>
+      c.name.toLowerCase().includes("total")
+    );
     if (!totalCol) return 0;
 
     // Iterate rows
-    previousBlock.children.forEach(row => {
+    previousBlock.children.forEach((row) => {
       const cell = previousBlock.model.cells[row.id]?.[totalCol.id];
       if (cell && cell.value) {
-        const val = parseFloat(cell.value.replace(/[^0-9.]/g, ''));
+        const val = parseFloat(cell.value.replace(/[^0-9.]/g, ""));
         if (!isNaN(val)) grandTotal += val;
       }
     });
@@ -49,8 +53,13 @@ export class TotalSummaryBlock extends LitElement {
   render() {
     const total = this.calculateTotal();
     // Format as Currency
-    const formatter = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
-    return html`<div class="summary-container">TOTAL INVESTMENT: ${formatter.format(total)}</div>`;
+    const formatter = new Intl.NumberFormat("en-AU", {
+      style: "currency",
+      currency: "AUD",
+    });
+    return html`<div class="summary-container">
+      TOTAL INVESTMENT: ${formatter.format(total)}
+    </div>`;
   }
 }
 // Note: Register this block in your Editor Specs (BlockSpecs)

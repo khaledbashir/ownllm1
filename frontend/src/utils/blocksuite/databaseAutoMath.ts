@@ -10,11 +10,11 @@
  *   unsubscribe(); // Stop listening
  */
 
-import type { Doc } from '@blocksuite/store';
+import type { Doc } from "@blocksuite/store";
 
 /**
  * Main setup function - call this when initializing a document
- * 
+ *
  * @param doc - The BlockSuite Doc
  * @returns Unsubscribe function to stop listening
  */
@@ -30,12 +30,12 @@ export function setupDatabaseAutoMath(doc: Doc) {
    * Process a database block and set up auto-calculation
    */
   function processDatabaseBlock(databaseBlock: any) {
-    if (!databaseBlock || databaseBlock.flavour !== 'affine:database') {
+    if (!databaseBlock || databaseBlock.flavour !== "affine:database") {
       return null;
     }
 
     const blockId = databaseBlock.id;
-    
+
     // Skip if already processed
     if (processedBlocks.has(blockId)) {
       return null;
@@ -46,40 +46,48 @@ export function setupDatabaseAutoMath(doc: Doc) {
     if (!model) return null;
 
     const columns = Array.isArray(model.columns) ? model.columns : [];
-    const children = Array.isArray(databaseBlock.children) ? databaseBlock.children : [];
+    const children = Array.isArray(databaseBlock.children)
+      ? databaseBlock.children
+      : [];
 
     // Find Hours, Rate, and Total columns
-    const hoursCol = columns.find((c: any) =>
-      c.name?.toLowerCase().includes('hour') ||
-      c.name?.toLowerCase().includes('qty') ||
-      c.name?.toLowerCase().includes('quantity')
+    const hoursCol = columns.find(
+      (c: any) =>
+        c.name?.toLowerCase().includes("hour") ||
+        c.name?.toLowerCase().includes("qty") ||
+        c.name?.toLowerCase().includes("quantity")
     );
-    const rateCol = columns.find((c: any) =>
-      c.name?.toLowerCase().includes('rate') ||
-      c.name?.toLowerCase().includes('price') ||
-      c.name?.toLowerCase().includes('cost')
+    const rateCol = columns.find(
+      (c: any) =>
+        c.name?.toLowerCase().includes("rate") ||
+        c.name?.toLowerCase().includes("price") ||
+        c.name?.toLowerCase().includes("cost")
     );
-    const totalCol = columns.find((c: any) =>
-      c.name?.toLowerCase().includes('total') ||
-      c.name?.toLowerCase().includes('amount')
+    const totalCol = columns.find(
+      (c: any) =>
+        c.name?.toLowerCase().includes("total") ||
+        c.name?.toLowerCase().includes("amount")
     );
 
     // Only proceed if we have all required columns
     if (!hoursCol || !rateCol || !totalCol) {
-      console.log('⚠️ Database block missing required columns (Hours, Rate, Total)', {
-        blockId: databaseBlock.id,
-        columns: columns.map((c: any) => c.name),
-        hasColumns: columns.length > 0
-      });
+      console.log(
+        "⚠️ Database block missing required columns (Hours, Rate, Total)",
+        {
+          blockId: databaseBlock.id,
+          columns: columns.map((c: any) => c.name),
+          hasColumns: columns.length > 0,
+        }
+      );
       return null;
     }
 
-    console.log('✅ Auto-Math enabled for database block', {
+    console.log("✅ Auto-Math enabled for database block", {
       blockId: databaseBlock.id,
       hoursCol: hoursCol.name,
       rateCol: rateCol.name,
       totalCol: totalCol.name,
-      rowCount: children.length
+      rowCount: children.length,
     });
 
     /**
@@ -88,17 +96,20 @@ export function setupDatabaseAutoMath(doc: Doc) {
     function recalculateAllRows() {
       // Guard against infinite loops
       if (isUpdating.has(blockId)) {
-        console.log('[AutoMath] Skipping recalculation - already updating:', blockId);
+        console.log(
+          "[AutoMath] Skipping recalculation - already updating:",
+          blockId
+        );
         return;
       }
 
       try {
         isUpdating.add(blockId);
-        
+
         // Get fresh data from model
         const currentCells = model.cells || {};
         const currentChildren = databaseBlock.children || [];
-        
+
         let hasChanges = false;
         const updatedCells = { ...currentCells };
 
@@ -118,31 +129,34 @@ export function setupDatabaseAutoMath(doc: Doc) {
 
           // Only update if calculated total differs from existing total
           if (calculatedTotal !== currentTotal) {
-            console.log('🔄 Updating row total:', {
+            console.log("🔄 Updating row total:", {
               rowId,
               hours,
               rate,
               oldTotal: currentTotal,
-              newTotal: calculatedTotal
+              newTotal: calculatedTotal,
             });
 
             updatedCells[rowId] = {
               ...rowCells,
               [totalCol.id]: {
                 columnId: totalCol.id,
-                value: calculatedTotal
-              }
+                value: calculatedTotal,
+              },
             };
             hasChanges = true;
           }
         });
 
         if (hasChanges) {
-          console.log('💾 Updating database block with new totals:', databaseBlock.id);
+          console.log(
+            "💾 Updating database block with new totals:",
+            databaseBlock.id
+          );
           doc.updateBlock(model, { cells: updatedCells });
         }
       } catch (e) {
-        console.error('[AutoMath] Failed to recalculate database:', e);
+        console.error("[AutoMath] Failed to recalculate database:", e);
       } finally {
         isUpdating.delete(blockId);
       }
@@ -162,9 +176,9 @@ export function setupDatabaseAutoMath(doc: Doc) {
    */
   function initializeAllDatabaseBlocks() {
     try {
-      const databaseBlocks = doc.getBlocksByFlavour?.('affine:database') || [];
+      const databaseBlocks = doc.getBlocksByFlavour?.("affine:database") || [];
       console.log(`🔍 Found ${databaseBlocks.length} database blocks`);
-      
+
       databaseBlocks.forEach((block) => {
         const dbInfo = processDatabaseBlock(block);
         if (dbInfo) {
@@ -172,7 +186,7 @@ export function setupDatabaseAutoMath(doc: Doc) {
         }
       });
     } catch (e) {
-      console.warn('[AutoMath] Error initializing database blocks:', e);
+      console.warn("[AutoMath] Error initializing database blocks:", e);
     }
   }
 
@@ -188,25 +202,28 @@ export function setupDatabaseAutoMath(doc: Doc) {
       if (!block) return;
 
       // If this is a database block, recalculate it
-      if (block.flavour === 'affine:database') {
-        console.log('📝 Database block updated, recalculating:', blockId);
+      if (block.flavour === "affine:database") {
+        console.log("📝 Database block updated, recalculating:", blockId);
         const dbInfo = activeDatabaseBlocks.get(blockId);
         if (dbInfo) {
           dbInfo.recalculateAllRows();
         }
       }
-      
+
       // If this is a row block, find its parent database and recalculate
       const parent = doc.getParent(blockId);
-      if (parent?.flavour === 'affine:database') {
-        console.log('📝 Row updated, recalculating parent database:', parent.id);
+      if (parent?.flavour === "affine:database") {
+        console.log(
+          "📝 Row updated, recalculating parent database:",
+          parent.id
+        );
         const dbInfo = activeDatabaseBlocks.get(parent.id);
         if (dbInfo) {
           dbInfo.recalculateAllRows();
         }
       }
     } catch (e) {
-      console.error('[AutoMath] Error handling block update:', e);
+      console.error("[AutoMath] Error handling block update:", e);
     }
   };
 
@@ -215,12 +232,12 @@ export function setupDatabaseAutoMath(doc: Doc) {
 
   // Listen to block updates
   let unsubscribeBlockUpdated: { dispose: () => void } | null = null;
-  
+
   if (doc.slots?.blockUpdated) {
     unsubscribeBlockUpdated = doc.slots.blockUpdated.on(handleBlockUpdated);
-    console.log('✅ Auto-Math Service Connected - listening to block updates');
+    console.log("✅ Auto-Math Service Connected - listening to block updates");
   } else {
-    console.warn('⚠️ Could not find blockUpdated slot, auto-math may not work');
+    console.warn("⚠️ Could not find blockUpdated slot, auto-math may not work");
   }
 
   /**
@@ -233,7 +250,7 @@ export function setupDatabaseAutoMath(doc: Doc) {
     processedBlocks.clear();
     activeDatabaseBlocks.clear();
     isUpdating.clear();
-    console.log('🛑 Auto-Math Service disconnected');
+    console.log("🛑 Auto-Math Service disconnected");
   };
 
   return unsubscribe;
@@ -244,27 +261,28 @@ export function setupDatabaseAutoMath(doc: Doc) {
  */
 function parseNumber(value: any): number {
   if (value === null || value === undefined) return 0;
-  
+
   // If it's already a number
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return Number.isFinite(value) ? value : 0;
   }
-  
+
   // If it's a string, extract number
-  if (typeof value === 'string') {
-    const match = value.replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
+  if (typeof value === "string") {
+    const match = value.replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
     if (match) {
       const n = Number(match[0]);
       return Number.isFinite(n) ? n : 0;
     }
   }
-  
+
   // If it's an object with value property
-  if (value && typeof value === 'object') {
+  if (value && typeof value === "object") {
     if (value.value !== undefined) return parseNumber(value.value);
-    if (typeof value.toString === 'function') return parseNumber(value.toString());
+    if (typeof value.toString === "function")
+      return parseNumber(value.toString());
   }
-  
+
   return 0;
 }
 
@@ -273,14 +291,14 @@ function parseNumber(value: any): number {
  * This is a standalone function that can be called externally
  */
 export function recalculateDatabaseRow(databaseBlock: any, rowId?: string) {
-  if (!databaseBlock || databaseBlock.flavour !== 'affine:database') {
-    console.warn('[AutoMath] Invalid database block provided');
+  if (!databaseBlock || databaseBlock.flavour !== "affine:database") {
+    console.warn("[AutoMath] Invalid database block provided");
     return;
   }
 
   const model = databaseBlock.model;
   if (!model) {
-    console.warn('[AutoMath] Database block has no model');
+    console.warn("[AutoMath] Database block has no model");
     return;
   }
 
@@ -288,23 +306,28 @@ export function recalculateDatabaseRow(databaseBlock: any, rowId?: string) {
   const cells = model.cells || {};
 
   // Find Hours, Rate, and Total columns
-  const hoursCol = columns.find((c: any) =>
-    c.name?.toLowerCase().includes('hour') ||
-    c.name?.toLowerCase().includes('qty') ||
-    c.name?.toLowerCase().includes('quantity')
+  const hoursCol = columns.find(
+    (c: any) =>
+      c.name?.toLowerCase().includes("hour") ||
+      c.name?.toLowerCase().includes("qty") ||
+      c.name?.toLowerCase().includes("quantity")
   );
-  const rateCol = columns.find((c: any) =>
-    c.name?.toLowerCase().includes('rate') ||
-    c.name?.toLowerCase().includes('price') ||
-    c.name?.toLowerCase().includes('cost')
+  const rateCol = columns.find(
+    (c: any) =>
+      c.name?.toLowerCase().includes("rate") ||
+      c.name?.toLowerCase().includes("price") ||
+      c.name?.toLowerCase().includes("cost")
   );
-  const totalCol = columns.find((c: any) =>
-    c.name?.toLowerCase().includes('total') ||
-    c.name?.toLowerCase().includes('amount')
+  const totalCol = columns.find(
+    (c: any) =>
+      c.name?.toLowerCase().includes("total") ||
+      c.name?.toLowerCase().includes("amount")
   );
 
   if (!hoursCol || !rateCol || !totalCol) {
-    console.warn('[AutoMath] Database missing required columns (Hours, Rate, Total)');
+    console.warn(
+      "[AutoMath] Database missing required columns (Hours, Rate, Total)"
+    );
     return;
   }
 
@@ -321,16 +344,16 @@ export function recalculateDatabaseRow(databaseBlock: any, rowId?: string) {
         ...rowCells,
         [totalCol.id]: {
           columnId: totalCol.id,
-          value: calculatedTotal
-        }
-      }
+          value: calculatedTotal,
+        },
+      },
     };
 
     try {
       databaseBlock.doc.updateBlock(model, { cells: updatedCells });
-      console.log('🔄 Manually recalculated row:', rowId);
+      console.log("🔄 Manually recalculated row:", rowId);
     } catch (e) {
-      console.error('[AutoMath] Failed to manually recalculate row:', e);
+      console.error("[AutoMath] Failed to manually recalculate row:", e);
     }
   } else {
     // Recalculate all rows
@@ -351,8 +374,8 @@ export function recalculateDatabaseRow(databaseBlock: any, rowId?: string) {
           ...rowCells,
           [totalCol.id]: {
             columnId: totalCol.id,
-            value: calculatedTotal
-          }
+            value: calculatedTotal,
+          },
         };
         hasChanges = true;
       }
@@ -361,15 +384,15 @@ export function recalculateDatabaseRow(databaseBlock: any, rowId?: string) {
     if (hasChanges) {
       try {
         databaseBlock.doc.updateBlock(model, { cells: updatedCells });
-        console.log('🔄 Manually recalculated database:', databaseBlock.id);
+        console.log("🔄 Manually recalculated database:", databaseBlock.id);
       } catch (e) {
-        console.error('[AutoMath] Failed to manually recalculate database:', e);
+        console.error("[AutoMath] Failed to manually recalculate database:", e);
       }
     }
   }
 }
 
 // Export to window for backwards compatibility (after function definition)
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   (window as any).recalculateDatabaseRow = recalculateDatabaseRow;
 }

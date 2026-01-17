@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Home,
   FileText,
   MessageSquare,
   Sparkles,
   User,
-  Menu
-} from 'lucide-react';
+  Menu,
+} from "lucide-react";
 
 /**
  * MobileNavBar Component
@@ -19,19 +19,19 @@ import {
  */
 
 const MobileNavBar = ({
-  activeTab = 'overview',
+  activeTab = "overview",
   onTabChange,
   showNotification = false,
-  notificationCount = 0
+  notificationCount = 0,
 }) => {
   const [ripple, setRipple] = useState(null);
 
   const tabs = [
-    { id: 'overview', icon: Home, label: 'Overview' },
-    { id: 'document', icon: FileText, label: 'Document' },
-    { id: 'comments', icon: MessageSquare, label: 'Comments' },
-    { id: 'ai', icon: Sparkles, label: 'AI' },
-    { id: 'profile', icon: User, label: 'Profile' }
+    { id: "overview", icon: Home, label: "Overview" },
+    { id: "document", icon: FileText, label: "Document" },
+    { id: "comments", icon: MessageSquare, label: "Comments" },
+    { id: "ai", icon: Sparkles, label: "AI" },
+    { id: "profile", icon: User, label: "Profile" },
   ];
 
   const handleTabClick = (tab, e) => {
@@ -39,7 +39,7 @@ const MobileNavBar = ({
     const rect = e.currentTarget.getBoundingClientRect();
     setRipple({
       x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2
+      y: rect.top + rect.height / 2,
     });
 
     // Clear ripple after animation
@@ -63,7 +63,7 @@ const MobileNavBar = ({
           style={{
             left: ripple.x - 16,
             top: ripple.y - 16,
-            zIndex: 50
+            zIndex: 50,
           }}
         />
       )}
@@ -83,7 +83,7 @@ const MobileNavBar = ({
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
-            const showBadge = tab.id === 'comments' && showNotification;
+            const showBadge = tab.id === "comments" && showNotification;
 
             return (
               <button
@@ -97,7 +97,7 @@ const MobileNavBar = ({
                   group
                 "
                 aria-label={tab.label}
-                aria-current={isActive ? 'page' : undefined}
+                aria-current={isActive ? "page" : undefined}
               >
                 {/* Active Background */}
                 {isActive && (
@@ -114,9 +114,10 @@ const MobileNavBar = ({
                   <Icon
                     className={`
                       w-6 h-6 transition-colors
-                      ${isActive
-                        ? 'text-purple-600 dark:text-purple-400'
-                        : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
+                      ${
+                        isActive
+                          ? "text-purple-600 dark:text-purple-400"
+                          : "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300"
                       }
                     `}
                   />
@@ -132,7 +133,7 @@ const MobileNavBar = ({
                         px-0.5
                       "
                     >
-                      {notificationCount > 9 ? '9+' : notificationCount}
+                      {notificationCount > 9 ? "9+" : notificationCount}
                     </span>
                   )}
                 </div>
@@ -141,9 +142,10 @@ const MobileNavBar = ({
                 <span
                   className={`
                     mt-1 text-[10px] font-medium transition-colors
-                    ${isActive
-                      ? 'text-purple-600 dark:text-purple-400'
-                      : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
+                    ${
+                      isActive
+                        ? "text-purple-600 dark:text-purple-400"
+                        : "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300"
                     }
                   `}
                 >

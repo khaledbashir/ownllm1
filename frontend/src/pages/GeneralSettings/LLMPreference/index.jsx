@@ -73,7 +73,15 @@ import FoundryOptions from "@/components/LLMSelection/FoundryOptions";
 import GiteeAIOptions from "@/components/LLMSelection/GiteeAIOptions/index.jsx";
 
 import LLMItem from "@/components/LLMSelection/LLMItem";
-import { CaretUpDown, MagnifyingGlass, X, Microphone, SpeakerHigh, Robot, Plus } from "@phosphor-icons/react";
+import {
+  CaretUpDown,
+  MagnifyingGlass,
+  X,
+  Microphone,
+  SpeakerHigh,
+  Robot,
+  Plus,
+} from "@phosphor-icons/react";
 import CTAButton from "@/components/lib/CTAButton";
 
 import TranscriptionModelSelector from "@/components/TranscriptionSelection/TranscriptionModelSelector";
@@ -479,10 +487,11 @@ export default function GeneralLLMPreference() {
                 <button
                   onClick={() => setTab("llm")}
                   type="button"
-                  className={`pb-2 text-sm font-medium transition-all duration-300 relative ${tab === "llm"
-                    ? "text-white border-b-2 border-primary-button"
-                    : "text-white text-opacity-60 hover:text-opacity-100"
-                    }`}
+                  className={`pb-2 text-sm font-medium transition-all duration-300 relative ${
+                    tab === "llm"
+                      ? "text-white border-b-2 border-primary-button"
+                      : "text-white text-opacity-60 hover:text-opacity-100"
+                  }`}
                 >
                   <div className="flex items-center gap-x-2">
                     <Robot size={18} />
@@ -492,10 +501,11 @@ export default function GeneralLLMPreference() {
                 <button
                   onClick={() => setTab("custom")}
                   type="button"
-                  className={`pb-2 text-sm font-medium transition-all duration-300 relative ${tab === "custom"
-                    ? "text-white border-b-2 border-primary-button"
-                    : "text-white text-opacity-60 hover:text-opacity-100"
-                    }`}
+                  className={`pb-2 text-sm font-medium transition-all duration-300 relative ${
+                    tab === "custom"
+                      ? "text-white border-b-2 border-primary-button"
+                      : "text-white text-opacity-60 hover:text-opacity-100"
+                  }`}
                 >
                   <div className="flex items-center gap-x-2">
                     <Plus size={18} />
@@ -505,10 +515,11 @@ export default function GeneralLLMPreference() {
                 <button
                   onClick={() => setTab("transcription")}
                   type="button"
-                  className={`pb-2 text-sm font-medium transition-all duration-300 relative ${tab === "transcription"
-                    ? "text-white border-b-2 border-primary-button"
-                    : "text-white text-opacity-60 hover:text-opacity-100"
-                    }`}
+                  className={`pb-2 text-sm font-medium transition-all duration-300 relative ${
+                    tab === "transcription"
+                      ? "text-white border-b-2 border-primary-button"
+                      : "text-white text-opacity-60 hover:text-opacity-100"
+                  }`}
                 >
                   <div className="flex items-center gap-x-2">
                     <Microphone size={18} />
@@ -518,10 +529,11 @@ export default function GeneralLLMPreference() {
                 <button
                   onClick={() => setTab("audio")}
                   type="button"
-                  className={`pb-2 text-sm font-medium transition-all duration-300 relative ${tab === "audio"
-                    ? "text-white border-b-2 border-primary-button"
-                    : "text-white text-opacity-60 hover:text-opacity-100"
-                    }`}
+                  className={`pb-2 text-sm font-medium transition-all duration-300 relative ${
+                    tab === "audio"
+                      ? "text-white border-b-2 border-primary-button"
+                      : "text-white text-opacity-60 hover:text-opacity-100"
+                  }`}
                 >
                   <div className="flex items-center gap-x-2">
                     <SpeakerHigh size={18} />

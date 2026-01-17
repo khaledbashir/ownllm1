@@ -176,9 +176,7 @@ export default function CommentThread({
 
           <div className="flex-1" />
 
-          <span className="text-xs text-slate-500">
-            Markdown supported
-          </span>
+          <span className="text-xs text-slate-500">Markdown supported</span>
         </div>
 
         {/* Textarea */}
@@ -186,7 +184,9 @@ export default function CommentThread({
           ref={textareaRef}
           value={replyTo ? replyText : newComment}
           onChange={(e) =>
-            replyTo ? setReplyText(e.target.value) : setNewComment(e.target.value)
+            replyTo
+              ? setReplyText(e.target.value)
+              : setNewComment(e.target.value)
           }
           placeholder={
             replyTo
@@ -204,9 +204,7 @@ export default function CommentThread({
           ) : (
             <button
               onClick={handleSubmit}
-              disabled={
-                replyTo ? !replyText.trim() : !newComment.trim()
-              }
+              disabled={replyTo ? !replyText.trim() : !newComment.trim()}
               className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send size={18} weight="bold" />
@@ -321,7 +319,11 @@ export default function CommentThread({
                   >
                     <ThumbsUp
                       size={16}
-                      weight={comment.likedBy?.includes(currentUser?.id) ? "fill" : "bold"}
+                      weight={
+                        comment.likedBy?.includes(currentUser?.id)
+                          ? "fill"
+                          : "bold"
+                      }
                     />
                     <span className="text-sm font-medium">
                       {comment.likeCount || 0}

@@ -7,7 +7,13 @@ import ManageWorkspace, {
 } from "../../Modals/ManageWorkspace";
 import paths from "@/utils/paths";
 import { useParams, useNavigate } from "react-router-dom";
-import { GearSix, UploadSimple, DotsSixVertical, Copy, NotePencil } from "@phosphor-icons/react";
+import {
+  GearSix,
+  UploadSimple,
+  DotsSixVertical,
+  Copy,
+  NotePencil,
+} from "@phosphor-icons/react";
 import useUser from "@/hooks/useUser";
 import ThreadContainer from "./ThreadContainer";
 import { useMatch } from "react-router-dom";
@@ -94,8 +100,9 @@ export default function ActiveWorkspaces() {
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className={`flex flex-col w-full group ${snapshot.isDragging ? "opacity-50" : ""
-                        }`}
+                      className={`flex flex-col w-full group ${
+                        snapshot.isDragging ? "opacity-50" : ""
+                      }`}
                       role="listitem"
                     >
                       <div className="flex gap-x-2 items-center justify-between w-full">
@@ -161,14 +168,25 @@ export default function ActiveWorkspaces() {
                                   onClick={async (e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    const { workspace: newWorkspace, message } = await Workspace.replicate(workspace.slug);
+                                    const { workspace: newWorkspace, message } =
+                                      await Workspace.replicate(workspace.slug);
                                     if (newWorkspace) {
-                                      showToast("Workspace replicated successfully!", "success", { clear: true });
+                                      showToast(
+                                        "Workspace replicated successfully!",
+                                        "success",
+                                        { clear: true }
+                                      );
                                       // Refresh workspaces list
                                       const workspaces = await Workspace.all();
-                                      setWorkspaces(Workspace.orderWorkspaces(workspaces));
+                                      setWorkspaces(
+                                        Workspace.orderWorkspaces(workspaces)
+                                      );
                                     } else {
-                                      showToast(`Failed to replicate workspace: ${message}`, "error", { clear: true });
+                                      showToast(
+                                        `Failed to replicate workspace: ${message}`,
+                                        "error",
+                                        { clear: true }
+                                      );
                                     }
                                   }}
                                   className="border-none rounded-md flex items-center justify-center p-[2px] hover:bg-[#646768] text-[#A7A8A9] hover:text-white"
@@ -185,8 +203,8 @@ export default function ActiveWorkspaces() {
                                       isInWorkspaceSettings
                                         ? paths.workspace.chat(workspace.slug)
                                         : paths.workspace.settings.generalAppearance(
-                                          workspace.slug
-                                        )
+                                            workspace.slug
+                                          )
                                     );
                                   }}
                                   className="rounded-md flex items-center justify-center text-[#A7A8A9] hover:text-white p-[2px] hover:bg-[#646768]"
@@ -195,7 +213,7 @@ export default function ActiveWorkspaces() {
                                   <GearSix
                                     color={
                                       isInWorkspaceSettings &&
-                                        workspace.slug === slug
+                                      workspace.slug === slug
                                         ? "#46C8FF"
                                         : undefined
                                     }

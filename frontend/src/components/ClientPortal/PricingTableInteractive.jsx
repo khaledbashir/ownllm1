@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Plus, 
-  Trash, 
-  PencilSimple, 
-  Check, 
+import {
+  Plus,
+  Trash,
+  PencilSimple,
+  Check,
   X as XIcon,
   Calculator,
-  CurrencyDollar
+  CurrencyDollar,
 } from "@phosphor-icons/react";
 
 /**
@@ -64,7 +64,9 @@ export default function PricingTableInteractive({
             description: editForm.description,
             hours: parseFloat(editForm.hours) || 0,
             rate: parseFloat(editForm.rate) || 0,
-            total: (parseFloat(editForm.hours) || 0) * (parseFloat(editForm.rate) || 0),
+            total:
+              (parseFloat(editForm.hours) || 0) *
+              (parseFloat(editForm.rate) || 0),
           }
         : row
     );
@@ -120,14 +122,10 @@ export default function PricingTableInteractive({
       {/* Table Header */}
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-white">
-            Pricing Breakdown
-          </h3>
+          <h3 className="text-lg font-bold text-white">Pricing Breakdown</h3>
           <div className="flex items-center gap-2 text-white/90">
             <Calculator size={20} weight="bold" />
-            <span className="text-sm font-medium">
-              Live Calculations
-            </span>
+            <span className="text-sm font-medium">Live Calculations</span>
           </div>
         </div>
       </div>
@@ -162,9 +160,7 @@ export default function PricingTableInteractive({
               <tr
                 key={row.id}
                 className={`transition-colors ${
-                  editingId === row.id
-                    ? "bg-indigo-50"
-                    : "hover:bg-slate-50"
+                  editingId === row.id ? "bg-indigo-50" : "hover:bg-slate-50"
                 }`}
               >
                 {editingId === row.id ? (
@@ -175,7 +171,10 @@ export default function PricingTableInteractive({
                         type="text"
                         value={editForm.description}
                         onChange={(e) =>
-                          setEditForm({ ...editForm, description: e.target.value })
+                          setEditForm({
+                            ...editForm,
+                            description: e.target.value,
+                          })
                         }
                         className="w-full px-3 py-2 border border-indigo-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         autoFocus
@@ -207,7 +206,7 @@ export default function PricingTableInteractive({
                       <span className="text-sm font-semibold text-slate-500">
                         {formatCurrency(
                           (parseFloat(editForm.hours) || 0) *
-                          (parseFloat(editForm.rate) || 0)
+                            (parseFloat(editForm.rate) || 0)
                         )}
                       </span>
                     </td>
@@ -310,9 +309,7 @@ export default function PricingTableInteractive({
       <div className="bg-slate-50 border-t border-slate-200 px-6 py-4">
         <div className="max-w-sm ml-auto space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-slate-600">
-              Subtotal
-            </span>
+            <span className="text-sm font-medium text-slate-600">Subtotal</span>
             <span className="text-lg font-bold text-slate-900">
               {formatCurrency(subtotal)}
             </span>

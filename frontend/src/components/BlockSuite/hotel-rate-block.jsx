@@ -6,7 +6,14 @@ import { BlockElement } from "@blocksuite/block-std";
 import { html } from "lit";
 import { literal } from "lit/static-html.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { FileCsv, Plus, Trash, CaretUp, CaretDown, Flag } from "@phosphor-icons/react";
+import {
+  FileCsv,
+  Plus,
+  Trash,
+  CaretUp,
+  CaretDown,
+  Flag,
+} from "@phosphor-icons/react";
 
 const defineOnce = (tag, ctor) => {
   if (!customElements.get(tag)) customElements.define(tag, ctor);
@@ -167,7 +174,14 @@ const HotelRateWidget = ({ model }) => {
   };
 
   const downloadCSV = () => {
-    const headers = ["Season", "Room Type", "Meal Plan", "Single Rate", "Double Rate", "Remarks"];
+    const headers = [
+      "Season",
+      "Room Type",
+      "Meal Plan",
+      "Single Rate",
+      "Double Rate",
+      "Remarks",
+    ];
     const csvRows = [headers.join(",")];
 
     rows.forEach((row) => {
@@ -176,14 +190,16 @@ const HotelRateWidget = ({ model }) => {
           .replace(/"/g, '""')
           .replace(/\n/g, " ")}"`;
 
-      csvRows.push([
-        clean(row.season),
-        clean(row.roomType),
-        row.mealPlan,
-        row.singleRate,
-        row.doubleRate,
-        clean(row.remarks),
-      ].join(","));
+      csvRows.push(
+        [
+          clean(row.season),
+          clean(row.roomType),
+          row.mealPlan,
+          row.singleRate,
+          row.doubleRate,
+          clean(row.remarks),
+        ].join(",")
+      );
     });
 
     const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
@@ -198,8 +214,10 @@ const HotelRateWidget = ({ model }) => {
   const isLowConfidence = (row) => {
     const single = Number(row.singleRate);
     const double = Number(row.doubleRate);
-    return (single === 0 || !Number.isFinite(single)) && 
-           (double === 0 || !Number.isFinite(double));
+    return (
+      (single === 0 || !Number.isFinite(single)) &&
+      (double === 0 || !Number.isFinite(double))
+    );
   };
 
   return (
@@ -217,14 +235,18 @@ const HotelRateWidget = ({ model }) => {
       {/* Header */}
       <div className="flex flex-col gap-1 mb-5">
         <div className="flex items-center justify-between">
-          <div className="text-xl font-bold text-white/90 tracking-tight">{title}</div>
+          <div className="text-xl font-bold text-white/90 tracking-tight">
+            {title}
+          </div>
           <div className="flex items-center gap-3">
             {extractedAt && (
               <div className="flex items-center gap-1.5 text-[10px] text-white/40 bg-white/5 px-2 py-1 rounded">
                 <Flag size={12} weight="fill" />
                 <span>AI Extracted</span>
                 {confidence && (
-                  <span className="text-emerald-400">({Math.round(confidence * 100)}%)</span>
+                  <span className="text-emerald-400">
+                    ({Math.round(confidence * 100)}%)
+                  </span>
                 )}
               </div>
             )}
@@ -240,7 +262,7 @@ const HotelRateWidget = ({ model }) => {
             </button>
           </div>
         </div>
-        
+
         {/* Currency Selector */}
         <div className="flex items-center justify-between">
           <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/30">
@@ -253,7 +275,11 @@ const HotelRateWidget = ({ model }) => {
                 className="flex items-center gap-2 text-xs font-medium text-white/60 hover:text-white bg-white/5 px-3 py-1.5 rounded border border-white/10 transition-colors"
               >
                 <span>Currency: {currency}</span>
-                {showCurrencyDropdown ? <CaretUp size={12} /> : <CaretDown size={12} />}
+                {showCurrencyDropdown ? (
+                  <CaretUp size={12} />
+                ) : (
+                  <CaretDown size={12} />
+                )}
               </button>
               {showCurrencyDropdown && (
                 <div className="absolute top-full right-0 mt-1 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl z-50 min-w-[200px]">
@@ -265,7 +291,9 @@ const HotelRateWidget = ({ model }) => {
                         setShowCurrencyDropdown(false);
                       }}
                       className={`w-full text-left px-3 py-2 text-xs hover:bg-white/5 transition-colors ${
-                        currency === cur.value ? "text-emerald-400 bg-white/5" : "text-white/70"
+                        currency === cur.value
+                          ? "text-emerald-400 bg-white/5"
+                          : "text-white/70"
                       }`}
                     >
                       {cur.label}
@@ -279,13 +307,15 @@ const HotelRateWidget = ({ model }) => {
       </div>
 
       {/* Rate Table */}
-      <DragDropContext onDragEnd={(result) => {
-        if (!result.destination) return;
-        moveRow({
-          fromIndex: result.source.index,
-          toIndex: result.destination.index,
-        });
-      }}>
+      <DragDropContext
+        onDragEnd={(result) => {
+          if (!result.destination) return;
+          moveRow({
+            fromIndex: result.source.index,
+            toIndex: result.destination.index,
+          });
+        }}
+      >
         <Droppable droppableId="hotel-rates">
           {(provided) => (
             <div
@@ -298,18 +328,30 @@ const HotelRateWidget = ({ model }) => {
                 className="grid text-left text-[10px] text-white/40 border-b border-white/5 pb-3 mb-2"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: isReadonly 
+                  gridTemplateColumns: isReadonly
                     ? "180px 200px 80px 100px 100px minmax(0, 1fr)"
                     : "180px 200px 80px 100px 100px minmax(0, 1fr) 44px",
                   width: "100%",
                 }}
               >
-                <div className="pr-3 font-bold uppercase tracking-wider">Season</div>
-                <div className="pr-3 font-bold uppercase tracking-wider">Room Type</div>
-                <div className="pr-3 font-bold uppercase tracking-wider">Meal Plan</div>
-                <div className="pr-3 text-right font-bold uppercase tracking-wider">Single</div>
-                <div className="pr-3 text-right font-bold uppercase tracking-wider">Double</div>
-                <div className="pr-3 font-bold uppercase tracking-wider">Remarks</div>
+                <div className="pr-3 font-bold uppercase tracking-wider">
+                  Season
+                </div>
+                <div className="pr-3 font-bold uppercase tracking-wider">
+                  Room Type
+                </div>
+                <div className="pr-3 font-bold uppercase tracking-wider">
+                  Meal Plan
+                </div>
+                <div className="pr-3 text-right font-bold uppercase tracking-wider">
+                  Single
+                </div>
+                <div className="pr-3 text-right font-bold uppercase tracking-wider">
+                  Double
+                </div>
+                <div className="pr-3 font-bold uppercase tracking-wider">
+                  Remarks
+                </div>
                 {!isReadonly && <div></div>}
               </div>
 
@@ -328,7 +370,9 @@ const HotelRateWidget = ({ model }) => {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         className={`py-2 transition-colors ${
-                          snapshot.isDragging ? "bg-white/5" : "hover:bg-white/2"
+                          snapshot.isDragging
+                            ? "bg-white/5"
+                            : "hover:bg-white/2"
                         } ${isLowConfidence(row) ? "bg-red-500/5" : ""}`}
                         style={{
                           ...provided.draggableProps.style,
@@ -338,7 +382,7 @@ const HotelRateWidget = ({ model }) => {
                           className="grid items-center text-xs"
                           style={{
                             display: "grid",
-                            gridTemplateColumns: isReadonly 
+                            gridTemplateColumns: isReadonly
                               ? "180px 200px 80px 100px 100px minmax(0, 1fr)"
                               : "180px 200px 80px 100px 100px minmax(0, 1fr) 44px",
                             width: "100%",
@@ -347,12 +391,16 @@ const HotelRateWidget = ({ model }) => {
                           {/* Season */}
                           <div className="pr-3">
                             {isReadonly ? (
-                              <div className="text-white/70">{row.season || "-"}</div>
+                              <div className="text-white/70">
+                                {row.season || "-"}
+                              </div>
                             ) : (
                               <input
                                 type="text"
                                 value={row.season}
-                                onChange={(e) => updateRow(index, { season: e.target.value })}
+                                onChange={(e) =>
+                                  updateRow(index, { season: e.target.value })
+                                }
                                 placeholder="Season"
                                 className="w-full bg-transparent text-white/90 placeholder-white/20 border border-transparent hover:border-white/10 focus:border-white/20 rounded px-2 py-1.5 transition-colors outline-none"
                               />
@@ -362,12 +410,16 @@ const HotelRateWidget = ({ model }) => {
                           {/* Room Type */}
                           <div className="pr-3">
                             {isReadonly ? (
-                              <div className="text-white/70">{row.roomType || "-"}</div>
+                              <div className="text-white/70">
+                                {row.roomType || "-"}
+                              </div>
                             ) : (
                               <input
                                 type="text"
                                 value={row.roomType}
-                                onChange={(e) => updateRow(index, { roomType: e.target.value })}
+                                onChange={(e) =>
+                                  updateRow(index, { roomType: e.target.value })
+                                }
                                 placeholder="Room Type"
                                 className="w-full bg-transparent text-white/90 placeholder-white/20 border border-transparent hover:border-white/10 focus:border-white/20 rounded px-2 py-1.5 transition-colors outline-none"
                               />
@@ -377,7 +429,9 @@ const HotelRateWidget = ({ model }) => {
                           {/* Meal Plan */}
                           <div className="pr-3">
                             {isReadonly ? (
-                              <div className="text-white/70 font-medium">{row.mealPlan}</div>
+                              <div className="text-white/70 font-medium">
+                                {row.mealPlan}
+                              </div>
                             ) : (
                               <div className="relative">
                                 <button
@@ -397,14 +451,18 @@ const HotelRateWidget = ({ model }) => {
                                       <button
                                         key={mp.value}
                                         onClick={() => {
-                                          updateRow(index, { mealPlan: mp.value });
+                                          updateRow(index, {
+                                            mealPlan: mp.value,
+                                          });
                                           setShowMealPlanDropdowns((prev) => ({
                                             ...prev,
                                             [index]: false,
                                           }));
                                         }}
                                         className={`w-full text-left px-3 py-2 text-xs hover:bg-white/5 transition-colors ${
-                                          row.mealPlan === mp.value ? "text-emerald-400 bg-white/5" : "text-white/70"
+                                          row.mealPlan === mp.value
+                                            ? "text-emerald-400 bg-white/5"
+                                            : "text-white/70"
                                         }`}
                                       >
                                         {mp.label}
@@ -419,20 +477,29 @@ const HotelRateWidget = ({ model }) => {
                           {/* Single Rate */}
                           <div className="pr-3">
                             {isReadonly ? (
-                              <div className={`text-right font-mono ${isLowConfidence(row) ? "text-red-400" : "text-white/70"}`}>
+                              <div
+                                className={`text-right font-mono ${isLowConfidence(row) ? "text-red-400" : "text-white/70"}`}
+                              >
                                 {formatCurrency(row.singleRate, currency)}
                               </div>
                             ) : (
                               <input
                                 type="number"
-                                value={row.singleRate === 0 ? "" : row.singleRate}
+                                value={
+                                  row.singleRate === 0 ? "" : row.singleRate
+                                }
                                 onChange={(e) => {
-                                  const val = e.target.value === "" ? 0 : Number(e.target.value);
+                                  const val =
+                                    e.target.value === ""
+                                      ? 0
+                                      : Number(e.target.value);
                                   updateRow(index, { singleRate: val });
                                 }}
                                 placeholder="0"
                                 className={`w-full bg-transparent text-right font-mono placeholder-white/20 border ${
-                                  isLowConfidence(row) ? "border-red-500/30 text-red-400" : "border-transparent hover:border-white/10 focus:border-white/20 text-white/90"
+                                  isLowConfidence(row)
+                                    ? "border-red-500/30 text-red-400"
+                                    : "border-transparent hover:border-white/10 focus:border-white/20 text-white/90"
                                 } rounded px-2 py-1.5 transition-colors outline-none`}
                               />
                             )}
@@ -441,20 +508,29 @@ const HotelRateWidget = ({ model }) => {
                           {/* Double Rate */}
                           <div className="pr-3">
                             {isReadonly ? (
-                              <div className={`text-right font-mono ${isLowConfidence(row) ? "text-red-400" : "text-white/70"}`}>
+                              <div
+                                className={`text-right font-mono ${isLowConfidence(row) ? "text-red-400" : "text-white/70"}`}
+                              >
                                 {formatCurrency(row.doubleRate, currency)}
                               </div>
                             ) : (
                               <input
                                 type="number"
-                                value={row.doubleRate === 0 ? "" : row.doubleRate}
+                                value={
+                                  row.doubleRate === 0 ? "" : row.doubleRate
+                                }
                                 onChange={(e) => {
-                                  const val = e.target.value === "" ? 0 : Number(e.target.value);
+                                  const val =
+                                    e.target.value === ""
+                                      ? 0
+                                      : Number(e.target.value);
                                   updateRow(index, { doubleRate: val });
                                 }}
                                 placeholder="0"
                                 className={`w-full bg-transparent text-right font-mono placeholder-white/20 border ${
-                                  isLowConfidence(row) ? "border-red-500/30 text-red-400" : "border-transparent hover:border-white/10 focus:border-white/20 text-white/90"
+                                  isLowConfidence(row)
+                                    ? "border-red-500/30 text-red-400"
+                                    : "border-transparent hover:border-white/10 focus:border-white/20 text-white/90"
                                 } rounded px-2 py-1.5 transition-colors outline-none`}
                               />
                             )}
@@ -463,14 +539,18 @@ const HotelRateWidget = ({ model }) => {
                           {/* Remarks */}
                           <div className="pr-3">
                             {isReadonly ? (
-                              <div className={`text-[10px] ${row.remarks?.toLowerCase().includes("review") ? "text-amber-400" : "text-white/50"}`}>
+                              <div
+                                className={`text-[10px] ${row.remarks?.toLowerCase().includes("review") ? "text-amber-400" : "text-white/50"}`}
+                              >
                                 {row.remarks || ""}
                               </div>
                             ) : (
                               <input
                                 type="text"
                                 value={row.remarks}
-                                onChange={(e) => updateRow(index, { remarks: e.target.value })}
+                                onChange={(e) =>
+                                  updateRow(index, { remarks: e.target.value })
+                                }
                                 placeholder="Notes..."
                                 className="w-full bg-transparent text-[10px] text-white/60 placeholder-white/20 border border-transparent hover:border-white/10 focus:border-white/20 rounded px-2 py-1.5 transition-colors outline-none"
                               />
@@ -520,7 +600,8 @@ const HotelRateWidget = ({ model }) => {
           <div className="flex items-start gap-2">
             <Flag size={14} weight="fill" className="text-red-400 mt-0.5" />
             <div className="text-[10px] text-red-300">
-              <span className="font-bold">Low Confidence:</span> Some rows have no rate data. Review and complete manually.
+              <span className="font-bold">Low Confidence:</span> Some rows have
+              no rate data. Review and complete manually.
             </div>
           </div>
         </div>
@@ -550,9 +631,7 @@ export class HotelRateBlockComponent extends BlockElement {
 
   renderBlock() {
     // Render via a tiny bridging element that hosts the React root.
-    return html`<hotel-rate-react-root
-      .block=${this}
-    ></hotel-rate-react-root>`;
+    return html`<hotel-rate-react-root .block=${this}></hotel-rate-react-root>`;
   }
 
   updated() {

@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
-import { Search, Info, CheckCircle, AlertTriangle, XCircle, DollarSign, TrendingUp, Lightbulb, ArrowRight, UserPlus } from "lucide-react";
+import {
+  Search,
+  Info,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+  DollarSign,
+  TrendingUp,
+  Lightbulb,
+  ArrowRight,
+  UserPlus,
+} from "lucide-react";
 import { useParams } from "react-router-dom";
 import paths from "@/utils/paths";
 import { API_BASE } from "@/utils/constants";
@@ -49,8 +60,8 @@ export default function DealChecker() {
         body: JSON.stringify({
           mode,
           listingText,
-          fingerprint
-        })
+          fingerprint,
+        }),
       });
 
       const data = await response.json();
@@ -83,7 +94,9 @@ export default function DealChecker() {
         <div className="max-w-4xl w-full">
           {/* Header */}
           <div className="mb-10 text-center">
-            <h1 className="text-4xl font-bold text-white mb-2">IsGoodDeal.com</h1>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              IsGoodDeal.com
+            </h1>
             <p className="text-zinc-400">AI-Powered Apple Deal Checker</p>
           </div>
 
@@ -106,10 +119,17 @@ export default function DealChecker() {
           {/* Progress Tracker */}
           <div className="mb-6 flex justify-between items-center px-2">
             <div className="text-sm font-medium text-zinc-400">
-              Free checks remaining: <span className={checksRemaining > 0 ? "text-green-400" : "text-red-400"}>{checksRemaining}</span>
+              Free checks remaining:{" "}
+              <span
+                className={
+                  checksRemaining > 0 ? "text-green-400" : "text-red-400"
+                }
+              >
+                {checksRemaining}
+              </span>
             </div>
             {checksRemaining <= 0 && (
-              <button 
+              <button
                 onClick={() => setShowSignupModal(true)}
                 className="text-xs font-bold text-blue-400 underline hover:text-blue-300 transition-colors"
               >
@@ -122,12 +142,18 @@ export default function DealChecker() {
           <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-6 shadow-2xl mb-10">
             <form onSubmit={handleAnalyze}>
               <label className="block text-sm font-medium text-zinc-300 mb-3">
-                {mode === "buyer" ? "Paste Listing Text (eBay, Facebook Marketplace, etc.)" : "Tell us what you are selling (Model, Storage, Condition)"}
+                {mode === "buyer"
+                  ? "Paste Listing Text (eBay, Facebook Marketplace, etc.)"
+                  : "Tell us what you are selling (Model, Storage, Condition)"}
               </label>
               <textarea
                 value={listingText}
                 onChange={(e) => setListingText(e.target.value)}
-                placeholder={mode === "buyer" ? "Example: iPhone 15 Pro Max 256GB Blue Titanium... $450" : "Example: MacBook Pro M2 2022, 16GB RAM, 512GB SSD, Mint condition..."}
+                placeholder={
+                  mode === "buyer"
+                    ? "Example: iPhone 15 Pro Max 256GB Blue Titanium... $450"
+                    : "Example: MacBook Pro M2 2022, 16GB RAM, 512GB SSD, Mint condition..."
+                }
                 className="w-full h-32 bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-zinc-600 mb-4 resize-none"
                 required
               />
@@ -140,7 +166,9 @@ export default function DealChecker() {
                   <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    {mode === "buyer" ? "Is This A Good Deal?" : "What Should I Price This At?"}
+                    {mode === "buyer"
+                      ? "Is This A Good Deal?"
+                      : "What Should I Price This At?"}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -174,18 +202,24 @@ export default function DealChecker() {
             <div className="w-16 h-16 bg-blue-600/20 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <UserPlus className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-4">You&apos;ve hit the limit!</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              You&apos;ve hit the limit!
+            </h2>
             <p className="text-zinc-400 mb-8">
-              Sign up for free to get <span className="text-white font-bold">5 more checks per day</span> and save your history.
+              Sign up for free to get{" "}
+              <span className="text-white font-bold">
+                5 more checks per day
+              </span>{" "}
+              and save your history.
             </p>
             <div className="flex flex-col gap-3">
-              <button 
-                onClick={() => window.location.href = paths.register()}
+              <button
+                onClick={() => (window.location.href = paths.register())}
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all"
               >
                 Sign Up Now
               </button>
-              <button 
+              <button
                 onClick={() => setShowSignupModal(false)}
                 className="w-full bg-zinc-700 hover:bg-zinc-600 text-white font-medium py-3 rounded-xl transition-all"
               >
@@ -202,49 +236,105 @@ export default function DealChecker() {
 function BuyerResultCard({ result }) {
   const isGood = result.recommendation === "yes";
   const isFair = result.recommendation === "maybe";
-  
-  const bgColor = isGood ? "bg-green-500/10" : isFair ? "bg-yellow-500/10" : "bg-red-500/10";
-  const borderColor = isGood ? "border-green-500" : isFair ? "border-yellow-500" : "border-red-500";
-  const textColor = isGood ? "text-green-500" : isFair ? "text-yellow-500" : "text-red-500";
-  
+
+  const bgColor = isGood
+    ? "bg-green-500/10"
+    : isFair
+      ? "bg-yellow-500/10"
+      : "bg-red-500/10";
+  const borderColor = isGood
+    ? "border-green-500"
+    : isFair
+      ? "border-yellow-500"
+      : "border-red-500";
+  const textColor = isGood
+    ? "text-green-500"
+    : isFair
+      ? "text-yellow-500"
+      : "text-red-500";
+
   return (
-    <div className={`border-2 ${borderColor} ${bgColor} rounded-3xl overflow-hidden shadow-2xl`}>
-      <div className={`p-6 ${borderColor} border-b flex justify-between items-center`}>
+    <div
+      className={`border-2 ${borderColor} ${bgColor} rounded-3xl overflow-hidden shadow-2xl`}
+    >
+      <div
+        className={`p-6 ${borderColor} border-b flex justify-between items-center`}
+      >
         <div className="flex items-center gap-3">
-          {isGood ? <CheckCircle className={`w-8 h-8 ${textColor}`} /> : isFair ? <AlertTriangle className={`w-8 h-8 ${textColor}`} /> : <XCircle className={`w-8 h-8 ${textColor}`} />}
-          <h3 className={`text-2xl font-black uppercase tracking-tight ${textColor}`}>
-            {result.recommendation === "yes" ? "YES - GOOD DEAL!" : result.recommendation === "maybe" ? "MAYBE - FAIR PRICE" : "NO - OVERPRICED"}
+          {isGood ? (
+            <CheckCircle className={`w-8 h-8 ${textColor}`} />
+          ) : isFair ? (
+            <AlertTriangle className={`w-8 h-8 ${textColor}`} />
+          ) : (
+            <XCircle className={`w-8 h-8 ${textColor}`} />
+          )}
+          <h3
+            className={`text-2xl font-black uppercase tracking-tight ${textColor}`}
+          >
+            {result.recommendation === "yes"
+              ? "YES - GOOD DEAL!"
+              : result.recommendation === "maybe"
+                ? "MAYBE - FAIR PRICE"
+                : "NO - OVERPRICED"}
           </h3>
         </div>
         <div className="text-right">
-          <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Confidence</div>
-          <div className={`text-2xl font-black ${textColor}`}>{result.confidence_score}%</div>
+          <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+            Confidence
+          </div>
+          <div className={`text-2xl font-black ${textColor}`}>
+            {result.confidence_score}%
+          </div>
         </div>
       </div>
-      
+
       <div className="p-8 grid md:grid-cols-2 gap-8 bg-zinc-900/50">
         <div>
           <div className="mb-6">
-            <div className="text-zinc-400 text-sm font-medium mb-1 uppercase tracking-wider">Analysis Summary</div>
+            <div className="text-zinc-400 text-sm font-medium mb-1 uppercase tracking-wider">
+              Analysis Summary
+            </div>
             <p className="text-white leading-relaxed">{result.reasoning}</p>
           </div>
-          
+
           <div className="space-y-4">
             <div className="flex justify-between items-end">
-              <span className="text-zinc-500 font-medium italic">Asking Price</span>
-              <span className="text-white text-xl font-bold">{result.asking_price}</span>
+              <span className="text-zinc-500 font-medium italic">
+                Asking Price
+              </span>
+              <span className="text-white text-xl font-bold">
+                {result.asking_price}
+              </span>
             </div>
             <div className="flex justify-between items-end border-b border-zinc-800 pb-2">
-              <span className="text-zinc-500 font-medium italic">Estimated Value</span>
-              <span className="text-blue-400 text-xl font-bold">${result.estimated_value}</span>
+              <span className="text-zinc-500 font-medium italic">
+                Estimated Value
+              </span>
+              <span className="text-blue-400 text-xl font-bold">
+                ${result.estimated_value}
+              </span>
             </div>
             <div className="flex justify-between items-end">
-              <span className="text-zinc-500 font-medium italic underline decoration-blue-500/30">Potential Savings</span>
-              <span className="text-green-400 text-xl font-black">${result.estimated_value - parseInt(result.asking_price.replace(/\D/g, ""))} (Save {Math.round((1 - parseInt(result.asking_price.replace(/\D/g, "")) / result.estimated_value) * 100)}%)</span>
+              <span className="text-zinc-500 font-medium italic underline decoration-blue-500/30">
+                Potential Savings
+              </span>
+              <span className="text-green-400 text-xl font-black">
+                $
+                {result.estimated_value -
+                  parseInt(result.asking_price.replace(/\D/g, ""))}{" "}
+                (Save{" "}
+                {Math.round(
+                  (1 -
+                    parseInt(result.asking_price.replace(/\D/g, "")) /
+                      result.estimated_value) *
+                    100
+                )}
+                %)
+              </span>
             </div>
           </div>
         </div>
-        
+
         <div className="space-y-6">
           <div>
             <div className="text-sm font-bold text-green-500 mb-3 flex items-center gap-2">
@@ -252,7 +342,10 @@ function BuyerResultCard({ result }) {
             </div>
             <ul className="space-y-2">
               {result.green_flags.map((flag, i) => (
-                <li key={i} className="text-zinc-300 text-sm flex items-start gap-2">
+                <li
+                  key={i}
+                  className="text-zinc-300 text-sm flex items-start gap-2"
+                >
                   <span className="text-green-500 mt-1">✓</span> {flag}
                 </li>
               ))}
@@ -264,7 +357,10 @@ function BuyerResultCard({ result }) {
             </div>
             <ul className="space-y-2">
               {result.red_flags.map((flag, i) => (
-                <li key={i} className="text-zinc-300 text-sm flex items-start gap-2">
+                <li
+                  key={i}
+                  className="text-zinc-300 text-sm flex items-start gap-2"
+                >
                   <span className="text-red-500 mt-1">!</span> {flag}
                 </li>
               ))}
@@ -282,14 +378,20 @@ function SellerResultCard({ result }) {
       <div className="bg-blue-600 p-6 flex justify-between items-center text-white">
         <div className="flex items-center gap-3">
           <TrendingUp className="w-8 h-8" />
-          <h3 className="text-2xl font-black uppercase tracking-tight">Optimal Price: {result.optimal_price}</h3>
+          <h3 className="text-2xl font-black uppercase tracking-tight">
+            Optimal Price: {result.optimal_price}
+          </h3>
         </div>
         <div className="text-right">
-          <div className="text-xs font-bold text-blue-200 uppercase tracking-widest">Market Demand</div>
-          <div className="text-2xl font-black">{result.market_demand.toUpperCase()}</div>
+          <div className="text-xs font-bold text-blue-200 uppercase tracking-widest">
+            Market Demand
+          </div>
+          <div className="text-2xl font-black">
+            {result.market_demand.toUpperCase()}
+          </div>
         </div>
       </div>
-      
+
       <div className="p-8 grid md:grid-cols-2 gap-8">
         <div>
           <div className="mb-8 bg-zinc-900 rounded-2xl p-6 border border-zinc-700">
@@ -302,25 +404,33 @@ function SellerResultCard({ result }) {
                   <div className="text-white font-bold">Quick Sale</div>
                   <div className="text-xs text-zinc-500">Fast (1-2 days)</div>
                 </div>
-                <div className="text-xl font-bold text-zinc-300">{result.quick_sale_price}</div>
+                <div className="text-xl font-bold text-zinc-300">
+                  {result.quick_sale_price}
+                </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-blue-600/10 rounded-xl outline outline-1 outline-blue-600/30 shadow-inner">
                 <div>
-                  <div className="text-blue-400 font-black">Optimal Balance ⭐</div>
+                  <div className="text-blue-400 font-black">
+                    Optimal Balance ⭐
+                  </div>
                   <div className="text-xs text-blue-300/60">3-5 days</div>
                 </div>
-                <div className="text-2xl font-black text-white">{result.optimal_price}</div>
+                <div className="text-2xl font-black text-white">
+                  {result.optimal_price}
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <div>
                   <div className="text-white font-bold">Max Realistic</div>
                   <div className="text-xs text-zinc-500">7-10+ days</div>
                 </div>
-                <div className="text-xl font-bold text-zinc-300">{result.max_price}</div>
+                <div className="text-xl font-bold text-zinc-300">
+                  {result.max_price}
+                </div>
               </div>
             </div>
           </div>
-          
+
           <div className="p-6 bg-zinc-900/30 rounded-2xl">
             <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-4 flex items-center gap-2 font-mono">
               STRATEGY_NOTES.txt
@@ -330,7 +440,7 @@ function SellerResultCard({ result }) {
             </p>
           </div>
         </div>
-        
+
         <div className="space-y-8">
           <div>
             <h4 className="text-sm font-bold text-yellow-500 mb-4 flex items-center gap-2">
@@ -338,19 +448,24 @@ function SellerResultCard({ result }) {
             </h4>
             <ul className="space-y-3">
               {result.listing_tips.map((tip, i) => (
-                <li key={i} className="bg-zinc-900 border border-zinc-700 p-4 rounded-xl text-zinc-300 text-sm shadow-sm hover:border-blue-500/50 transition-colors">
-                  <span className="text-blue-500 font-bold mr-2">#{i+1}</span> {tip}
+                <li
+                  key={i}
+                  className="bg-zinc-900 border border-zinc-700 p-4 rounded-xl text-zinc-300 text-sm shadow-sm hover:border-blue-500/50 transition-colors"
+                >
+                  <span className="text-blue-500 font-bold mr-2">#{i + 1}</span>{" "}
+                  {tip}
                 </li>
               ))}
             </ul>
           </div>
-          
+
           <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-zinc-700 rounded-3xl bg-zinc-900/20 group hover:border-blue-500/50 transition-all cursor-pointer">
             <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <Info className="w-6 h-6 text-zinc-500" />
             </div>
             <p className="text-zinc-500 text-center text-sm">
-              Connect to eBay API to automate this pricing or see real-time trends.
+              Connect to eBay API to automate this pricing or see real-time
+              trends.
             </p>
           </div>
         </div>

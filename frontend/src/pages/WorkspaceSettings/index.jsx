@@ -154,9 +154,10 @@ function TabItem({ title, icon, to, visible = true }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `${isActive
-          ? "text-sky-400 pb-4 border-b-[4px] -mb-[19px] border-sky-400"
-          : "text-white/60 hover:text-sky-400"
+        `${
+          isActive
+            ? "text-sky-400 pb-4 border-b-[4px] -mb-[19px] border-sky-400"
+            : "text-white/60 hover:text-sky-400"
         } ` + " flex gap-x-2 items-center font-medium whitespace-nowrap"
       }
     >

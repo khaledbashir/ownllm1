@@ -96,7 +96,9 @@ export default function WorkspaceLLMSelection({
     isCustom: true,
   }));
   const allProviders = [...LLMS, ...customProvidersList];
-  const selectedLLMObject = allProviders.find((llm) => llm.value === selectedLLM);
+  const selectedLLMObject = allProviders.find(
+    (llm) => llm.value === selectedLLM
+  );
 
   return (
     <div className="border-b border-white/40 pb-8">
@@ -197,7 +199,12 @@ export default function WorkspaceLLMSelection({
 }
 
 // TODO: Add this to agent selector as well as make generic component.
-function ModelSelector({ selectedLLM, workspace, setHasChanges, customProviders }) {
+function ModelSelector({
+  selectedLLM,
+  workspace,
+  setHasChanges,
+  customProviders,
+}) {
   if (NO_MODEL_SELECTION.includes(selectedLLM)) {
     if (selectedLLM !== "default") {
       return (
@@ -216,7 +223,10 @@ function ModelSelector({ selectedLLM, workspace, setHasChanges, customProviders 
     return null;
   }
 
-  if (FREE_FORM_LLM_SELECTION.includes(selectedLLM) || selectedLLM.startsWith("custom_")) {
+  if (
+    FREE_FORM_LLM_SELECTION.includes(selectedLLM) ||
+    selectedLLM.startsWith("custom_")
+  ) {
     return (
       <FreeFormLLMInput
         workspace={workspace}
@@ -236,7 +246,12 @@ function ModelSelector({ selectedLLM, workspace, setHasChanges, customProviders 
   );
 }
 
-function FreeFormLLMInput({ workspace, setHasChanges, provider, customProviders }) {
+function FreeFormLLMInput({
+  workspace,
+  setHasChanges,
+  provider,
+  customProviders,
+}) {
   const { t } = useTranslation();
   const customProvider = customProviders?.find((p) => p.id === provider);
 

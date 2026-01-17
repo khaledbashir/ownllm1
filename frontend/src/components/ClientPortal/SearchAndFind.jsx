@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Search,
   X,
   ChevronUp,
   ChevronDown,
   CaseSensitive,
-  Filter
-} from 'lucide-react';
+  Filter,
+} from "lucide-react";
 
 /**
  * SearchAndFind Component
- * 
+ *
  * Global search functionality:
  * - Highlight matches in text
  * - Navigation arrows (next/prev match)
@@ -23,14 +23,14 @@ const SearchAndFind = ({
   content,
   sections = [],
   onHighlightMatch,
-  onScrollToMatch
+  onScrollToMatch,
 }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [matches, setMatches] = useState([]);
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const [isCaseSensitive, setIsCaseSensitive] = useState(false);
-  const [selectedSection, setSelectedSection] = useState('all');
+  const [selectedSection, setSelectedSection] = useState("all");
   const searchInputRef = useRef(null);
 
   // Focus input when expanded
@@ -63,20 +63,20 @@ const SearchAndFind = ({
 
       foundMatches.push({
         index: matchIndex,
-        text: content.substring(matchIndex, matchIndex + query.length)
+        text: content.substring(matchIndex, matchIndex + query.length),
       });
 
       searchIndex = matchIndex + query.length;
     }
 
     // Filter by section if selected
-    if (selectedSection !== 'all') {
-      const section = sections.find(s => s.id === selectedSection);
+    if (selectedSection !== "all") {
+      const section = sections.find((s) => s.id === selectedSection);
       if (section) {
         const sectionStart = content.indexOf(section.content);
         const sectionEnd = sectionStart + section.content.length;
         foundMatches = foundMatches.filter(
-          match => match.index >= sectionStart && match.index < sectionEnd
+          (match) => match.index >= sectionStart && match.index < sectionEnd
         );
       }
     }
@@ -108,7 +108,7 @@ const SearchAndFind = ({
   };
 
   const clearSearch = () => {
-    setQuery('');
+    setQuery("");
     setMatches([]);
     setCurrentMatchIndex(0);
     onHighlightMatch?.([]);
@@ -119,10 +119,10 @@ const SearchAndFind = ({
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       setIsExpanded(false);
       clearSearch();
-    } else if (e.key === 'Enter') {
+    } else if (e.key === "Enter") {
       handleNextMatch();
     }
   };
@@ -135,7 +135,7 @@ const SearchAndFind = ({
           flex items-center gap-2 bg-white dark:bg-gray-800
           border border-gray-300 dark:border-gray-600
           rounded-xl overflow-hidden transition-all duration-300
-          ${isExpanded ? 'w-full shadow-lg' : 'w-64'}
+          ${isExpanded ? "w-full shadow-lg" : "w-64"}
         `}
       >
         {/* Search Input Container */}
@@ -173,7 +173,7 @@ const SearchAndFind = ({
             px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-700
             border-l border-gray-300 dark:border-gray-600 transition-colors
           "
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+          aria-label={isExpanded ? "Collapse" : "Expand"}
         >
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -228,9 +228,10 @@ const SearchAndFind = ({
                 onClick={() => setIsCaseSensitive(!isCaseSensitive)}
                 className={`
                   flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors
-                  ${isCaseSensitive
-                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  ${
+                    isCaseSensitive
+                      ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                   }
                 `}
               >
@@ -267,7 +268,7 @@ const SearchAndFind = ({
                 "
               >
                 <option value="all">All Sections</option>
-                {sections.map(section => (
+                {sections.map((section) => (
                   <option key={section.id} value={section.id}>
                     {section.title}
                   </option>
@@ -279,13 +280,26 @@ const SearchAndFind = ({
           {/* Keyboard Shortcuts */}
           <div className="text-xs text-gray-400 dark:text-gray-500 text-center">
             <span className="mr-3">
-              <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Enter</kbd> Next
+              <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+                Enter
+              </kbd>{" "}
+              Next
             </span>
             <span className="mr-3">
-              <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Shift</kbd>+<kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Enter</kbd> Prev
+              <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+                Shift
+              </kbd>
+              +
+              <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+                Enter
+              </kbd>{" "}
+              Prev
             </span>
             <span>
-              <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Esc</kbd> Close
+              <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+                Esc
+              </kbd>{" "}
+              Close
             </span>
           </div>
         </div>

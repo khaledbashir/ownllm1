@@ -372,7 +372,10 @@ function useIsDisabled() {
     window.addEventListener(ATTACHMENTS_PROCESSED_EVENT, handleProcessed);
 
     return () => {
-      window.removeEventListener(ATTACHMENTS_PROCESSING_EVENT, handleProcessing);
+      window.removeEventListener(
+        ATTACHMENTS_PROCESSING_EVENT,
+        handleProcessing
+      );
       window.removeEventListener(ATTACHMENTS_PROCESSED_EVENT, handleProcessed);
     };
   }, []);

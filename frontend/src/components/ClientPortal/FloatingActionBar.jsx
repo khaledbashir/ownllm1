@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   MessageSquare,
   Paperclip,
@@ -7,12 +7,12 @@ import {
   X,
   Plus,
   ChevronUp,
-  Minus2
-} from 'lucide-react';
+  Minus2,
+} from "lucide-react";
 
 /**
  * FloatingActionBar Component
- * 
+ *
  * Premium floating action bar for quick actions:
  * - Fixed position bottom-right
  * - Quick actions: Comment, Attach, AI Chat, Download
@@ -28,7 +28,7 @@ const FloatingActionBar = ({
   onDownload,
   isCollapsed: externalCollapsed,
   onToggleCollapse,
-  tooltipPosition = 'left'
+  tooltipPosition = "left",
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(externalCollapsed ?? false);
   const [isScrolledDown, setIsScrolledDown] = useState(false);
@@ -48,43 +48,43 @@ const FloatingActionBar = ({
       setIsScrolledDown(scrollPosition > threshold);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const actions = [
     {
-      id: 'comment',
+      id: "comment",
       icon: MessageSquare,
-      label: 'Add Comment',
-      color: 'bg-blue-600 hover:bg-blue-700',
-      tooltip: 'Add a comment to the proposal',
-      onClick: onAddComment
+      label: "Add Comment",
+      color: "bg-blue-600 hover:bg-blue-700",
+      tooltip: "Add a comment to the proposal",
+      onClick: onAddComment,
     },
     {
-      id: 'attach',
+      id: "attach",
       icon: Paperclip,
-      label: 'Attach File',
-      color: 'bg-purple-600 hover:bg-purple-700',
-      tooltip: 'Attach a file to this proposal',
-      onClick: onAttachFile
+      label: "Attach File",
+      color: "bg-purple-600 hover:bg-purple-700",
+      tooltip: "Attach a file to this proposal",
+      onClick: onAttachFile,
     },
     {
-      id: 'ai-chat',
+      id: "ai-chat",
       icon: Sparkles,
-      label: 'AI Assistant',
-      color: 'bg-amber-500 hover:bg-amber-600',
-      tooltip: 'Ask AI about this proposal',
-      onClick: onOpenAIChat
+      label: "AI Assistant",
+      color: "bg-amber-500 hover:bg-amber-600",
+      tooltip: "Ask AI about this proposal",
+      onClick: onOpenAIChat,
     },
     {
-      id: 'download',
+      id: "download",
       icon: Download,
-      label: 'Download',
-      color: 'bg-green-600 hover:bg-green-700',
-      tooltip: 'Download proposal as PDF',
-      onClick: onDownload
-    }
+      label: "Download",
+      color: "bg-green-600 hover:bg-green-700",
+      tooltip: "Download proposal as PDF",
+      onClick: onDownload,
+    },
   ];
 
   const handleActionClick = (action) => {
@@ -111,8 +111,8 @@ const FloatingActionBar = ({
       <div
         className={`flex flex-col items-end gap-2 transition-all duration-300 ease-out ${
           shouldCollapse
-            ? 'opacity-0 translate-y-4 scale-95 pointer-events-none'
-            : 'opacity-100 translate-y-0 scale-100'
+            ? "opacity-0 translate-y-4 scale-95 pointer-events-none"
+            : "opacity-100 translate-y-0 scale-100"
         }`}
       >
         {actions.map((action, index) => (
@@ -126,11 +126,11 @@ const FloatingActionBar = ({
                 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg
                 transform transition-all duration-200
                 ${action.color}
-                ${isAnimating ? 'scale-90' : 'hover:scale-110 hover:shadow-xl'}
-                ${hoveredAction === action.id ? 'scale-110 shadow-xl' : ''}
+                ${isAnimating ? "scale-90" : "hover:scale-110 hover:shadow-xl"}
+                ${hoveredAction === action.id ? "scale-110 shadow-xl" : ""}
               `}
               style={{
-                animationDelay: `${index * 50}ms`
+                animationDelay: `${index * 50}ms`,
               }}
               aria-label={action.label}
             >
@@ -145,7 +145,7 @@ const FloatingActionBar = ({
                 text-white text-sm font-medium rounded-lg shadow-lg
                 whitespace-nowrap opacity-0 group-hover:opacity-100
                 transition-opacity duration-200 pointer-events-none
-                ${tooltipPosition === 'left' ? 'right-14' : 'left-14'}
+                ${tooltipPosition === "left" ? "right-14" : "left-14"}
               `}
             >
               {action.tooltip}
@@ -163,7 +163,7 @@ const FloatingActionBar = ({
           flex items-center justify-center shadow-lg shadow-purple-500/30
           transform transition-all duration-300 hover:scale-105 hover:shadow-purple-500/50
         "
-        aria-label={shouldCollapse ? 'Expand actions' : 'Collapse actions'}
+        aria-label={shouldCollapse ? "Expand actions" : "Collapse actions"}
       >
         {shouldCollapse ? (
           <Plus className="w-6 h-6 text-white" />
@@ -183,8 +183,10 @@ const FloatingActionBar = ({
             transition-opacity duration-200 pointer-events-none
           "
         >
-          Press <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">Ctrl</kbd> +{' '}
-          <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">K</kbd> to expand
+          Press{" "}
+          <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">Ctrl</kbd>{" "}
+          + <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">K</kbd>{" "}
+          to expand
         </div>
       )}
     </div>

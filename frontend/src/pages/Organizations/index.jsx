@@ -14,9 +14,21 @@ import CTAButton from "@/components/lib/CTAButton";
 import { Trash, PencilSimple, Gear } from "@phosphor-icons/react";
 
 export default function Organizations() {
-  const { isOpen: isFormOpen, openModal: openFormModal, closeModal: closeFormModal } = useModal();
-  const { isOpen: isDetailsOpen, openModal: openDetailsModal, closeModal: closeDetailsModal } = useModal();
-  const { isOpen: isSettingsOpen, openModal: openSettingsModal, closeModal: closeSettingsModal } = useModal();
+  const {
+    isOpen: isFormOpen,
+    openModal: openFormModal,
+    closeModal: closeFormModal,
+  } = useModal();
+  const {
+    isOpen: isDetailsOpen,
+    openModal: openDetailsModal,
+    closeModal: closeDetailsModal,
+  } = useModal();
+  const {
+    isOpen: isSettingsOpen,
+    openModal: openSettingsModal,
+    closeModal: closeSettingsModal,
+  } = useModal();
 
   const [loading, setLoading] = useState(true);
   const [organizations, setOrganizations] = useState([]);
@@ -67,13 +79,17 @@ export default function Organizations() {
   };
 
   const handleDelete = async (org) => {
-    if (!confirm(`Are you sure you want to delete the organization "${org.name}"? This will remove all users and workspaces associated with this organization.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete the organization "${org.name}"? This will remove all users and workspaces associated with this organization.`
+      )
+    ) {
       return;
     }
-    
+
     const response = await Organization.delete(org.id);
     if (response?.success || response?.error === null) {
-      setOrganizations(organizations.filter(o => o.id !== org.id));
+      setOrganizations(organizations.filter((o) => o.id !== org.id));
     }
   };
 
@@ -150,7 +166,8 @@ export default function Organizations() {
             {organizations.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-theme-text-secondary">
-                  No organizations found. Click "Add organization" to create one.
+                  No organizations found. Click "Add organization" to create
+                  one.
                 </p>
               </div>
             ) : (
@@ -192,29 +209,41 @@ export default function Organizations() {
                         {org.slug}
                       </td>
                       <td className="px-6 py-3 border-white/5">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          org.plan === 'free' ? 'bg-green-500/20 text-green-400' :
-                          org.plan === 'pro' ? 'bg-blue-500/20 text-blue-400' :
-                          org.plan === 'enterprise' ? 'bg-purple-500/20 text-purple-400' :
-                          'bg-gray-500/20 text-gray-400'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                            org.plan === "free"
+                              ? "bg-green-500/20 text-green-400"
+                              : org.plan === "pro"
+                                ? "bg-blue-500/20 text-blue-400"
+                                : org.plan === "enterprise"
+                                  ? "bg-purple-500/20 text-purple-400"
+                                  : "bg-gray-500/20 text-gray-400"
+                          }`}
+                        >
                           {org.plan}
                         </span>
                       </td>
                       <td className="px-6 py-3 border-white/5">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          org.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                          org.status === 'trial' ? 'bg-yellow-500/20 text-yellow-400' :
-                          org.status === 'past_due' ? 'bg-orange-500/20 text-orange-400' :
-                          org.status === 'suspended' ? 'bg-red-500/20 text-red-400' :
-                          org.status === 'canceled' ? 'bg-gray-500/20 text-gray-400' :
-                          'bg-gray-500/20 text-gray-400'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                            org.status === "active"
+                              ? "bg-green-500/20 text-green-400"
+                              : org.status === "trial"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : org.status === "past_due"
+                                  ? "bg-orange-500/20 text-orange-400"
+                                  : org.status === "suspended"
+                                    ? "bg-red-500/20 text-red-400"
+                                    : org.status === "canceled"
+                                      ? "bg-gray-500/20 text-gray-400"
+                                      : "bg-gray-500/20 text-gray-400"
+                          }`}
+                        >
                           {org.status}
                         </span>
                       </td>
                       <td className="px-6 py-3 border-white/5 text-theme-text-secondary">
-                        {org.seatLimit ? `${org.seatLimit}` : 'Unlimited'}
+                        {org.seatLimit ? `${org.seatLimit}` : "Unlimited"}
                       </td>
                       <td className="px-6 py-3 border-white/5">
                         <div className="flex items-center gap-x-2">

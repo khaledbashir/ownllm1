@@ -130,8 +130,8 @@ export default function FormsManager({ workspace }) {
       </div>
 
       <p className="text-white/60 text-sm">
-        Connect OpenForm instances to this workspace. Responses will be added to the
-        knowledge base for AI analysis.
+        Connect OpenForm instances to this workspace. Responses will be added to
+        the knowledge base for AI analysis.
       </p>
 
       {/* Connect Form Modal */}
@@ -197,8 +197,8 @@ export default function FormsManager({ workspace }) {
           <FileText className="w-12 h-12 text-white/20 mx-auto mb-3" />
           <h3 className="text-white font-medium mb-2">No forms connected</h3>
           <p className="text-white/60 text-sm mb-4">
-            Connect your OpenForm instances to start collecting responses and using them
-            in AI conversations.
+            Connect your OpenForm instances to start collecting responses and
+            using them in AI conversations.
           </p>
           <button
             onClick={() => setShowConnectModal(true)}
@@ -218,9 +218,7 @@ export default function FormsManager({ workspace }) {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <FileText className="w-5 h-5 text-purple-400" />
-                    <h3 className="text-white font-medium">
-                      {form.formTitle}
-                    </h3>
+                    <h3 className="text-white font-medium">{form.formTitle}</h3>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-white/60">
                     <span>Responses: {form.responseCount || 0}</span>
@@ -244,7 +242,9 @@ export default function FormsManager({ workspace }) {
                         ? "bg-purple-600 text-white"
                         : "bg-theme-bg-primary text-white/60 hover:text-white"
                     }`}
-                    title={form.aiAnalysis ? "AI Analysis ON" : "AI Analysis OFF"}
+                    title={
+                      form.aiAnalysis ? "AI Analysis ON" : "AI Analysis OFF"
+                    }
                   >
                     <Brain className="w-4 h-4" />
                   </button>
@@ -279,9 +279,9 @@ export default function FormsManager({ workspace }) {
             <div>
               <h4 className="text-white font-medium mb-1">AI Analysis</h4>
               <p className="text-white/70 text-sm">
-                When enabled, form responses are automatically added to your workspace
-                documents. You can then chat with the AI about any form response,
-                and it will use RAG to provide insights.
+                When enabled, form responses are automatically added to your
+                workspace documents. You can then chat with the AI about any
+                form response, and it will use RAG to provide insights.
               </p>
             </div>
           </div>

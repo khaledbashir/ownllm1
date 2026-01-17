@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Moon, Sun } from "lucide-react";
 
 /**
  * DarkModeToggle Component
- * 
+ *
  * Premium dark mode toggle with:
  * - Smooth color transition
  * - Persist preference in localStorage
@@ -11,9 +11,9 @@ import { Moon, Sun } from 'lucide-react';
  */
 
 const DarkModeToggle = ({
-  position = 'header', // 'header' | 'sidebar' | 'floating'
-  size = 'md', // 'sm' | 'md' | 'lg'
-  className = ''
+  position = "header", // 'header' | 'sidebar' | 'floating'
+  size = "md", // 'sm' | 'md' | 'lg'
+  className = "",
 }) => {
   const [isDark, setIsDark] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -23,13 +23,15 @@ const DarkModeToggle = ({
     setIsMounted(true);
 
     // Check localStorage first
-    const storedPreference = localStorage.getItem('darkMode');
-    
+    const storedPreference = localStorage.getItem("darkMode");
+
     if (storedPreference !== null) {
-      setIsDark(storedPreference === 'true');
+      setIsDark(storedPreference === "true");
     } else {
       // Fall back to system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)"
+      ).matches;
       setIsDark(prefersDark);
     }
   }, []);
@@ -41,13 +43,13 @@ const DarkModeToggle = ({
     const root = document.documentElement;
 
     if (isDark) {
-      root.classList.add('dark');
+      root.classList.add("dark");
     } else {
-      root.classList.remove('dark');
+      root.classList.remove("dark");
     }
 
     // Persist preference
-    localStorage.setItem('darkMode', isDark.toString());
+    localStorage.setItem("darkMode", isDark.toString());
   }, [isDark, isMounted]);
 
   // Listen for system preference changes
@@ -55,19 +57,19 @@ const DarkModeToggle = ({
     if (!isMounted) return;
 
     // Only listen if no manual preference set
-    const storedPreference = localStorage.getItem('darkMode');
+    const storedPreference = localStorage.getItem("darkMode");
     if (storedPreference !== null) return;
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     const handleChange = (e) => {
       setIsDark(e.matches);
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    
+    mediaQuery.addEventListener("change", handleChange);
+
     return () => {
-      mediaQuery.removeEventListener('change', handleChange);
+      mediaQuery.removeEventListener("change", handleChange);
     };
   }, [isMounted]);
 
@@ -77,16 +79,16 @@ const DarkModeToggle = ({
 
   // Size configurations
   const sizes = {
-    sm: 'w-8 h-8 p-1.5',
-    md: 'w-10 h-10 p-2',
-    lg: 'w-12 h-12 p-2.5'
+    sm: "w-8 h-8 p-1.5",
+    md: "w-10 h-10 p-2",
+    lg: "w-12 h-12 p-2.5",
   };
 
   // Position styles
   const positions = {
-    header: 'relative',
-    sidebar: 'absolute right-4 top-4',
-    floating: 'fixed right-4 top-4 z-40'
+    header: "relative",
+    sidebar: "absolute right-4 top-4",
+    floating: "fixed right-4 top-4 z-40",
   };
 
   return (
@@ -103,7 +105,7 @@ const DarkModeToggle = ({
         focus:outline-none focus:ring-2 focus:ring-purple-500
         ${className}
       `}
-      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
     >
       {isDark ? (
         <Moon className="w-full h-full text-purple-400 dark:text-purple-400" />

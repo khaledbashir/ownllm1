@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
   X,
@@ -9,12 +9,12 @@ import {
   Copy,
   Download,
   MessageSquare,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 /**
  * AIAssistantPanel Component
- * 
+ *
  * Premium AI assistant panel for proposal interactions:
  * - Collapsible side panel (right side)
  * - Chat input for questions
@@ -31,14 +31,14 @@ const AIAssistantPanel = ({
   selectedSection,
   onAskQuestion,
   onHighlightSection,
-  onExportMarkdown
+  onExportMarkdown,
 }) => {
   const [isOpen, setIsOpen] = useState(externalOpen ?? false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'summary' | 'highlights'
+  const [activeTab, setActiveTab] = useState("chat"); // 'chat' | 'summary' | 'highlights'
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -49,14 +49,14 @@ const AIAssistantPanel = ({
 
   // Focus input when chat tab opens
   useEffect(() => {
-    if (activeTab === 'chat' && isOpen && !isMinimized) {
+    if (activeTab === "chat" && isOpen && !isMinimized) {
       inputRef.current?.focus();
     }
   }, [activeTab, isOpen, isMinimized]);
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const togglePanel = () => {
@@ -72,13 +72,13 @@ const AIAssistantPanel = ({
 
     const userMessage = {
       id: Date.now(),
-      role: 'user',
+      role: "user",
       content: input.trim(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
     setIsLoading(true);
 
     try {
@@ -87,29 +87,32 @@ const AIAssistantPanel = ({
 
       const aiMessage = {
         id: Date.now() + 1,
-        role: 'assistant',
-        content: response || 'I apologize, but I could not process your request. Please try again.',
-        timestamp: new Date().toISOString()
+        role: "assistant",
+        content:
+          response ||
+          "I apologize, but I could not process your request. Please try again.",
+        timestamp: new Date().toISOString(),
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       const errorMessage = {
         id: Date.now() + 1,
-        role: 'assistant',
-        content: 'Sorry, I encountered an error while processing your request. Please try again later.',
+        role: "assistant",
+        content:
+          "Sorry, I encountered an error while processing your request. Please try again later.",
         isError: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -117,9 +120,9 @@ const AIAssistantPanel = ({
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -129,8 +132,11 @@ const AIAssistantPanel = ({
 
   const exportAsMarkdown = () => {
     const markdown = messages
-      .map(msg => `### ${msg.role === 'user' ? 'You' : 'AI Assistant'}\n\n${msg.content}\n\n---\n`)
-      .join('\n');
+      .map(
+        (msg) =>
+          `### ${msg.role === "user" ? "You" : "AI Assistant"}\n\n${msg.content}\n\n---\n`
+      )
+      .join("\n");
 
     if (onExportMarkdown) {
       onExportMarkdown(markdown);
@@ -202,10 +208,10 @@ const AIAssistantPanel = ({
                 </span>
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 dark:text-white text-sm">
-                    {highlight.title || 'Important Section'}
+                    {highlight.title || "Important Section"}
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    {highlight.description || 'Click to highlight this section'}
+                    {highlight.description || "Click to highlight this section"}
                   </div>
                 </div>
               </div>
@@ -241,7 +247,8 @@ const AIAssistantPanel = ({
               AI Assistant
             </h4>
             <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-xs">
-              Ask me anything about your proposal, and I'll help you analyze, summarize, and improve it.
+              Ask me anything about your proposal, and I'll help you analyze,
+              summarize, and improve it.
             </p>
             {selectedSection && (
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 rounded-full text-sm text-amber-700 dark:text-amber-400">
@@ -254,16 +261,17 @@ const AIAssistantPanel = ({
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
                 className={`
                   max-w-[85%] rounded-2xl px-4 py-3
-                  ${message.role === 'user'
-                    ? 'bg-purple-600 text-white'
-                    : message.isError
-                      ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                  ${
+                    message.role === "user"
+                      ? "bg-purple-600 text-white"
+                      : message.isError
+                        ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
                   }
                 `}
               >
@@ -276,12 +284,16 @@ const AIAssistantPanel = ({
                 <div className="prose prose-sm dark:prose-invert max-w-none">
                   {message.content}
                 </div>
-                <div className={`
+                <div
+                  className={`
                   flex items-center justify-end gap-2 mt-2
-                  ${message.role === 'user' ? 'text-purple-200' : 'text-gray-500 dark:text-gray-400'}
-                `}>
-                  <span className="text-xs">{formatTime(message.timestamp)}</span>
-                  {message.role === 'assistant' && (
+                  ${message.role === "user" ? "text-purple-200" : "text-gray-500 dark:text-gray-400"}
+                `}
+                >
+                  <span className="text-xs">
+                    {formatTime(message.timestamp)}
+                  </span>
+                  {message.role === "assistant" && (
                     <button
                       onClick={() => copyToClipboard(message.content)}
                       className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
@@ -300,9 +312,18 @@ const AIAssistantPanel = ({
             <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl px-4 py-3">
               <div className="flex items-center gap-2">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  />
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  />
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  />
                 </div>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   AI is thinking...
@@ -325,7 +346,7 @@ const AIAssistantPanel = ({
             placeholder={
               selectedSection
                 ? `Ask about "${selectedSection}"...`
-                : 'Ask about your proposal...'
+                : "Ask about your proposal..."
             }
             rows={1}
             className="
@@ -336,8 +357,8 @@ const AIAssistantPanel = ({
               placeholder-gray-400 dark:placeholder-gray-500
             "
             style={{
-              minHeight: '42px',
-              maxHeight: '120px'
+              minHeight: "42px",
+              maxHeight: "120px",
             }}
           />
           <button
@@ -355,7 +376,19 @@ const AIAssistantPanel = ({
         </div>
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            Press <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Enter</kbd> to send, <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Shift</kbd> + <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Enter</kbd> for new line
+            Press{" "}
+            <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+              Enter
+            </kbd>{" "}
+            to send,{" "}
+            <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+              Shift
+            </kbd>{" "}
+            +{" "}
+            <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+              Enter
+            </kbd>{" "}
+            for new line
           </span>
         </div>
       </div>
@@ -389,7 +422,7 @@ const AIAssistantPanel = ({
         bg-white dark:bg-gray-800 rounded-2xl shadow-2xl
         flex flex-col border border-purple-200 dark:border-purple-800
         transition-all duration-300 ease-in-out z-30
-        ${isMinimized ? 'h-16' : ''}
+        ${isMinimized ? "h-16" : ""}
       `}
     >
       {/* Header */}
@@ -412,7 +445,7 @@ const AIAssistantPanel = ({
           <button
             onClick={() => setIsMinimized(!isMinimized)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            aria-label={isMinimized ? 'Expand' : 'Minimize'}
+            aria-label={isMinimized ? "Expand" : "Minimize"}
           >
             {isMinimized ? (
               <Maximize2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -435,12 +468,13 @@ const AIAssistantPanel = ({
           {/* Tabs */}
           <div className="flex border-b border-gray-200 dark:border-gray-700">
             <button
-              onClick={() => setActiveTab('chat')}
+              onClick={() => setActiveTab("chat")}
               className={`
                 flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors
-                ${activeTab === 'chat'
-                  ? 'text-purple-600 dark:text-purple-400 border-purple-600 dark:border-purple-400'
-                  : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white'
+                ${
+                  activeTab === "chat"
+                    ? "text-purple-600 dark:text-purple-400 border-purple-600 dark:border-purple-400"
+                    : "text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white"
                 }
               `}
             >
@@ -448,12 +482,13 @@ const AIAssistantPanel = ({
               Chat
             </button>
             <button
-              onClick={() => setActiveTab('summary')}
+              onClick={() => setActiveTab("summary")}
               className={`
                 flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors
-                ${activeTab === 'summary'
-                  ? 'text-purple-600 dark:text-purple-400 border-purple-600 dark:border-purple-400'
-                  : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white'
+                ${
+                  activeTab === "summary"
+                    ? "text-purple-600 dark:text-purple-400 border-purple-600 dark:border-purple-400"
+                    : "text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white"
                 }
               `}
             >
@@ -461,12 +496,13 @@ const AIAssistantPanel = ({
               Summary
             </button>
             <button
-              onClick={() => setActiveTab('highlights')}
+              onClick={() => setActiveTab("highlights")}
               className={`
                 flex-1 px-4 py-2 text-sm font-medium border-b-2 transition-colors
-                ${activeTab === 'highlights'
-                  ? 'text-purple-600 dark:text-purple-400 border-purple-600 dark:border-purple-400'
-                  : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white'
+                ${
+                  activeTab === "highlights"
+                    ? "text-purple-600 dark:text-purple-400 border-purple-600 dark:border-purple-400"
+                    : "text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-white"
                 }
               `}
             >
@@ -477,9 +513,9 @@ const AIAssistantPanel = ({
 
           {/* Tab Content */}
           <div className="flex-1 overflow-hidden">
-            {activeTab === 'chat' && <ChatTab />}
-            {activeTab === 'summary' && <SummaryTab />}
-            {activeTab === 'highlights' && <HighlightsTab />}
+            {activeTab === "chat" && <ChatTab />}
+            {activeTab === "summary" && <SummaryTab />}
+            {activeTab === "highlights" && <HighlightsTab />}
           </div>
         </>
       )}

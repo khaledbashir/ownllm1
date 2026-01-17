@@ -24,16 +24,25 @@ export default function MarketingHome() {
               Ready to Deploy Your Intelligence?
             </h2>
             <p className="text-lg text-zinc-400 font-normal mb-12">
-              Get started with your sovereign AI infrastructure in minutes. No credit card required for initial consultation.
+              Get started with your sovereign AI infrastructure in minutes. No
+              credit card required for initial consultation.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link to="/register">
-                <Button size="lg" className="h-16 px-12 rounded-lg bg-white text-black hover:bg-zinc-200 font-bold uppercase tracking-widest text-[11px] group">
-                  Get Started Now <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
+                <Button
+                  size="lg"
+                  className="h-16 px-12 rounded-lg bg-white text-black hover:bg-zinc-200 font-bold uppercase tracking-widest text-[11px] group"
+                >
+                  Get Started Now{" "}
+                  <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link to="/login">
-                <Button size="lg" variant="outline" className="h-16 px-12 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 font-bold uppercase tracking-widest text-[11px]">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-16 px-12 rounded-lg border-white/10 bg-white/5 hover:bg-white/10 font-bold uppercase tracking-widest text-[11px]"
+                >
                   Sign In
                 </Button>
               </Link>

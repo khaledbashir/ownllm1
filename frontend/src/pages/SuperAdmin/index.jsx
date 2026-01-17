@@ -3,7 +3,23 @@ import Sidebar from "@/components/SettingsSidebar";
 import { isMobile } from "react-device-detect";
 import * as Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { Buildings, Users, SquaresFour, FileText, ChartLineUp, Plus, Gear, Trash, PencilSimple, Shield, UserPlus, CheckCircle, WarningCircle, XCircle, DotsThreeVertical } from "@phosphor-icons/react";
+import {
+  Buildings,
+  Users,
+  SquaresFour,
+  FileText,
+  ChartLineUp,
+  Plus,
+  Gear,
+  Trash,
+  PencilSimple,
+  Shield,
+  UserPlus,
+  CheckCircle,
+  WarningCircle,
+  XCircle,
+  DotsThreeVertical,
+} from "@phosphor-icons/react";
 import Organization from "@/models/organization";
 import OrganizationDetails from "../Organizations/OrganizationDetails";
 import OrganizationForm from "../Organizations/OrganizationForm";
@@ -12,12 +28,32 @@ import ModalWrapper from "@/components/ModalWrapper";
 import CTAButton from "@/components/lib/CTAButton";
 
 export default function SuperAdmin() {
-  const { isOpen: isFormOpen, openModal: openFormModal, closeModal: closeFormModal } = useModal();
-  const { isOpen: isDetailsOpen, openModal: openDetailsModal, closeModal: closeDetailsModal } = useModal();
-  const { isOpen: isSettingsOpen, openModal: openSettingsModal, closeModal: closeSettingsModal } = useModal();
-  const { isOpen: isUsersOpen, openModal: openUsersModal, closeModal: closeUsersModal } = useModal();
-  const { isOpen: isWorkspacesOpen, openModal: openWorkspacesModal, closeModal: closeWorkspacesModal } = useModal();
-  
+  const {
+    isOpen: isFormOpen,
+    openModal: openFormModal,
+    closeModal: closeFormModal,
+  } = useModal();
+  const {
+    isOpen: isDetailsOpen,
+    openModal: openDetailsModal,
+    closeModal: closeDetailsModal,
+  } = useModal();
+  const {
+    isOpen: isSettingsOpen,
+    openModal: openSettingsModal,
+    closeModal: closeSettingsModal,
+  } = useModal();
+  const {
+    isOpen: isUsersOpen,
+    openModal: openUsersModal,
+    closeModal: closeUsersModal,
+  } = useModal();
+  const {
+    isOpen: isWorkspacesOpen,
+    openModal: openWorkspacesModal,
+    closeModal: closeWorkspacesModal,
+  } = useModal();
+
   const [loading, setLoading] = useState(true);
   const [organizations, setOrganizations] = useState([]);
   const [selectedOrg, setSelectedOrg] = useState(null);
@@ -28,21 +64,21 @@ export default function SuperAdmin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPlan, setFilterPlan] = useState("all");
-  
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      
+
       const [orgsData, orgStats] = await Promise.all([
         Organization.getAll(),
-        fetchSystemStats()
+        fetchSystemStats(),
       ]);
-      
+
       setOrganizations(orgsData?.organizations || []);
       setStats(orgStats);
       setLoading(false);
     }
-    
+
     fetchData();
   }, []);
 
@@ -50,23 +86,23 @@ export default function SuperAdmin() {
     // Get stats across all organizations
     const orgs = await Organization.getAll();
     const organizations = orgs?.organizations || [];
-    
+
     let totalUsers = 0;
     let totalWorkspaces = 0;
     let totalDocuments = 0;
     let activeOrgs = 0;
     let suspendedOrgs = 0;
-    
+
     for (const org of organizations) {
       const stats = await Organization.getStats(org.id);
       totalUsers += stats?.stats?.userCount || 0;
       totalWorkspaces += stats?.stats?.workspaceCount || 0;
       totalDocuments += stats?.stats?.documentCount || 0;
-      
-      if (org.status === 'active') activeOrgs++;
-      if (org.status === 'suspended') suspendedOrgs++;
+
+      if (org.status === "active") activeOrgs++;
+      if (org.status === "suspended") suspendedOrgs++;
     }
-    
+
     return {
       totalOrganizations: organizations.length,
       totalUsers,
@@ -95,13 +131,17 @@ export default function SuperAdmin() {
   };
 
   const handleDelete = async (org) => {
-    if (!confirm(`Are you sure you want to delete organization "${org.name}"? This will remove all users and workspaces associated with this organization.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete organization "${org.name}"? This will remove all users and workspaces associated with this organization.`
+      )
+    ) {
       return;
     }
-    
+
     const response = await Organization.delete(org.id);
     if (response?.success || response?.error === null) {
-      setOrganizations(organizations.filter(o => o.id !== org.id));
+      setOrganizations(organizations.filter((o) => o.id !== org.id));
       // Refresh stats
       const orgStats = await fetchSystemStats();
       setStats(orgStats);
@@ -163,11 +203,15 @@ export default function SuperAdmin() {
   };
 
   const handleToggleStatus = async (org) => {
-    const newStatus = org.status === 'active' ? 'suspended' : 'active';
-    if (!confirm(`Are you sure you want to ${newStatus === 'suspended' ? 'suspend' : 'activate'} organization "${org.name}"?`)) {
+    const newStatus = org.status === "active" ? "suspended" : "active";
+    if (
+      !confirm(
+        `Are you sure you want to ${newStatus === "suspended" ? "suspend" : "activate"} organization "${org.name}"?`
+      )
+    ) {
       return;
     }
-    
+
     const response = await Organization.update(org.id, { status: newStatus });
     if (response?.success) {
       const _organizations = await Organization.getAll();
@@ -233,7 +277,10 @@ export default function SuperAdmin() {
           <div className="flex items-center justify-between pb-6 border-white/10 border-b-2 mb-6">
             <div className="flex flex-col">
               <div className="flex items-center gap-x-4">
-                <Shield className="h-6 w-6 text-theme-button-primary" weight="bold" />
+                <Shield
+                  className="h-6 w-6 text-theme-button-primary"
+                  weight="bold"
+                />
                 <p className="text-lg leading-6 font-bold text-theme-text-primary">
                   Super Admin Dashboard
                 </p>
@@ -256,9 +303,13 @@ export default function SuperAdmin() {
               <div className="bg-white/5 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Buildings className="h-5 w-5 text-theme-button-cta" />
-                  <p className="text-xs text-theme-text-secondary uppercase">Total Organizations</p>
+                  <p className="text-xs text-theme-text-secondary uppercase">
+                    Total Organizations
+                  </p>
                 </div>
-                <p className="text-3xl font-bold text-theme-text-primary">{stats.totalOrganizations}</p>
+                <p className="text-3xl font-bold text-theme-text-primary">
+                  {stats.totalOrganizations}
+                </p>
                 <div className="flex items-center gap-4 mt-2">
                   <span className="flex items-center gap-1 text-xs text-green-400">
                     <span className="w-2 h-2 rounded-full bg-green-400" />
@@ -270,29 +321,41 @@ export default function SuperAdmin() {
                   </span>
                 </div>
               </div>
-              
+
               <div className="bg-white/5 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="h-5 w-5 text-blue-400" />
-                  <p className="text-xs text-theme-text-secondary uppercase">Total Users</p>
+                  <p className="text-xs text-theme-text-secondary uppercase">
+                    Total Users
+                  </p>
                 </div>
-                <p className="text-3xl font-bold text-theme-text-primary">{stats.totalUsers}</p>
+                <p className="text-3xl font-bold text-theme-text-primary">
+                  {stats.totalUsers}
+                </p>
               </div>
-              
+
               <div className="bg-white/5 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <SquaresFour className="h-5 w-5 text-purple-400" />
-                  <p className="text-xs text-theme-text-secondary uppercase">Total Workspaces</p>
+                  <p className="text-xs text-theme-text-secondary uppercase">
+                    Total Workspaces
+                  </p>
                 </div>
-                <p className="text-3xl font-bold text-theme-text-primary">{stats.totalWorkspaces}</p>
+                <p className="text-3xl font-bold text-theme-text-primary">
+                  {stats.totalWorkspaces}
+                </p>
               </div>
-              
+
               <div className="bg-white/5 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="h-5 w-5 text-yellow-400" />
-                  <p className="text-xs text-theme-text-secondary uppercase">Total Documents</p>
+                  <p className="text-xs text-theme-text-secondary uppercase">
+                    Total Documents
+                  </p>
                 </div>
-                <p className="text-3xl font-bold text-theme-text-primary">{stats.totalDocuments}</p>
+                <p className="text-3xl font-bold text-theme-text-primary">
+                  {stats.totalDocuments}
+                </p>
               </div>
             </div>
           )}
@@ -314,8 +377,18 @@ export default function SuperAdmin() {
                     className="bg-theme-settings-input-bg text-theme-settings-input-text border border-white/10 rounded-lg px-4 py-2 pl-10 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-theme-button-primary"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-secondary">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -353,7 +426,8 @@ export default function SuperAdmin() {
                 <div className="text-center py-16 bg-white/5 rounded-lg">
                   <Buildings className="h-12 w-12 mx-auto mb-4 text-theme-text-secondary" />
                   <p className="text-theme-text-secondary">
-                    No organizations found. Click "Create Organization" to create one.
+                    No organizations found. Click "Create Organization" to
+                    create one.
                   </p>
                 </div>
               ) : (
@@ -385,15 +459,25 @@ export default function SuperAdmin() {
                   </thead>
                   <tbody>
                     {organizations
-                      .filter(org => {
-                        const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                              org.slug.toLowerCase().includes(searchTerm.toLowerCase());
-                        const matchesStatus = filterStatus === 'all' || org.status === filterStatus;
-                        const matchesPlan = filterPlan === 'all' || org.plan === filterPlan;
+                      .filter((org) => {
+                        const matchesSearch =
+                          org.name
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase()) ||
+                          org.slug
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase());
+                        const matchesStatus =
+                          filterStatus === "all" || org.status === filterStatus;
+                        const matchesPlan =
+                          filterPlan === "all" || org.plan === filterPlan;
                         return matchesSearch && matchesStatus && matchesPlan;
                       })
                       .map((org) => (
-                        <tr key={org.id} className="row-hover border-t border-white/5">
+                        <tr
+                          key={org.id}
+                          className="row-hover border-t border-white/5"
+                        >
                           <td className="px-4 py-3 text-theme-text-primary font-medium">
                             <button
                               onClick={() => handleViewDetails(org)}
@@ -403,20 +487,26 @@ export default function SuperAdmin() {
                             </button>
                           </td>
                           <td className="px-4 py-3 text-theme-text-secondary">
-                            <code className="bg-white/5 px-2 py-1 rounded text-xs">@{org.slug}</code>
+                            <code className="bg-white/5 px-2 py-1 rounded text-xs">
+                              @{org.slug}
+                            </code>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold ${PLAN_COLORS[org.plan] || PLAN_COLORS.free}`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-semibold ${PLAN_COLORS[org.plan] || PLAN_COLORS.free}`}
+                            >
                               {org.plan}
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold ${STATUS_COLORS[org.status] || STATUS_COLORS.canceled}`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-semibold ${STATUS_COLORS[org.status] || STATUS_COLORS.canceled}`}
+                            >
                               {org.status}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-theme-text-secondary">
-                            {org.seatLimit ? `${org.seatLimit}` : 'Unlimited'}
+                            {org.seatLimit ? `${org.seatLimit}` : "Unlimited"}
                           </td>
                           <td className="px-4 py-3 text-theme-text-secondary">
                             {new Date(org.createdAt).toLocaleDateString()}
@@ -447,11 +537,17 @@ export default function SuperAdmin() {
                               <button
                                 onClick={() => handleToggleStatus(org)}
                                 className={`p-1.5 rounded hover:bg-white/10 transition-colors ${
-                                  org.status === 'active' ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-green-300'
+                                  org.status === "active"
+                                    ? "text-red-400 hover:text-red-300"
+                                    : "text-green-400 hover:text-green-300"
                                 }`}
-                                title={org.status === 'active' ? 'Suspend organization' : 'Activate organization'}
+                                title={
+                                  org.status === "active"
+                                    ? "Suspend organization"
+                                    : "Activate organization"
+                                }
                               >
-                                {org.status === 'active' ? (
+                                {org.status === "active" ? (
                                   <XCircle className="h-4 w-4" />
                                 ) : (
                                   <CheckCircle className="h-4 w-4" />
@@ -474,7 +570,7 @@ export default function SuperAdmin() {
             </div>
           </div>
         </div>
-        
+
         {/* Form Modal */}
         <ModalWrapper isOpen={isFormOpen}>
           <OrganizationForm
@@ -484,7 +580,7 @@ export default function SuperAdmin() {
             mode={viewMode}
           />
         </ModalWrapper>
-        
+
         {/* Details Modal */}
         <ModalWrapper isOpen={isDetailsOpen}>
           <OrganizationDetails
@@ -511,10 +607,14 @@ export default function SuperAdmin() {
               </div>
               <div className="p-6 space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-theme-text-primary mb-4">General Settings</h3>
+                  <h3 className="text-lg font-semibold text-theme-text-primary mb-4">
+                    General Settings
+                  </h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-theme-text-primary mb-2">Organization Name</label>
+                      <label className="block text-sm font-medium text-theme-text-primary mb-2">
+                        Organization Name
+                      </label>
                       <input
                         type="text"
                         defaultValue={selectedOrg.name}
@@ -523,7 +623,9 @@ export default function SuperAdmin() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-theme-text-primary mb-2">Slug</label>
+                      <label className="block text-sm font-medium text-theme-text-primary mb-2">
+                        Slug
+                      </label>
                       <input
                         type="text"
                         defaultValue={selectedOrg.slug}
@@ -534,10 +636,14 @@ export default function SuperAdmin() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-theme-text-primary mb-4">Plan & Status</h3>
+                  <h3 className="text-lg font-semibold text-theme-text-primary mb-4">
+                    Plan & Status
+                  </h3>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-theme-text-primary mb-2">Plan</label>
+                      <label className="block text-sm font-medium text-theme-text-primary mb-2">
+                        Plan
+                      </label>
                       <select
                         id="settings-plan"
                         defaultValue={selectedOrg.plan}
@@ -549,7 +655,9 @@ export default function SuperAdmin() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-theme-text-primary mb-2">Status</label>
+                      <label className="block text-sm font-medium text-theme-text-primary mb-2">
+                        Status
+                      </label>
                       <select
                         id="settings-status"
                         defaultValue={selectedOrg.status}
@@ -563,23 +671,31 @@ export default function SuperAdmin() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-theme-text-primary mb-2">Admin Role</label>
+                      <label className="block text-sm font-medium text-theme-text-primary mb-2">
+                        Admin Role
+                      </label>
                       <select
                         id="settings-role"
-                        defaultValue={selectedOrg.role || 'default'}
+                        defaultValue={selectedOrg.role || "default"}
                         className="w-full bg-theme-settings-input-bg text-theme-settings-input-text border border-white/10 rounded-lg px-3 py-2.5"
                       >
                         <option value="default">Default</option>
                         <option value="admin">Admin</option>
                       </select>
-                      <p className="text-xs text-theme-text-secondary mt-1">Admin organizations get special privileges</p>
+                      <p className="text-xs text-theme-text-secondary mt-1">
+                        Admin organizations get special privileges
+                      </p>
                     </div>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-theme-text-primary mb-4">Seat Limit</h3>
+                  <h3 className="text-lg font-semibold text-theme-text-primary mb-4">
+                    Seat Limit
+                  </h3>
                   <div>
-                    <label className="block text-sm font-medium text-theme-text-primary mb-2">Maximum Users</label>
+                    <label className="block text-sm font-medium text-theme-text-primary mb-2">
+                      Maximum Users
+                    </label>
                     <input
                       type="number"
                       defaultValue={selectedOrg.seatLimit || ""}
@@ -587,7 +703,9 @@ export default function SuperAdmin() {
                       placeholder="Unlimited"
                       className="w-full bg-theme-settings-input-bg text-theme-settings-input-text border border-white/10 rounded-lg px-3 py-2.5"
                     />
-                    <p className="text-xs text-theme-text-secondary mt-1">Leave empty for unlimited users</p>
+                    <p className="text-xs text-theme-text-secondary mt-1">
+                      Leave empty for unlimited users
+                    </p>
                   </div>
                 </div>
                 <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
@@ -599,21 +717,30 @@ export default function SuperAdmin() {
                   </button>
                   <button
                     onClick={async () => {
-                      const name = document.getElementById('settings-name').value;
-                      const slug = document.getElementById('settings-slug').value;
-                      const plan = document.getElementById('settings-plan').value;
-                      const status = document.getElementById('settings-status').value;
-                      const role = document.getElementById('settings-role').value;
-                      const seatLimit = document.getElementById('settings-seats').value;
+                      const name =
+                        document.getElementById("settings-name").value;
+                      const slug =
+                        document.getElementById("settings-slug").value;
+                      const plan =
+                        document.getElementById("settings-plan").value;
+                      const status =
+                        document.getElementById("settings-status").value;
+                      const role =
+                        document.getElementById("settings-role").value;
+                      const seatLimit =
+                        document.getElementById("settings-seats").value;
 
-                      const response = await Organization.update(selectedOrg.id, {
-                        name,
-                        slug,
-                        plan,
-                        status,
-                        role,
-                        seatLimit: seatLimit ? Number(seatLimit) : null,
-                      });
+                      const response = await Organization.update(
+                        selectedOrg.id,
+                        {
+                          name,
+                          slug,
+                          plan,
+                          status,
+                          role,
+                          seatLimit: seatLimit ? Number(seatLimit) : null,
+                        }
+                      );
 
                       if (response?.success) {
                         const _organizations = await Organization.getAll();
@@ -622,7 +749,9 @@ export default function SuperAdmin() {
                         setStats(orgStats);
                         handleSettingsClose();
                       } else {
-                        alert(response?.error || 'Failed to update organization');
+                        alert(
+                          response?.error || "Failed to update organization"
+                        );
                       }
                     }}
                     className="px-4 py-2.5 text-sm font-medium text-white bg-theme-button-primary hover:bg-theme-button-primary-hover rounded-lg transition-colors"
@@ -678,8 +807,12 @@ function OrganizationUsersModal({ organization, closeModal }) {
     <div className="bg-theme-bg-secondary w-full max-w-2xl rounded-lg shadow-2xl max-h-[90vh] overflow-hidden">
       <div className="flex items-center justify-between p-6 border-b border-white/10">
         <div>
-          <h2 className="text-xl font-bold text-theme-text-primary">Users - {organization.name}</h2>
-          <p className="text-sm text-theme-text-secondary">{users.length} user(s)</p>
+          <h2 className="text-xl font-bold text-theme-text-primary">
+            Users - {organization.name}
+          </h2>
+          <p className="text-sm text-theme-text-secondary">
+            {users.length} user(s)
+          </p>
         </div>
         <button
           onClick={closeModal}
@@ -690,11 +823,15 @@ function OrganizationUsersModal({ organization, closeModal }) {
       </div>
       <div className="overflow-y-auto max-h-[70vh]">
         {loading ? (
-          <div className="p-8 text-center text-theme-text-secondary">Loading...</div>
+          <div className="p-8 text-center text-theme-text-secondary">
+            Loading...
+          </div>
         ) : users.length === 0 ? (
           <div className="p-8 text-center">
             <Users className="h-12 w-12 mx-auto mb-4 text-theme-text-secondary" />
-            <p className="text-theme-text-secondary">No users found in this organization.</p>
+            <p className="text-theme-text-secondary">
+              No users found in this organization.
+            </p>
           </div>
         ) : (
           <table className="w-full text-xs text-left">
@@ -709,22 +846,34 @@ function OrganizationUsersModal({ organization, closeModal }) {
             <tbody>
               {users.map((user) => (
                 <tr key={user.id} className="border-t border-white/5">
-                  <td className="px-6 py-3 text-theme-text-primary font-medium">{user.username}</td>
-                  <td className="px-6 py-3 text-theme-text-secondary">{user.email || '-'}</td>
+                  <td className="px-6 py-3 text-theme-text-primary font-medium">
+                    {user.username}
+                  </td>
+                  <td className="px-6 py-3 text-theme-text-secondary">
+                    {user.email || "-"}
+                  </td>
                   <td className="px-6 py-3">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                      user.role === 'admin' ? 'bg-purple-500/20 text-purple-400' :
-                      user.role === 'manager' ? 'bg-blue-500/20 text-blue-400' :
-                      'bg-gray-500/20 text-gray-400'
-                    }`}>
-                      {user.role || 'default'}
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-semibold ${
+                        user.role === "admin"
+                          ? "bg-purple-500/20 text-purple-400"
+                          : user.role === "manager"
+                            ? "bg-blue-500/20 text-blue-400"
+                            : "bg-gray-500/20 text-gray-400"
+                      }`}
+                    >
+                      {user.role || "default"}
                     </span>
                   </td>
                   <td className="px-6 py-3">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                      user.suspended ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'
-                    }`}>
-                      {user.suspended ? 'Suspended' : 'Active'}
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-semibold ${
+                        user.suspended
+                          ? "bg-red-500/20 text-red-400"
+                          : "bg-green-500/20 text-green-400"
+                      }`}
+                    >
+                      {user.suspended ? "Suspended" : "Active"}
                     </span>
                   </td>
                 </tr>
@@ -756,8 +905,12 @@ function OrganizationWorkspacesModal({ organization, closeModal }) {
     <div className="bg-theme-bg-secondary w-full max-w-2xl rounded-lg shadow-2xl max-h-[90vh] overflow-hidden">
       <div className="flex items-center justify-between p-6 border-b border-white/10">
         <div>
-          <h2 className="text-xl font-bold text-theme-text-primary">Workspaces - {organization.name}</h2>
-          <p className="text-sm text-theme-text-secondary">{workspaces.length} workspace(s)</p>
+          <h2 className="text-xl font-bold text-theme-text-primary">
+            Workspaces - {organization.name}
+          </h2>
+          <p className="text-sm text-theme-text-secondary">
+            {workspaces.length} workspace(s)
+          </p>
         </div>
         <button
           onClick={closeModal}
@@ -768,11 +921,15 @@ function OrganizationWorkspacesModal({ organization, closeModal }) {
       </div>
       <div className="overflow-y-auto max-h-[70vh]">
         {loading ? (
-          <div className="p-8 text-center text-theme-text-secondary">Loading...</div>
+          <div className="p-8 text-center text-theme-text-secondary">
+            Loading...
+          </div>
         ) : workspaces.length === 0 ? (
           <div className="p-8 text-center">
             <SquaresFour className="h-12 w-12 mx-auto mb-4 text-theme-text-secondary" />
-            <p className="text-theme-text-secondary">No workspaces found in this organization.</p>
+            <p className="text-theme-text-secondary">
+              No workspaces found in this organization.
+            </p>
           </div>
         ) : (
           <table className="w-full text-xs text-left">
@@ -786,8 +943,12 @@ function OrganizationWorkspacesModal({ organization, closeModal }) {
             <tbody>
               {workspaces.map((ws) => (
                 <tr key={ws.id} className="border-t border-white/5">
-                  <td className="px-6 py-3 text-theme-text-primary font-medium">{ws.name}</td>
-                  <td className="px-6 py-3 text-theme-text-secondary">{ws.slug}</td>
+                  <td className="px-6 py-3 text-theme-text-primary font-medium">
+                    {ws.name}
+                  </td>
+                  <td className="px-6 py-3 text-theme-text-secondary">
+                    {ws.slug}
+                  </td>
                   <td className="px-6 py-3 text-theme-text-secondary">
                     {new Date(ws.createdAt).toLocaleDateString()}
                   </td>

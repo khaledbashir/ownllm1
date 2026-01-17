@@ -9,11 +9,13 @@ A complete, production-ready auto-calculation system for `affine:database` block
 ## 🚀 Quick Start
 
 ### 1. Import in BlockSuiteEditor.jsx
+
 ```typescript
-import { setupDatabaseAutoMath } from '@/utils/blocksuite/databaseAutoMath';
+import { setupDatabaseAutoMath } from "@/utils/blocksuite/databaseAutoMath";
 ```
 
 ### 2. Initialize After Doc Load
+
 ```typescript
 // Inside your editor initialization effect
 const unsubscribeAutoMath = setupDatabaseAutoMath(doc);
@@ -23,6 +25,7 @@ editorRef.current.unsubscribeAutoMath = unsubscribeAutoMath;
 ```
 
 ### 3. Cleanup on Unmount
+
 ```typescript
 useEffect(() => {
   return () => {
@@ -39,13 +42,13 @@ Done! ✅
 
 ## 📋 Files Provided
 
-| File | Purpose |
-|------|---------|
-| **databaseAutoMath.ts** | Core implementation with `setupDatabaseAutoMath()` and `recalculateDatabaseRow()` |
-| **INTEGRATION_GUIDE.md** | Step-by-step integration instructions for BlockSuiteEditor.jsx |
-| **databaseAutoMath.test.ts** | Full test suite with 4 test cases |
-| **ARCHITECTURE.js** | Detailed architecture & troubleshooting guide |
-| **README.md** | This file |
+| File                         | Purpose                                                                           |
+| ---------------------------- | --------------------------------------------------------------------------------- |
+| **databaseAutoMath.ts**      | Core implementation with `setupDatabaseAutoMath()` and `recalculateDatabaseRow()` |
+| **INTEGRATION_GUIDE.md**     | Step-by-step integration instructions for BlockSuiteEditor.jsx                    |
+| **databaseAutoMath.test.ts** | Full test suite with 4 test cases                                                 |
+| **ARCHITECTURE.js**          | Detailed architecture & troubleshooting guide                                     |
+| **README.md**                | This file                                                                         |
 
 All located in: `/root/ownllm/frontend/src/utils/blocksuite/`
 
@@ -83,7 +86,7 @@ Loop prevention timeout (500ms) clears
 ✅ **Safe Parsing**: Empty/invalid cells default to 0, not NaN  
 ✅ **No View Contamination**: Pure data logic, doesn't modify UI components  
 ✅ **Backward Compatible**: Works with existing databases without changes  
-✅ **Customizable**: Pass custom column configs for different use cases  
+✅ **Customizable**: Pass custom column configs for different use cases
 
 ---
 
@@ -94,10 +97,10 @@ Loop prevention timeout (500ms) clears
 ```typescript
 const customConfig = {
   multipliers: [
-    { names: ['qty', 'quantity', 'units'], type: 'number' },
-    { names: ['unit_price', 'cost', 'rate'], type: 'number' },
+    { names: ["qty", "quantity", "units"], type: "number" },
+    { names: ["unit_price", "cost", "rate"], type: "number" },
   ],
-  target: { names: ['line_total', 'total'], type: 'number' },
+  target: { names: ["line_total", "total"], type: "number" },
 };
 
 setupDatabaseAutoMath(doc, customConfig);
@@ -106,10 +109,10 @@ setupDatabaseAutoMath(doc, customConfig);
 ### Manual Recalculation
 
 ```typescript
-import { recalculateDatabaseRow } from '@/utils/blocksuite/databaseAutoMath';
+import { recalculateDatabaseRow } from "@/utils/blocksuite/databaseAutoMath";
 
-const databaseBlock = doc.getBlocksByFlavour('affine:database')[0];
-const rowId = 'some-row-id';
+const databaseBlock = doc.getBlocksByFlavour("affine:database")[0];
+const rowId = "some-row-id";
 
 recalculateDatabaseRow(databaseBlock, rowId);
 ```
@@ -119,13 +122,15 @@ recalculateDatabaseRow(databaseBlock, rowId);
 ## 🧪 Testing
 
 ### Run Unit Tests
+
 ```typescript
-import { testDatabaseAutoMath } from '@/utils/blocksuite/databaseAutoMath.test';
+import { testDatabaseAutoMath } from "@/utils/blocksuite/databaseAutoMath.test";
 
 testDatabaseAutoMath(); // Returns true/false
 ```
 
 ### Manual Testing
+
 1. Create a database with columns: `Name`, `Hours`, `Rate`, `Total`
 2. Add a row with Hours = `10`, Rate = `75`
 3. Verify Total auto-populates to `750.00`
@@ -136,21 +141,22 @@ testDatabaseAutoMath(); // Returns true/false
 
 ## 🐛 Troubleshooting
 
-| Symptom | Solution |
-|---------|----------|
+| Symptom                        | Solution                                                                      |
+| ------------------------------ | ----------------------------------------------------------------------------- |
 | **Calculation not triggering** | Verify column names match (Hours, Rate, Total). Check console for debug logs. |
-| **Total shows 0** | Hours/Rate cells might be empty. Ensure they contain numbers. |
-| **Changes not persisting** | Ensure `setupDatabaseAutoMath()` is called and snapshot save works. |
-| **Infinite loop** | Increase `UPDATE_TIMEOUT` constant if system is slow. |
+| **Total shows 0**              | Hours/Rate cells might be empty. Ensure they contain numbers.                 |
+| **Changes not persisting**     | Ensure `setupDatabaseAutoMath()` is called and snapshot save works.           |
+| **Infinite loop**              | Increase `UPDATE_TIMEOUT` constant if system is slow.                         |
 
 ### Debug Mode
+
 ```typescript
 // Enable verbose logging
-localStorage.debug_blocksuite_automath = '1';
+localStorage.debug_blocksuite_automath = "1";
 
 // Check what's happening
-const dbs = doc.getBlocksByFlavour('affine:database');
-console.log('Database blocks:', dbs.length);
+const dbs = doc.getBlocksByFlavour("affine:database");
+console.log("Database blocks:", dbs.length);
 ```
 
 ---
@@ -204,6 +210,7 @@ console.log('Database blocks:', dbs.length);
 ## 🤝 Handover
 
 ### ✅ Completed
+
 - Core auto-math logic with Y.js observers
 - Infinite loop prevention mechanism
 - Column detection (flexible naming)
@@ -212,6 +219,7 @@ console.log('Database blocks:', dbs.length);
 - Complete documentation
 
 ### 📋 Next Steps (for Integration)
+
 1. Add import to BlockSuiteEditor.jsx
 2. Call `setupDatabaseAutoMath(doc)` after doc.load()
 3. Store unsubscribe function for cleanup
@@ -220,6 +228,7 @@ console.log('Database blocks:', dbs.length);
 6. Deploy to staging/production
 
 ### 🧪 Acceptance Criteria
+
 - [ ] Auto-calculation works for Hours × Rate → Total
 - [ ] No infinite loops observed
 - [ ] Changes persist after reload
@@ -232,6 +241,7 @@ console.log('Database blocks:', dbs.length);
 ## 📞 Support
 
 All code is well-commented. Check:
+
 - `databaseAutoMath.ts`: Core logic + detailed comments
 - `INTEGRATION_GUIDE.md`: Step-by-step integration
 - `ARCHITECTURE.js`: Deep dive into design decisions

@@ -125,6 +125,7 @@ const MCPServers = {
         error: e.message,
         warnings: [],
       }));
-  },};
+  },
+};
 
 export default MCPServers;

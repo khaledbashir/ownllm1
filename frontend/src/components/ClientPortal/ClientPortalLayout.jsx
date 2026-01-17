@@ -48,7 +48,9 @@ export default function ClientPortalLayout({
       )}
 
       {/* Main Layout */}
-      <div className={`flex flex-1 pt-16 lg:pt-0 ${hideSidebar ? "" : "lg:pl-72"}`}>
+      <div
+        className={`flex flex-1 pt-16 lg:pt-0 ${hideSidebar ? "" : "lg:pl-72"}`}
+      >
         {/* Sidebar - Desktop */}
         {!hideSidebar && (
           <aside
@@ -115,16 +117,12 @@ export default function ClientPortalLayout({
             </div>
 
             {/* Mobile Sidebar Content */}
-            <div className="p-4">
-              {sidebarContent && sidebarContent(false)}
-            </div>
+            <div className="p-4">{sidebarContent && sidebarContent(false)}</div>
           </aside>
         )}
 
         {/* Main Content Area */}
-        <main className="flex-1 min-w-0">
-          {children}
-        </main>
+        <main className="flex-1 min-w-0">{children}</main>
       </div>
     </div>
   );

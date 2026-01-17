@@ -173,7 +173,10 @@ export default function ApprovalPanel({
 
         {!canApprove && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-3">
-            <Warning size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+            <Warning
+              size={20}
+              className="text-amber-600 flex-shrink-0 mt-0.5"
+            />
             <div>
               <p className="text-sm font-semibold text-amber-900">
                 Read-Only Mode
@@ -275,7 +278,8 @@ export default function ApprovalPanel({
             <CheckCircle size={24} weight="fill" className="text-emerald-600" />
             <div>
               <p className="text-sm font-semibold text-emerald-900">
-                Previously signed on {new Date(existingSignature.timestamp).toLocaleDateString()}
+                Previously signed on{" "}
+                {new Date(existingSignature.timestamp).toLocaleDateString()}
               </p>
               <p className="text-xs text-emerald-700">
                 This proposal has been approved

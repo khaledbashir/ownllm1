@@ -31,10 +31,15 @@ const LLMS = [LLM_DEFAULT, ...AVAILABLE_LLM_PROVIDERS].filter(
 );
 
 // Inline AI Model Selection Component
-function InlineAIModelSelection({ provider, workspace, setHasChanges, customProviders }) {
+function InlineAIModelSelection({
+  provider,
+  workspace,
+  setHasChanges,
+  customProviders,
+}) {
   // Check if this is a custom provider
-  const customProvider = customProviders.find(p => p.id === provider);
-  
+  const customProvider = customProviders.find((p) => p.id === provider);
+
   // For custom providers, show the configured model (no need to fetch)
   if (customProvider) {
     return (
@@ -50,14 +55,16 @@ function InlineAIModelSelection({ provider, workspace, setHasChanges, customProv
           className="w-full bg-theme-settings-input-bg text-white text-sm rounded-lg border border-white/10 p-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
         <div className="text-xs text-white/50 mt-1">
-          Using default model from provider configuration: {customProvider.model}
+          Using default model from provider configuration:{" "}
+          {customProvider.model}
         </div>
       </div>
     );
   }
 
   // For standard providers, fetch models
-  const { defaultModels, customModels, loading } = useGetProviderModels(provider);
+  const { defaultModels, customModels, loading } =
+    useGetProviderModels(provider);
 
   if (loading) {
     return (
@@ -135,7 +142,6 @@ function InlineAIModelSelection({ provider, workspace, setHasChanges, customProv
   );
 }
 
-
 /**
  * DocAISettings - Settings for the inline AI in the document editor
  * Allows users to customize:
@@ -152,7 +158,7 @@ export default function DocAISettings({ workspace, setHasChanges }) {
     prompt: "",
     icon: "✨",
   });
-  
+
   // Provider/Model selection state
   const [selectedProvider, setSelectedProvider] = useState("default");
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,7 +175,10 @@ export default function DocAISettings({ workspace, setHasChanges }) {
         let actions = [];
         if (workspace.inlineAiActions) {
           const actionsStr = workspace.inlineAiActions;
-          if (typeof actionsStr === 'string' && !actionsStr.startsWith('[object')) {
+          if (
+            typeof actionsStr === "string" &&
+            !actionsStr.startsWith("[object")
+          ) {
             actions = JSON.parse(actionsStr);
           }
         }
@@ -195,7 +204,11 @@ export default function DocAISettings({ workspace, setHasChanges }) {
           logo: GenericOpenAiLogo,
           description: `Custom OpenAI-compatible provider`,
         }));
-        setAvailableProviders([LLM_DEFAULT, ...AVAILABLE_LLM_PROVIDERS, ...customProviderLLMs]);
+        setAvailableProviders([
+          LLM_DEFAULT,
+          ...AVAILABLE_LLM_PROVIDERS,
+          ...customProviderLLMs,
+        ]);
       }
     } catch (error) {
       console.error("Failed to load custom providers:", error);
@@ -261,7 +274,9 @@ export default function DocAISettings({ workspace, setHasChanges }) {
     llm.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const selectedLLMObject = allProviders.find((llm) => llm.value === selectedProvider);
+  const selectedLLMObject = allProviders.find(
+    (llm) => llm.value === selectedProvider
+  );
 
   return (
     <div className="mt-4">
@@ -350,7 +365,9 @@ export default function DocAISettings({ workspace, setHasChanges }) {
                           setHasChanges(true);
                         }}
                         className={`w-full p-3 text-left hover:bg-theme-bg-primary transition-colors ${
-                          selectedProvider === llm.value ? "bg-theme-bg-primary" : ""
+                          selectedProvider === llm.value
+                            ? "bg-theme-bg-primary"
+                            : ""
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -393,7 +410,11 @@ export default function DocAISettings({ workspace, setHasChanges }) {
                       </div>
                     </div>
                   </div>
-                  <CaretDown size={16} weight="bold" className="text-white/50" />
+                  <CaretDown
+                    size={16}
+                    weight="bold"
+                    className="text-white/50"
+                  />
                 </button>
               )}
             </div>
@@ -425,10 +446,11 @@ export default function DocAISettings({ workspace, setHasChanges }) {
                   name="inlineAiModel"
                   defaultValue={
                     selectedProvider.startsWith("custom_")
-                      ? (customProviders.find((p) => p.id === selectedProvider)?.model ||
+                      ? customProviders.find((p) => p.id === selectedProvider)
+                          ?.model ||
                         workspace?.inlineAiModel ||
-                        "")
-                      : (workspace?.inlineAiModel || "")
+                        ""
+                      : workspace?.inlineAiModel || ""
                   }
                   onChange={() => setHasChanges(true)}
                   placeholder="Enter model name exactly as referenced in the API"

@@ -16,7 +16,7 @@ import {
   LayoutDashboard,
   Filter,
   X,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import CRM from "@/models/crm";
 import Workspace from "@/models/workspace";
@@ -77,7 +77,9 @@ export default function CRMPage() {
       const { thread, error } = await WorkspaceThread.new(chatWorkspace.slug);
       if (thread) {
         // Automatically name it so it's not "Untitled"
-        await WorkspaceThread.update(chatWorkspace.slug, thread.slug, { name: `Assistant Session ${new Date().toLocaleDateString()}` });
+        await WorkspaceThread.update(chatWorkspace.slug, thread.slug, {
+          name: `Assistant Session ${new Date().toLocaleDateString()}`,
+        });
         const { threads } = await WorkspaceThread.all(chatWorkspace.slug);
         setCrmThreads(threads);
         setCrmThreadSlug(thread.slug);
@@ -142,17 +144,23 @@ export default function CRMPage() {
         const resolvedThreads = Array.isArray(threads) ? threads : [];
         setCrmThreads(resolvedThreads);
 
-        const crmThread = resolvedThreads.find(t => t.name === "CRM Assistant");
+        const crmThread = resolvedThreads.find(
+          (t) => t.name === "CRM Assistant"
+        );
         if (crmThread) {
           setCrmThreadSlug(crmThread.slug);
         } else {
           // Create a new CRM thread if none exist or specific one not found
           const { thread: newThread } = await WorkspaceThread.new(ws.slug);
           if (newThread) {
-            await WorkspaceThread.update(ws.slug, newThread.slug, { name: "CRM Assistant" });
+            await WorkspaceThread.update(ws.slug, newThread.slug, {
+              name: "CRM Assistant",
+            });
             setCrmThreadSlug(newThread.slug);
             // Refresh threads list
-            const { threads: updatedThreads } = await WorkspaceThread.all(ws.slug);
+            const { threads: updatedThreads } = await WorkspaceThread.all(
+              ws.slug
+            );
             setCrmThreads(Array.isArray(updatedThreads) ? updatedThreads : []);
           }
         }
@@ -179,7 +187,9 @@ export default function CRMPage() {
       if (res.success && res.pipelines.length > 0) {
         setPipelines(res.pipelines);
         if (selectedPipeline) {
-          const stillExists = res.pipelines.find(p => p.id === selectedPipeline.id);
+          const stillExists = res.pipelines.find(
+            (p) => p.id === selectedPipeline.id
+          );
           if (stillExists) setSelectedPipeline(stillExists);
           else setSelectedPipeline(res.pipelines[0]);
         } else {
@@ -230,7 +240,9 @@ export default function CRMPage() {
     if (cardId) {
       const res = await CRM.updateCard(cardId, formData);
       if (res.success) {
-        setCards(cards.map((c) => (c.id === cardId ? { ...c, ...formData } : c)));
+        setCards(
+          cards.map((c) => (c.id === cardId ? { ...c, ...formData } : c))
+        );
         showToast("Opportunity updated", "success");
       }
     } else {
@@ -248,7 +260,8 @@ export default function CRMPage() {
   };
 
   const handleDeleteCard = async (cardId) => {
-    if (!window.confirm("Are you sure you want to delete this opportunity?")) return;
+    if (!window.confirm("Are you sure you want to delete this opportunity?"))
+      return;
     const res = await CRM.deleteCard(cardId);
     if (res.success) {
       setCards(cards.filter((c) => c.id !== cardId));
@@ -284,55 +297,71 @@ export default function CRMPage() {
   };
 
   // PRAGMATIC TOOL HANDLER FOR CHAT
-  const handleToolCall = useCallback(async (tool, args) => {
-    console.log("[CRM] Chat invoking tool:", tool, args);
-    try {
-      if (tool === "create_lead" || tool === "create_opportunity") {
-        const { title, value, stage, company, name, email } = args;
-        if (!title) throw new Error("Title is required");
+  const handleToolCall = useCallback(
+    async (tool, args) => {
+      console.log("[CRM] Chat invoking tool:", tool, args);
+      try {
+        if (tool === "create_lead" || tool === "create_opportunity") {
+          const { title, value, stage, company, name, email } = args;
+          if (!title) throw new Error("Title is required");
 
-        const targetStage = stage || selectedPipeline?.stages[0] || "New";
+          const targetStage = stage || selectedPipeline?.stages[0] || "New";
 
-        const res = await CRM.createCard({
-          pipelineId: selectedPipeline?.id,
-          title,
-          value: value || 0,
-          stage: targetStage,
-          company,
-          name,
-          email
-        });
+          const res = await CRM.createCard({
+            pipelineId: selectedPipeline?.id,
+            title,
+            value: value || 0,
+            stage: targetStage,
+            company,
+            name,
+            email,
+          });
 
-        if (res.success) {
-          showToast(`Agent created lead: ${title}`, "success");
-          loadCards(selectedPipeline?.id);
-          return "Successfully created lead.";
-        } else {
-          throw new Error(res.error);
+          if (res.success) {
+            showToast(`Agent created lead: ${title}`, "success");
+            loadCards(selectedPipeline?.id);
+            return "Successfully created lead.";
+          } else {
+            throw new Error(res.error);
+          }
         }
-      }
 
-      if (tool === "list_leads") {
-        const stage = args.stage;
-        let found = cards;
-        if (stage) found = cards.filter(c => c.stage.toLowerCase() === stage.toLowerCase());
-        return JSON.stringify(found.map(c => ({ id: c.id, title: c.title, value: c.value, stage: c.stage })));
+        if (tool === "list_leads") {
+          const stage = args.stage;
+          let found = cards;
+          if (stage)
+            found = cards.filter(
+              (c) => c.stage.toLowerCase() === stage.toLowerCase()
+            );
+          return JSON.stringify(
+            found.map((c) => ({
+              id: c.id,
+              title: c.title,
+              value: c.value,
+              stage: c.stage,
+            }))
+          );
+        }
+      } catch (e) {
+        console.error(e);
+        showToast(`Agent failed to execute ${tool}: ${e.message}`, "error");
       }
-
-    } catch (e) {
-      console.error(e);
-      showToast(`Agent failed to execute ${tool}: ${e.message}`, "error");
-    }
-  }, [selectedPipeline, cards]);
+    },
+    [selectedPipeline, cards]
+  );
 
   const stages = selectedPipeline?.stages || [];
 
   // Statistics
   const stats = useMemo(() => {
     const totalCards = cards.length;
-    const totalValue = cards.reduce((sum, card) => sum + (Number(card.value) || 0), 0);
+    const totalValue = cards.reduce(
+      (sum, card) => sum + (Number(card.value) || 0),
+      0
+    );
     const wonCards = cards.filter((c) => c.stage === "Won").length;
-    const conversionRate = totalCards > 0 ? ((wonCards / totalCards) * 100).toFixed(1) : 0;
+    const conversionRate =
+      totalCards > 0 ? ((wonCards / totalCards) * 100).toFixed(1) : 0;
 
     return {
       totalCards,
@@ -359,7 +388,6 @@ export default function CRMPage() {
     return filtered;
   }, [cards, searchQuery, filterStage]);
 
-
   if (loading) {
     return (
       <div className="w-screen h-screen overflow-hidden bg-theme-bg-container flex items-center justify-center">
@@ -379,17 +407,19 @@ export default function CRMPage() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative transition-all duration-300">
-
         {/* Modern Glass Header */}
         <div className="px-8 py-5 border-b border-white/5 bg-[#141414]/50 backdrop-blur-md sticky top-0 z-10 shrink-0">
           <div className="flex items-center justify-between gap-6">
-
             <div className="flex items-center gap-6">
               <button
                 onClick={() => setSidebarVisible(!sidebarVisible)}
                 className="p-2 -ml-2 rounded-xl text-white hover:bg-white/10 transition-all font-bold"
               >
-                {sidebarVisible ? <PanelLeftClose size={24} /> : <PanelLeftOpen size={24} />}
+                {sidebarVisible ? (
+                  <PanelLeftClose size={24} />
+                ) : (
+                  <PanelLeftOpen size={24} />
+                )}
               </button>
 
               <div className="flex flex-col">
@@ -403,16 +433,23 @@ export default function CRMPage() {
                       <select
                         value={selectedPipeline?.id || ""}
                         onChange={(e) => {
-                          const p = pipelines.find((p) => p.id === Number(e.target.value));
+                          const p = pipelines.find(
+                            (p) => p.id === Number(e.target.value)
+                          );
                           setSelectedPipeline(p);
                         }}
                         className="bg-transparent text-xl font-bold text-white hover:text-[#007AFF] cursor-pointer appearance-none pl-0 pr-8 focus:outline-none transition-colors"
                       >
                         {pipelines.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
                         ))}
                       </select>
-                      <ChevronDown size={16} className="absolute right-0 top-1/2 -translate-y-1/2 text-white pointer-events-none group-hover:text-[#007AFF] transition-colors" />
+                      <ChevronDown
+                        size={16}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 text-white pointer-events-none group-hover:text-[#007AFF] transition-colors"
+                      />
                     </div>
                   )}
                 </div>
@@ -423,16 +460,28 @@ export default function CRMPage() {
               {/* Quick StatsRow */}
               <div className="hidden lg:flex items-center gap-8 text-sm mx-6 px-6 border-l border-r border-white/10">
                 <div className="flex flex-col items-center">
-                  <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Total Value</span>
-                  <span className="text-lg font-mono font-bold text-white tracking-wide">${stats.totalValue.toLocaleString()}</span>
+                  <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">
+                    Total Value
+                  </span>
+                  <span className="text-lg font-mono font-bold text-white tracking-wide">
+                    ${stats.totalValue.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Deals</span>
-                  <span className="text-lg font-mono font-bold text-white tracking-wide">{stats.totalCards}</span>
+                  <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">
+                    Deals
+                  </span>
+                  <span className="text-lg font-mono font-bold text-white tracking-wide">
+                    {stats.totalCards}
+                  </span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Win Rate</span>
-                  <span className="text-lg font-mono font-bold text-green-400 tracking-wide">{stats.conversionRate}%</span>
+                  <span className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">
+                    Win Rate
+                  </span>
+                  <span className="text-lg font-mono font-bold text-green-400 tracking-wide">
+                    {stats.conversionRate}%
+                  </span>
                 </div>
               </div>
 
@@ -440,10 +489,11 @@ export default function CRMPage() {
                 onClick={() => setChatOpen(!chatOpen)}
                 className={`
                      relative overflow-hidden group flex items-center gap-2 px-5 py-3 rounded-xl border-2 transition-all duration-300
-                     ${chatOpen
-                    ? "bg-white/10 border-white/30 text-white shadow-[0_0_20px_rgba(255,255,255,0.15)] font-bold"
-                    : "bg-transparent border-white/10 text-white/80 hover:text-white hover:border-white/40 font-semibold"
-                  }
+                     ${
+                       chatOpen
+                         ? "bg-white/10 border-white/30 text-white shadow-[0_0_20px_rgba(255,255,255,0.15)] font-bold"
+                         : "bg-transparent border-white/10 text-white/80 hover:text-white hover:border-white/40 font-semibold"
+                     }
                    `}
               >
                 <MessageSquare size={20} />
@@ -474,7 +524,10 @@ export default function CRMPage() {
           {/* Filters Toolbar */}
           <div className="flex items-center gap-4 mt-6">
             <div className="relative flex-1 max-w-sm">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50"
+              />
               <input
                 type="text"
                 value={searchQuery}
@@ -487,15 +540,15 @@ export default function CRMPage() {
             <div className="flex gap-2 p-1.5 rounded-xl bg-white/5 border border-white/10">
               <button
                 onClick={() => setFilterStage("all")}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStage === 'all' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'}`}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStage === "all" ? "bg-white/20 text-white shadow-sm" : "text-white/50 hover:text-white"}`}
               >
                 All
               </button>
-              {stages.slice(0, 3).map(s => (
+              {stages.slice(0, 3).map((s) => (
                 <button
                   key={s}
                   onClick={() => setFilterStage(s)}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStage === s ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'}`}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStage === s ? "bg-white/20 text-white shadow-sm" : "text-white/50 hover:text-white"}`}
                 >
                   {s}
                 </button>
@@ -506,7 +559,6 @@ export default function CRMPage() {
 
         {/* Board & Chat Container */}
         <div className="flex-1 flex overflow-hidden relative">
-
           {/* Pipeline Board */}
           <div className="flex-1 overflow-hidden bg-[#141414] p-6 flex flex-col">
             <PipelineBoard
@@ -540,7 +592,9 @@ export default function CRMPage() {
                 <div className="flex flex-col">
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     Assistant
-                    <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/10 text-white/50">Active Session</span>
+                    <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/10 text-white/50">
+                      Active Session
+                    </span>
                   </h3>
                   {crmThreads.length > 0 && (
                     <select
@@ -548,9 +602,15 @@ export default function CRMPage() {
                       onChange={(e) => setCrmThreadSlug(e.target.value)}
                       className="bg-transparent text-[10px] text-blue-400 font-bold hover:text-blue-300 cursor-pointer appearance-none border-none outline-none p-0 m-0"
                     >
-                      {crmThreads.map(t => (
-                        <option key={t.slug} value={t.slug} className="bg-[#1a1a1a]">
-                          {t.name === "CRM Assistant" ? "Main Assistant" : t.name}
+                      {crmThreads.map((t) => (
+                        <option
+                          key={t.slug}
+                          value={t.slug}
+                          className="bg-[#1a1a1a]"
+                        >
+                          {t.name === "CRM Assistant"
+                            ? "Main Assistant"
+                            : t.name}
                         </option>
                       ))}
                     </select>

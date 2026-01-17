@@ -4,7 +4,7 @@ import { Plus, X, CaretDown } from "@phosphor-icons/react";
 function normalizeKeyValueRows(input) {
   // Always return an array
   if (input === null || input === undefined) return [];
-  if (typeof input !== 'object' && typeof input !== 'string') return [];
+  if (typeof input !== "object" && typeof input !== "string") return [];
 
   // Expected shape: [{ key: string, value: string }]
   if (Array.isArray(input)) {

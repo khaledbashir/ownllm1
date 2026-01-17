@@ -216,7 +216,7 @@ const Workspace = {
         try {
           const chatResult = JSON.parse(msg.data);
           handleChat(chatResult);
-        } catch { }
+        } catch {}
       },
       onerror(err) {
         handleChat({
@@ -660,7 +660,7 @@ const Workspace = {
     return await fetch(`${API_BASE}/workspace/${slug}/forms`, {
       method: "POST",
       headers: { ...baseHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     })
       .then((res) => res.json())
       .catch((e) => ({ success: false, error: e.message }));
@@ -669,7 +669,7 @@ const Workspace = {
     return await fetch(`${API_BASE}/workspace/${slug}/forms/generate`, {
       method: "POST",
       headers: { ...baseHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     })
       .then((res) => res.json())
       .catch((e) => ({ success: false, error: e.message }));
@@ -686,7 +686,7 @@ const Workspace = {
     return await fetch(`${API_BASE}/workspace/${slug}/forms/${uuid}`, {
       method: "PUT",
       headers: { ...baseHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     })
       .then((res) => res.json())
       .catch((e) => ({ success: false, error: e.message }));
@@ -700,12 +700,15 @@ const Workspace = {
       .catch((e) => ({ success: false, error: e.message }));
   },
   getFormResponses: async function (slug, uuid) {
-    return await fetch(`${API_BASE}/workspace/${slug}/forms/${uuid}/responses`, {
-      method: "GET",
-      headers: baseHeaders(),
-    })
+    return await fetch(
+      `${API_BASE}/workspace/${slug}/forms/${uuid}/responses`,
+      {
+        method: "GET",
+        headers: baseHeaders(),
+      }
+    )
       .then((res) => res.json())
-      .then(res => res.responses || [])
+      .then((res) => res.responses || [])
       .catch((e) => []);
   },
 

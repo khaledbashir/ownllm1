@@ -1,6 +1,6 @@
 /**
  * IMPLEMENTATION EXAMPLES: Database Auto-Math in BlockSuiteEditor.jsx
- * 
+ *
  * Copy-paste ready code snippets showing exactly where and how to integrate
  * the auto-math functionality into your existing BlockSuiteEditor component.
  */
@@ -14,7 +14,7 @@
 
   ADD THIS:
 */
-import { setupDatabaseAutoMath } from '@/utils/blocksuite/databaseAutoMath';
+import { setupDatabaseAutoMath } from "@/utils/blocksuite/databaseAutoMath";
 
 /*
   Location: Inside the main useEffect that initializes the editor (~line 670-700)
@@ -121,10 +121,13 @@ import { setupDatabaseAutoMath } from '@/utils/blocksuite/databaseAutoMath';
 */
 const customConfig = {
   multipliers: [
-    { names: ['qty', 'quantity', 'units', 'hours'], type: 'number' },
-    { names: ['unit_price', 'unit_cost', 'rate', 'price'], type: 'number' },
+    { names: ["qty", "quantity", "units", "hours"], type: "number" },
+    { names: ["unit_price", "unit_cost", "rate", "price"], type: "number" },
   ],
-  target: { names: ['line_total', 'total', 'subtotal', 'amount'], type: 'number' },
+  target: {
+    names: ["line_total", "total", "subtotal", "amount"],
+    type: "number",
+  },
 };
 
 const unsubscribeAutoMath = setupDatabaseAutoMath(doc, customConfig);
@@ -140,9 +143,9 @@ editorRef.current.unsubscribeAutoMath = unsubscribeAutoMath;
 try {
   const unsubscribeAutoMath = setupDatabaseAutoMath(doc);
   editorRef.current.unsubscribeAutoMath = unsubscribeAutoMath;
-  console.log('[BlockSuiteEditor] Auto-math enabled for databases');
+  console.log("[BlockSuiteEditor] Auto-math enabled for databases");
 } catch (error) {
-  console.error('[BlockSuiteEditor] Failed to setup auto-math:', error);
+  console.error("[BlockSuiteEditor] Failed to setup auto-math:", error);
   // Fail gracefully - app still works without auto-calc
 }
 
@@ -155,21 +158,21 @@ try {
 */
 
 // Enable debug logging
-localStorage.debug_blocksuite_automath = '1';
+localStorage.debug_blocksuite_automath = "1";
 
 // Check if auto-math is loaded
-console.log('databaseAutoMath:', typeof setupDatabaseAutoMath);
+console.log("databaseAutoMath:", typeof setupDatabaseAutoMath);
 
 // Run unit tests
-import { testDatabaseAutoMath } from '@/utils/blocksuite/databaseAutoMath.test';
+import { testDatabaseAutoMath } from "@/utils/blocksuite/databaseAutoMath.test";
 testDatabaseAutoMath();
 
 // Manually trigger calculation on a specific row
-import { recalculateDatabaseRow } from '@/utils/blocksuite/databaseAutoMath';
-const db = doc.getBlocksByFlavour('affine:database')[0];
+import { recalculateDatabaseRow } from "@/utils/blocksuite/databaseAutoMath";
+const db = doc.getBlocksByFlavour("affine:database")[0];
 const rowId = Object.keys(db.model.cells)[0];
 recalculateDatabaseRow(db, rowId);
-console.log('Recalculated row:', rowId);
+console.log("Recalculated row:", rowId);
 
 // ============================================================================
 // EXAMPLE 5: Full Component Reference (Excerpt)
@@ -336,12 +339,13 @@ console.log('Recalculated row:', rowId);
 */
 
 export const INTEGRATION_EXAMPLES = {
-  setupImport: "import { setupDatabaseAutoMath } from '@/utils/blocksuite/databaseAutoMath'",
-  initLocation: 'After ensureDocLoaded(doc) in editor initialization effect',
-  cleanupLocation: 'Add new useEffect() to handle cleanup',
+  setupImport:
+    "import { setupDatabaseAutoMath } from '@/utils/blocksuite/databaseAutoMath'",
+  initLocation: "After ensureDocLoaded(doc) in editor initialization effect",
+  cleanupLocation: "Add new useEffect() to handle cleanup",
   customConfigExample: {
-    multipliers: [{ names: ['qty', 'hours'] }, { names: ['rate', 'price'] }],
-    target: { names: ['total'] },
+    multipliers: [{ names: ["qty", "hours"] }, { names: ["rate", "price"] }],
+    target: { names: ["total"] },
   },
-  testCommand: 'testDatabaseAutoMath() in browser console',
+  testCommand: "testDatabaseAutoMath() in browser console",
 };

@@ -1,6 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 import { ConfirmProvider } from "@/components/Modals/ConfirmModal";
 import DocumentTemplates from "@/pages/GeneralSettings/DocumentTemplates";
 import App from "@/App.jsx";
@@ -76,27 +80,24 @@ const router = createBrowserRouter([
           {
             path: "dashboard",
             lazy: async () => {
-              const { default: ClientDashboard } = await import(
-                "@/pages/ClientPortal/Dashboard"
-              );
+              const { default: ClientDashboard } =
+                await import("@/pages/ClientPortal/Dashboard");
               return { element: <ClientDashboard /> };
             },
           },
           {
             path: "projects",
             lazy: async () => {
-              const { default: ClientProjects } = await import(
-                "@/pages/ClientPortal/Projects"
-              );
+              const { default: ClientProjects } =
+                await import("@/pages/ClientPortal/Projects");
               return { element: <ClientProjects /> };
             },
           },
           {
             path: "messages",
             lazy: async () => {
-              const { default: ClientMessages } = await import(
-                "@/pages/ClientPortal/Messages"
-              );
+              const { default: ClientMessages } =
+                await import("@/pages/ClientPortal/Messages");
               return { element: <ClientMessages /> };
             },
           },
@@ -106,9 +107,8 @@ const router = createBrowserRouter([
               // Reusing PublicProposal logic but wrapping it in the portal context?
               // Ideally we refactor PublicProposal to be a component we can reuse.
               // For now, let's just leave a placeholder or point to a new wrapper.
-              const { default: PublicProposal } = await import(
-                "@/pages/PublicProposal"
-              );
+              const { default: PublicProposal } =
+                await import("@/pages/PublicProposal");
               return { element: <PublicProposal /> };
             },
           },
@@ -170,8 +170,7 @@ const router = createBrowserRouter([
       {
         path: "forms/:uuid",
         lazy: async () => {
-          const { default: PublicForm } =
-            await import("@/pages/PublicForm");
+          const { default: PublicForm } = await import("@/pages/PublicForm");
           return { element: <PublicForm /> };
         },
       },
@@ -180,7 +179,9 @@ const router = createBrowserRouter([
         lazy: async () => {
           const { default: WorkspaceFormsDashboard } =
             await import("@/pages/WorkspaceForms/Dashboard");
-          return { element: <PrivateRoute Component={WorkspaceFormsDashboard} /> };
+          return {
+            element: <PrivateRoute Component={WorkspaceFormsDashboard} />,
+          };
         },
       },
       {
@@ -447,16 +448,14 @@ const router = createBrowserRouter([
       {
         path: "/settings/super-admin",
         lazy: async () => {
-          const { default: SuperAdmin } =
-            await import("@/pages/SuperAdmin");
+          const { default: SuperAdmin } = await import("@/pages/SuperAdmin");
           return { element: <AdminRoute Component={SuperAdmin} /> };
         },
       },
       {
         path: "/super-admin",
         lazy: async () => {
-          const { default: SuperAdmin } =
-            await import("@/pages/SuperAdmin");
+          const { default: SuperAdmin } = await import("@/pages/SuperAdmin");
           return { element: <AdminRoute Component={SuperAdmin} /> };
         },
       },

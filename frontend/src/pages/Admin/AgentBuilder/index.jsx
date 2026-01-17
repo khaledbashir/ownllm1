@@ -15,7 +15,7 @@ import FlowBuilderChat from "@/components/FlowBuilderChat";
 function normalizeKeyValueRows(input) {
   // Always return an array - defensive check
   if (input === null || input === undefined) return [];
-  if (typeof input !== 'object' && typeof input !== 'string') return [];
+  if (typeof input !== "object" && typeof input !== "string") return [];
 
   if (Array.isArray(input)) {
     return input
@@ -114,11 +114,14 @@ function normalizeVariables(input) {
 
 function normalizeStepConfig(stepType, config, blockInfo) {
   // Defensive checks
-  if (!stepType || typeof stepType !== 'string') {
+  if (!stepType || typeof stepType !== "string") {
     return {};
   }
 
-  const defaults = (blockInfo && blockInfo[stepType] && blockInfo[stepType].defaultConfig) ? blockInfo[stepType].defaultConfig : {};
+  const defaults =
+    blockInfo && blockInfo[stepType] && blockInfo[stepType].defaultConfig
+      ? blockInfo[stepType].defaultConfig
+      : {};
   const merged = { ...defaults, ...(config || {}) };
 
   if (stepType === "apiCall") {

@@ -147,8 +147,8 @@ export default function VerifyEmail() {
                       Email Verified!
                     </h2>
                     <p className="text-theme-text-secondary">
-                      Your email has been verified successfully. You can now log in to
-                      your account.
+                      Your email has been verified successfully. You can now log
+                      in to your account.
                     </p>
                     <p className="text-theme-text-secondary text-sm mt-4">
                       Redirecting to login page...

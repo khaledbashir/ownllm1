@@ -98,7 +98,10 @@ export default function ThreadNotes({
   const handleSaveTemplate = useCallback(
     async (name, description) => {
       try {
-        console.log("[ThreadNotes] Starting to save template:", { name, description });
+        console.log("[ThreadNotes] Starting to save template:", {
+          name,
+          description,
+        });
         await editorRef.current.saveAsTemplate(name, description);
         console.log("[ThreadNotes] Template saved successfully");
         showToast("Template saved!", "success");
@@ -250,22 +253,28 @@ export default function ThreadNotes({
         // Agency data has: role, description, hours, baseRate
         const hasANCData = (rows) => {
           if (!Array.isArray(rows) || rows.length === 0) return false;
-          const sampleRow = rows.find(r => !r.isHeader);
-          return sampleRow && (
-            (sampleRow.productName || sampleRow.category) ||
-            (sampleRow.dimensions && (sampleRow.dimensions.width || sampleRow.dimensions.height))
+          const sampleRow = rows.find((r) => !r.isHeader);
+          return (
+            sampleRow &&
+            (sampleRow.productName ||
+              sampleRow.category ||
+              (sampleRow.dimensions &&
+                (sampleRow.dimensions.width || sampleRow.dimensions.height)))
           );
         };
-        
-        const isAncEstimate = res?.pricingTable?.type === "anc_estimate" || (res?.pricingTable?.specs && res?.pricingTable?.pricing);
+
+        const isAncEstimate =
+          res?.pricingTable?.type === "anc_estimate" ||
+          (res?.pricingTable?.specs && res?.pricingTable?.pricing);
         const isANC = !isAncEstimate && hasANCData(res?.pricingTable?.rows);
-        
+
         // If the markdown contains pricing tables, BlockSuiteEditor.insertMarkdown will convert them
         // into interactive pricing blocks automatically. Only insert the structured pricing payload
         // as a fallback when the markdown contains no DETAILED pricing tables (summary tables are fine).
-        const markdownHasPricingTable = /\n\s*\|.*(?:Role|Rate|Price|Cost|Hours|Qty|Quantity).*\|\s*\n\s*\|\s*[-:|\s]+\|/mi.test(
-          markdown
-        );
+        const markdownHasPricingTable =
+          /\n\s*\|.*(?:Role|Rate|Price|Cost|Hours|Qty|Quantity).*\|\s*\n\s*\|\s*[-:|\s]+\|/im.test(
+            markdown
+          );
 
         // ANC MODE: AUTO-INSERT PRICING TABLE IF DATA DETECTED (regardless of action)
         if (
@@ -279,15 +288,15 @@ export default function ThreadNotes({
               tableType: "anc_estimate",
               title: res.pricingTable.title || "ANC Project Proposal",
               ancEstimateData: {
-                 specs: res.pricingTable.specs,
-                 pricing: res.pricingTable.pricing
-              }
+                specs: res.pricingTable.specs,
+                pricing: res.pricingTable.pricing,
+              },
             });
           } else if (isANC || action === "draft_sow") {
             // Insert as ANC or Agency pricing table
             editorRef.current.insertPricingTableWithData({
               ...res.pricingTable,
-              tableType: isANC ? "anc" : "agency"
+              tableType: isANC ? "anc" : "agency",
             });
           }
         } else {

@@ -2,9 +2,9 @@ import React from "react";
 
 /**
  * Status Badge - Animated status indicator for proposals
- * 
+ *
  * Usage: <StatusBadge status="approved" />
- * 
+ *
  * Statuses:
  * - approved: Green gradient
  * - review: Yellow gradient

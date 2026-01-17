@@ -207,12 +207,14 @@ function TemplateEditor({ template: initialTemplate, onSave, onCancel }) {
     }
     try {
       const overridesStr = initialTemplate.cssOverrides;
-      if (typeof overridesStr !== 'string') {
+      if (typeof overridesStr !== "string") {
         console.warn("[TemplateEditor] cssOverrides is not a string");
         return { logoHeight: 40, logoAlignment: "flex-start" };
       }
-      if (overridesStr.startsWith('[object')) {
-        console.warn("[TemplateEditor] cssOverrides contains malformed content");
+      if (overridesStr.startsWith("[object")) {
+        console.warn(
+          "[TemplateEditor] cssOverrides contains malformed content"
+        );
         return { logoHeight: 40, logoAlignment: "flex-start" };
       }
       return JSON.parse(overridesStr);

@@ -44,7 +44,11 @@ export default function Register() {
       id: "enterprise",
       name: "Enterprise",
       description: "For large organizations with custom needs",
-      features: ["Everything in Pro", "Custom integrations", "Priority support"],
+      features: [
+        "Everything in Pro",
+        "Custom integrations",
+        "Priority support",
+      ],
       price: "Contact us",
     },
   ];
@@ -78,7 +82,9 @@ export default function Register() {
       // First check if multi-user mode is enabled
       const settings = await System.keys();
       if (!settings?.MultiUserMode) {
-        setError("Multi-user mode is not enabled. Please contact administrator.");
+        setError(
+          "Multi-user mode is not enabled. Please contact administrator."
+        );
         setLoading(false);
         return;
       }
@@ -106,7 +112,7 @@ export default function Register() {
       }
 
       showToast(data.message, "success");
-      
+
       if (data.requiresEmailVerification) {
         navigate("/login", { state: { message: data.message } });
       } else {
@@ -169,7 +175,13 @@ export default function Register() {
         />
 
         {step === 1 && (
-          <form onSubmit={(e) => { e.preventDefault(); nextStep(); }} className="flex flex-col justify-center items-center relative rounded-2xl bg-theme-bg-secondary md:shadow-[0_4px_14px_rgba(0,0,0,0.25)] md:px-12 py-12 -mt-4 md:mt-0">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              nextStep();
+            }}
+            className="flex flex-col justify-center items-center relative rounded-2xl bg-theme-bg-secondary md:shadow-[0_4px_14px_rgba(0,0,0,0.25)] md:px-12 py-12 -mt-4 md:mt-0"
+          >
             <div className="flex items-start justify-between pt-11 pb-9 rounded-t">
               <div className="flex items-center flex-col gap-y-4">
                 <h3 className="text-4xl md:text-2xl font-bold text-white text-center white-space-nowrap hidden md:block">
@@ -184,7 +196,9 @@ export default function Register() {
             <div className="w-full px-4 md:px-12">
               <div className="w-full flex flex-col gap-y-4">
                 <div className="w-full md:w-full md:px-0 px-6">
-                  <label className="text-white text-sm font-bold block mb-2">Username</label>
+                  <label className="text-white text-sm font-bold block mb-2">
+                    Username
+                  </label>
                   <input
                     type="text"
                     placeholder="Choose a username"
@@ -196,7 +210,9 @@ export default function Register() {
                   />
                 </div>
                 <div className="w-full md:w-full md:px-0 px-6">
-                  <label className="text-white text-sm font-bold block mb-2">Email</label>
+                  <label className="text-white text-sm font-bold block mb-2">
+                    Email
+                  </label>
                   <input
                     type="email"
                     placeholder="Enter your email"
@@ -208,7 +224,9 @@ export default function Register() {
                   />
                 </div>
                 <div className="w-full md:w-full md:px-0 px-6">
-                  <label className="text-white text-sm font-bold block mb-2">Password</label>
+                  <label className="text-white text-sm font-bold block mb-2">
+                    Password
+                  </label>
                   <input
                     type="password"
                     placeholder="Create a password"
@@ -220,7 +238,9 @@ export default function Register() {
                   />
                 </div>
                 <div className="w-full md:w-full md:px-0 px-6">
-                  <label className="text-white text-sm font-bold block mb-2">Confirm Password</label>
+                  <label className="text-white text-sm font-bold block mb-2">
+                    Confirm Password
+                  </label>
                   <input
                     type="password"
                     placeholder="Confirm your password"
@@ -231,7 +251,9 @@ export default function Register() {
                     autoComplete="off"
                   />
                 </div>
-                {error && <p className="text-red-400 text-sm px-6">Error: {error}</p>}
+                {error && (
+                  <p className="text-red-400 text-sm px-6">Error: {error}</p>
+                )}
               </div>
             </div>
 
@@ -256,7 +278,10 @@ export default function Register() {
         )}
 
         {step === 2 && (
-          <form onSubmit={handleRegister} className="flex flex-col justify-center items-center relative rounded-2xl bg-theme-bg-secondary md:shadow-[0_4px_14px_rgba(0,0,0,0.25)] md:px-12 py-12 -mt-4 md:mt-0">
+          <form
+            onSubmit={handleRegister}
+            className="flex flex-col justify-center items-center relative rounded-2xl bg-theme-bg-secondary md:shadow-[0_4px_14px_rgba(0,0,0,0.25)] md:px-12 py-12 -mt-4 md:mt-0"
+          >
             <div className="flex items-start justify-between pt-11 pb-9 rounded-t">
               <div className="flex items-center flex-col gap-y-4">
                 <h3 className="text-4xl md:text-2xl font-bold text-white text-center white-space-nowrap hidden md:block">
@@ -271,7 +296,9 @@ export default function Register() {
             <div className="w-full px-4 md:px-12">
               <div className="w-full flex flex-col gap-y-4">
                 <div className="w-full md:w-full md:px-0 px-6">
-                  <label className="text-white text-sm font-bold block mb-2">Organization Name</label>
+                  <label className="text-white text-sm font-bold block mb-2">
+                    Organization Name
+                  </label>
                   <input
                     type="text"
                     placeholder="e.g., Acme Inc."
@@ -283,9 +310,13 @@ export default function Register() {
                   />
                 </div>
                 <div className="w-full md:w-full md:px-0 px-6">
-                  <label className="text-white text-sm font-bold block mb-2">Organization Slug (URL)</label>
+                  <label className="text-white text-sm font-bold block mb-2">
+                    Organization Slug (URL)
+                  </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-secondary text-sm">/org/</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-text-secondary text-sm">
+                      /org/
+                    </span>
                     <input
                       type="text"
                       placeholder="acme-inc"
@@ -299,7 +330,9 @@ export default function Register() {
                 </div>
 
                 <div className="w-full md:w-full md:px-0 px-6">
-                  <label className="text-white text-sm font-bold block mb-3">Select Your Plan</label>
+                  <label className="text-white text-sm font-bold block mb-3">
+                    Select Your Plan
+                  </label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {PLANS.map((planOption) => (
                       <div
@@ -311,9 +344,15 @@ export default function Register() {
                             : "border-theme-settings-input-bg hover:border-primary-button/50"
                         }`}
                       >
-                        <h4 className="text-white font-bold mb-2">{planOption.name}</h4>
-                        <p className="text-theme-text-secondary text-sm mb-3">{planOption.description}</p>
-                        <p className="text-primary-button font-bold mb-3">{planOption.price}</p>
+                        <h4 className="text-white font-bold mb-2">
+                          {planOption.name}
+                        </h4>
+                        <p className="text-theme-text-secondary text-sm mb-3">
+                          {planOption.description}
+                        </p>
+                        <p className="text-primary-button font-bold mb-3">
+                          {planOption.price}
+                        </p>
                         <ul className="text-theme-text-secondary text-xs space-y-1">
                           {planOption.features.map((feature, idx) => (
                             <li key={idx} className="flex items-center gap-2">
@@ -326,7 +365,9 @@ export default function Register() {
                   </div>
                 </div>
 
-                {error && <p className="text-red-400 text-sm px-6">Error: {error}</p>}
+                {error && (
+                  <p className="text-red-400 text-sm px-6">Error: {error}</p>
+                )}
               </div>
             </div>
 

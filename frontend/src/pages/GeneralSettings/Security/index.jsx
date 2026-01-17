@@ -367,7 +367,11 @@ function BecomeSuperAdmin() {
   }, []);
 
   const handleBecomeSuperAdmin = async () => {
-    if (!window.confirm("Are you sure? This will remove your organization assignment and make you a Super Admin.")) {
+    if (
+      !window.confirm(
+        "Are you sure? This will remove your organization assignment and make you a Super Admin."
+      )
+    ) {
       return;
     }
 
@@ -383,7 +387,9 @@ function BecomeSuperAdmin() {
       const data = await response.json();
 
       if (data.success) {
-        setMessage("Success! Please logout and login again to access Super Admin Dashboard.");
+        setMessage(
+          "Success! Please logout and login again to access Super Admin Dashboard."
+        );
         setTimeout(() => {
           window.localStorage.removeItem(AUTH_USER);
           window.localStorage.removeItem(AUTH_TOKEN);
@@ -411,7 +417,8 @@ function BecomeSuperAdmin() {
             </p>
           </div>
           <p className="text-xs leading-[18px] font-base text-white text-opacity-60">
-            Convert your account to Super Admin status. This removes your organization assignment and grants full platform control access.
+            Convert your account to Super Admin status. This removes your
+            organization assignment and grants full platform control access.
           </p>
         </div>
         <div className="relative w-full max-h-full">
@@ -428,7 +435,9 @@ function BecomeSuperAdmin() {
                     {loading ? "Processing..." : "Become Super Admin"}
                   </CTAButton>
                   {message && (
-                    <div className={`mt-3 text-sm ${message.includes("Success") ? "text-green-500" : "text-red-500"}`}>
+                    <div
+                      className={`mt-3 text-sm ${message.includes("Success") ? "text-green-500" : "text-red-500"}`}
+                    >
                       {message}
                     </div>
                   )}
@@ -437,7 +446,8 @@ function BecomeSuperAdmin() {
             </div>
             <div className="flex items-center justify-between space-x-14">
               <p className="text-white text-opacity-80 text-xs rounded-lg w-96">
-                Super Admin accounts can access the Super Admin Dashboard at /settings/super-admin and manage all organizations.
+                Super Admin accounts can access the Super Admin Dashboard at
+                /settings/super-admin and manage all organizations.
               </p>
             </div>
           </div>

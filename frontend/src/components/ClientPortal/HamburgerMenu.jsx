@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { Menu, X } from "lucide-react";
 
 /**
  * HamburgerMenu Component
@@ -14,9 +14,9 @@ import { Menu, X } from 'lucide-react';
 const HamburgerMenu = ({
   isOpen,
   onToggle,
-  position = 'top-left', // 'top-left' | 'top-right'
+  position = "top-left", // 'top-left' | 'top-right'
   showBadge = false,
-  badgeCount = 0
+  badgeCount = 0,
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const buttonRef = useRef(null);
@@ -24,7 +24,7 @@ const HamburgerMenu = ({
   const handleClick = () => {
     setIsAnimating(true);
     onToggle?.();
-    
+
     // Reset animation after it completes
     setTimeout(() => setIsAnimating(false), 200);
   };
@@ -32,18 +32,18 @@ const HamburgerMenu = ({
   // Close on escape key
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onToggle?.();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onToggle]);
 
   const positionStyles = {
-    'top-left': 'top-4 left-4',
-    'top-right': 'top-4 right-4'
+    "top-left": "top-4 left-4",
+    "top-right": "top-4 right-4",
   };
 
   return (
@@ -59,11 +59,11 @@ const HamburgerMenu = ({
         flex items-center justify-center
         transform transition-all duration-200
         hover:scale-105 active:scale-95
-        ${isAnimating ? 'scale-95' : ''}
+        ${isAnimating ? "scale-95" : ""}
         focus:outline-none focus:ring-2 focus:ring-purple-500
         z-50 md:hidden
       `}
-      aria-label={isOpen ? 'Close menu' : 'Open menu'}
+      aria-label={isOpen ? "Close menu" : "Open menu"}
       aria-expanded={isOpen}
     >
       {/* Notification Badge */}
@@ -78,7 +78,7 @@ const HamburgerMenu = ({
             px-0.5
           "
         >
-          {badgeCount > 9 ? '9+' : badgeCount}
+          {badgeCount > 9 ? "9+" : badgeCount}
         </span>
       )}
 

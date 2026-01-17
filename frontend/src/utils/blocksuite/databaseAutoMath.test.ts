@@ -1,13 +1,16 @@
 /**
  * Test Suite for Database Auto-Math Logic
- * 
+ *
  * Usage:
  *   import { testDatabaseAutoMath } from '@/utils/blocksuite/databaseAutoMath.test';
  *   testDatabaseAutoMath();
  */
 
-import { setupDatabaseAutoMath, recalculateDatabaseRow } from './databaseAutoMath';
-import { Doc, Schema, DocCollection, Text } from '@blocksuite/store';
+import {
+  setupDatabaseAutoMath,
+  recalculateDatabaseRow,
+} from "./databaseAutoMath";
+import { Doc, Schema, DocCollection, Text } from "@blocksuite/store";
 
 /**
  * Create a mock database block for testing
@@ -17,10 +20,10 @@ function createMockDatabaseBlock(doc: Doc, parentId: string) {
 
   // Create columns: Name, Hours, Rate, Total
   const columns = [
-    { id: genId(), name: 'Name', type: 'title' },
-    { id: genId(), name: 'Hours', type: 'number' },
-    { id: genId(), name: 'Rate', type: 'number' },
-    { id: genId(), name: 'Total', type: 'number' },
+    { id: genId(), name: "Name", type: "title" },
+    { id: genId(), name: "Hours", type: "number" },
+    { id: genId(), name: "Rate", type: "number" },
+    { id: genId(), name: "Total", type: "number" },
   ];
 
   const viewsColumns = columns.map(() => ({
@@ -31,22 +34,22 @@ function createMockDatabaseBlock(doc: Doc, parentId: string) {
 
   // Create database block
   const databaseId = doc.addBlock(
-    'affine:database',
+    "affine:database",
     {
       views: [
         {
           id: genId(),
-          name: 'Table View',
-          mode: 'table',
+          name: "Table View",
+          mode: "table",
           columns: [],
-          filter: { type: 'group', op: 'and', conditions: [] },
+          filter: { type: "group", op: "and", conditions: [] },
           header: {
             titleColumn: viewsColumns[0].id,
-            iconColumn: 'type',
+            iconColumn: "type",
           },
         },
       ],
-      title: new Text(''),
+      title: new Text(""),
       cells: {},
       columns,
     },
@@ -55,28 +58,28 @@ function createMockDatabaseBlock(doc: Doc, parentId: string) {
 
   // Create row 1: Developer, 10 hours, 75/hr
   const row1Id = doc.addBlock(
-    'affine:paragraph',
-    { text: new Text('Developer'), type: 'text' },
+    "affine:paragraph",
+    { text: new Text("Developer"), type: "text" },
     databaseId
   );
 
   // Create row 2: Designer, 5 hours, 65/hr
   const row2Id = doc.addBlock(
-    'affine:paragraph',
-    { text: new Text('Designer'), type: 'text' },
+    "affine:paragraph",
+    { text: new Text("Designer"), type: "text" },
     databaseId
   );
 
   const cells = {
     [row1Id]: {
-      [columns[1].id]: { columnId: columns[1].id, value: new Text('10') },
-      [columns[2].id]: { columnId: columns[2].id, value: new Text('75') },
-      [columns[3].id]: { columnId: columns[3].id, value: new Text('0') },
+      [columns[1].id]: { columnId: columns[1].id, value: new Text("10") },
+      [columns[2].id]: { columnId: columns[2].id, value: new Text("75") },
+      [columns[3].id]: { columnId: columns[3].id, value: new Text("0") },
     },
     [row2Id]: {
-      [columns[1].id]: { columnId: columns[1].id, value: new Text('5') },
-      [columns[2].id]: { columnId: columns[2].id, value: new Text('65') },
-      [columns[3].id]: { columnId: columns[3].id, value: new Text('0') },
+      [columns[1].id]: { columnId: columns[1].id, value: new Text("5") },
+      [columns[2].id]: { columnId: columns[2].id, value: new Text("65") },
+      [columns[3].id]: { columnId: columns[3].id, value: new Text("0") },
     },
   };
 
@@ -90,8 +93,20 @@ function createMockDatabaseBlock(doc: Doc, parentId: string) {
     databaseBlock,
     columns,
     rows: [
-      { id: row1Id, name: 'Developer', hours: '10', rate: '75', expectedTotal: '750.00' },
-      { id: row2Id, name: 'Designer', hours: '5', rate: '65', expectedTotal: '325.00' },
+      {
+        id: row1Id,
+        name: "Developer",
+        hours: "10",
+        rate: "75",
+        expectedTotal: "750.00",
+      },
+      {
+        id: row2Id,
+        name: "Designer",
+        hours: "5",
+        rate: "65",
+        expectedTotal: "325.00",
+      },
     ],
   };
 }
@@ -101,8 +116,8 @@ function createMockDatabaseBlock(doc: Doc, parentId: string) {
  * Verify that Hours, Rate, and Total columns are found correctly
  */
 export function testColumnDetection() {
-  console.log('\n=== TEST 1: Column Detection ===');
-  
+  console.log("\n=== TEST 1: Column Detection ===");
+
   try {
     const schema = new Schema();
     const collection = new DocCollection({ schema });
@@ -111,35 +126,48 @@ export function testColumnDetection() {
     const doc = collection.createDoc();
     doc.load();
 
-    const pageId = doc.addBlock('affine:page', {});
-    const noteId = doc.addBlock('affine:note', {}, pageId);
+    const pageId = doc.addBlock("affine:page", {});
+    const noteId = doc.addBlock("affine:note", {}, pageId);
 
     const { databaseBlock, columns } = createMockDatabaseBlock(doc, noteId);
 
-    console.log('✓ Database block created');
-    console.log('  Columns:', columns.map((c) => c.name).join(', '));
+    console.log("✓ Database block created");
+    console.log("  Columns:", columns.map((c) => c.name).join(", "));
 
     if (!databaseBlock) {
-      console.error('✗ Failed to get database block');
+      console.error("✗ Failed to get database block");
       return false;
     }
 
     const model = databaseBlock.model;
-    console.log('  Model columns:', model.columns.map((c: any) => c.name).join(', '));
+    console.log(
+      "  Model columns:",
+      model.columns.map((c: any) => c.name).join(", ")
+    );
 
-    const hasHours = model.columns.some((c: any) => c.name?.toLowerCase() === 'hours');
-    const hasRate = model.columns.some((c: any) => c.name?.toLowerCase() === 'rate');
-    const hasTotal = model.columns.some((c: any) => c.name?.toLowerCase() === 'total');
+    const hasHours = model.columns.some(
+      (c: any) => c.name?.toLowerCase() === "hours"
+    );
+    const hasRate = model.columns.some(
+      (c: any) => c.name?.toLowerCase() === "rate"
+    );
+    const hasTotal = model.columns.some(
+      (c: any) => c.name?.toLowerCase() === "total"
+    );
 
     if (hasHours && hasRate && hasTotal) {
-      console.log('✓ All required columns detected');
+      console.log("✓ All required columns detected");
       return true;
     } else {
-      console.error('✗ Missing required columns', { hasHours, hasRate, hasTotal });
+      console.error("✗ Missing required columns", {
+        hasHours,
+        hasRate,
+        hasTotal,
+      });
       return false;
     }
   } catch (e) {
-    console.error('✗ Test failed:', e);
+    console.error("✗ Test failed:", e);
     return false;
   }
 }
@@ -149,8 +177,8 @@ export function testColumnDetection() {
  * Verify that recalculateDatabaseRow updates the Total correctly
  */
 export function testManualCalculation() {
-  console.log('\n=== TEST 2: Manual Calculation ===');
-  
+  console.log("\n=== TEST 2: Manual Calculation ===");
+
   try {
     const schema = new Schema();
     const collection = new DocCollection({ schema });
@@ -159,36 +187,39 @@ export function testManualCalculation() {
     const doc = collection.createDoc();
     doc.load();
 
-    const pageId = doc.addBlock('affine:page', {});
-    const noteId = doc.addBlock('affine:note', {}, pageId);
+    const pageId = doc.addBlock("affine:page", {});
+    const noteId = doc.addBlock("affine:note", {}, pageId);
 
     const { databaseBlock, rows } = createMockDatabaseBlock(doc, noteId);
 
-    console.log('✓ Database block created with test data');
+    console.log("✓ Database block created with test data");
 
     // Test row 1: 10 hours × 75 rate = 750
     recalculateDatabaseRow(databaseBlock, rows[0].id);
 
     const model = databaseBlock.model;
-    const totalCol = model.columns.find((c: any) => c.name?.toLowerCase() === 'total');
+    const totalCol = model.columns.find(
+      (c: any) => c.name?.toLowerCase() === "total"
+    );
 
     if (!totalCol) {
-      console.error('✗ Total column not found');
+      console.error("✗ Total column not found");
       return false;
     }
 
-    const row1Total = model.cells[rows[0].id]?.[totalCol.id]?.value?.toString?.();
+    const row1Total =
+      model.cells[rows[0].id]?.[totalCol.id]?.value?.toString?.();
     console.log(`  Row 1 total (expected 750.00): ${row1Total}`);
 
-    if (row1Total === '750.00') {
-      console.log('✓ Manual calculation works correctly');
+    if (row1Total === "750.00") {
+      console.log("✓ Manual calculation works correctly");
       return true;
     } else {
-      console.warn('✗ Total mismatch. Got:', row1Total, 'Expected: 750.00');
+      console.warn("✗ Total mismatch. Got:", row1Total, "Expected: 750.00");
       return false;
     }
   } catch (e) {
-    console.error('✗ Test failed:', e);
+    console.error("✗ Test failed:", e);
     return false;
   }
 }
@@ -198,8 +229,8 @@ export function testManualCalculation() {
  * Verify that setupDatabaseAutoMath initializes without errors
  */
 export function testAutoSubscription() {
-  console.log('\n=== TEST 3: Auto-Subscription Setup ===');
-  
+  console.log("\n=== TEST 3: Auto-Subscription Setup ===");
+
   try {
     const schema = new Schema();
     const collection = new DocCollection({ schema });
@@ -208,29 +239,31 @@ export function testAutoSubscription() {
     const doc = collection.createDoc();
     doc.load();
 
-    const pageId = doc.addBlock('affine:page', {});
-    const noteId = doc.addBlock('affine:note', {}, pageId);
+    const pageId = doc.addBlock("affine:page", {});
+    const noteId = doc.addBlock("affine:note", {}, pageId);
 
     createMockDatabaseBlock(doc, noteId);
 
     // Initialize auto-math
     const unsubscribe = setupDatabaseAutoMath(doc);
 
-    if (typeof unsubscribe !== 'function') {
-      console.error('✗ setupDatabaseAutoMath did not return an unsubscribe function');
+    if (typeof unsubscribe !== "function") {
+      console.error(
+        "✗ setupDatabaseAutoMath did not return an unsubscribe function"
+      );
       return false;
     }
 
-    console.log('✓ Auto-math setup successful');
-    console.log('✓ Unsubscribe function returned');
+    console.log("✓ Auto-math setup successful");
+    console.log("✓ Unsubscribe function returned");
 
     // Clean up
     unsubscribe();
-    console.log('✓ Unsubscribe called successfully');
+    console.log("✓ Unsubscribe called successfully");
 
     return true;
   } catch (e) {
-    console.error('✗ Test failed:', e);
+    console.error("✗ Test failed:", e);
     return false;
   }
 }
@@ -240,8 +273,8 @@ export function testAutoSubscription() {
  * Verify that updating Total doesn't trigger another calculation
  */
 export function testNoInfiniteLoop() {
-  console.log('\n=== TEST 4: Infinite Loop Prevention ===');
-  
+  console.log("\n=== TEST 4: Infinite Loop Prevention ===");
+
   try {
     const schema = new Schema();
     const collection = new DocCollection({ schema });
@@ -250,8 +283,8 @@ export function testNoInfiniteLoop() {
     const doc = collection.createDoc();
     doc.load();
 
-    const pageId = doc.addBlock('affine:page', {});
-    const noteId = doc.addBlock('affine:note', {}, pageId);
+    const pageId = doc.addBlock("affine:page", {});
+    const noteId = doc.addBlock("affine:note", {}, pageId);
 
     const { databaseBlock, rows } = createMockDatabaseBlock(doc, noteId);
 
@@ -272,13 +305,15 @@ export function testNoInfiniteLoop() {
 
     // Manually update Hours - should trigger one calc update
     const model = databaseBlock.model;
-    const hoursCol = model.columns.find((c: any) => c.name?.toLowerCase() === 'hours');
+    const hoursCol = model.columns.find(
+      (c: any) => c.name?.toLowerCase() === "hours"
+    );
 
     if (hoursCol) {
       const updatedCells = { ...model.cells };
       updatedCells[rows[0].id] = {
         ...updatedCells[rows[0].id],
-        [hoursCol.id]: { columnId: hoursCol.id, value: new Text('20') },
+        [hoursCol.id]: { columnId: hoursCol.id, value: new Text("20") },
       };
 
       doc.updateBlock(model, { cells: updatedCells });
@@ -289,11 +324,11 @@ export function testNoInfiniteLoop() {
 
         if (updateCount <= 2) {
           // 1 for our manual update, possibly 1 for the auto-calc
-          console.log('✓ No infinite loop detected');
+          console.log("✓ No infinite loop detected");
           unsubscribe();
           return true;
         } else {
-          console.warn('✗ Possible infinite loop: too many updates');
+          console.warn("✗ Possible infinite loop: too many updates");
           unsubscribe();
           return false;
         }
@@ -302,7 +337,7 @@ export function testNoInfiniteLoop() {
 
     return true;
   } catch (e) {
-    console.error('✗ Test failed:', e);
+    console.error("✗ Test failed:", e);
     return false;
   }
 }
@@ -311,43 +346,47 @@ export function testNoInfiniteLoop() {
  * Run all tests
  */
 export function testDatabaseAutoMath() {
-  console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║  Database Auto-Math Logic Test Suite                       ║');
-  console.log('╚════════════════════════════════════════════════════════════╝');
+  console.log(
+    "\n╔════════════════════════════════════════════════════════════╗"
+  );
+  console.log("║  Database Auto-Math Logic Test Suite                       ║");
+  console.log("╚════════════════════════════════════════════════════════════╝");
 
   const results = [];
 
   try {
     results.push({
-      name: 'Column Detection',
+      name: "Column Detection",
       passed: testColumnDetection(),
     });
 
     results.push({
-      name: 'Manual Calculation',
+      name: "Manual Calculation",
       passed: testManualCalculation(),
     });
 
     results.push({
-      name: 'Auto-Subscription Setup',
+      name: "Auto-Subscription Setup",
       passed: testAutoSubscription(),
     });
 
     results.push({
-      name: 'Infinite Loop Prevention',
+      name: "Infinite Loop Prevention",
       passed: testNoInfiniteLoop(),
     });
   } catch (e) {
-    console.error('Test suite error:', e);
+    console.error("Test suite error:", e);
   }
 
-  console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║  Test Results Summary                                      ║');
-  console.log('╚════════════════════════════════════════════════════════════╝');
+  console.log(
+    "\n╔════════════════════════════════════════════════════════════╗"
+  );
+  console.log("║  Test Results Summary                                      ║");
+  console.log("╚════════════════════════════════════════════════════════════╝");
 
   let passed = 0;
   results.forEach((result) => {
-    const icon = result.passed ? '✓' : '✗';
+    const icon = result.passed ? "✓" : "✗";
     console.log(`${icon} ${result.name}`);
     if (result.passed) passed++;
   });

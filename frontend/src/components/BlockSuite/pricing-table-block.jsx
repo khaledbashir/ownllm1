@@ -74,22 +74,30 @@ const clampNumber = (
 const formatCurrency = (value) => {
   const n = Math.round(Number(value)); // Round to nearest dollar
   if (!Number.isFinite(n)) return "$0";
-  return "$" + n.toLocaleString(undefined, {
-    maximumFractionDigits: 0,
-  });
+  return (
+    "$" +
+    n.toLocaleString(undefined, {
+      maximumFractionDigits: 0,
+    })
+  );
 };
 
-const calcTotals = ({ rows, discountPercent, gstPercent, tableType = "agency" }) => {
+const calcTotals = ({
+  rows,
+  discountPercent,
+  gstPercent,
+  tableType = "agency",
+}) => {
   const subtotal = (rows || []).reduce((sum, row) => {
     if (row.isHeader) return sum;
-    
+
     // ANC: unitPrice * quantity
     if (tableType === "anc") {
       const unitPrice = Number(row.unitPrice) || 0;
       const quantity = Number(row.quantity) || 1;
       return sum + Math.round(unitPrice * quantity);
     }
-    
+
     // Agency: hours * baseRate
     const hours = Number(row.hours) || 0;
     const rate = Number(row.baseRate) || 0;
@@ -109,7 +117,7 @@ const calcTotals = ({ rows, discountPercent, gstPercent, tableType = "agency" })
 };
 
 // This is the block model (holds props) for BlockSuite.
-export class PricingTableModel extends defineEmbedModel(BlockModel) { }
+export class PricingTableModel extends defineEmbedModel(BlockModel) {}
 
 // We implement as an embed block so affine:note allows it.
 export const PricingTableBlockSchema = createEmbedBlockSchema({
@@ -148,21 +156,22 @@ const PricingTableWidget = ({ model }) => {
     const rows = getProp("rows", []);
     const tableType = getProp("tableType", "agency"); // "anc" or "agency"
     const title = model.title?.toString?.() ?? "Project Pricing";
-    
+
     // 2. Build CSV Content
     let csvContent = "";
-    
+
     if (tableType === "anc") {
       // ANC Format: Product, Category, Description, W, H, Qty, Total
-      csvContent += "Product,Category,Description,Width,Height,Quantity,Total\n";
-      rows.forEach(row => {
+      csvContent +=
+        "Product,Category,Description,Width,Height,Quantity,Total\n";
+      rows.forEach((row) => {
         const lineTotal = (row.unitPrice || 0) * (row.quantity || 1);
         csvContent += `"${row.productName || ""}","${row.category || ""}","${(row.description || "").replace(/"/g, '""')}","${row.dimensions?.width}","${row.dimensions?.height}","${row.quantity}","${lineTotal}"\n`;
       });
     } else {
       // Agency Format: Role, Description, Hours, Rate, Total
       csvContent += "Role,Description,Hours,Rate,Total\n";
-      rows.forEach(row => {
+      rows.forEach((row) => {
         const lineTotal = (row.hours || 0) * (row.baseRate || 0);
         csvContent += `"${row.role || ""}","${(row.description || "").replace(/"/g, '""')}","${row.hours}","${row.baseRate}","${lineTotal}"\n`;
       });
@@ -171,27 +180,34 @@ const PricingTableWidget = ({ model }) => {
     // Add Totals
     // calcTotals is defined later or imported, but we can reuse the logic here or access the calculated state if available.
     // Looking at the code below, 'totals' is a useMemo state.
-    // However, 'totals' might not be available inside this callback if it's stale. 
+    // However, 'totals' might not be available inside this callback if it's stale.
     // Safest to recalculate or use the memoized value if exportToExcel is wrapped in useCallback/dep array.
     // For simplicity in this patch, we'll re-implement the basic math to avoid dependency issues.
-    
+
     let subtotal = 0;
     if (tableType === "anc") {
-      subtotal = rows.reduce((acc, row) => acc + ((row.unitPrice || 0) * (row.quantity || 1)), 0);
+      subtotal = rows.reduce(
+        (acc, row) => acc + (row.unitPrice || 0) * (row.quantity || 1),
+        0
+      );
     } else {
-      subtotal = rows.reduce((acc, row) => acc + ((row.hours || 0) * (row.baseRate || 0)), 0);
+      subtotal = rows.reduce(
+        (acc, row) => acc + (row.hours || 0) * (row.baseRate || 0),
+        0
+      );
     }
-    
+
     // Apply discount
     const discountAmount = subtotal * (discountPercent / 100);
     const afterDiscount = subtotal - discountAmount;
-    
+
     // Apply Tax
     const taxAmount = afterDiscount * (gstPercent / 100);
     const finalTotal = afterDiscount + taxAmount;
 
     csvContent += `\n,,,Subtotal,,${subtotal.toFixed(2)}\n`;
-    if (discountPercent > 0) csvContent += `,,,Discount (${discountPercent}%),,-${discountAmount.toFixed(2)}\n`;
+    if (discountPercent > 0)
+      csvContent += `,,,Discount (${discountPercent}%),,-${discountAmount.toFixed(2)}\n`;
     csvContent += `,,,Tax (${gstPercent}%),,${taxAmount.toFixed(2)}\n`;
     csvContent += `,,,TOTAL,,${finalTotal.toFixed(2)}\n`;
 
@@ -297,25 +313,26 @@ const PricingTableWidget = ({ model }) => {
   };
 
   const addRow = (isHeader = false) => {
-    const newRow = tableType === "anc"
-      ? {
-          id: `new-${Date.now()}`,
-          productName: isHeader ? "NEW SECTION" : "",
-          category: "",
-          description: "",
-          dimensions: { width: 0, height: 0, area: 0 },
-          unitPrice: 0,
-          quantity: 1,
-          isHeader,
-        }
-      : {
-          id: `new-${Date.now()}`,
-          role: isHeader ? "NEW SECTION" : "",
-          description: "",
-          hours: 0,
-          baseRate: 0,
-          isHeader,
-        };
+    const newRow =
+      tableType === "anc"
+        ? {
+            id: `new-${Date.now()}`,
+            productName: isHeader ? "NEW SECTION" : "",
+            category: "",
+            description: "",
+            dimensions: { width: 0, height: 0, area: 0 },
+            unitPrice: 0,
+            quantity: 1,
+            isHeader,
+          }
+        : {
+            id: `new-${Date.now()}`,
+            role: isHeader ? "NEW SECTION" : "",
+            description: "",
+            hours: 0,
+            baseRate: 0,
+            isHeader,
+          };
     updateModel({ rows: [...rows, newRow] });
   };
 
@@ -341,15 +358,28 @@ const PricingTableWidget = ({ model }) => {
   };
 
   const downloadCSV = () => {
-    const headers = tableType === "anc"
-      ? ["Product", "Category", "Description", "Width", "Height", "Quantity", "Unit Price", "Total"]
-      : ["Role", "Description", "Hours", "Rate", "Line Total"];
+    const headers =
+      tableType === "anc"
+        ? [
+            "Product",
+            "Category",
+            "Description",
+            "Width",
+            "Height",
+            "Quantity",
+            "Unit Price",
+            "Total",
+          ]
+        : ["Role", "Description", "Hours", "Rate", "Line Total"];
     const csvRows = [headers.join(",")];
 
     rows.forEach((row) => {
       if (row.isHeader) {
-        const name = tableType === "anc" ? (row.productName || row.role) : row.role;
-        csvRows.push(`${name.toUpperCase()},${tableType === "anc" ? "" : ""}${tableType === "anc" ? ",,,,,,," : ",,,,"}`);
+        const name =
+          tableType === "anc" ? row.productName || row.role : row.role;
+        csvRows.push(
+          `${name.toUpperCase()},${tableType === "anc" ? "" : ""}${tableType === "anc" ? ",,,,,,," : ",,,,"}`
+        );
         return;
       }
 
@@ -364,25 +394,29 @@ const PricingTableWidget = ({ model }) => {
         const quantity = row.quantity || 1;
         const unitPrice = row.unitPrice || 0;
         const lineTotal = unitPrice * quantity;
-        csvRows.push([
-          clean(row.productName || row.role),
-          clean(row.category),
-          clean(row.description),
-          width,
-          height,
-          quantity,
-          unitPrice.toFixed(2),
-          lineTotal.toFixed(2),
-        ].join(","));
+        csvRows.push(
+          [
+            clean(row.productName || row.role),
+            clean(row.category),
+            clean(row.description),
+            width,
+            height,
+            quantity,
+            unitPrice.toFixed(2),
+            lineTotal.toFixed(2),
+          ].join(",")
+        );
       } else {
         const lineTotal = clampNumber(row.hours) * clampNumber(row.baseRate);
-        csvRows.push([
-          clean(row.role),
-          clean(row.description),
-          row.hours,
-          row.baseRate,
-          lineTotal.toFixed(2),
-        ].join(","));
+        csvRows.push(
+          [
+            clean(row.role),
+            clean(row.description),
+            row.hours,
+            row.baseRate,
+            lineTotal.toFixed(2),
+          ].join(",")
+        );
       }
     });
 
@@ -396,7 +430,9 @@ const PricingTableWidget = ({ model }) => {
         `${totalPrefix},Discount (-${discountPercent}%),-${totals.discount.toFixed(2)}`
       );
     }
-    csvRows.push(`${totalPrefix},GST (${gstPercent}%),${totals.gst.toFixed(2)}`);
+    csvRows.push(
+      `${totalPrefix},GST (${gstPercent}%),${totals.gst.toFixed(2)}`
+    );
     csvRows.push(`${totalPrefix},Total Investment,${totals.total.toFixed(2)}`);
 
     const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
@@ -430,7 +466,9 @@ const PricingTableWidget = ({ model }) => {
     >
       <div className="flex flex-col gap-1 mb-5">
         <div className="flex items-center justify-between">
-          <div className="text-xl font-bold text-white/90 tracking-tight">{title}</div>
+          <div className="text-xl font-bold text-white/90 tracking-tight">
+            {title}
+          </div>
           <div className="flex items-center gap-3">
             <button
               onClick={downloadCSV}
@@ -489,47 +527,76 @@ const PricingTableWidget = ({ model }) => {
           {/* Specs Table */}
           <div className="border border-white/10 rounded-xl overflow-hidden bg-black/20 shadow-xl">
             <div className="bg-[#0055b8] px-4 py-3 flex justify-between items-center border-b border-white/10">
-              <h3 className="text-sm font-black uppercase tracking-widest text-white">Specifications</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-white">
+                Specifications
+              </h3>
               <div className="text-[10px] text-white/70 font-bold uppercase tracking-widest">
                 {ancEstimateData.specs?.productName || "LED Display"}
               </div>
             </div>
             <div className="p-5 grid grid-cols-2 md:grid-cols-8 gap-6 text-xs">
               <div className="flex flex-col gap-1.5 col-span-2 md:col-span-1">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Item</span>
-                <span className="text-white font-medium text-sm truncate" title={ancEstimateData.specs?.productName}>
+                <span className="text-white/40 uppercase tracking-tighter font-bold">
+                  Item
+                </span>
+                <span
+                  className="text-white font-medium text-sm truncate"
+                  title={ancEstimateData.specs?.productName}
+                >
                   {ancEstimateData.specs?.productName || "LED Display"}
                 </span>
               </div>
               <div className="flex flex-col gap-1.5 md:text-center">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Pitch</span>
+                <span className="text-white/40 uppercase tracking-tighter font-bold">
+                  Pitch
+                </span>
                 <span className="text-white font-medium text-sm">
                   {ancEstimateData.specs?.pitch || "10mm"}
                 </span>
               </div>
               <div className="flex flex-col gap-1.5 md:text-center">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Size (H'xW')</span>
+                <span className="text-white/40 uppercase tracking-tighter font-bold">
+                  Size (H'xW')
+                </span>
                 <span className="text-white font-medium text-sm">
-                  {ancEstimateData.specs?.height}' x {ancEstimateData.specs?.width}'
+                  {ancEstimateData.specs?.height}' x{" "}
+                  {ancEstimateData.specs?.width}'
                 </span>
               </div>
               <div className="flex flex-col gap-1.5 md:text-center">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Pixel Count</span>
-                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.resolution || "TBD"}</span>
-              </div>
-              <div className="flex flex-col gap-1.5 md:text-center">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Service</span>
-                <span className="text-white font-medium text-sm truncate">{ancEstimateData.specs?.service || "Front/Rear"}</span>
-              </div>
-              <div className="flex flex-col gap-1.5 md:text-center">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Sq Ft</span>
+                <span className="text-white/40 uppercase tracking-tighter font-bold">
+                  Pixel Count
+                </span>
                 <span className="text-white font-medium text-sm">
-                  {Math.round((ancEstimateData.specs?.height || 0) * (ancEstimateData.specs?.width || 0))}
+                  {ancEstimateData.specs?.resolution || "TBD"}
                 </span>
               </div>
               <div className="flex flex-col gap-1.5 md:text-center">
-                <span className="text-white/40 uppercase tracking-tighter font-bold">Qty</span>
-                <span className="text-white font-medium text-sm">{ancEstimateData.specs?.qty || 1}</span>
+                <span className="text-white/40 uppercase tracking-tighter font-bold">
+                  Service
+                </span>
+                <span className="text-white font-medium text-sm truncate">
+                  {ancEstimateData.specs?.service || "Front/Rear"}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">
+                  Sq Ft
+                </span>
+                <span className="text-white font-medium text-sm">
+                  {Math.round(
+                    (ancEstimateData.specs?.height || 0) *
+                      (ancEstimateData.specs?.width || 0)
+                  )}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5 md:text-center">
+                <span className="text-white/40 uppercase tracking-tighter font-bold">
+                  Qty
+                </span>
+                <span className="text-white font-medium text-sm">
+                  {ancEstimateData.specs?.qty || 1}
+                </span>
               </div>
             </div>
           </div>
@@ -537,32 +604,74 @@ const PricingTableWidget = ({ model }) => {
           {/* Pricing Table */}
           <div className="border border-white/10 rounded-xl overflow-hidden bg-black/20 shadow-xl">
             <div className="bg-white/10 px-4 py-3 border-b border-white/10 flex justify-between items-center">
-              <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Pricing Breakdown</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-white/80">
+                Pricing Breakdown
+              </h3>
               <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">
-                Selling @ {formatCurrency(ancEstimateData.pricing?.total / ((ancEstimateData.specs?.height || 1) * (ancEstimateData.specs?.width || 1) * (ancEstimateData.specs?.qty || 1)))} /sqft
+                Selling @{" "}
+                {formatCurrency(
+                  ancEstimateData.pricing?.total /
+                    ((ancEstimateData.specs?.height || 1) *
+                      (ancEstimateData.specs?.width || 1) *
+                      (ancEstimateData.specs?.qty || 1))
+                )}{" "}
+                /sqft
               </div>
             </div>
             <div className="p-0 divide-y divide-white/5">
               {[
-                { label: "LED Display System (Materials)", value: ancEstimateData.pricing?.base },
+                {
+                  label: "LED Display System (Materials)",
+                  value: ancEstimateData.pricing?.base,
+                },
                 {
                   label: "Structural & Installation",
-                  value: (ancEstimateData.pricing?.structural || 0) + (ancEstimateData.pricing?.labor || 0),
+                  value:
+                    (ancEstimateData.pricing?.structural || 0) +
+                    (ancEstimateData.pricing?.labor || 0),
                 },
-                { label: "Engineering & Project Management", value: ancEstimateData.pricing?.pm },
-                { label: "Shipping & Logistics", value: ancEstimateData.pricing?.shipping },
-                { label: "Bonding Cost ($16.67/sf)", value: ancEstimateData.pricing?.bond },
-                { label: "Strategic ANC Margin (10%)", value: ancEstimateData.pricing?.margin, isProfit: true },
+                {
+                  label: "Engineering & Project Management",
+                  value: ancEstimateData.pricing?.pm,
+                },
+                {
+                  label: "Shipping & Logistics",
+                  value: ancEstimateData.pricing?.shipping,
+                },
+                {
+                  label: "Bonding Cost ($16.67/sf)",
+                  value: ancEstimateData.pricing?.bond,
+                },
+                {
+                  label: "Strategic ANC Margin (10%)",
+                  value: ancEstimateData.pricing?.margin,
+                  isProfit: true,
+                },
               ].map((row, i) => (
-                <div key={i} className={`px-6 py-4 flex justify-between items-center hover:bg-white/5 transition-colors ${row.isProfit ? "bg-emerald-500/5 whitespace-nowrap" : ""}`}>
-                  <span className={`text-sm font-medium ${row.isProfit ? "text-emerald-400" : "text-white/70"}`}>{row.label}</span>
-                  <span className={`font-mono text-sm font-semibold ${row.isProfit ? "text-emerald-400" : "text-white"}`}>{formatCurrency(row.value)}</span>
+                <div
+                  key={i}
+                  className={`px-6 py-4 flex justify-between items-center hover:bg-white/5 transition-colors ${row.isProfit ? "bg-emerald-500/5 whitespace-nowrap" : ""}`}
+                >
+                  <span
+                    className={`text-sm font-medium ${row.isProfit ? "text-emerald-400" : "text-white/70"}`}
+                  >
+                    {row.label}
+                  </span>
+                  <span
+                    className={`font-mono text-sm font-semibold ${row.isProfit ? "text-emerald-400" : "text-white"}`}
+                  >
+                    {formatCurrency(row.value)}
+                  </span>
                 </div>
               ))}
               <div className="px-6 py-6 bg-purple-500/10 flex justify-between items-center border-t border-purple-500/20">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-purple-400">Total Contract Value</span>
-                  <span className="text-[9px] text-white/30 italic">Includes Margin & Bond ({currency})</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-purple-400">
+                    Total Contract Value
+                  </span>
+                  <span className="text-[9px] text-white/30 italic">
+                    Includes Margin & Bond ({currency})
+                  </span>
                 </div>
                 <span className="text-2xl font-black text-white tracking-tighter decoration-purple-500/50 underline underline-offset-8 decoration-4">
                   {formatCurrency(ancEstimateData.pricing?.total)}
@@ -577,8 +686,10 @@ const PricingTableWidget = ({ model }) => {
       {tableType === "anc" && (
         <div className="overflow-x-auto overflow-y-visible">
           {(() => {
-            const readonlyColumns = "200px 100px minmax(0, 1fr) 80px 80px 80px 120px";
-            const editColumns = "200px 100px minmax(0, 1fr) 80px 80px 80px 120px 44px";
+            const readonlyColumns =
+              "200px 100px minmax(0, 1fr) 80px 80px 80px 120px";
+            const editColumns =
+              "200px 100px minmax(0, 1fr) 80px 80px 80px 120px 44px";
 
             return (
               <>
@@ -586,17 +697,36 @@ const PricingTableWidget = ({ model }) => {
                   className="grid text-left text-[10px] text-white/40 border-b border-white/5 py-3"
                   style={{
                     display: "grid",
-                    gridTemplateColumns: !isReadonly ? editColumns : readonlyColumns,
+                    gridTemplateColumns: !isReadonly
+                      ? editColumns
+                      : readonlyColumns,
                     width: "100%",
                   }}
                 >
-                  <div className="pr-3 font-bold uppercase tracking-wider">Product</div>
-                  <div className="pr-3 font-bold uppercase tracking-wider">Category</div>
-                  <div style={{ paddingRight: 15 }} className="font-bold uppercase tracking-wider">Description</div>
-                  <div className="pr-3 text-right font-bold uppercase tracking-wider">W</div>
-                  <div className="pr-3 text-right font-bold uppercase tracking-wider">H</div>
-                  <div className="pr-3 text-right font-bold uppercase tracking-wider">Qty</div>
-                  <div className="text-right font-bold uppercase tracking-wider">Total</div>
+                  <div className="pr-3 font-bold uppercase tracking-wider">
+                    Product
+                  </div>
+                  <div className="pr-3 font-bold uppercase tracking-wider">
+                    Category
+                  </div>
+                  <div
+                    style={{ paddingRight: 15 }}
+                    className="font-bold uppercase tracking-wider"
+                  >
+                    Description
+                  </div>
+                  <div className="pr-3 text-right font-bold uppercase tracking-wider">
+                    W
+                  </div>
+                  <div className="pr-3 text-right font-bold uppercase tracking-wider">
+                    H
+                  </div>
+                  <div className="pr-3 text-right font-bold uppercase tracking-wider">
+                    Qty
+                  </div>
+                  <div className="text-right font-bold uppercase tracking-wider">
+                    Total
+                  </div>
                   {!isReadonly && <div></div>}
                 </div>
 
@@ -604,7 +734,11 @@ const PricingTableWidget = ({ model }) => {
                   onDragEnd={(result) => {
                     if (isReadonly) return;
                     const destinationIndex = result?.destination?.index;
-                    if (destinationIndex === undefined || destinationIndex === null) return;
+                    if (
+                      destinationIndex === undefined ||
+                      destinationIndex === null
+                    )
+                      return;
                     moveRow({
                       fromIndex: result.source.index,
                       toIndex: destinationIndex,
@@ -636,7 +770,9 @@ const PricingTableWidget = ({ model }) => {
                                     style={{
                                       ...draggableProvided.draggableProps.style,
                                       width: "100%",
-                                      background: snapshot.isDragging ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)",
+                                      background: snapshot.isDragging
+                                        ? "rgba(255,255,255,0.05)"
+                                        : "rgba(255,255,255,0.02)",
                                       marginTop: idx === 0 ? 0 : 24,
                                       marginBottom: 8,
                                       borderRadius: "8px 8px 0 0",
@@ -661,7 +797,9 @@ const PricingTableWidget = ({ model }) => {
                                         <input
                                           className="flex-1 bg-transparent border-none font-black tracking-[0.1em] uppercase text-white/95 focus:ring-0 p-0 placeholder:text-white/20"
                                           type="text"
-                                          value={row.productName || row.role || ""}
+                                          value={
+                                            row.productName || row.role || ""
+                                          }
                                           onChange={(e) =>
                                             updateRow(idx, {
                                               productName: e.target.value,
@@ -688,7 +826,9 @@ const PricingTableWidget = ({ model }) => {
                           }
 
                           const width = clampNumber(row.dimensions?.width || 0);
-                          const height = clampNumber(row.dimensions?.height || 0);
+                          const height = clampNumber(
+                            row.dimensions?.height || 0
+                          );
                           const quantity = clampNumber(row.quantity || 1);
                           const unitPrice = clampNumber(row.unitPrice || 0);
                           const lineTotal = unitPrice * quantity;
@@ -707,21 +847,33 @@ const PricingTableWidget = ({ model }) => {
                                   className={`grid items-start border-b border-white/5 py-2 text-sm text-white/80 group ${snapshot.isDragging ? "opacity-60 bg-white/10 rounded" : ""}`}
                                   style={{
                                     display: "grid",
-                                    gridTemplateColumns: !isReadonly ? editColumns : readonlyColumns,
+                                    gridTemplateColumns: !isReadonly
+                                      ? editColumns
+                                      : readonlyColumns,
                                     width: "100%",
                                     ...draggableProvided.draggableProps.style,
-                                    ...(snapshot.isDragging ? { display: "grid", background: "#252525", opacity: 0.9 } : {}),
+                                    ...(snapshot.isDragging
+                                      ? {
+                                          display: "grid",
+                                          background: "#252525",
+                                          opacity: 0.9,
+                                        }
+                                      : {}),
                                   }}
                                 >
                                   {/* Product Column */}
                                   <div className="pr-3">
                                     {isReadonly ? (
-                                      <span className="font-medium">{row.productName || row.role}</span>
+                                      <span className="font-medium">
+                                        {row.productName || row.role}
+                                      </span>
                                     ) : (
                                       <input
                                         className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
                                         type="text"
-                                        value={row.productName || row.role || ""}
+                                        value={
+                                          row.productName || row.role || ""
+                                        }
                                         onChange={(e) =>
                                           updateRow(idx, {
                                             productName: e.target.value,
@@ -735,31 +887,47 @@ const PricingTableWidget = ({ model }) => {
                                   {/* Category Column */}
                                   <div className="pr-3">
                                     {isReadonly ? (
-                                      <span className="text-white/60">{row.category || ""}</span>
+                                      <span className="text-white/60">
+                                        {row.category || ""}
+                                      </span>
                                     ) : (
                                       <input
                                         className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/60"
                                         type="text"
                                         value={row.category || ""}
                                         onChange={(e) =>
-                                          updateRow(idx, { category: e.target.value })
+                                          updateRow(idx, {
+                                            category: e.target.value,
+                                          })
                                         }
                                       />
                                     )}
                                   </div>
 
                                   {/* Description Column */}
-                                  <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", overflowWrap: "break-word", paddingRight: 15, minWidth: 0 }}>
+                                  <div
+                                    style={{
+                                      whiteSpace: "pre-wrap",
+                                      wordBreak: "break-word",
+                                      overflowWrap: "break-word",
+                                      paddingRight: 15,
+                                      minWidth: 0,
+                                    }}
+                                  >
                                     {isReadonly ? (
                                       <div className="prose prose-invert prose-sm max-w-none">
-                                        <ReactMarkdown>{row.description || ""}</ReactMarkdown>
+                                        <ReactMarkdown>
+                                          {row.description || ""}
+                                        </ReactMarkdown>
                                       </div>
                                     ) : (
                                       <textarea
                                         className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 resize-vertical min-h-[40px]"
                                         value={row.description || ""}
                                         onChange={(e) =>
-                                          updateRow(idx, { description: e.target.value })
+                                          updateRow(idx, {
+                                            description: e.target.value,
+                                          })
                                         }
                                       />
                                     )}
@@ -778,7 +946,12 @@ const PricingTableWidget = ({ model }) => {
                                         onChange={(e) => {
                                           const dims = row.dimensions || {};
                                           updateRow(idx, {
-                                            dimensions: { ...dims, width: clampNumber(e.target.value) }
+                                            dimensions: {
+                                              ...dims,
+                                              width: clampNumber(
+                                                e.target.value
+                                              ),
+                                            },
                                           });
                                         }}
                                       />
@@ -798,7 +971,12 @@ const PricingTableWidget = ({ model }) => {
                                         onChange={(e) => {
                                           const dims = row.dimensions || {};
                                           updateRow(idx, {
-                                            dimensions: { ...dims, height: clampNumber(e.target.value) }
+                                            dimensions: {
+                                              ...dims,
+                                              height: clampNumber(
+                                                e.target.value
+                                              ),
+                                            },
                                           });
                                         }}
                                       />
@@ -816,7 +994,11 @@ const PricingTableWidget = ({ model }) => {
                                         min={1}
                                         value={quantity}
                                         onChange={(e) =>
-                                          updateRow(idx, { quantity: clampNumber(e.target.value) })
+                                          updateRow(idx, {
+                                            quantity: clampNumber(
+                                              e.target.value
+                                            ),
+                                          })
                                         }
                                       />
                                     )}
@@ -863,51 +1045,169 @@ const PricingTableWidget = ({ model }) => {
             const readonlyColumns = "180px minmax(0, 1fr) 80px 100px 120px";
             const editColumns = "180px minmax(0, 1fr) 80px 100px 120px 44px";
 
-          return (
-            <>
-              <div
-                className="grid text-left text-[10px] text-white/40 border-b border-white/5 py-3"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: !isReadonly
-                    ? editColumns
-                    : readonlyColumns,
-                  width: "100%",
-                }}
-              >
-                <div className="pr-3 font-bold uppercase tracking-wider">Role</div>
-                <div style={{ paddingRight: 15 }} className="font-bold uppercase tracking-wider">Description</div>
-                <div className="pr-3 text-right font-bold uppercase tracking-wider">Hours</div>
-                <div className="pr-3 text-right font-bold uppercase tracking-wider">Rate</div>
-                <div className="text-right font-bold uppercase tracking-wider">Total</div>
-                {!isReadonly && <div></div>}
-              </div>
+            return (
+              <>
+                <div
+                  className="grid text-left text-[10px] text-white/40 border-b border-white/5 py-3"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: !isReadonly
+                      ? editColumns
+                      : readonlyColumns,
+                    width: "100%",
+                  }}
+                >
+                  <div className="pr-3 font-bold uppercase tracking-wider">
+                    Role
+                  </div>
+                  <div
+                    style={{ paddingRight: 15 }}
+                    className="font-bold uppercase tracking-wider"
+                  >
+                    Description
+                  </div>
+                  <div className="pr-3 text-right font-bold uppercase tracking-wider">
+                    Hours
+                  </div>
+                  <div className="pr-3 text-right font-bold uppercase tracking-wider">
+                    Rate
+                  </div>
+                  <div className="text-right font-bold uppercase tracking-wider">
+                    Total
+                  </div>
+                  {!isReadonly && <div></div>}
+                </div>
 
-              <DragDropContext
-                onDragEnd={(result) => {
-                  if (isReadonly) return;
-                  const destinationIndex = result?.destination?.index;
-                  if (
-                    destinationIndex === undefined ||
-                    destinationIndex === null
-                  )
-                    return;
-                  moveRow({
-                    fromIndex: result.source.index,
-                    toIndex: destinationIndex,
-                  });
-                }}
-              >
-                <Droppable droppableId="pricing-table-rows">
-                  {(droppableProvided) => (
-                    <div
-                      ref={droppableProvided.innerRef}
-                      {...droppableProvided.droppableProps}
-                    >
-                      {(rows.length === 0 ? [] : rows).map((row, idx) => {
-                        const isHeader = !!row.isHeader;
+                <DragDropContext
+                  onDragEnd={(result) => {
+                    if (isReadonly) return;
+                    const destinationIndex = result?.destination?.index;
+                    if (
+                      destinationIndex === undefined ||
+                      destinationIndex === null
+                    )
+                      return;
+                    moveRow({
+                      fromIndex: result.source.index,
+                      toIndex: destinationIndex,
+                    });
+                  }}
+                >
+                  <Droppable droppableId="pricing-table-rows">
+                    {(droppableProvided) => (
+                      <div
+                        ref={droppableProvided.innerRef}
+                        {...droppableProvided.droppableProps}
+                      >
+                        {(rows.length === 0 ? [] : rows).map((row, idx) => {
+                          const isHeader = !!row.isHeader;
 
-                        if (isHeader) {
+                          if (isHeader) {
+                            return (
+                              <Draggable
+                                key={row.id || `row-${idx}`}
+                                draggableId={String(row.id || `row-${idx}`)}
+                                index={idx}
+                                isDragDisabled={isReadonly}
+                              >
+                                {(draggableProvided, snapshot) => (
+                                  <div
+                                    ref={draggableProvided.innerRef}
+                                    {...draggableProvided.draggableProps}
+                                    className={`flex items-center gap-2 py-4 px-2 border-b-2 border-white/10 group ${snapshot.isDragging ? "opacity-60 bg-white/5" : ""}`}
+                                    style={{
+                                      ...draggableProvided.draggableProps.style,
+                                      width: "100%",
+                                      background: snapshot.isDragging
+                                        ? "rgba(255,255,255,0.05)"
+                                        : "rgba(255,255,255,0.02)",
+                                      marginTop: idx === 0 ? 0 : 24,
+                                      marginBottom: 8,
+                                      borderRadius: "8px 8px 0 0",
+                                    }}
+                                  >
+                                    {!isReadonly && (
+                                      <div
+                                        {...draggableProvided.dragHandleProps}
+                                        className="drag-handle cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 px-2 select-none"
+                                        title="Drag section"
+                                      >
+                                        ⋮⋮
+                                      </div>
+                                    )}
+                                    <div className="flex-1 flex items-center gap-3">
+                                      <div className="h-6 w-1 bg-purple-500 rounded-full" />
+                                      {isReadonly ? (
+                                        <span className="text-sm font-black tracking-[0.1em] uppercase text-white/95">
+                                          {row.role}
+                                        </span>
+                                      ) : (
+                                        <input
+                                          className="flex-1 bg-transparent border-none font-black tracking-[0.1em] uppercase text-white/95 focus:ring-0 p-0 placeholder:text-white/20"
+                                          type="text"
+                                          value={row.role || ""}
+                                          onChange={(e) =>
+                                            updateRow(idx, {
+                                              role: e.target.value,
+                                            })
+                                          }
+                                          placeholder="SECTION TITLE..."
+                                        />
+                                      )}
+                                    </div>
+                                    {!isReadonly && (
+                                      <button
+                                        onClick={() => removeRow(idx)}
+                                        className="text-red-400/40 hover:text-red-400 px-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Remove section"
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </Draggable>
+                            );
+                          }
+
+                          const hours = clampNumber(row.hours);
+                          const rate = clampNumber(row.baseRate);
+                          const lineTotal = hours * rate;
+                          const roleQuery = (row.role || "")
+                            .trim()
+                            .toLowerCase();
+
+                          const filteredRoles = (rolesToUse || [])
+                            .filter((r) => {
+                              const name = (r?.name || "").toLowerCase();
+                              if (!roleQuery) return true;
+                              return name.includes(roleQuery);
+                            })
+                            .sort((a, b) => {
+                              const an = (a?.name || "").toLowerCase();
+                              const bn = (b?.name || "").toLowerCase();
+                              const aStarts =
+                                roleQuery && an.startsWith(roleQuery);
+                              const bStarts =
+                                roleQuery && bn.startsWith(roleQuery);
+                              if (aStarts && !bStarts) return -1;
+                              if (!aStarts && bStarts) return 1;
+                              return an.localeCompare(bn);
+                            })
+                            .slice(0, 50);
+
+                          const selectRole = (role) => {
+                            if (!role?.name) return;
+                            updateRow(idx, {
+                              role: role.name,
+                              baseRate:
+                                role?.rate !== undefined
+                                  ? clampNumber(role.rate)
+                                  : clampNumber(row.baseRate),
+                            });
+                            setRolePickerOpenIndex(null);
+                          };
+
                           return (
                             <Draggable
                               key={row.id || `row-${idx}`}
@@ -919,489 +1219,383 @@ const PricingTableWidget = ({ model }) => {
                                 <div
                                   ref={draggableProvided.innerRef}
                                   {...draggableProvided.draggableProps}
-                                  className={`flex items-center gap-2 py-4 px-2 border-b-2 border-white/10 group ${snapshot.isDragging ? "opacity-60 bg-white/5" : ""}`}
+                                  className={`grid items-start border-b border-white/5 py-2 text-sm text-white/80 group ${snapshot.isDragging ? "opacity-60 bg-white/10 rounded" : ""}`}
                                   style={{
-                                    ...draggableProvided.draggableProps.style,
+                                    display: "grid",
+                                    gridTemplateColumns: !isReadonly
+                                      ? editColumns
+                                      : readonlyColumns,
                                     width: "100%",
-                                    background: snapshot.isDragging
-                                      ? "rgba(255,255,255,0.05)"
-                                      : "rgba(255,255,255,0.02)",
-                                    marginTop: idx === 0 ? 0 : 24,
-                                    marginBottom: 8,
-                                    borderRadius: "8px 8px 0 0",
+                                    ...draggableProvided.draggableProps.style,
+                                    // Ensure layout holds during drag
+                                    ...(snapshot.isDragging
+                                      ? {
+                                          display: "grid",
+                                          background: "#252525",
+                                          opacity: 0.9,
+                                        }
+                                      : {}),
                                   }}
                                 >
-                                  {!isReadonly && (
-                                    <div
-                                      {...draggableProvided.dragHandleProps}
-                                      className="drag-handle cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 px-2 select-none"
-                                      title="Drag section"
-                                    >
-                                      ⋮⋮
+                                  {/* Role Column with Drag Handle */}
+                                  <div className="pr-3 flex items-start gap-2">
+                                    {!isReadonly && (
+                                      <div
+                                        {...draggableProvided.dragHandleProps}
+                                        className="drag-handle cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 select-none mt-1"
+                                        title="Drag to reorder"
+                                      >
+                                        ⋮⋮
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      {isReadonly ? (
+                                        <span className="font-medium">
+                                          {row.role}
+                                        </span>
+                                      ) : (
+                                        <div className="relative">
+                                          <div className="flex items-stretch gap-1">
+                                            <input
+                                              className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+                                              type="text"
+                                              value={row.role || ""}
+                                              onFocus={() => {
+                                                setRolePickerOpenIndex(idx);
+                                              }}
+                                              onBlur={() => {
+                                                if (
+                                                  closeRolePickerTimeoutRef.current
+                                                ) {
+                                                  clearTimeout(
+                                                    closeRolePickerTimeoutRef.current
+                                                  );
+                                                }
+                                                closeRolePickerTimeoutRef.current =
+                                                  setTimeout(() => {
+                                                    setRolePickerOpenIndex(
+                                                      (cur) =>
+                                                        cur === idx ? null : cur
+                                                    );
+                                                  }, 120);
+                                              }}
+                                              onChange={(e) => {
+                                                const val = e.target.value;
+                                                const updates = { role: val };
+                                                const found =
+                                                  availableRoles.find(
+                                                    (r) => r.name === val
+                                                  );
+                                                if (found) {
+                                                  updates.baseRate = found.rate;
+                                                }
+                                                updateRow(idx, updates);
+                                                setRolePickerOpenIndex(idx);
+                                              }}
+                                            />
+                                            <button
+                                              type="button"
+                                              className="bg-black/20 border border-white/10 rounded px-2 text-white/50 hover:text-white/80"
+                                              onMouseDown={(e) =>
+                                                e.preventDefault()
+                                              }
+                                              onClick={() =>
+                                                setRolePickerOpenIndex((cur) =>
+                                                  cur === idx ? null : idx
+                                                )
+                                              }
+                                              title="Choose role"
+                                            >
+                                              ▾
+                                            </button>
+                                          </div>
+                                          {rolePickerOpenIndex === idx &&
+                                            filteredRoles.length > 0 && (
+                                              <div className="absolute left-0 right-0 mt-1 max-h-64 overflow-auto bg-black/90 border border-white/10 rounded shadow-lg z-50">
+                                                {filteredRoles.map((role) => (
+                                                  <div
+                                                    key={role.id || role.name}
+                                                    className="px-2 py-1 text-sm text-white/80 hover:bg-white/10 cursor-pointer flex items-center justify-between gap-3"
+                                                    onMouseDown={(e) => {
+                                                      e.preventDefault();
+                                                      selectRole(role);
+                                                    }}
+                                                  >
+                                                    <div className="min-w-0">
+                                                      <div className="truncate">
+                                                        {role.name}
+                                                      </div>
+                                                      {role.category && (
+                                                        <div className="text-xs text-white/40 truncate">
+                                                          {role.category}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                    <div className="text-xs text-white/50 whitespace-nowrap">
+                                                      {formatCurrency(
+                                                        role.rate,
+                                                        currency
+                                                      )}
+                                                      /hr
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                  <div className="flex-1 flex items-center gap-3">
-                                    <div className="h-6 w-1 bg-purple-500 rounded-full" />
+                                  </div>
+
+                                  {/* Description Column - Fixed Wrapping */}
+                                  <div
+                                    style={{
+                                      whiteSpace: "pre-wrap",
+                                      wordBreak: "break-word",
+                                      overflowWrap: "break-word",
+                                      paddingRight: 15,
+                                      minWidth: 0,
+                                    }}
+                                  >
                                     {isReadonly ? (
-                                      <span className="text-sm font-black tracking-[0.1em] uppercase text-white/95">
-                                        {row.role}
-                                      </span>
+                                      <div className="prose prose-invert prose-sm max-w-none">
+                                        <ReactMarkdown>
+                                          {row.description || ""}
+                                        </ReactMarkdown>
+                                      </div>
                                     ) : (
-                                      <input
-                                        className="flex-1 bg-transparent border-none font-black tracking-[0.1em] uppercase text-white/95 focus:ring-0 p-0 placeholder:text-white/20"
-                                        type="text"
-                                        value={row.role || ""}
+                                      <textarea
+                                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 resize-vertical min-h-[40px]"
+                                        value={row.description || ""}
                                         onChange={(e) =>
                                           updateRow(idx, {
-                                            role: e.target.value,
+                                            description: e.target.value,
                                           })
                                         }
-                                        placeholder="SECTION TITLE..."
                                       />
                                     )}
                                   </div>
+
+                                  {/* Hours Column */}
+                                  <div className="pr-3 text-right">
+                                    {isReadonly ? (
+                                      <span>{hours}</span>
+                                    ) : (
+                                      <input
+                                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 text-right"
+                                        type="number"
+                                        min={0}
+                                        value={hours}
+                                        onChange={(e) =>
+                                          updateRow(idx, {
+                                            hours: clampNumber(e.target.value),
+                                          })
+                                        }
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Rate Column */}
+                                  <div className="pr-3 text-right">
+                                    {isReadonly ? (
+                                      <span>
+                                        {formatCurrency(rate, currency)}
+                                      </span>
+                                    ) : (
+                                      <input
+                                        className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 text-right"
+                                        type="number"
+                                        min={0}
+                                        value={rate}
+                                        onChange={(e) =>
+                                          updateRow(idx, {
+                                            baseRate: clampNumber(
+                                              e.target.value
+                                            ),
+                                          })
+                                        }
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Total Column */}
+                                  <div className="text-right font-medium whitespace-nowrap">
+                                    {formatCurrency(lineTotal, currency)}
+                                  </div>
+
+                                  {/* Actions Column */}
                                   {!isReadonly && (
-                                    <button
-                                      onClick={() => removeRow(idx)}
-                                      className="text-red-400/40 hover:text-red-400 px-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      title="Remove section"
-                                    >
-                                      ✕
-                                    </button>
+                                    <div className="flex items-center justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => removeRow(idx)}
+                                        className="text-red-400 hover:bg-red-900/30 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Remove row"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
                                   )}
                                 </div>
                               )}
                             </Draggable>
                           );
-                        }
+                        })}
+                        {droppableProvided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </>
+            );
+          })()}
+        </div>
+      )}
 
-                        const hours = clampNumber(row.hours);
-                        const rate = clampNumber(row.baseRate);
-                        const lineTotal = hours * rate;
-                        const roleQuery = (row.role || "").trim().toLowerCase();
+      {!isReadonly && (
+        <div className="flex items-center gap-2 mt-2">
+          <button
+            onClick={() => addRow(false)}
+            className="text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300"
+          >
+            + New Item
+          </button>
+          <span className="text-white/20 text-xs">|</span>
+          <button
+            onClick={() => addRow(true)}
+            className="text-xs flex items-center gap-1 text-purple-400 hover:text-purple-300"
+          >
+            + New Section
+          </button>
+          <span className="text-white/20 text-xs">|</span>
+          <button
+            onClick={sortRows}
+            className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300"
+            title="Sort Accountant Management to bottom"
+          >
+            Sort Roles
+          </button>
+        </div>
+      )}
 
-                        const filteredRoles = (rolesToUse || [])
-                          .filter((r) => {
-                            const name = (r?.name || "").toLowerCase();
-                            if (!roleQuery) return true;
-                            return name.includes(roleQuery);
-                          })
-                          .sort((a, b) => {
-                            const an = (a?.name || "").toLowerCase();
-                            const bn = (b?.name || "").toLowerCase();
-                            const aStarts =
-                              roleQuery && an.startsWith(roleQuery);
-                            const bStarts =
-                              roleQuery && bn.startsWith(roleQuery);
-                            if (aStarts && !bStarts) return -1;
-                            if (!aStarts && bStarts) return 1;
-                            return an.localeCompare(bn);
-                          })
-                          .slice(0, 50);
+      {!isReadonly && (
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-white/50">Discount %</span>
+            <input
+              className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+              type="number"
+              min={0}
+              max={100}
+              value={discountPercent}
+              onChange={(e) =>
+                updateModel({
+                  discountPercent: clampNumber(e.target.value, { max: 100 }),
+                })
+              }
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-white/50">GST %</span>
+            <input
+              className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+              type="number"
+              min={0}
+              max={100}
+              value={gstPercent}
+              onChange={(e) =>
+                updateModel({
+                  gstPercent: clampNumber(e.target.value, { max: 100 }),
+                })
+              }
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-white/50">Title</span>
+            <input
+              className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
+              type="text"
+              value={title}
+              onChange={(e) =>
+                updateModel({ title: new Text(e.target.value || "") })
+              }
+            />
+          </label>
+        </div>
+      )}
 
-                        const selectRole = (role) => {
-                          if (!role?.name) return;
-                          updateRow(idx, {
-                            role: role.name,
-                            baseRate:
-                              role?.rate !== undefined
-                                ? clampNumber(role.rate)
-                                : clampNumber(row.baseRate),
-                          });
-                          setRolePickerOpenIndex(null);
-                        };
+      {showTotals && (
+        <div className="mt-12 flex justify-end" contentEditable={false}>
+          <div
+            className="w-full max-w-md border border-white/10 rounded-2xl overflow-hidden shadow-2xl bg-black/20"
+            style={{
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <div className="px-6 py-4 border-b border-white/10 bg-white/5">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/40">
+                Investment Summary
+              </h3>
+            </div>
 
-                        return (
-                          <Draggable
-                            key={row.id || `row-${idx}`}
-                            draggableId={String(row.id || `row-${idx}`)}
-                            index={idx}
-                            isDragDisabled={isReadonly}
-                          >
-                            {(draggableProvided, snapshot) => (
-                              <div
-                                ref={draggableProvided.innerRef}
-                                {...draggableProvided.draggableProps}
-                                className={`grid items-start border-b border-white/5 py-2 text-sm text-white/80 group ${snapshot.isDragging ? "opacity-60 bg-white/10 rounded" : ""}`}
-                                style={{
-                                  display: "grid",
-                                  gridTemplateColumns: !isReadonly
-                                    ? editColumns
-                                    : readonlyColumns,
-                                  width: "100%",
-                                  ...draggableProvided.draggableProps.style,
-                                  // Ensure layout holds during drag
-                                  ...(snapshot.isDragging
-                                    ? {
-                                      display: "grid",
-                                      background: "#252525",
-                                      opacity: 0.9,
-                                    }
-                                    : {}),
-                                }}
-                              >
-                                {/* Role Column with Drag Handle */}
-                                <div className="pr-3 flex items-start gap-2">
-                                  {!isReadonly && (
-                                    <div
-                                      {...draggableProvided.dragHandleProps}
-                                      className="drag-handle cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 select-none mt-1"
-                                      title="Drag to reorder"
-                                    >
-                                      ⋮⋮
-                                    </div>
-                                  )}
-                                  <div className="flex-1">
-                                    {isReadonly ? (
-                                      <span className="font-medium">
-                                        {row.role}
-                                      </span>
-                                    ) : (
-                                      <div className="relative">
-                                        <div className="flex items-stretch gap-1">
-                                          <input
-                                            className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                                            type="text"
-                                            value={row.role || ""}
-                                            onFocus={() => {
-                                              setRolePickerOpenIndex(idx);
-                                            }}
-                                            onBlur={() => {
-                                              if (
-                                                closeRolePickerTimeoutRef.current
-                                              ) {
-                                                clearTimeout(
-                                                  closeRolePickerTimeoutRef.current
-                                                );
-                                              }
-                                              closeRolePickerTimeoutRef.current =
-                                                setTimeout(() => {
-                                                  setRolePickerOpenIndex(
-                                                    (cur) =>
-                                                      cur === idx ? null : cur
-                                                  );
-                                                }, 120);
-                                            }}
-                                            onChange={(e) => {
-                                              const val = e.target.value;
-                                              const updates = { role: val };
-                                              const found = availableRoles.find(
-                                                (r) => r.name === val
-                                              );
-                                              if (found) {
-                                                updates.baseRate = found.rate;
-                                              }
-                                              updateRow(idx, updates);
-                                              setRolePickerOpenIndex(idx);
-                                            }}
-                                          />
-                                          <button
-                                            type="button"
-                                            className="bg-black/20 border border-white/10 rounded px-2 text-white/50 hover:text-white/80"
-                                            onMouseDown={(e) =>
-                                              e.preventDefault()
-                                            }
-                                            onClick={() =>
-                                              setRolePickerOpenIndex((cur) =>
-                                                cur === idx ? null : idx
-                                              )
-                                            }
-                                            title="Choose role"
-                                          >
-                                            ▾
-                                          </button>
-                                        </div>
-                                        {rolePickerOpenIndex === idx &&
-                                          filteredRoles.length > 0 && (
-                                            <div className="absolute left-0 right-0 mt-1 max-h-64 overflow-auto bg-black/90 border border-white/10 rounded shadow-lg z-50">
-                                              {filteredRoles.map((role) => (
-                                                <div
-                                                  key={role.id || role.name}
-                                                  className="px-2 py-1 text-sm text-white/80 hover:bg-white/10 cursor-pointer flex items-center justify-between gap-3"
-                                                  onMouseDown={(e) => {
-                                                    e.preventDefault();
-                                                    selectRole(role);
-                                                  }}
-                                                >
-                                                  <div className="min-w-0">
-                                                    <div className="truncate">
-                                                      {role.name}
-                                                    </div>
-                                                    {role.category && (
-                                                      <div className="text-xs text-white/40 truncate">
-                                                        {role.category}
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                  <div className="text-xs text-white/50 whitespace-nowrap">
-                                                    {formatCurrency(
-                                                      role.rate,
-                                                      currency
-                                                    )}
-                                                    /hr
-                                                  </div>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Description Column - Fixed Wrapping */}
-                                <div
-                                  style={{
-                                    whiteSpace: "pre-wrap",
-                                    wordBreak: "break-word",
-                                    overflowWrap: "break-word",
-                                    paddingRight: 15,
-                                    minWidth: 0,
-                                  }}
-                                >
-                                  {isReadonly ? (
-                                    <div className="prose prose-invert prose-sm max-w-none">
-                                      <ReactMarkdown>
-                                        {row.description || ""}
-                                      </ReactMarkdown>
-                                    </div>
-                                  ) : (
-                                    <textarea
-                                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 resize-vertical min-h-[40px]"
-                                      value={row.description || ""}
-                                      onChange={(e) =>
-                                        updateRow(idx, {
-                                          description: e.target.value,
-                                        })
-                                      }
-                                    />
-                                  )}
-                                </div>
-
-                                {/* Hours Column */}
-                                <div className="pr-3 text-right">
-                                  {isReadonly ? (
-                                    <span>{hours}</span>
-                                  ) : (
-                                    <input
-                                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 text-right"
-                                      type="number"
-                                      min={0}
-                                      value={hours}
-                                      onChange={(e) =>
-                                        updateRow(idx, {
-                                          hours: clampNumber(e.target.value),
-                                        })
-                                      }
-                                    />
-                                  )}
-                                </div>
-
-                                {/* Rate Column */}
-                                <div className="pr-3 text-right">
-                                  {isReadonly ? (
-                                    <span>
-                                      {formatCurrency(rate, currency)}
-                                    </span>
-                                  ) : (
-                                    <input
-                                      className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80 text-right"
-                                      type="number"
-                                      min={0}
-                                      value={rate}
-                                      onChange={(e) =>
-                                        updateRow(idx, {
-                                          baseRate: clampNumber(e.target.value),
-                                        })
-                                      }
-                                    />
-                                  )}
-                                </div>
-
-                                {/* Total Column */}
-                                <div className="text-right font-medium whitespace-nowrap">
-                                  {formatCurrency(lineTotal, currency)}
-                                </div>
-
-                                {/* Actions Column */}
-                                {!isReadonly && (
-                                  <div className="flex items-center justify-end">
-                                    <button
-                                      type="button"
-                                      onClick={() => removeRow(idx)}
-                                      className="text-red-400 hover:bg-red-900/30 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                      title="Remove row"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </Draggable>
-                        );
-                      })}
-                      {droppableProvided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            </>
-          );
-        })()}
-      </div>
-    )}
-
-      {
-        !isReadonly && (
-          <div className="flex items-center gap-2 mt-2">
-            <button
-              onClick={() => addRow(false)}
-              className="text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300"
-            >
-              + New Item
-            </button>
-            <span className="text-white/20 text-xs">|</span>
-            <button
-              onClick={() => addRow(true)}
-              className="text-xs flex items-center gap-1 text-purple-400 hover:text-purple-300"
-            >
-              + New Section
-            </button>
-            <span className="text-white/20 text-xs">|</span>
-            <button
-              onClick={sortRows}
-              className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300"
-              title="Sort Accountant Management to bottom"
-            >
-              Sort Roles
-            </button>
-          </div>
-        )
-      }
-
-      {
-        !isReadonly && (
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-white/50">Discount %</span>
-              <input
-                className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                type="number"
-                min={0}
-                max={100}
-                value={discountPercent}
-                onChange={(e) =>
-                  updateModel({
-                    discountPercent: clampNumber(e.target.value, { max: 100 }),
-                  })
-                }
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-white/50">GST %</span>
-              <input
-                className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                type="number"
-                min={0}
-                max={100}
-                value={gstPercent}
-                onChange={(e) =>
-                  updateModel({
-                    gstPercent: clampNumber(e.target.value, { max: 100 }),
-                  })
-                }
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-white/50">Title</span>
-              <input
-                className="bg-black/20 border border-white/10 rounded px-2 py-1 text-sm text-white/80"
-                type="text"
-                value={title}
-                onChange={(e) =>
-                  updateModel({ title: new Text(e.target.value || "") })
-                }
-              />
-            </label>
-          </div>
-        )
-      }
-
-      {
-        showTotals && (
-          <div className="mt-12 flex justify-end" contentEditable={false}>
-            <div
-              className="w-full max-w-md border border-white/10 rounded-2xl overflow-hidden shadow-2xl bg-black/20"
-              style={{
-                backdropFilter: "blur(10px)",
-              }}
-            >
-              <div className="px-6 py-4 border-b border-white/10 bg-white/5">
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/40">
-                  Investment Summary
-                </h3>
+            <div className="p-6 space-y-3 text-sm">
+              <div className="flex justify-between items-center text-white/50">
+                <span className="font-medium">Subtotal</span>
+                <span className="font-mono font-semibold text-white/80">
+                  {formatCurrency(totals.subtotal)}
+                </span>
               </div>
 
-              <div className="p-6 space-y-3 text-sm">
-                <div className="flex justify-between items-center text-white/50">
-                  <span className="font-medium">Subtotal</span>
-                  <span className="font-mono font-semibold text-white/80">
-                    {formatCurrency(totals.subtotal)}
+              {discountPercent > 0 && (
+                <div className="flex justify-between items-center text-emerald-400 font-medium">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs opacity-60">−</span>
+                    <span>Discount ({discountPercent}%)</span>
+                  </div>
+                  <span className="font-mono font-bold">
+                    -{formatCurrency(totals.discount)}
                   </span>
                 </div>
+              )}
 
-                {discountPercent > 0 && (
-                  <div className="flex justify-between items-center text-emerald-400 font-medium">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs opacity-60">−</span>
-                      <span>Discount ({discountPercent}%)</span>
-                    </div>
-                    <span className="font-mono font-bold">
-                      -{formatCurrency(totals.discount)}
+              <div className="flex justify-between items-center text-white/50">
+                <span className="font-medium">GST ({gstPercent}%)</span>
+                <span className="font-mono font-semibold text-white/80">
+                  {formatCurrency(totals.gst)}
+                </span>
+              </div>
+
+              <div className="pt-4 mt-2 border-t-2 border-white/10">
+                <div className="flex justify-between items-end">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/30">
+                      Total Investment
+                    </span>
+                    <span className="text-[9px] text-white/20 italic">
+                      Commercial Rounding Applied
                     </span>
                   </div>
-                )}
-
-                <div className="flex justify-between items-center text-white/50">
-                  <span className="font-medium">GST ({gstPercent}%)</span>
-                  <span className="font-mono font-semibold text-white/80">
-                    {formatCurrency(totals.gst)}
-                  </span>
-                </div>
-
-                <div className="pt-4 mt-2 border-t-2 border-white/10">
-                  <div className="flex justify-between items-end">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/30">
-                        Total Investment
-                      </span>
-                      <span className="text-[9px] text-white/20 italic">
-                        Commercial Rounding Applied
-                      </span>
-                    </div>
-                    <div className="text-3xl font-black text-white tracking-tighter decoration-purple-500/50 underline underline-offset-8 decoration-4">
-                      {formatCurrency(totals.total)}
-                    </div>
+                  <div className="text-3xl font-black text-white tracking-tighter decoration-purple-500/50 underline underline-offset-8 decoration-4">
+                    {formatCurrency(totals.total)}
                   </div>
                 </div>
-                
-                {/* ANC Audit Download Button */}
-                <div className="pt-2 flex justify-end">
-                   <button 
-                     onClick={exportToExcel}
-                     className="text-xs text-white/40 hover:text-white underline"
-                     title="Download raw data for Excel audit"
-                   >
-                     Download Excel (CSV)
-                   </button>
-                </div>
+              </div>
+
+              {/* ANC Audit Download Button */}
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={exportToExcel}
+                  className="text-xs text-white/40 hover:text-white underline"
+                  title="Download raw data for Excel audit"
+                >
+                  Download Excel (CSV)
+                </button>
               </div>
             </div>
           </div>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
 };
 

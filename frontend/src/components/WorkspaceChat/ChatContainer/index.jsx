@@ -154,7 +154,9 @@ export default function ChatContainer({
   chatOnly = false, // Lightweight mode: no doc tabs, no insert modals
 }) {
   const { threadSlug: paramThreadSlug } = useParams();
-  const threadSlug = chatOnly ? null : (propThreadSlug || paramThreadSlug || null);
+  const threadSlug = chatOnly
+    ? null
+    : propThreadSlug || paramThreadSlug || null;
   const [message, setMessage] = useState("");
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [chatHistory, setChatHistory] = useState(knownHistory);
@@ -173,65 +175,79 @@ export default function ChatContainer({
   const notesEditorRef = externalEditorRef || internalNotesEditorRef;
   const executedMessageIds = useRef(new Set());
 
-  const executeTool = useCallback(async (toolCall) => {
-    const editor = notesEditorRef.current;
-    if (!editor) return;
+  const executeTool = useCallback(
+    async (toolCall) => {
+      const editor = notesEditorRef.current;
+      if (!editor) return;
 
-    const { tool, args } = toolCall;
-    console.log("[ClientTool] Executing:", tool, args);
+      const { tool, args } = toolCall;
+      console.log("[ClientTool] Executing:", tool, args);
 
-    try {
-      switch (tool) {
-        case "insert_block":
-          // args: type, text, parentId, props
-          await editor.appendBlock(args.type, args.text, args.parentId, args.props);
-          toast.success("AI inserted content");
-          break;
-        case "insert_database":
-          await editor.insertDatabase(args.title, args.view, args.columns, args.rows, args.parentId);
-          toast.success("AI created database");
-          break;
-        case "update_block":
-          // args: id, text
-          await editor.updateBlock(args.id, args.text);
-          toast.success("AI updated content");
-          break;
-        case "delete_block":
-          // args: id
-          await editor.deleteBlock(args.id);
-          toast.success("AI deleted content");
-          break;
-        case "clear_document":
-          await editor.clearDocument();
-          toast.success("AI cleared document");
-          break;
-        case "get_selection":
-          const sel = editor.getSelection();
-          console.log("[ClientTool] Selection:", sel);
-          // In a full implementation, we'd feed this back to the AI
-          break;
-        case "get_document_structure":
-          const struct = editor.getDocumentStructure();
-          console.log("[ClientTool] Structure:", struct);
-          break;
-        default:
-          if (externalToolHandler) {
-            await externalToolHandler(tool, args);
-          } else {
-            console.warn("[ClientTool] Unknown tool:", tool);
-          }
+      try {
+        switch (tool) {
+          case "insert_block":
+            // args: type, text, parentId, props
+            await editor.appendBlock(
+              args.type,
+              args.text,
+              args.parentId,
+              args.props
+            );
+            toast.success("AI inserted content");
+            break;
+          case "insert_database":
+            await editor.insertDatabase(
+              args.title,
+              args.view,
+              args.columns,
+              args.rows,
+              args.parentId
+            );
+            toast.success("AI created database");
+            break;
+          case "update_block":
+            // args: id, text
+            await editor.updateBlock(args.id, args.text);
+            toast.success("AI updated content");
+            break;
+          case "delete_block":
+            // args: id
+            await editor.deleteBlock(args.id);
+            toast.success("AI deleted content");
+            break;
+          case "clear_document":
+            await editor.clearDocument();
+            toast.success("AI cleared document");
+            break;
+          case "get_selection":
+            const sel = editor.getSelection();
+            console.log("[ClientTool] Selection:", sel);
+            // In a full implementation, we'd feed this back to the AI
+            break;
+          case "get_document_structure":
+            const struct = editor.getDocumentStructure();
+            console.log("[ClientTool] Structure:", struct);
+            break;
+          default:
+            if (externalToolHandler) {
+              await externalToolHandler(tool, args);
+            } else {
+              console.warn("[ClientTool] Unknown tool:", tool);
+            }
+        }
+      } catch (e) {
+        console.error("[ClientTool] Execution failed:", e);
+        toast.error(`AI Action Failed: ${e.message}`);
       }
-    } catch (e) {
-      console.error("[ClientTool] Execution failed:", e);
-      toast.error(`AI Action Failed: ${e.message}`);
-    }
-  }, [notesEditorRef, externalToolHandler]);
+    },
+    [notesEditorRef, externalToolHandler]
+  );
 
   // Tool Execution Effect
   useEffect(() => {
     if (loadingResponse) return; // Wait for stream to finish
     const lastMsg = chatHistory[chatHistory.length - 1];
-    if (!lastMsg || lastMsg.role !== 'assistant' || !lastMsg.uuid) return;
+    if (!lastMsg || lastMsg.role !== "assistant" || !lastMsg.uuid) return;
 
     if (executedMessageIds.current.has(lastMsg.uuid)) return;
 
@@ -661,10 +677,11 @@ export default function ChatContainer({
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
-              ? "border-theme-text-primary text-theme-text-primary"
-              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-              }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+              activeTab === "chat"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+            }`}
           >
             <ChatText size={18} />
             Chat
@@ -672,10 +689,11 @@ export default function ChatContainer({
           {threadSlug && (
             <button
               onClick={() => setActiveTab("notes")}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
-                ? "border-theme-text-primary text-theme-text-primary"
-                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-                }`}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+                activeTab === "notes"
+                  ? "border-theme-text-primary text-theme-text-primary"
+                  : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              }`}
             >
               <FileText size={18} />
               Doc
@@ -683,10 +701,11 @@ export default function ChatContainer({
           )}
           <button
             onClick={() => setActiveTab("forms")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "forms"
-              ? "border-theme-text-primary text-theme-text-primary"
-              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-              }`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
+              activeTab === "forms"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+            }`}
           >
             <NotePencil size={18} />
             Forms

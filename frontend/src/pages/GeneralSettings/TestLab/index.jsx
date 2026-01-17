@@ -123,7 +123,7 @@ To use a tool, output a JSON block like this:
 Do not provide explanation before the tool call if you are just performing an action.`;
 
           await Workspace.update(workspace.slug, {
-            openAiPrompt: SYSTEM_PROMPT
+            openAiPrompt: SYSTEM_PROMPT,
           });
         }
 
@@ -144,7 +144,10 @@ Do not provide explanation before the tool call if you are just performing an ac
 
           // Fetch chat history if thread exists
           if (activeThread) {
-            const history = await WorkspaceThread.chatHistory(workspace.slug, activeThread.slug);
+            const history = await WorkspaceThread.chatHistory(
+              workspace.slug,
+              activeThread.slug
+            );
             setChatHistory(history);
           }
         }
@@ -165,7 +168,7 @@ Do not provide explanation before the tool call if you are just performing an ac
         return (
           <BlockSuiteEditor
             ref={editorRef}
-            onSave={() => { }}
+            onSave={() => {}}
             workspaceSlug="lab"
             threadSlug={labThread?.slug}
           />
@@ -233,10 +236,11 @@ Do not provide explanation before the tool call if you are just performing an ac
                 <button
                   key={m.id}
                   onClick={() => setMode(m.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive
-                    ? "bg-white text-black"
-                    : "text-white/50 hover:text-white/80 hover:bg-white/5"
-                    }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    isActive
+                      ? "bg-white text-black"
+                      : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                  }`}
                 >
                   <Icon size={16} weight={isActive ? "fill" : "regular"} />
                   {m.label}

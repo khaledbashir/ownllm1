@@ -190,9 +190,16 @@ export default function MultiUserAuth() {
     const data = {};
     const form = new FormData(e.target);
     for (var [key, value] of form.entries()) data[key] = value;
-    const { valid, user, token, message, recoveryCodes, requiresEmailVerification, email } =
-      await System.requestToken(data);
-    
+    const {
+      valid,
+      user,
+      token,
+      message,
+      recoveryCodes,
+      requiresEmailVerification,
+      email,
+    } = await System.requestToken(data);
+
     // Check if email verification is required
     if (requiresEmailVerification && email) {
       // Store email for resend form and redirect to verify-email page
@@ -201,7 +208,7 @@ export default function MultiUserAuth() {
       setLoading(false);
       return;
     }
-    
+
     if (valid && !!token && !!user) {
       setUser(user);
       setToken(token);

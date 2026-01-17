@@ -41,9 +41,7 @@ export default function ProposalHeader({
               <h1 className="text-sm font-semibold text-slate-700">
                 Proposal Portal
               </h1>
-              <p className="text-xs text-slate-500">
-                Secure client view
-              </p>
+              <p className="text-xs text-slate-500">Secure client view</p>
             </div>
           </div>
 
@@ -151,7 +149,10 @@ export default function ProposalHeader({
                 >
                   <Share2 size={20} weight="bold" />
                   Share Link
-                  <ArrowDown size={16} className={`transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`} />
+                  <ArrowDown
+                    size={16}
+                    className={`transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {/* Share Menu */}

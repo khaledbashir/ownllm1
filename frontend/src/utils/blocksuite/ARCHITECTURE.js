@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 /**
  * DATABASE AUTO-MATH: Architecture & Implementation Reference
- * 
+ *
  * This document explains how the auto-math logic works and how to integrate it.
- * 
+ *
  * Problem Statement:
  * ─────────────────
  * The standard `affine:database` block is "dumb" - it just stores values.
- * We need it to automatically calculate Totals (Hours × Rate) like the 
+ * We need it to automatically calculate Totals (Hours × Rate) like the
  * custom pricing table does.
- * 
+ *
  * Solution Overview:
  * ──────────────────
  * Listen to Y.js cell updates → Detect Hours/Rate changes → Recalculate Total
- * 
+ *
  */
 
 // ===========================================================================
@@ -21,28 +21,29 @@
 // ===========================================================================
 
 const ARCHITECTURE = {
-  component: 'DatabaseAutoMath System',
-  location: '/root/ownllm/frontend/src/utils/blocksuite/',
-  
+  component: "DatabaseAutoMath System",
+  location: "/root/ownllm/frontend/src/utils/blocksuite/",
+
   files: {
-    'databaseAutoMath.ts': {
-      description: 'Core logic for detecting and calculating totals',
+    "databaseAutoMath.ts": {
+      description: "Core logic for detecting and calculating totals",
       exports: [
-        'setupDatabaseAutoMath(doc, config?)',
-        'recalculateDatabaseRow(databaseBlock, rowId, config?)',
+        "setupDatabaseAutoMath(doc, config?)",
+        "recalculateDatabaseRow(databaseBlock, rowId, config?)",
       ],
     },
-    'INTEGRATION_GUIDE.md': {
-      description: 'Step-by-step integration instructions for BlockSuiteEditor',
-      content: 'Import statements, where to add initialization, cleanup patterns',
+    "INTEGRATION_GUIDE.md": {
+      description: "Step-by-step integration instructions for BlockSuiteEditor",
+      content:
+        "Import statements, where to add initialization, cleanup patterns",
     },
-    'databaseAutoMath.test.ts': {
-      description: 'Test suite to verify the implementation',
+    "databaseAutoMath.test.ts": {
+      description: "Test suite to verify the implementation",
       tests: [
-        'Column detection',
-        'Manual calculation',
-        'Auto-subscription setup',
-        'Infinite loop prevention',
+        "Column detection",
+        "Manual calculation",
+        "Auto-subscription setup",
+        "Infinite loop prevention",
       ],
     },
   },
@@ -80,33 +81,33 @@ const ARCHITECTURE = {
 
 const DESIGN_DECISIONS = {
   CRDT_Safe: {
-    decision: 'Use doc.updateBlock() instead of direct mutations',
-    reason: 'Ensures changes sync across Y.js peers in collaborative mode',
-    impact: 'Slightly async, but safe for distributed systems',
+    decision: "Use doc.updateBlock() instead of direct mutations",
+    reason: "Ensures changes sync across Y.js peers in collaborative mode",
+    impact: "Slightly async, but safe for distributed systems",
   },
 
   LoopPrevention: {
     decision: 'Track "recentlyUpdated" cells in a Set with timeout',
-    reason: 'Y.js observers fire on ANY change, including our own updates',
-    impact: 'Updated cell is skipped for 500ms to break cycles',
+    reason: "Y.js observers fire on ANY change, including our own updates",
+    impact: "Updated cell is skipped for 500ms to break cycles",
   },
 
   ColumnMatching: {
-    decision: 'Match column names case-insensitively',
+    decision: "Match column names case-insensitively",
     reason: 'User might name it "HOURS", "hours", "Hours", "qty", etc.',
-    impact: 'Flexible - works with variations (hours/qty, rate/price)',
+    impact: "Flexible - works with variations (hours/qty, rate/price)",
   },
 
   SafeNumberParsing: {
-    decision: 'parseNumberSafe() returns 0 for empty/invalid values',
-    reason: 'Prevents NaN propagation in calculations',
-    impact: '5 × empty = 0, not NaN',
+    decision: "parseNumberSafe() returns 0 for empty/invalid values",
+    reason: "Prevents NaN propagation in calculations",
+    impact: "5 × empty = 0, not NaN",
   },
 
   NoViewModifications: {
-    decision: 'Logic is in BlockService-style, not in UI component',
-    reason: 'Separates data logic from rendering (as per BlockSuite design)',
-    impact: 'Auto-math works regardless of how cell is rendered',
+    decision: "Logic is in BlockService-style, not in UI component",
+    reason: "Separates data logic from rendering (as per BlockSuite design)",
+    impact: "Auto-math works regardless of how cell is rendered",
   },
 };
 
@@ -157,10 +158,10 @@ const INTEGRATION_CHECKLIST = `
 const CONFIGURATION = {
   default: {
     multipliers: [
-      { names: ['hours', 'qty', 'quantity'], type: 'number' },
-      { names: ['rate', 'price', 'cost'], type: 'number' },
+      { names: ["hours", "qty", "quantity"], type: "number" },
+      { names: ["rate", "price", "cost"], type: "number" },
     ],
-    target: { names: ['total', 'subtotal', 'amount'], type: 'number' },
+    target: { names: ["total", "subtotal", "amount"], type: "number" },
   },
 
   customize: `
@@ -183,34 +184,38 @@ const CONFIGURATION = {
 // ===========================================================================
 
 const TROUBLESHOOTING = {
-  'Calculation not triggering': {
-    cause: 'Column names do not match config',
-    solution: 'Ensure columns are named exactly (case-insensitive): Hours, Rate, Total',
-    debug: 'Check browser console for "[AutoMath] Skipping database block - missing"',
+  "Calculation not triggering": {
+    cause: "Column names do not match config",
+    solution:
+      "Ensure columns are named exactly (case-insensitive): Hours, Rate, Total",
+    debug:
+      'Check browser console for "[AutoMath] Skipping database block - missing"',
   },
 
-  'Total shows 0 when it should show a value': {
-    cause: 'Hours or Rate cells are empty or contain non-numeric text',
-    solution: 'parseNumberSafe() treats empty/invalid as 0. Ensure values are numbers',
-    debug: 'Log the cell values: model.cells[rowId][columnId].value.toString()',
+  "Total shows 0 when it should show a value": {
+    cause: "Hours or Rate cells are empty or contain non-numeric text",
+    solution:
+      "parseNumberSafe() treats empty/invalid as 0. Ensure values are numbers",
+    debug: "Log the cell values: model.cells[rowId][columnId].value.toString()",
   },
 
-  'Changes not persisting after reload': {
-    cause: 'Not calling doc.updateBlock() correctly, or snapshot not saved',
-    solution: 'Ensure setupDatabaseAutoMath is called and snapshot save works',
-    debug: 'Check BlockSuiteEditor.jsx saveDocSnapshot() is being called',
+  "Changes not persisting after reload": {
+    cause: "Not calling doc.updateBlock() correctly, or snapshot not saved",
+    solution: "Ensure setupDatabaseAutoMath is called and snapshot save works",
+    debug: "Check BlockSuiteEditor.jsx saveDocSnapshot() is being called",
   },
 
-  'Infinite loop warning': {
-    cause: 'Loop prevention timeout (500ms) too short for slow systems',
-    solution: 'Increase UPDATE_TIMEOUT in databaseAutoMath.ts (search: "UPDATE_TIMEOUT")',
+  "Infinite loop warning": {
+    cause: "Loop prevention timeout (500ms) too short for slow systems",
+    solution:
+      'Increase UPDATE_TIMEOUT in databaseAutoMath.ts (search: "UPDATE_TIMEOUT")',
     debug: 'Monitor console for "[AutoMath] Enabled for database block"',
   },
 
-  'Error: Cannot read property cells of undefined': {
-    cause: 'Trying to calculate before model is fully initialized',
-    solution: 'Ensure doc.load() is called before setupDatabaseAutoMath()',
-    debug: 'Add console.log in recalculateRow() to verify model structure',
+  "Error: Cannot read property cells of undefined": {
+    cause: "Trying to calculate before model is fully initialized",
+    solution: "Ensure doc.load() is called before setupDatabaseAutoMath()",
+    debug: "Add console.log in recalculateRow() to verify model structure",
   },
 };
 
@@ -259,10 +264,10 @@ const TESTING_GUIDE = `
 // ===========================================================================
 
 const PERFORMANCE = {
-  observerCost: 'Very low - only fires on cell updates, not on every keystroke',
-  calculationCost: 'O(1) per row - just parse + multiply + update',
-  memoryUsage: 'Negligible - small Set<string> for loop prevention',
-  scalability: 'Tested with 100+ rows in a single database without issues',
+  observerCost: "Very low - only fires on cell updates, not on every keystroke",
+  calculationCost: "O(1) per row - just parse + multiply + update",
+  memoryUsage: "Negligible - small Set<string> for loop prevention",
+  scalability: "Tested with 100+ rows in a single database without issues",
 };
 
 // ===========================================================================
@@ -270,17 +275,32 @@ const PERFORMANCE = {
 // ===========================================================================
 
 if (require.main === module) {
-  console.log('\n╔═══════════════════════════════════════════════════════════════╗');
-  console.log('║  DATABASE AUTO-MATH: Architecture & Implementation Reference  ║');
-  console.log('╚═══════════════════════════════════════════════════════════════╝\n');
+  console.log(
+    "\n╔═══════════════════════════════════════════════════════════════╗"
+  );
+  console.log(
+    "║  DATABASE AUTO-MATH: Architecture & Implementation Reference  ║"
+  );
+  console.log(
+    "╚═══════════════════════════════════════════════════════════════╝\n"
+  );
 
-  console.log('ARCHITECTURE:\n', JSON.stringify(ARCHITECTURE, null, 2));
-  console.log('\n\nDESIGN DECISIONS:\n', JSON.stringify(DESIGN_DECISIONS, null, 2));
-  console.log('\n\nINTEGRATION CHECKLIST:\n', INTEGRATION_CHECKLIST);
-  console.log('\n\nCONFIGURATION:\n', JSON.stringify(CONFIGURATION.default, null, 2));
-  console.log('\n\nTROUBLESHOOTING:\n', JSON.stringify(TROUBLESHOOTING, null, 2));
-  console.log('\n\nTESTING GUIDE:\n', TESTING_GUIDE);
-  console.log('\n\nPERFORMANCE NOTES:\n', JSON.stringify(PERFORMANCE, null, 2));
+  console.log("ARCHITECTURE:\n", JSON.stringify(ARCHITECTURE, null, 2));
+  console.log(
+    "\n\nDESIGN DECISIONS:\n",
+    JSON.stringify(DESIGN_DECISIONS, null, 2)
+  );
+  console.log("\n\nINTEGRATION CHECKLIST:\n", INTEGRATION_CHECKLIST);
+  console.log(
+    "\n\nCONFIGURATION:\n",
+    JSON.stringify(CONFIGURATION.default, null, 2)
+  );
+  console.log(
+    "\n\nTROUBLESHOOTING:\n",
+    JSON.stringify(TROUBLESHOOTING, null, 2)
+  );
+  console.log("\n\nTESTING GUIDE:\n", TESTING_GUIDE);
+  console.log("\n\nPERFORMANCE NOTES:\n", JSON.stringify(PERFORMANCE, null, 2));
 }
 
 module.exports = {

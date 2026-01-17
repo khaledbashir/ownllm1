@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  List, 
-  ChatCircle, 
-  ClockCounterClockwise, 
+import {
+  List,
+  ChatCircle,
+  ClockCounterClockwise,
   CheckCircle,
   FileText,
   X,
-  CaretRight
+  CaretRight,
 } from "@phosphor-icons/react";
 
 /**
@@ -35,12 +35,12 @@ export default function DocumentSidebar({
 
   // Auto-expand all sections on mount
   useEffect(() => {
-    const allSectionIds = new Set(sections.map(s => s.id));
+    const allSectionIds = new Set(sections.map((s) => s.id));
     setExpandedSections(allSectionIds);
   }, [sections]);
 
   const toggleSection = (sectionId) => {
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const next = new Set(prev);
       if (next.has(sectionId)) {
         next.delete(sectionId);
@@ -113,7 +113,8 @@ export default function DocumentSidebar({
           setActiveTab("activity");
           // Scroll to comments
           if (scrollContainerRef.current) {
-            scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+            scrollContainerRef.current.scrollTop =
+              scrollContainerRef.current.scrollHeight;
           }
         }}
       />
@@ -173,29 +174,33 @@ function TableOfContents({
 
                 {/* Completion Badge */}
                 {section.completed && (
-                  <CheckCircle size={16} className="text-emerald-500 flex-shrink-0" />
+                  <CheckCircle
+                    size={16}
+                    className="text-emerald-500 flex-shrink-0"
+                  />
                 )}
               </button>
 
               {/* Subsections (if expanded) */}
-              {expandedSections.has(section.id) && section.subsections?.length > 0 && (
-                <div className="ml-8 mt-1 space-y-1">
-                  {section.subsections.map((sub) => (
-                    <button
-                      key={sub.id}
-                      onClick={() => onSectionClick(sub)}
-                      className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
-                        activeSection === sub.id
-                          ? "bg-indigo-100 text-indigo-700"
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                      <span className="truncate">{sub.title}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              {expandedSections.has(section.id) &&
+                section.subsections?.length > 0 && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    {section.subsections.map((sub) => (
+                      <button
+                        key={sub.id}
+                        onClick={() => onSectionClick(sub)}
+                        className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                          activeSection === sub.id
+                            ? "bg-indigo-100 text-indigo-700"
+                            : "text-slate-600 hover:bg-slate-100"
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                        <span className="truncate">{sub.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
             </div>
           ))}
         </div>
@@ -207,11 +212,7 @@ function TableOfContents({
 /**
  * Quick Actions - Footer with quick links
  */
-function QuickActions({
-  commentCount,
-  unreadComments,
-  onJumpToComments,
-}) {
+function QuickActions({ commentCount, unreadComments, onJumpToComments }) {
   return (
     <div className="p-4 border-t border-slate-200 bg-slate-50">
       <button
@@ -237,9 +238,7 @@ function QuickActions({
             )}
           </div>
         </div>
-        <span className="text-xs text-slate-500">
-          {commentCount} total
-        </span>
+        <span className="text-xs text-slate-500">{commentCount} total</span>
       </button>
     </div>
   );
@@ -248,11 +247,7 @@ function QuickActions({
 /**
  * Activity Feed - Comments, changes, versions
  */
-function ActivityFeed({
-  commentCount,
-  unreadComments,
-  version,
-}) {
+function ActivityFeed({ commentCount, unreadComments, version }) {
   return (
     <div className="p-4 space-y-4">
       <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -280,7 +275,8 @@ function ActivityFeed({
           {unreadComments > 0 && (
             <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-xs font-semibold text-red-700">
-                {unreadComments} unread {unreadComments === 1 ? "comment" : "comments"}
+                {unreadComments} unread{" "}
+                {unreadComments === 1 ? "comment" : "comments"}
               </p>
             </div>
           )}
@@ -297,9 +293,7 @@ function ActivityFeed({
                     <span className="text-sm font-semibold text-slate-900">
                       John Doe
                     </span>
-                    <span className="text-xs text-slate-500">
-                      2 hours ago
-                    </span>
+                    <span className="text-xs text-slate-500">2 hours ago</span>
                   </div>
                   <p className="text-sm text-slate-600 line-clamp-2">
                     "Can we clarify the timeline for the third milestone?"
@@ -318,9 +312,7 @@ function ActivityFeed({
                     <span className="text-sm font-semibold text-slate-900">
                       Alice Smith
                     </span>
-                    <span className="text-xs text-slate-500">
-                      5 hours ago
-                    </span>
+                    <span className="text-xs text-slate-500">5 hours ago</span>
                   </div>
                   <p className="text-sm text-slate-600 line-clamp-2">
                     "The pricing looks good. Ready to move forward!"

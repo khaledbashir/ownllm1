@@ -180,13 +180,21 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         if (workspace?.inlineAiActions) {
           // Check for malformed content before attempting to parse
           const actionsStr = workspace.inlineAiActions;
-          if (typeof actionsStr !== 'string') {
-            console.warn("[BlockSuiteEditor] inlineAiActions is not a string:", typeof actionsStr);
+          if (typeof actionsStr !== "string") {
+            console.warn(
+              "[BlockSuiteEditor] inlineAiActions is not a string:",
+              typeof actionsStr
+            );
             return;
           }
           // Check for common malformed patterns
-          if (actionsStr.startsWith('[object') || actionsStr.trim().startsWith('[object')) {
-            console.warn("[BlockSuiteEditor] inlineAiActions contains malformed content, skipping");
+          if (
+            actionsStr.startsWith("[object") ||
+            actionsStr.trim().startsWith("[object")
+          ) {
+            console.warn(
+              "[BlockSuiteEditor] inlineAiActions contains malformed content, skipping"
+            );
             return;
           }
           const actions = JSON.parse(actionsStr);
@@ -853,7 +861,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             if (typeof content === "string") {
               // Check for common malformed JSON patterns before attempting parse
               // e.g., "[object Object]" from incorrect stringification
-              if (content.startsWith("[object") || content.trim().startsWith("[object")) {
+              if (
+                content.startsWith("[object") ||
+                content.trim().startsWith("[object")
+              ) {
                 console.warn(
                   "[BlockSuiteEditor] Detected malformed content (object stringified incorrectly), creating fresh doc"
                 );
@@ -904,7 +915,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           unsubscribeAutoMath = setupDatabaseAutoMath(doc);
           console.log("✅ Auto-Math Service initialized");
         } catch (e) {
-          console.warn("[BlockSuiteEditor] Failed to initialize Auto-Math Service:", e);
+          console.warn(
+            "[BlockSuiteEditor] Failed to initialize Auto-Math Service:",
+            e
+          );
         }
 
         if (
@@ -1107,7 +1121,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         editorContext.unregisterEditor();
       }
       // Cleanup Auto-Math Service
-      if (typeof unsubscribeAutoMath === 'function') {
+      if (typeof unsubscribeAutoMath === "function") {
         unsubscribeAutoMath();
       }
       if (containerRef.current) {
@@ -1243,7 +1257,13 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       const idxHours = findCol(["hour", "qty", "quantity", "days", "units"]);
       const idxRate = findCol(["rate", "price", "cost", "fee", "amount"]);
       const idxTotal = findCol(["total", "subtotal", "value", "investment"]); // Added to support summary tables
-      const idxDesc = findCol(["description", "detail", "note", "scope", "type"]); // Added 'type' for Investment Type
+      const idxDesc = findCol([
+        "description",
+        "detail",
+        "note",
+        "scope",
+        "type",
+      ]); // Added 'type' for Investment Type
 
       // Require at least Role and (Rate OR Total) to be considered a pricing table
       if (idxRole === -1 || (idxRate === -1 && idxTotal === -1)) {
@@ -1274,7 +1294,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             idxHours !== -1 ? (parseNumber(cells[idxHours]) ?? 0) : 0;
 
           // If Rate is missing but Total exists, use Total as Rate (assuming 1 unit/hour)
-          let baseRate = idxRate !== -1 ? (parseNumber(cells[idxRate]) ?? 0) : 0;
+          let baseRate =
+            idxRate !== -1 ? (parseNumber(cells[idxRate]) ?? 0) : 0;
           if (idxRate === -1 && idxTotal !== -1) {
             baseRate = parseNumber(cells[idxTotal]) ?? 0;
           }
@@ -1485,7 +1506,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         const isFromInsertMarkdown = doc && doc._insertMarkdownMode;
         if (level === 1 && isFromInsertMarkdown) {
           // Skip H1 blocks in remaining content - title already handled
-          console.log("[BlockSuiteEditor] Skipping H1 block in remaining content:", headingText);
+          console.log(
+            "[BlockSuiteEditor] Skipping H1 block in remaining content:",
+            headingText
+          );
         } else {
           doc.addBlock(
             "affine:paragraph",
@@ -1606,7 +1630,7 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
             flavour: block.flavour,
             text: block.text?.toString?.() || "",
             // Add other props as needed
-            children: (block.children || []).map(buildTree)
+            children: (block.children || []).map(buildTree),
           };
         };
         return buildTree(doc.root);
@@ -1621,21 +1645,21 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       if (!editorRef.current?.std?.selection) return null;
       try {
         const selection = editorRef.current.std.selection;
-        const textSelection = selection.find('text');
-        const blockSelection = selection.find('block');
+        const textSelection = selection.find("text");
+        const blockSelection = selection.find("block");
 
         if (textSelection) {
           return {
-            type: 'text',
+            type: "text",
             from: textSelection.from,
             to: textSelection.to,
-            blockId: textSelection.blockId
+            blockId: textSelection.blockId,
           };
         }
         if (blockSelection) {
           return {
-            type: 'block',
-            blockIds: blockSelection.blockIds
+            type: "block",
+            blockIds: blockSelection.blockIds,
           };
         }
         return null;
@@ -1668,7 +1692,12 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     },
 
     // Append a block to a parent (or root/last note if parentId null)
-    appendBlock: (type = "affine:paragraph", textContent = "", parentId = null, props = {}) => {
+    appendBlock: (
+      type = "affine:paragraph",
+      textContent = "",
+      parentId = null,
+      props = {}
+    ) => {
       if (!editorRef.current?.doc) return false;
       try {
         const doc = editorRef.current.doc;
@@ -1699,22 +1728,30 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
     },
 
     // Create a database (Kanban/Table)
-    insertDatabase: (title, view = 'kanban', columnsDef = [], rowsData = [], parentId = null) => {
+    insertDatabase: (
+      title,
+      view = "kanban",
+      columnsDef = [],
+      rowsData = [],
+      parentId = null
+    ) => {
       if (!editorRef.current?.doc) return false;
       try {
         const doc = editorRef.current.doc;
         // Generate internal IDs for columns
-        const columns = columnsDef.map(col => ({
+        const columns = columnsDef.map((col) => ({
           id: window.crypto.randomUUID(),
           name: col.name,
-          type: col.type || 'text',
-          data: col.options ? {
-            options: col.options.map(o => ({
-              id: window.crypto.randomUUID(),
-              value: o,
-              color: 'var(--affine-tag-blue)'
-            }))
-          } : {}
+          type: col.type || "text",
+          data: col.options
+            ? {
+                options: col.options.map((o) => ({
+                  id: window.crypto.randomUUID(),
+                  value: o,
+                  color: "var(--affine-tag-blue)",
+                })),
+              }
+            : {},
         }));
 
         // Find parent
@@ -1728,46 +1765,66 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // Create Database Block
         // We must provide a View so it renders.
         const viewId = window.crypto.randomUUID();
-        const views = [{
-          id: viewId,
-          name: 'Default View',
-          mode: view || 'table',
-          columns: columns.map(c => ({
-            id: c.id,
-            width: 180,
-            hidden: false
-          })),
-          filter: { type: 'group', op: 'and', conditions: [] }
-        }];
+        const views = [
+          {
+            id: viewId,
+            name: "Default View",
+            mode: view || "table",
+            columns: columns.map((c) => ({
+              id: c.id,
+              width: 180,
+              hidden: false,
+            })),
+            filter: { type: "group", op: "and", conditions: [] },
+          },
+        ];
 
-        const dbId = doc.addBlock('affine:database', {
-          title: new Text(title),
-          columns: columns,
-          views: views
-        }, pId);
+        const dbId = doc.addBlock(
+          "affine:database",
+          {
+            title: new Text(title),
+            columns: columns,
+            views: views,
+          },
+          pId
+        );
 
         // Add Rows and Populate Cells
         const cells = {};
 
         for (const row of rowsData) {
           // Identify title content: look for 'title', 'name', 'Task', or first key
-          const titleKey = Object.keys(row).find(k => k.toLowerCase() === 'title' || k.toLowerCase() === 'name' || k.toLowerCase() === 'task') || Object.keys(row)[0];
+          const titleKey =
+            Object.keys(row).find(
+              (k) =>
+                k.toLowerCase() === "title" ||
+                k.toLowerCase() === "name" ||
+                k.toLowerCase() === "task"
+            ) || Object.keys(row)[0];
           const rowTitle = row[titleKey] || "Untitled";
 
           // Create row block (child paragraph)
-          const rowId = doc.addBlock('affine:paragraph', { text: new Text(rowTitle) }, dbId);
+          const rowId = doc.addBlock(
+            "affine:paragraph",
+            { text: new Text(rowTitle) },
+            dbId
+          );
 
           // Map other columns
           cells[rowId] = {};
-          columns.forEach(col => {
+          columns.forEach((col) => {
             if (col.name === titleKey) return; // Skip title, already set
 
             const val = row[col.name];
             if (val) {
-              if (col.type === 'select' && col.data?.options) {
-                const opt = col.data.options.find(o => o.value === val);
+              if (col.type === "select" && col.data?.options) {
+                const opt = col.data.options.find((o) => o.value === val);
                 if (opt) cells[rowId][col.id] = { value: opt.id };
-              } else if (col.type === 'multi-select' && Array.isArray(val) && col.data?.options) {
+              } else if (
+                col.type === "multi-select" &&
+                Array.isArray(val) &&
+                col.data?.options
+              ) {
                 // Handle multi-select? Just skipping complexity for now
               } else {
                 cells[rowId][col.id] = { value: val };
@@ -1941,7 +1998,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
 
         // If we found a title, set it as the page title
         if (title) {
-          const pageBlock = getBlocksByFlavourSafe(doc, "affine:page")[0] || doc.root;
+          const pageBlock =
+            getBlocksByFlavourSafe(doc, "affine:page")[0] || doc.root;
           if (pageBlock) {
             try {
               const titleProp = pageBlock.title;
@@ -1955,12 +2013,20 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
               ) {
                 pageBlock.title.yText.delete(0, pageBlock.title.yText.length);
                 pageBlock.title.yText.insert(0, title);
-                console.log("[BlockSuiteEditor] Set page title via yText:", title);
+                console.log(
+                  "[BlockSuiteEditor] Set page title via yText:",
+                  title
+                );
               } else {
-                console.warn("[BlockSuiteEditor] Could not access page title property");
+                console.warn(
+                  "[BlockSuiteEditor] Could not access page title property"
+                );
               }
             } catch (titleError) {
-              console.warn("[BlockSuiteEditor] Could not set page title:", titleError);
+              console.warn(
+                "[BlockSuiteEditor] Could not set page title:",
+                titleError
+              );
             }
           }
         }
@@ -2133,7 +2199,8 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
       const discountPercent = toNumber(payload.discountPercent, 0);
       const gstPercent = toNumber(payload.gstPercent, 10);
       const rows = normalizeRows(payload.rows);
-      const tableType = typeof payload.tableType === "string" ? payload.tableType : "agency";
+      const tableType =
+        typeof payload.tableType === "string" ? payload.tableType : "agency";
       const ancEstimateData = payload.ancEstimateData || null;
 
       try {
@@ -2281,12 +2348,14 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         // Ensure the document is loaded before creating snapshot
         if (doc.load) {
           const loadResult = doc.load();
-          if (loadResult && typeof loadResult.then === 'function') {
+          if (loadResult && typeof loadResult.then === "function") {
             await loadResult;
           }
         }
 
-        console.log("[BlockSuiteEditor] Creating snapshot for template save...");
+        console.log(
+          "[BlockSuiteEditor] Creating snapshot for template save..."
+        );
         const job = new Job({ collection });
         const snapshot = await job.docToSnapshot(doc);
 
@@ -2294,7 +2363,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           throw new Error("Failed to generate document snapshot");
         }
 
-        console.log("[BlockSuiteEditor] Snapshot created successfully, length:", JSON.stringify(snapshot).length);
+        console.log(
+          "[BlockSuiteEditor] Snapshot created successfully, length:",
+          JSON.stringify(snapshot).length
+        );
 
         return await BlockTemplate.create(workspaceSlug, {
           name,
@@ -2510,7 +2582,10 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
         if (selectedTemplate.cssOverrides) {
           try {
             const overridesStr = selectedTemplate.cssOverrides;
-            if (typeof overridesStr === 'string' && !overridesStr.startsWith('[object')) {
+            if (
+              typeof overridesStr === "string" &&
+              !overridesStr.startsWith("[object")
+            ) {
               overrides = JSON.parse(overridesStr);
             }
           } catch (e) {
@@ -2915,26 +2990,26 @@ ${activeTemplateFooter}
       // Use FormData to send HTML to Gotenberg
       // Gotenberg endpoint: POST /forms/chromium/convert/html
       const formData = new FormData();
-      formData.append('index.html', gotenbergHtml, 'index.html');
-      formData.append('landscape', 'false'); // Portrait orientation
-      formData.append('marginTop', '1');
-      formData.append('marginBottom', '1');
-      formData.append('marginLeft', '1');
-      formData.append('marginRight', '1');
-      formData.append('printBackground', 'true'); // Include background colors
-      formData.append('preferCssPageSize', 'true'); // Use CSS page size
+      formData.append("index.html", gotenbergHtml, "index.html");
+      formData.append("landscape", "false"); // Portrait orientation
+      formData.append("marginTop", "1");
+      formData.append("marginBottom", "1");
+      formData.append("marginLeft", "1");
+      formData.append("marginRight", "1");
+      formData.append("printBackground", "true"); // Include background colors
+      formData.append("preferCssPageSize", "true"); // Use CSS page size
 
-      const gotenbergUrl = 'http://gotenberg:4000/forms/chromium/convert/html';
+      const gotenbergUrl = "http://gotenberg:4000/forms/chromium/convert/html";
 
       const response = await fetch(gotenbergUrl, {
-        method: 'POST',
+        method: "POST",
         body: formData,
         // Don't set Content-Type - let browser set multipart boundary
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[Gotenberg] Error response:', errorText);
+        console.error("[Gotenberg] Error response:", errorText);
         throw new Error(`Gotenberg service error: ${response.status}`);
       }
 
@@ -2942,14 +3017,14 @@ ${activeTemplateFooter}
       const pdfBlob = await response.blob();
 
       // Validate it's a PDF
-      if (pdfBlob.type !== 'application/pdf') {
-        console.warn('[Gotenberg] Unexpected content type:', pdfBlob.type);
-        throw new Error('Gotenberg did not return a PDF');
+      if (pdfBlob.type !== "application/pdf") {
+        console.warn("[Gotenberg] Unexpected content type:", pdfBlob.type);
+        throw new Error("Gotenberg did not return a PDF");
       }
 
       // Trigger download
       const url = window.URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `report-${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(a);
@@ -3000,20 +3075,23 @@ ${activeTemplateFooter}
 
     // Strip HTML tags to get plain text
     const plainText = html
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove style tags
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove script tags
-      .replace(/<[^>]+>/g, '') // Remove all HTML tags
-      .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
-      .replace(/&/g, '&') // Replace HTML entities
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "") // Remove style tags
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "") // Remove script tags
+      .replace(/<[^>]+>/g, "") // Remove all HTML tags
+      .replace(/&nbsp;/g, " ") // Replace &nbsp; with space
+      .replace(/&/g, "&") // Replace HTML entities
+      .replace(/</g, "<")
+      .replace(/>/g, ">")
       .replace(/"/g, '"')
       .replace(/&#039;/g, "'")
-      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .replace(/\s+/g, " ") // Collapse multiple spaces
       .trim();
 
     console.log("[extractTextContent] Plain text length:", plainText.length);
-    console.log("[extractTextContent] Plain text preview:", plainText.slice(0, 200));
+    console.log(
+      "[extractTextContent] Plain text preview:",
+      plainText.slice(0, 200)
+    );
 
     return {
       title: docTitle,
@@ -3140,7 +3218,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-          "Doc embedded successfully! AI can now retrieve this content."
+            "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -3432,11 +3510,17 @@ ${activeTemplateFooter}
                       if (!selectedBrandTemplate.cssOverrides) return 40;
                       try {
                         const overridesStr = selectedBrandTemplate.cssOverrides;
-                        if (typeof overridesStr === 'string' && !overridesStr.startsWith('[object')) {
+                        if (
+                          typeof overridesStr === "string" &&
+                          !overridesStr.startsWith("[object")
+                        ) {
                           return JSON.parse(overridesStr).logoHeight || 40;
                         }
                       } catch (e) {
-                        console.warn("[BlockSuiteEditor] Failed to parse brand cssOverrides:", e);
+                        console.warn(
+                          "[BlockSuiteEditor] Failed to parse brand cssOverrides:",
+                          e
+                        );
                       }
                       return 40;
                     })(),
@@ -3500,7 +3584,8 @@ ${activeTemplateFooter}
                   if (!doc) return "";
                   const blocks = [];
                   const traverse = (block) => {
-                    if (block.text?.toString) blocks.push(block.text.toString());
+                    if (block.text?.toString)
+                      blocks.push(block.text.toString());
                     block.children?.forEach(traverse);
                   };
                   if (doc.root) traverse(doc.root);
@@ -3559,7 +3644,10 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
     const assetsManager = job.assetsManager;
     assets = assetsManager.getAssets(); // Map<string, Blob>
   } catch (blobError) {
-    console.warn("[PDF Export] Could not load some assets (may have missing blobs):", blobError.message);
+    console.warn(
+      "[PDF Export] Could not load some assets (may have missing blobs):",
+      blobError.message
+    );
     // Continue with empty assets map - images may not render but export won't fail
   }
 
@@ -3699,7 +3787,10 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
         try {
           blockSnapshot = await job.blockToSnapshot(block);
         } catch (snapshotError) {
-          console.warn("[PDF Export] Failed to create block snapshot:", snapshotError);
+          console.warn(
+            "[PDF Export] Failed to create block snapshot:",
+            snapshotError
+          );
           // Fallback to direct model access
         }
 
@@ -3734,7 +3825,7 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch { }
+          } catch {}
           return value;
         };
 
@@ -3807,9 +3898,12 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
         const formatCurrency = (value) => {
           const n = Math.round(Number(value));
           if (!Number.isFinite(n)) return "$0";
-          return "$" + n.toLocaleString(undefined, {
-            maximumFractionDigits: 0,
-          });
+          return (
+            "$" +
+            n.toLocaleString(undefined, {
+              maximumFractionDigits: 0,
+            })
+          );
         };
 
         const subtotal = rows.reduce((sum, row) => {
@@ -4101,13 +4195,15 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
         // Total Summary Footer Block
         // Look at previous sibling - if it's a database, sum the "Total" column
         const previousBlock = doc.getBlock(block.id)?.previousSibling;
-        if (!previousBlock || previousBlock.flavour !== 'affine:database') {
+        if (!previousBlock || previousBlock.flavour !== "affine:database") {
           html = `<div style="width:100%; background:#000; color:#fff; padding:10px; text-align:right; font-weight:bold;">TOTAL INVESTMENT: No database found</div>`;
           break;
         }
 
         let grandTotal = 0;
-        const totalCol = previousBlock.model.columns?.find(c => c.name?.toLowerCase().includes('total'));
+        const totalCol = previousBlock.model.columns?.find((c) =>
+          c.name?.toLowerCase().includes("total")
+        );
         if (!totalCol) {
           html = `<div style="width:100%; background:#000; color:#fff; padding:10px; text-align:right; font-weight:bold;">TOTAL INVESTMENT: No total column found</div>`;
           break;
@@ -4117,17 +4213,20 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
         const children = previousBlock.children || [];
         const cells = previousBlock.model.cells || {};
 
-        children.forEach(row => {
+        children.forEach((row) => {
           const rowCells = cells[row.id] || {};
           const cell = rowCells[totalCol.id];
           if (cell && cell.value) {
-            const val = parseFloat(String(cell.value).replace(/[^0-9.]/g, ''));
+            const val = parseFloat(String(cell.value).replace(/[^0-9.]/g, ""));
             if (!isNaN(val)) grandTotal += val;
           }
         });
 
         // Format as Currency
-        const formatter = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
+        const formatter = new Intl.NumberFormat("en-AU", {
+          style: "currency",
+          currency: "AUD",
+        });
         html = `<div style="width:100%; background:#000; color:#fff; padding:10px; text-align:right; font-weight:bold;">TOTAL INVESTMENT: ${formatter.format(grandTotal)}</div>`;
         break;
       }
