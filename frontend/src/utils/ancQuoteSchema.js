@@ -156,7 +156,6 @@ export const ANC_QUOTE_SCHEMA = {
       properties: {
         timestamp: {
           type: "string",
-          format: "date-time",
           description: "When this update was generated"
         },
         turnNumber: {
