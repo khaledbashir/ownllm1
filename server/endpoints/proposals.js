@@ -10,7 +10,7 @@
 const { Router } = require("express");
 const { validatedRequest } = require("../middleware/request");
 const { multiUserMode } = require("../middleware/multiUserProtected");
-const prisma = require("../prisma");
+const prisma = require("../utils/prisma"); // Corrected path
 const AncPricingEngine = require("../utils/AncPricingEngine");
 const AncAuditExcelService = require("../services/AncAuditExcelService");
 const { generateAncPdf } = require("../utils/ancPdfExport");
