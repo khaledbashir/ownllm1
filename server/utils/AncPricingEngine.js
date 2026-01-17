@@ -47,7 +47,7 @@ class AncPricingEngine {
 
     // 6. GLOBAL PERCENTAGES
     this.RATES = {
-      STRUCTURAL_BASE_ PCT: 0.20, // 20% of Hardware
+      STRUCTURAL_BASE_PCT: 0.20, // 20% of Hardware
       LABOR_BASE_PCT: 0.15,       // 15% of (Hardware + Structural)
       PM_FEE: 0.08,
       SHIPPING: 0.05,
