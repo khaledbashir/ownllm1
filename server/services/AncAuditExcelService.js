@@ -398,7 +398,7 @@ class AncAuditExcelService {
     workbook.worksheets.forEach((sheet) => {
       // Set page margins for printing
       sheet.pageSetup = {
-        paperSize: sheet.PAPER_SIZE.LETTER,
+        paperSize: 1, // 1 = Letter (8.5 x 11")
         orientation: "portrait",
         fitToPage: true,
         fitToHeight: 1,
