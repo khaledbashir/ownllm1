@@ -79,7 +79,7 @@ export const ProposalPreviewSlider = ({
                 <h3 className="font-bold text-lg">📋 Proposal Preview</h3>
                 <button
                   onClick={() => onToggle()}
-                  className="hover:bg-blue-500 p-1 rounded transition-colors md:hidden"
+                  className="hover:bg-blue-500 p-1 rounded transition-colors"
                 >
                   <X size={20} />
                 </button>

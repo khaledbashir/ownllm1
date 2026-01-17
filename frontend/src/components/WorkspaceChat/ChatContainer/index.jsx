@@ -410,9 +410,9 @@ export default function ChatContainer({
   }, [pendingNoteInsert, shouldReplace]);
 
   // Parse and validate JSON quote data from assistant messages (ANC Proposal System)
-  // Only runs in ANC workspaces
+  // Runs in all workspaces for testing
   useEffect(() => {
-    if (!isANCWorkspace) return; // Skip if not an ANC workspace
+    // Removed isANCWorkspace check for debugging
     if (!chatHistory || chatHistory.length === 0) return;
 
     // Get the last assistant message
