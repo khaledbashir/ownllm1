@@ -7,10 +7,9 @@
  * Response: { success, excelUrl, pdfUrl, zipUrl, message }
  */
 
-const { Router } = require("express");
 const { validatedRequest } = require("../middleware/request");
 const { multiUserMode } = require("../middleware/multiUserProtected");
-const prisma = require("../utils/prisma"); // Corrected path
+const prisma = require("../utils/prisma");
 const AncPricingEngine = require("../utils/AncPricingEngine");
 const AncAuditExcelService = require("../services/AncAuditExcelService");
 const { generateAncPdf } = require("../utils/ancPdfExport");
@@ -18,16 +17,17 @@ const path = require("path");
 const fs = require("fs");
 const JSZip = require("jszip");
 
-const router = Router();
+function proposalsEndpoints(app) {
+  if (!app) return;
 
-/**
- * POST /workspace/:slug/generate-proposal
- * Unified endpoint to generate both Excel audit + Client PDF
- */
-router.post(
-  "/workspace/:slug/generate-proposal",
-  [validatedRequest, multiUserMode],
-  async (request, response) => {
+  /**
+   * POST /workspace/:slug/generate-proposal
+   * Unified endpoint to generate both Excel audit + Client PDF
+   */
+  app.post(
+    "/workspace/:slug/generate-proposal",
+    [validatedRequest, multiUserMode],
+    async (request, response) => {
     try {
       const { slug } = request.params;
       const {
@@ -182,6 +182,7 @@ router.post(
       });
     }
   }
-);
+  );
+}
 
-module.exports = router;
+module.exports = { proposalsEndpoints };

@@ -50,6 +50,17 @@ export const ProposalPreviewSlider = ({
         />
       )}
 
+      {/* Toggle Button (Always handle visibility) */}
+      {!isOpen && (
+        <button
+          onClick={() => onToggle()}
+          className="fixed right-0 top-24 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-l-lg transition-colors z-40 shadow-lg"
+          title="Open proposal preview"
+        >
+          <CaretLeft size={20} weight="bold" />
+        </button>
+      )}
+
       {/* Slider Container */}
       <div
         className={`
@@ -60,17 +71,6 @@ export const ProposalPreviewSlider = ({
           overflow-hidden flex flex-col
         `}
       >
-        {/* Toggle Button (Left side when closed) */}
-        {!isOpen && (
-          <button
-            onClick={() => onToggle()}
-            className="absolute -left-10 top-4 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-l-lg transition-colors"
-            title="Open proposal preview"
-          >
-            <CaretLeft size={20} weight="bold" />
-          </button>
-        )}
-
         {isOpen && (
           <>
             {/* Header */}
