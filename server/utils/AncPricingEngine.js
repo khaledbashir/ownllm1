@@ -1,148 +1,222 @@
 // server/utils/AncPricingEngine.js
 
 /**
- * ANC Production Pricing Logic
- * Handles calculations for LED Displays based on "Master Excel" rules.
+ * ANC Production Pricing Logic (Waterfall Methodology)
+ * Updated to reflect strict business rules (v2.0)
  */
 
 class AncPricingEngine {
   constructor() {
-    // ANC PRODUCT CATALOG - Test Data (swap for real data later)
-    this.PRODUCT_CATALOG = {
-      'P001': { pitch: '10mm', environment: 'Outdoor', basePrice: 2500, category: 'Ribbon Board', weight: 45 },
-      'P002': { pitch: '6mm', environment: 'Outdoor', basePrice: 3200, category: 'Scoreboards', weight: 65 },
-      'P003': { pitch: '4mm', environment: 'Indoor', basePrice: 1800, category: 'Ribbon Board', weight: 35 },
-      'P004': { pitch: '1.5mm', environment: 'Indoor', basePrice: 5500, category: 'Premium', weight: 25 },
+    // 1. BASE HARDWARE RATES (per sq ft)
+    this.BASE_RATES = {
+      INDOOR_STANDARD: 800,
+      RIBBON_BOARD: 1200,
+      OUTDOOR_PREMIUM_ADDER: 200,
     };
 
-    // ANC MASTER PRICING FORMULAS - From Test Catalog
-    this.PIXEL_PITCH_RATES = {
-      '10mm': 2500.00,    // P001 - Outdoor Ribbon
-      '6mm': 3200.00,     // P002 - Outdoor Scoreboard
-      '4mm': 1800.00,     // P003 - Indoor Ribbon
-      '1.5mm': 5500.00,   // P004 - Indoor Premium
+    // 2. PIXEL PITCH ADDERS (per sq ft)
+    this.PITCH_ADDERS = {
+      FINE_PITCH: 400,     // <= 4mm
+      ULTRA_FINE: 800,     // <= 2.5mm
+      COARSE_DISCOUNT: 0.85 // 16mm or greater get 15% off base
     };
 
-    // ANC MASTER EXCEL RATES - Aligned with Test Catalog Rules
+    // 3. PRODUCT CLASS MULTIPLIERS (applied to base rate)
+    this.PRODUCT_MULTIPLIERS = {
+      'Center Hung': 1.30,
+      'Vomitory': 1.15,
+      'Standard': 1.0,
+    };
+
+    // 4. STRUCTURAL MODIFIERS (Applied to Structural Base Cost)
+    this.STRUCTURAL_MODIFIERS = {
+      CURVED: 0.05,
+      OUTDOOR_WIND: 0.05,
+      RIGGING: 0.10,
+      NEW_STEEL: 0.15,
+    };
+
+    // 5. LABOR MODIFIERS (Applied to Labor Base Cost)
+    this.LABOR_MODIFIERS = {
+      UNION: 0.15,      // Makes total labor rate ~30%
+      PREVAILING: 0.10, // Makes total labor rate ~25%
+      NON_UNION: 0.0,   // Standard base 15%
+      REAR_ACCESS: 0.02,
+      FRONT_ACCESS: 0.15,
+    };
+
+    // 6. GLOBAL PERCENTAGES
     this.RATES = {
-      LABOR_UNION_HOURLY: 150.00,    // $150/hour (Union labor)
-      PM_FEE: 0.08,                  // 8% Project Management
-      MARGIN: 0.30,                  // 30% Target Margin
-      CONTINGENCY: 0.05,             // 5% for Outdoor + New Steel
-      RIBBON_SURCHARGE: 0.20,        // 20% surcharge for Ribbon Board category
-      STRUCTURAL_MATERIALS: 0.20,    // 20% of hardware cost
-      STRUCTURAL_CURVED_MOD: 1.15,   // 1.15x multiplier for curved mounting
-      LABOR_COMPLEXITY: {
-        'front': 1.0,                // Front service = 1.0x
-        'rear': 1.5,                 // Rear service = 1.5x (more access needed)
-        'curved': 1.2,               // Curved = 1.2x (extra engineering)
-      },
-      LABOR_HOURS_BASE: 40,          // 40 hours per 100 sq ft
+      STRUCTURAL_BASE_ PCT: 0.20, // 20% of Hardware
+      LABOR_BASE_PCT: 0.15,       // 15% of (Hardware + Structural)
+      PM_FEE: 0.08,
+      SHIPPING: 0.05,
+      BOND: 0.01,
+      DEFAULT_MARGIN: 0.30,
     };
   }
 
   /**
-   * Calculates the full quote breakdown following ANC Master Rules
-   * Step 1: Hardware Cost (Base) = Area × Base Price/SqFt
-   * Step 2: Apply Adjustments (Ribbon Surcharge, Outdoor Contingency)
-   * Step 3: Installation & Labor Costs
-   * Step 4: Final Pricing with Margin
+   * Main Calculation Method
    */
-  calculate(width, height, pixelPitch = '1.5mm', environment = 'Indoor', margin = 0.30, clientName = '', productCategory = 'Premium', serviceAccess = 'front', steelType = 'existing') {
-    // ===== VALIDATION =====
-    if (!width || !height || width <= 0 || height <= 0) {
-      throw new Error("Invalid dimensions: width and height must be > 0");
-    }
-    if (!clientName || clientName.trim() === '') {
-      throw new Error("Client name is required");
-    }
-
-    const area = width * height;
-    const env = environment.toLowerCase().includes('outdoor') ? 'Outdoor' : 'Indoor';
-    const targetMargin = Number(margin) || this.RATES.MARGIN;
-
-    // ===== STEP 1: HARDWARE COST (BASE) =====
-    // Formula: Screen Area (sq ft) × Base Price per SqFt
-    const hardwareRate = this.PIXEL_PITCH_RATES[pixelPitch] || this.PIXEL_PITCH_RATES['1.5mm'];
-    const baseHardwareCost = area * hardwareRate;
-
-    // ===== STEP 2: ADJUSTMENTS & MODIFIERS =====
-    // Ribbon Board Surcharge: +20% if category = "Ribbon Board"
-    const isRibbonBoard = productCategory === 'Ribbon Board';
-    const ribbonSurcharge = isRibbonBoard ? baseHardwareCost * this.RATES.RIBBON_SURCHARGE : 0;
-    const hardwareAfterRibbon = baseHardwareCost + ribbonSurcharge;
-
-    // Environment Outdoor Contingency: +5% if Outdoor AND New Steel
-    const isOutdoorNewSteel = (env === 'Outdoor' && steelType === 'new');
-    const contingencyAmount = isOutdoorNewSteel ? hardwareAfterRibbon * this.RATES.CONTINGENCY : 0;
-    const hardwareWithContingency = hardwareAfterRibbon + contingencyAmount;
-
-    // ===== STEP 3: INSTALLATION & LABOR COSTS =====
-    // 3A. Structural Materials = Hardware Cost × 0.20
-    let structuralMaterials = baseHardwareCost * this.RATES.STRUCTURAL_MATERIALS;
-    // Modifier: If curved mounting = ×1.15
-    if (serviceAccess.toLowerCase() === 'curved') {
-      structuralMaterials *= this.RATES.STRUCTURAL_CURVED_MOD;
-    }
-
-    // 3B. Installation Labor
-    // Base Rate: $150/hour (Union)
-    // Hours = (Screen Area / 100) × 40 hours
-    const laborHours = (area / 100) * this.RATES.LABOR_HOURS_BASE;
-    let complexityFactor = this.RATES.LABOR_COMPLEXITY[serviceAccess.toLowerCase()] || 1.0;
-    const installationLaborCost = laborHours * this.RATES.LABOR_UNION_HOURLY * complexityFactor;
-
-    // ===== STEP 4: FINAL CALCULATION =====
-    const totalCost = hardwareWithContingency + structuralMaterials + installationLaborCost;
+  calculate(
+    width, 
+    height, 
+    pixelPitch = 4, // Int or float
+    environment = 'Indoor', 
+    margin = 0.30, 
+    clientName = '', 
+    productClass = 'Scoreboard', // "Scoreboard", "Ribbon Board", "Center Hung", "Vomitory"
+    serviceAccess = 'Front', 
+    steelType = 'Existing',
+    laborType = 'Non-Union',
+    shape = 'Flat',
+    mountingType = 'Wall',
+    bondRequired = 'No',
+    unitCostOverride = null
+  ) {
+    // A. Validation
+    if (!width || !height || width <= 0) throw new Error("Invalid dimensions");
     
-    // Add PM Fee (8% of subtotal)
-    const pmFee = totalCost * this.RATES.PM_FEE;
-    const costWithPM = totalCost + pmFee;
+    // Normalization
+    const env = environment.toLowerCase() === 'outdoor' ? 'Outdoor' : 'Indoor';
+    const pitch = Number(pixelPitch) || 10;
+    const area = width * height;
+    const access = serviceAccess.toLowerCase();
+    const isCurved = shape.toLowerCase() === 'curved';
+    const isNewSteel = steelType.toLowerCase() === 'new';
+    const isOutdoor = env === 'Outdoor';
 
-    // Calculate Sell Price with Margin
-    // Sell Price = Cost / (1 - Margin%)
-    const finalPrice = costWithPM / (1 - targetMargin);
-    const grossProfit = finalPrice - costWithPM;
+    // ==========================================================
+    // STEP 1: HARDWARE COST CALCULATION
+    // ==========================================================
+    let baseRatePerSqFt = 0;
+
+    // 1-A: Determine Base Product Rate
+    if (productClass === 'Ribbon Board') {
+      baseRatePerSqFt = this.BASE_RATES.RIBBON_BOARD;
+    } else {
+      baseRatePerSqFt = this.BASE_RATES.INDOOR_STANDARD;
+    }
+
+    // 1-B: Outdoor Adder
+    if (isOutdoor) {
+      baseRatePerSqFt += this.BASE_RATES.OUTDOOR_PREMIUM_ADDER;
+    }
+
+    // 1-C: Product Class Multipliers (Center Hung / Vomitory)
+    const classMult = this.PRODUCT_MULTIPLIERS[productClass] || 1.0;
+    baseRatePerSqFt = baseRatePerSqFt * classMult;
+
+    // 1-D: Pixel Pitch Modifiers
+    if (pitch <= 2.5) {
+      baseRatePerSqFt += this.PITCH_ADDERS.ULTRA_FINE;
+    } else if (pitch <= 4) {
+      baseRatePerSqFt += this.PITCH_ADDERS.FINE_PITCH;
+    } else if (pitch >= 16) {
+      baseRatePerSqFt = baseRatePerSqFt * this.PITCH_ADDERS.COARSE_DISCOUNT;
+    }
+
+    // 1-E: Manual Override (Waterfall Priority 1)
+    if (unitCostOverride && unitCostOverride > 0) {
+      baseRatePerSqFt = unitCostOverride;
+    }
+
+    const totalHardwareCost = area * baseRatePerSqFt;
+
+    // ==========================================================
+    // STEP 2: STRUCTURAL MATERIALS
+    // ==========================================================
+    // Base: 20% of Hardware
+    let structBase = totalHardwareCost * this.RATES['STRUCTURAL_BASE_ PCT'];
+    let structModifiers = 0;
+
+    if (isCurved) structModifiers += this.STRUCTURAL_MODIFIERS.CURVED;
+    if (isOutdoor) structModifiers += this.STRUCTURAL_MODIFIERS.OUTDOOR_WIND;
+    if (mountingType.toLowerCase() === 'rigging') structModifiers += this.STRUCTURAL_MODIFIERS.RIGGING;
+    if (isNewSteel) structModifiers += this.STRUCTURAL_MODIFIERS.NEW_STEEL;
+
+    const totalStructuralCost = structBase * (1 + structModifiers);
+
+    // ==========================================================
+    // STEP 3: LABOR & INSTALLATION
+    // ==========================================================
+    // Base: 15% of (Hardware + Structural)
+    const costUseBias = totalHardwareCost + totalStructuralCost;
+    let laborBase = costUseBias * this.RATES.LABOR_BASE_PCT;
+    let laborModifiers = 0;
+
+    // Labor Type Modifiers
+    if (laborType === 'Union') laborModifiers += this.LABOR_MODIFIERS.UNION;
+    if (laborType === 'Prevailing') laborModifiers += this.LABOR_MODIFIERS.PREVAILING;
+
+    // Access Modifiers
+    if (access === 'front') laborModifiers += this.LABOR_MODIFIERS.FRONT_ACCESS;
+    if (access === 'rear') laborModifiers += this.LABOR_MODIFIERS.REAR_ACCESS;
+
+    const totalLaborCost = laborBase * (1 + laborModifiers);
+
+    // ==========================================================
+    // STEP 4: EXPENSES & PM
+    // ==========================================================
+    const shippingCost = totalHardwareCost * this.RATES.SHIPPING;
+    const pmFee = (totalHardwareCost + totalStructuralCost + totalLaborCost) * this.RATES.PM_FEE;
+    
+    // Subtotal before contingency and margin
+    const subtotal = totalHardwareCost + totalStructuralCost + totalLaborCost + shippingCost + pmFee;
+
+    // ==========================================================
+    // STEP 5: CONTINGENCY & BOND
+    // ==========================================================
+    // Dynamic Contingency: Outdoor + New Steel = +5% risk buffer
+    let contingencyAmt = 0;
+    if (isOutdoor && isNewSteel) {
+      contingencyAmt = subtotal * 0.05;
+    }
+
+    // Bond Cost (1% of Contract Value - iterative estimation)
+    // Approximate contract value first
+    let estimatedSell = (subtotal + contingencyAmt) / (1 - margin);
+    let bondCost = (bondRequired === 'Yes') ? (estimatedSell * this.RATES.BOND) : 0;
+
+    const totalCostBasis = subtotal + contingencyAmt + bondCost;
+
+    // ==========================================================
+    // STEP 6: FINAL PRICE
+    // ==========================================================
+    const finalSellPrice = totalCostBasis / (1 - margin);
+    const grossProfit = finalSellPrice - totalCostBasis;
 
     return {
-      // Client & Project Info
-      clientName: clientName,
-      projectType: env === 'Outdoor' ? "Outdoor LED Display" : "Indoor LED Display",
+      clientName,
+      projectType: `${env} ${productClass}`,
       environment: env,
-      
-      // Dimensions & Area
+      pixelPitch: pitch,
+      screenArea: area,
       screenWidth: width,
       screenHeight: height,
-      screenArea: area,
       
-      // Product Details
-      pixelPitch: pixelPitch,
-      category: productCategory,
+      // Breakdown
+      baseRatePerSqFt,
+      unitCostOverride,
+      hardwareCost: totalHardwareCost,
+      structuralCost: totalStructuralCost,
+      laborCost: totalLaborCost,
+      shippingCost,
+      pmFee,
+      contingency: contingencyAmt,
+      bondCost,
       
-      // COST BREAKDOWN (for Excel export)
-      baseHardwareCost: baseHardwareCost,
-      ribbonSurcharge: ribbonSurcharge,
-      contingencyAmount: contingencyAmount,
-      hardwareCost: hardwareWithContingency,
-      
-      structuralCost: structuralMaterials,
-      laborHours: laborHours,
-      complexityFactor: complexityFactor,
-      laborCost: installationLaborCost,
-      
-      pmFee: pmFee,
-      
-      // FINAL PRICING
-      totalCost: costWithPM,
-      finalPrice: Math.round(finalPrice * 100) / 100,
+      // Totals
+      totalCost: totalCostBasis,
+      finalPrice: Math.round(finalSellPrice * 100) / 100,
       grossProfit: Math.round(grossProfit * 100) / 100,
-      marginPercent: (targetMargin * 100).toFixed(1),
+      marginPercent: (margin * 100).toFixed(1),
       
-      // Metadata
-      quoteDate: new Date().toISOString().split('T')[0],
-      serviceAccess: serviceAccess,
-      steelType: steelType,
-      calculationMethod: "ANC Master Formula Bank v1",
+      calculationMethod: "ANC Waterfall v2.0",
+      productClass,
+      steelType,
+      laborType
     };
   }
 }
