@@ -51,7 +51,7 @@ export const ANC_QUOTE_SCHEMA = {
         },
         pixelPitch: {
           type: "number",
-          enum: [1.5, 2, 3, 4, 6, 8, 10, 12],
+          enum: [1.5, 2, 3, 4, 6, 8, 10, 12, 16],
           description: "LED pixel pitch in millimeters"
         },
         screenArea: {
@@ -61,36 +61,81 @@ export const ANC_QUOTE_SCHEMA = {
         },
         clientName: {
           type: "string",
-          minLength: 2,
-          maxLength: 100,
           description: "Client/venue name"
         },
-        projectName: {
+        address: {
           type: "string",
-          minLength: 2,
-          maxLength: 100,
-          description: "Project name or description"
+          description: "Project location/address"
         },
-        productCategory: {
+        productClass: {
           type: "string",
-          enum: ["LED Display", "Scoreboard", "Ribbon Board", "Custom"],
-          description: "Product category"
+          enum: ["Scoreboard", "Ribbon Board", "Center Hung", "Vomitory", "Custom"],
+          description: "Product classification"
+        },
+        shape: {
+          type: "string",
+          enum: ["Flat", "Curved"],
+          description: "Display shape"
+        },
+        mountingType: {
+          type: "string",
+          enum: ["Wall", "Ground", "Rigging", "Pole"],
+          description: "Mounting method"
+        },
+        serviceAccess: {
+          type: "string",
+          enum: ["Front", "Rear"],
+          description: "Service access direction"
+        },
+        laborType: {
+          type: "string",
+          enum: ["Union", "Non-Union", "Prevailing"],
+          description: "Labor classification"
+        },
+        powerDistance: {
+          type: "string",
+          enum: ["Close", "Medium", "Far"],
+          description: "Distance to power source"
+        },
+        permits: {
+          type: "string",
+          enum: ["Client", "ANC", "Existing"],
+          description: "Permit responsibility"
+        },
+        controlSystem: {
+          type: "string",
+          enum: ["Include", "None"],
+          description: "Control system requirement"
+        },
+        bondRequired: {
+          type: "string",
+          enum: ["Yes", "No"],
+          description: "Performance bond requirement"
+        },
+        installComplexity: {
+          type: "string",
+          enum: ["Standard", "High"],
+          description: "Installation complexity level"
+        },
+        unitCostOverride: {
+          type: "number",
+          description: "Manual override for unit cost per sq ft"
+        },
+        targetMargin: {
+          type: "number",
+          minimum: 0,
+          maximum: 100,
+          description: "Target gross margin percentage"
         },
         serviceLevel: {
           type: "string",
-          enum: ["Self-Install", "Partial Service", "Full Service"],
-          description: "Installation service level"
+          enum: ["Bronze", "Silver", "Gold"],
+          description: "Post-install service package"
         },
         steelType: {
           type: "string",
           enum: ["New", "Existing"],
           description: "Steel structural condition"
-        },
-        powerDistanceFeet: {
-          type: "number",
-          minimum: 0,
-          maximum: 1000,
-          description: "Distance to power source in feet"
         },
         budget: {
           type: "number",
@@ -183,8 +228,10 @@ export const VALIDATION_LIMITS = {
 // Allowed field names (whitelist)
 export const ALLOWED_FIELDS = [
   "width", "height", "environment", "pixelPitch", "screenArea",
-  "clientName", "projectName", "productCategory", "serviceLevel",
-  "steelType", "powerDistanceFeet", "budget",
+  "clientName", "projectName", "address", "productClass", "serviceLevel",
+  "steelType", "powerDistance", "budget", "shape", "mountingType", "serviceAccess",
+  "laborType", "permits", "controlSystem", "bondRequired", "installComplexity",
+  "unitCostOverride", "targetMargin",
   "hardwareCost", "structuralCost", "laborCost", "pmFee",
   "contingency", "totalCost", "finalPrice", "grossProfit", "marginPercent",
   "status"
