@@ -55,6 +55,51 @@ const Workspace = {
 
     return { workspace, message, copiedDocuments };
   },
+  downloadAuditExcel: async function (slug, quoteData = {}) {
+    try {
+      const response = await fetch(
+        `${API_BASE}/workspace/${slug}/download-audit-excel`,
+        {
+          method: "POST",
+          body: JSON.stringify({ quoteData }),
+          headers: baseHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to download Excel file");
+      }
+
+      // Get the blob and filename from headers
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "ANC_Quote.xlsx";
+      
+      if (contentDisposition) {
+        const matches = contentDisposition.match(/filename="(.+?)"/);
+        if (matches && matches[1]) {
+          filename = matches[1];
+        }
+      }
+
+      // Create download link and trigger
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+
+      return { success: true, message: "Excel file downloaded successfully" };
+    } catch (error) {
+      console.error("Error downloading Excel:", error);
+      return { success: false, message: error.message };
+    }
+  },
   modifyEmbeddings: async function (slug, changes = {}) {
     const { workspace, message } = await fetch(
       `${API_BASE}/workspace/${slug}/update-embeddings`,

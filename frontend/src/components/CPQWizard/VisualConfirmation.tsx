@@ -1,4 +1,7 @@
 import { CPQInput } from "@/utils/cpqCalculator";
+import { Send, FileDown } from "lucide-react";
+import { useState } from "react";
+import Workspace from "@/models/workspace";
 
 interface VisualConfirmationProps {
   data: CPQInput;
@@ -11,6 +14,54 @@ export default function VisualConfirmation({
   onConfirm,
   onRegenerate,
 }: VisualConfirmationProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadExcel = async () => {
+    try {
+      setIsDownloading(true);
+      
+      // Prepare quote data from current input
+      const quoteData = {
+        clientName: data.clientName || "Unknown",
+        screenWidth: data.widthFt || 0,
+        screenHeight: data.heightFt || 0,
+        screenArea: (data.widthFt || 0) * (data.heightFt || 0),
+        productType: data.productClass || "Standard LED Display",
+        basePricePerSqFt: 2500, // Default base price
+        mountingType: data.serviceAccess || "Front Service",
+        isCurved: false,
+        isOutdoor: data.environment === "Outdoor",
+        materialType: data.structureCondition || "Existing",
+        desiredMargin: (data.targetMargin || 30) / 100,
+        hardwareCost: 0,
+        structuralCost: 0,
+        laborHours: 0,
+        laborRate: 150,
+        laborComplexityFactor: 1.0,
+        shippingCost: 0,
+        pmFee: 0,
+        engineeringFee: 0,
+        totalCost: 0,
+        finalPrice: 0,
+        grossProfit: 0,
+      };
+
+      // For now, use a default workspace slug - in production, this would come from context
+      const workspaceSlug = "default-workspace";
+      
+      const result = await Workspace.downloadAuditExcel(workspaceSlug, quoteData);
+      
+      if (!result.success) {
+        console.error("Failed to download Excel:", result.message);
+        alert("Failed to download Excel file: " + result.message);
+      }
+    } catch (error) {
+      console.error("Error downloading Excel:", error);
+      alert("Error downloading Excel file");
+    } finally {
+      setIsDownloading(false);
+    }
+  }
   const {
     clientName,
     address,
@@ -119,18 +170,27 @@ export default function VisualConfirmation({
           <div className="flex gap-4 mt-6">
             <button
               onClick={onConfirm}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
-              <Send size={16} className="mr-2" />
+              <Send size={16} />
               Confirm & Generate Proposal
+            </button>
+            <button
+              onClick={handleDownloadExcel}
+              disabled={isDownloading}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              title="Download quote as Excel with live formulas"
+            >
+              <FileDown size={16} />
+              {isDownloading ? "Generating..." : "Download Excel"}
             </button>
             {onRegenerate && (
               <button
                 onClick={onRegenerate}
-                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
-                <Send size={16} className="mr-2" />
-                Regenerate Configuration
+                <Send size={16} />
+                Regenerate
               </button>
             )}
           </div>

@@ -1195,6 +1195,66 @@ function workspaceEndpoints(app) {
     }
   );
 
+  /**
+   * POST /workspace/:slug/download-audit-excel
+   * Generate and download Excel audit file with live formulas
+   * Body: { quoteData: {...} }
+   */
+  app.post(
+    "/workspace/:slug/download-audit-excel",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager, ROLES.member])],
+    async (request, response) => {
+      try {
+        const { slug = null } = request.params;
+        const user = await userFromSession(request, response);
+        const { quoteData = {} } = reqBody(request);
+
+        const currWorkspace = multiUserMode(response)
+          ? await Workspace.getWithUser(user, { slug })
+          : await Workspace.get({ slug });
+
+        if (!currWorkspace) {
+          response.status(404).json({ error: "Workspace not found" });
+          return;
+        }
+
+        // Import the service
+        const { AncAuditExcelService } = require("../services/AncAuditExcelService");
+
+        // Generate Excel buffer
+        const excelBuffer = await AncAuditExcelService.generateAuditExcel(quoteData);
+
+        // Log the action
+        await EventLogs.logEvent(
+          "audit_excel_downloaded",
+          {
+            workspaceName: currWorkspace?.name || "Unknown",
+            clientName: quoteData.clientName || "N/A",
+            quoteDate: quoteData.quoteDate || new Date().toISOString(),
+          },
+          user?.id
+        );
+
+        // Generate filename
+        const clientName = (quoteData.clientName || "Quote").replace(/\s+/g, "_");
+        const dateStr = new Date().toISOString().split("T")[0];
+        const filename = `ANC_Quote_${clientName}_${dateStr}.xlsx`;
+
+        // Send file
+        response.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        response.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        response.setHeader("Content-Length", excelBuffer.length);
+        response.send(excelBuffer);
+      } catch (error) {
+        console.error("Error generating audit Excel:", error);
+        response.status(500).json({ error: "Failed to generate Excel file" });
+      }
+    }
+  );
+
   // Parsed Files in separate endpoint just to keep the workspace endpoints clean
   workspaceParsedFilesEndpoints(app);
 }
