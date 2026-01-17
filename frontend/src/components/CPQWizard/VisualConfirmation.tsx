@@ -2,6 +2,7 @@ import { CPQInput } from "@/utils/cpqCalculator";
 import { Send, FileDown } from "lucide-react";
 import { useState } from "react";
 import Workspace from "@/models/workspace";
+import { calculateCPQ } from "@/utils/cpqCalculator";
 
 interface VisualConfirmationProps {
   data: CPQInput;
@@ -19,45 +20,81 @@ export default function VisualConfirmation({
   const handleDownloadExcel = async () => {
     try {
       setIsDownloading(true);
-      
-      // Prepare quote data from current input
+
+      // Validate input dimensions
+      if (!data.widthFt || !data.heightFt || data.widthFt <= 0 || data.heightFt <= 0) {
+        alert("Please enter valid width and height dimensions");
+        return;
+      }
+
+      // Run the pricing calculator to get all breakdown values
+      const calculation = calculateCPQ(data);
+
+      // Prepare complete quote data with all calculated values
       const quoteData = {
-        clientName: data.clientName || "Unknown",
-        screenWidth: data.widthFt || 0,
-        screenHeight: data.heightFt || 0,
-        screenArea: (data.widthFt || 0) * (data.heightFt || 0),
+        clientName: data.clientName || "Unknown Client",
+        projectName: data.projectName || "Unnamed Project",
+        address: data.address || "",
+        
+        // Dimensions
+        screenWidth: data.widthFt,
+        screenHeight: data.heightFt,
+        screenArea: calculation.sqFt,
+        
+        // Product Info
         productType: data.productClass || "Standard LED Display",
-        basePricePerSqFt: 2500, // Default base price
+        pixelPitch: data.pixelPitch || 1.5,
+        basePricePerSqFt: 2500,
+        
+        // Configuration
         mountingType: data.serviceAccess || "Front Service",
-        isCurved: false,
+        isCurved: data.shape === "Curved",
         isOutdoor: data.environment === "Outdoor",
         materialType: data.structureCondition || "Existing",
-        desiredMargin: (data.targetMargin || 30) / 100,
-        hardwareCost: 0,
-        structuralCost: 0,
-        laborHours: 0,
+        laborType: data.laborType || "NonUnion",
+        
+        // Calculated Costs (from CPQ calculator)
+        hardwareCost: calculation.hardwareCost,
+        structuralCost: calculation.structuralCost,
+        laborHours: Math.round(calculation.sqFt / 20), // Rough estimate: 20 sqft per hour
         laborRate: 150,
-        laborComplexityFactor: 1.0,
-        shippingCost: 0,
-        pmFee: 0,
-        engineeringFee: 0,
-        totalCost: 0,
-        finalPrice: 0,
-        grossProfit: 0,
+        laborComplexityFactor: data.laborType === "Union" ? 1.5 : 1.0,
+        laborCost: calculation.laborCost,
+        
+        // Additional Costs
+        shippingCost: Math.round(calculation.expenseCost * 0.05),
+        pmFee: calculation.pmCost,
+        engineeringFee: Math.round(calculation.expenseCost * 0.15),
+        contingencyAmount: calculation.contingencyCost,
+        bondAmount: calculation.bondCost,
+        
+        // Totals
+        desiredMargin: data.targetMargin ? data.targetMargin / 100 : 0.30,
+        totalCost: calculation.totalCost,
+        finalPrice: calculation.sellPrice,
+        grossProfit: calculation.sellPrice - calculation.totalCost,
+        
+        // Additional metadata
+        quoteDate: new Date().toISOString().split("T")[0],
+        powerAmps: calculation.powerAmps,
       };
 
       // For now, use a default workspace slug - in production, this would come from context
-      const workspaceSlug = "default-workspace";
-      
+      const workspaceSlug = "anc"; // Default workspace for ANC
+
       const result = await Workspace.downloadAuditExcel(workspaceSlug, quoteData);
-      
+
       if (!result.success) {
         console.error("Failed to download Excel:", result.message);
         alert("Failed to download Excel file: " + result.message);
       }
     } catch (error) {
       console.error("Error downloading Excel:", error);
-      alert("Error downloading Excel file");
+      alert("Error downloading Excel file: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsDownloading(false);
+    }
+  }
     } finally {
       setIsDownloading(false);
     }

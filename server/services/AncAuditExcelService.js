@@ -14,6 +14,27 @@ class AncAuditExcelService {
    * @returns {Promise<Buffer>} Excel file buffer
    */
   static async generateAuditExcel(quoteData) {
+    // Validate input data
+    if (!quoteData) {
+      throw new Error("Quote data is required to generate Excel file");
+    }
+
+    if (!quoteData.screenWidth || quoteData.screenWidth <= 0) {
+      throw new Error("Invalid screen width - must be greater than 0");
+    }
+
+    if (!quoteData.screenHeight || quoteData.screenHeight <= 0) {
+      throw new Error("Invalid screen height - must be greater than 0");
+    }
+
+    if (!quoteData.totalCost || quoteData.totalCost <= 0) {
+      throw new Error("Invalid total cost - quote must have calculated costs greater than 0. Please ensure all dimensions and pricing are properly calculated.");
+    }
+
+    if (!quoteData.clientName || quoteData.clientName.trim() === "") {
+      throw new Error("Client name is required");
+    }
+
     const workbook = new ExcelJS.Workbook();
 
     // Create all sheets
@@ -419,6 +440,13 @@ class AncAuditExcelService {
         horizontalCentered: false,
         verticalCentered: false,
       };
+
+      // Format header row
+      const headerRow = sheet.getRow(1);
+      if (headerRow) {
+        headerRow.height = 30;
+        headerRow.alignment = { horizontal: "center", vertical: "middle" };
+      }
 
       // Freeze header rows where applicable
       if (sheet.name !== "DataSource") {
