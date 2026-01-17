@@ -1249,8 +1249,15 @@ function workspaceEndpoints(app) {
         response.setHeader("Content-Length", excelBuffer.length);
         response.send(excelBuffer);
       } catch (error) {
-        console.error("Error generating audit Excel:", error);
-        response.status(500).json({ error: "Failed to generate Excel file" });
+        console.error("Error generating audit Excel:", {
+          message: error.message,
+          quoteData: reqBody(request)?.quoteData,
+          stack: error.stack,
+        });
+        response.status(500).json({ 
+          error: "Failed to generate Excel file",
+          details: error.message 
+        });
       }
     }
   );
