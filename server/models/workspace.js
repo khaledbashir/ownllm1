@@ -754,7 +754,7 @@ const Workspace = {
    * @param {number} workspaceId - The ID of the workspace to replicate.
    * @param {number} creatorId - The ID of the user creating the replicated workspace.
    * @param {string} newName - Optional custom name for the replicated workspace.
-   * @param {boolean} deepClone - If true, copies pinned/watched documents and links their vector embeddings.
+   * @param {boolean} deepClone - If true, copies ALL documents (pinned, watched, embedded) and links their vector embeddings.
    * @returns {Promise<{workspace: Object | null, message: string | null, copiedDocuments?: number}>} A promise that resolves to an object containing the replicated workspace and an error message if applicable.
    */
   replicate: async function (workspaceId, creatorId = null, newName = null, deepClone = false) {
@@ -818,17 +818,13 @@ const Workspace = {
 
       let copiedDocuments = 0;
 
-      // Deep Clone: Copy pinned/watched documents and link their vector embeddings
+      // Deep Clone: Copy ALL documents from source workspace and link their vector embeddings
       if (deepClone === true) {
         try {
-          // Fetch all pinned or watched documents from source workspace
+          // Fetch ALL documents from source workspace (not just pinned/watched)
           const sourceDocuments = await prisma.workspace_documents.findMany({
             where: {
-              workspaceId: sourceWorkspace.id,
-              OR: [
-                { pinned: true },
-                { watched: true }
-              ]
+              workspaceId: sourceWorkspace.id
             }
           });
 
@@ -855,7 +851,7 @@ const Workspace = {
               }
             }
             
-            console.log(`[Workspace.replicate] Deep cloned ${copiedDocuments} documents with vector embeddings from workspace ${sourceWorkspace.id} to ${newWorkspace.id}`);
+            console.log(`[Workspace.replicate] Deep cloned ${copiedDocuments} documents (including pinned, watched, and embedded) with vector embeddings from workspace ${sourceWorkspace.id} to ${newWorkspace.id}`);
           }
         } catch (deepCloneError) {
           console.error("Error during deep clone of documents:", deepCloneError.message);
