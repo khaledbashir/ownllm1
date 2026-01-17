@@ -177,6 +177,9 @@ export default function ChatContainer({
   const [previewSliderOpen, setPreviewSliderOpen] = useState(false);
   const [generatingProposal, setGeneratingProposal] = useState(false);
 
+  // Detect if this is an ANC workspace by checking system prompt
+  const isANCWorkspace = workspace?.inlineAiSystemPrompt?.includes('ANC Sports Proposal Engine');
+
   // Ref for notes editor to allow AI to insert content
   // If external ref is provided, use it. Otherwise use internal ref.
   const internalNotesEditorRef = useRef(null);
@@ -407,7 +410,9 @@ export default function ChatContainer({
   }, [pendingNoteInsert, shouldReplace]);
 
   // Parse and validate JSON quote data from assistant messages (ANC Proposal System)
+  // Only runs in ANC workspaces
   useEffect(() => {
+    if (!isANCWorkspace) return; // Skip if not an ANC workspace
     if (!chatHistory || chatHistory.length === 0) return;
 
     // Get the last assistant message
@@ -446,7 +451,7 @@ export default function ChatContainer({
     if (jsonData.fields && Object.keys(jsonData.fields).length > 0) {
       setPreviewSliderOpen(true);
     }
-  }, [chatHistory]);
+  }, [chatHistory, isANCWorkspace]);
 
   // Maintain state of message from whatever is in PromptInput
   const handleMessageChange = (event) => {
@@ -948,15 +953,17 @@ export default function ChatContainer({
         </div>
       )}
 
-      {/* ANC Proposal Preview Slider */}
-      <ProposalPreviewSlider
-        quoteData={quoteData}
-        isOpen={previewSliderOpen}
-        onToggle={() => setPreviewSliderOpen(!previewSliderOpen)}
-        onGenerateExcel={handleGenerateExcel}
-        onDownloadPdf={handleDownloadPdf}
-        isGenerating={generatingProposal}
-      />
+      {/* ANC Proposal Preview Slider - Only show in ANC workspaces */}
+      {isANCWorkspace && (
+        <ProposalPreviewSlider
+          quoteData={quoteData}
+          isOpen={previewSliderOpen}
+          onToggle={() => setPreviewSliderOpen(!previewSliderOpen)}
+          onGenerateExcel={handleGenerateExcel}
+          onDownloadPdf={handleDownloadPdf}
+          isGenerating={generatingProposal}
+        />
+      )}
     </div>
   );
 }
