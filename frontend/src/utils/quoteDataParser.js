@@ -36,9 +36,10 @@ export function extractAndValidateJson(message = '') {
     return { valid: false, data: null, error: 'Invalid message type' };
   }
 
-  // Defensive regex: handle optional whitespace/newlines
-  // Pattern: ```json ... ``` (relaxed newlines)
-  const jsonBlockRegex = /```\s*(?:json)?\s*([\s\S]*?)```/;
+  // Defensive regex: handle optional whitespace/newlines, case insensitive for language
+  // Pattern: ```json ... ``` (relaxed newlines and lang)
+  // Matches ```json, ```JSON, or just ``` if it looks like start of block
+  const jsonBlockRegex = /```\s*(?:json|JSON)?\s*([\s\S]*?)```/;
   const match = message.match(jsonBlockRegex);
 
   if (!match || !match[1]) {

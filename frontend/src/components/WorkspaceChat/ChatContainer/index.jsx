@@ -415,41 +415,40 @@ export default function ChatContainer({
     // Removed isANCWorkspace check for debugging
     if (!chatHistory || chatHistory.length === 0) return;
 
-    // Get the last assistant message
-    const lastMsg = chatHistory[chatHistory.length - 1];
-    if (!lastMsg || lastMsg.role !== 'assistant') return;
+    // Scan last 5 assistant messages to find the most recent quote data
+    // This prevents losing data if the bot sends a short follow-up message
+    const assistantMsgs = chatHistory
+      .slice(-5) // Look at last 5
+      .filter(m => m.role === 'assistant');
 
-    const content = lastMsg.content || '';
-    if (!content) return;
+    if (assistantMsgs.length === 0) return;
 
-    // Extract and validate JSON block (includes strict schema validation)
-    const validationResult = extractAndValidateJson(content);
+    let foundData = false;
+    let newQuoteData = {};
 
-    if (!validationResult.valid) {
-      // Silent fail - no JSON found or validation failed
-      // This is expected when AI just asks a question without new data
-      if (validationResult.error && validationResult.error !== 'No JSON code block found') {
-        console.debug('[ANC Parser]', validationResult.error);
-        // Optionally log to analytics/sentry here for monitoring
+    // Process messages from oldest to newest in the slice to build up state
+    for (const msg of assistantMsgs) {
+      const content = msg.content || '';
+      if (!content) continue;
+
+      const validationResult = extractAndValidateJson(content);
+      if (validationResult.valid) {
+        foundData = true;
+        // Merge this message's data into our accumulator
+        newQuoteData = mergeQuoteData(newQuoteData, validationResult.data);
       }
-      return;
     }
 
-    const jsonData = validationResult.data;
+    if (foundData) {
+      setQuoteData(prev => {
+        const merged = mergeQuoteData(prev, newQuoteData);
+        return merged;
+      });
 
-    // Update quote data with validated fields
-    setQuoteData(prev => {
-      const merged = mergeQuoteData(prev, jsonData);
-      
-      // Log the update for debugging
-      logQuoteUpdate(merged, validationResult);
-      
-      return merged;
-    });
-
-    // Auto-open slider when we have data
-    if (jsonData.fields && Object.keys(jsonData.fields).length > 0) {
-      setPreviewSliderOpen(true);
+      // Auto-open slider when we have meaningful data
+      if (newQuoteData.fields && Object.keys(newQuoteData.fields).length > 0) {
+        setPreviewSliderOpen(true);
+      }
     }
   }, [chatHistory, isANCWorkspace]);
 
