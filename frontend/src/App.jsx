@@ -12,6 +12,7 @@ import { FullScreenLoader } from "./components/Preloader";
 import { ThemeProvider } from "./ThemeContext";
 import { PWAModeProvider } from "./PWAContext";
 import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
+import { DuplicateWorkspaceProvider } from "@/components/Modals/DuplicateWorkspaceModal";
 
 export default function App() {
   return (
@@ -21,11 +22,13 @@ export default function App() {
           <AuthProvider>
             <LogoProvider>
               <PfpProvider>
-                <I18nextProvider i18n={i18n}>
-                  <Outlet />
-                  <ToastContainer />
-                  <KeyboardShortcutsHelp />
-                </I18nextProvider>
+                <DuplicateWorkspaceProvider>
+                  <I18nextProvider i18n={i18n}>
+                    <Outlet />
+                    <ToastContainer />
+                    <KeyboardShortcutsHelp />
+                  </I18nextProvider>
+                </DuplicateWorkspaceProvider>
               </PfpProvider>
             </LogoProvider>
           </AuthProvider>

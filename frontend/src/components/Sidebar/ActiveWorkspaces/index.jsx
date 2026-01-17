@@ -5,6 +5,7 @@ import Workspace from "@/models/workspace";
 import ManageWorkspace, {
   useManageWorkspaceModal,
 } from "../../Modals/ManageWorkspace";
+import { useDuplicateWorkspaceModal } from "../../Modals/DuplicateWorkspaceModal";
 import paths from "@/utils/paths";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -27,6 +28,7 @@ export default function ActiveWorkspaces() {
   const [workspaces, setWorkspaces] = useState([]);
   const [selectedWs, setSelectedWs] = useState(null);
   const { showing, showModal, hideModal } = useManageWorkspaceModal();
+  const { open: openDuplicateModal } = useDuplicateWorkspaceModal();
   const { user } = useUser();
   const isInWorkspaceSettings = !!useMatch("/workspace/:slug/settings/:tab");
 
@@ -38,6 +40,11 @@ export default function ActiveWorkspaces() {
     }
     getWorkspaces();
   }, []);
+
+  const refreshWorkspaces = async () => {
+    const workspaces = await Workspace.all();
+    setWorkspaces(Workspace.orderWorkspaces(workspaces));
+  };
 
   if (loading) {
     return (
@@ -165,29 +172,10 @@ export default function ActiveWorkspaces() {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    const { workspace: newWorkspace, message } =
-                                      await Workspace.replicate(workspace.slug);
-                                    if (newWorkspace) {
-                                      showToast(
-                                        "Workspace replicated successfully!",
-                                        "success",
-                                        { clear: true }
-                                      );
-                                      // Refresh workspaces list
-                                      const workspaces = await Workspace.all();
-                                      setWorkspaces(
-                                        Workspace.orderWorkspaces(workspaces)
-                                      );
-                                    } else {
-                                      showToast(
-                                        `Failed to replicate workspace: ${message}`,
-                                        "error",
-                                        { clear: true }
-                                      );
-                                    }
+                                    openDuplicateModal(workspace, refreshWorkspaces);
                                   }}
                                   className="border-none rounded-md flex items-center justify-center p-[2px] hover:bg-[#646768] text-[#A7A8A9] hover:text-white"
                                   aria-label="Replicate workspace"

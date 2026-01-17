@@ -749,14 +749,15 @@ const Workspace = {
   },
 
   /**
-   * Replicate a workspace with all its settings.
+   * Replicate a workspace with all its settings and optionally deep-clone documents with their vector embeddings.
    * Creates a new workspace with the same configuration as the source workspace.
    * @param {number} workspaceId - The ID of the workspace to replicate.
    * @param {number} creatorId - The ID of the user creating the replicated workspace.
    * @param {string} newName - Optional custom name for the replicated workspace.
-   * @returns {Promise<{workspace: Object | null, message: string | null}>} A promise that resolves to an object containing the replicated workspace and an error message if applicable.
+   * @param {boolean} deepClone - If true, copies pinned/watched documents and links their vector embeddings.
+   * @returns {Promise<{workspace: Object | null, message: string | null, copiedDocuments?: number}>} A promise that resolves to an object containing the replicated workspace and an error message if applicable.
    */
-  replicate: async function (workspaceId, creatorId = null, newName = null) {
+  replicate: async function (workspaceId, creatorId = null, newName = null, deepClone = false) {
     try {
       // Get the source workspace
       const sourceWorkspace = await prisma.workspaces.findUnique({
@@ -815,7 +816,58 @@ const Workspace = {
       // If created with a user then we need to create the relationship as well
       if (!!creatorId) await WorkspaceUser.create(creatorId, newWorkspace.id);
 
-      return { workspace: newWorkspace, message: null };
+      let copiedDocuments = 0;
+
+      // Deep Clone: Copy pinned/watched documents and link their vector embeddings
+      if (deepClone === true) {
+        try {
+          // Fetch all pinned or watched documents from source workspace
+          const sourceDocuments = await prisma.workspace_documents.findMany({
+            where: {
+              workspaceId: sourceWorkspace.id,
+              OR: [
+                { pinned: true },
+                { watched: true }
+              ]
+            }
+          });
+
+          if (sourceDocuments.length > 0) {
+            // Create new workspace_documents entries that link to the same embeddings
+            for (const sourceDoc of sourceDocuments) {
+              try {
+                await prisma.workspace_documents.create({
+                  data: {
+                    docId: sourceDoc.docId, // Keep the same docId to link to same vectors
+                    filename: sourceDoc.filename,
+                    docpath: sourceDoc.docpath,
+                    workspaceId: newWorkspace.id,
+                    organizationId: sourceDoc.organizationId,
+                    metadata: sourceDoc.metadata,
+                    pinned: sourceDoc.pinned,
+                    watched: sourceDoc.watched,
+                  }
+                });
+                copiedDocuments++;
+              } catch (docError) {
+                console.warn(`Failed to copy document ${sourceDoc.filename}:`, docError.message);
+                // Continue with next document instead of failing entirely
+              }
+            }
+            
+            console.log(`[Workspace.replicate] Deep cloned ${copiedDocuments} documents with vector embeddings from workspace ${sourceWorkspace.id} to ${newWorkspace.id}`);
+          }
+        } catch (deepCloneError) {
+          console.error("Error during deep clone of documents:", deepCloneError.message);
+          // Don't fail the entire workspace replication, just log the error
+        }
+      }
+
+      const responseMessage = deepClone && copiedDocuments > 0 
+        ? `Workspace replicated with ${copiedDocuments} documents and their vector embeddings.`
+        : null;
+
+      return { workspace: newWorkspace, message: responseMessage, copiedDocuments };
     } catch (error) {
       console.error("Error replicating workspace:", error.message);
       return { workspace: null, message: error.message };

@@ -39,12 +39,12 @@ const Workspace = {
 
     return { workspace, message };
   },
-  replicate: async function (slug, name = null) {
-    const { workspace, message } = await fetch(
+  replicate: async function (slug, name = null, deepClone = false) {
+    const { workspace, message, copiedDocuments } = await fetch(
       `${API_BASE}/workspace/${slug}/replicate`,
       {
         method: "POST",
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, deepClone }),
         headers: baseHeaders(),
       }
     )
@@ -53,7 +53,7 @@ const Workspace = {
         return { workspace: null, message: e.message };
       });
 
-    return { workspace, message };
+    return { workspace, message, copiedDocuments };
   },
   modifyEmbeddings: async function (slug, changes = {}) {
     const { workspace, message } = await fetch(

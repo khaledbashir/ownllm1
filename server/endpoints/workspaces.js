@@ -121,7 +121,7 @@ function workspaceEndpoints(app) {
       try {
         const user = await userFromSession(request, response);
         const { slug = null } = request.params;
-        const { name = null } = reqBody(request);
+        const { name = null, deepClone = false } = reqBody(request);
         const currWorkspace = multiUserMode(response)
           ? await Workspace.getWithUser(user, { slug })
           : await Workspace.get({ slug });
@@ -131,10 +131,11 @@ function workspaceEndpoints(app) {
           return;
         }
 
-        const { workspace, message } = await Workspace.replicate(
+        const { workspace, message, copiedDocuments } = await Workspace.replicate(
           currWorkspace.id,
           user?.id,
-          name
+          name,
+          deepClone
         );
 
         if (!workspace) {
@@ -147,11 +148,22 @@ function workspaceEndpoints(app) {
           {
             workspaceName: workspace?.name || "Unknown Workspace",
             sourceWorkspaceName: currWorkspace?.name || "Unknown Workspace",
+            deepClone: deepClone,
+            copiedDocuments: copiedDocuments || 0,
           },
           user?.id
         );
 
-        response.status(200).json({ workspace, message });
+        const successMessage = deepClone && copiedDocuments && copiedDocuments > 0
+          ? `Workspace replicated successfully with ${copiedDocuments} document(s) and their vector embeddings.`
+          : message || "Workspace replicated successfully.";
+
+        response.status(200).json({ 
+          workspace, 
+          message: successMessage,
+          copiedDocuments: copiedDocuments || 0,
+          deepCloneEnabled: deepClone
+        });
       } catch (e) {
         console.error(e.message, e);
         response.sendStatus(500).end();
