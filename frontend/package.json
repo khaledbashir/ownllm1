@@ -72,7 +72,8 @@
     "tunnel-rat": "^0.1.2",
     "uuid": "^9.0.0",
     "xlsx": "^0.18.5",
-    "yjs": "^13.6.27"
+    "yjs": "^13.6.27",
+    "ajv": "^8.12.0"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.1.1",

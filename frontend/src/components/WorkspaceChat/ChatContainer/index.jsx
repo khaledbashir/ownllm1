@@ -7,6 +7,7 @@ import PromptInput, {
 } from "./PromptInput";
 import Workspace from "@/models/workspace";
 import handleChat, { ABORT_STREAM_EVENT } from "@/utils/chat";
+import { baseHeaders } from "@/utils/request";
 import { isMobile } from "react-device-detect";
 import { SidebarMobileHeader } from "../../Sidebar";
 import { useParams } from "react-router-dom";
@@ -26,6 +27,8 @@ import ThreadNotes from "../ThreadNotes";
 import { ChatText, FileText, NotePencil } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 import WorkspaceForms from "../../WorkspaceForms";
+import ProposalPreviewSlider from "../../ProposalPreviewSlider";
+import { extractAndValidateJson, mergeQuoteData, hasMinimumQuoteData, removeJsonBlockFromText, logQuoteUpdate } from "@/utils/quoteDataParser";
 
 // Event for AI to insert content into notes
 export const NOTE_INSERT_EVENT = "note-insert-content";
@@ -168,6 +171,11 @@ export default function ChatContainer({
   const [showInsertModal, setShowInsertModal] = useState(false);
   const [shouldReplace, setShouldReplace] = useState(false); // Flag to clear doc before insert
   const { files, parseAttachments } = useContext(DndUploaderContext);
+
+  // NEW: ANC Proposal Preview Slider State
+  const [quoteData, setQuoteData] = useState({});
+  const [previewSliderOpen, setPreviewSliderOpen] = useState(false);
+  const [generatingProposal, setGeneratingProposal] = useState(false);
 
   // Ref for notes editor to allow AI to insert content
   // If external ref is provided, use it. Otherwise use internal ref.
@@ -397,6 +405,48 @@ export default function ChatContainer({
       cancelled = true;
     };
   }, [pendingNoteInsert, shouldReplace]);
+
+  // Parse and validate JSON quote data from assistant messages (ANC Proposal System)
+  useEffect(() => {
+    if (!chatHistory || chatHistory.length === 0) return;
+
+    // Get the last assistant message
+    const lastMsg = chatHistory[chatHistory.length - 1];
+    if (!lastMsg || lastMsg.role !== 'assistant') return;
+
+    const content = lastMsg.content || '';
+    if (!content) return;
+
+    // Extract and validate JSON block (includes strict schema validation)
+    const validationResult = extractAndValidateJson(content);
+
+    if (!validationResult.valid) {
+      // Silent fail - no JSON found or validation failed
+      // This is expected when AI just asks a question without new data
+      if (validationResult.error && validationResult.error !== 'No JSON code block found') {
+        console.debug('[ANC Parser]', validationResult.error);
+        // Optionally log to analytics/sentry here for monitoring
+      }
+      return;
+    }
+
+    const jsonData = validationResult.data;
+
+    // Update quote data with validated fields
+    setQuoteData(prev => {
+      const merged = mergeQuoteData(prev, jsonData);
+      
+      // Log the update for debugging
+      logQuoteUpdate(merged, validationResult);
+      
+      return merged;
+    });
+
+    // Auto-open slider when we have data
+    if (jsonData.fields && Object.keys(jsonData.fields).length > 0) {
+      setPreviewSliderOpen(true);
+    }
+  }, [chatHistory]);
 
   // Maintain state of message from whatever is in PromptInput
   const handleMessageChange = (event) => {
@@ -665,6 +715,105 @@ export default function ChatContainer({
     handleWSS();
   }, [socketId]);
 
+  // ANC Proposal Handlers
+  const handleGenerateExcel = async () => {
+    if (!hasMinimumQuoteData(quoteData)) {
+      toast.error("Need complete proposal data first");
+      return;
+    }
+
+    setGeneratingProposal(true);
+    try {
+      const response = await fetch(
+        `/api/workspace/${workspace.slug}/generate-proposal`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...baseHeaders(),
+          },
+          body: JSON.stringify({
+            ...quoteData,
+            outputFormat: 'excel',
+            margin: quoteData.marginPercent ? (quoteData.marginPercent / 100) : 0.30,
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.downloadUrl) {
+        // Download the file
+        const link = document.createElement('a');
+        link.href = data.downloadUrl;
+        link.download = data.filename || 'proposal.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Excel proposal generated and downloaded');
+      } else {
+        throw new Error(data.error || 'Failed to generate Excel');
+      }
+    } catch (error) {
+      console.error('Excel generation error:', error);
+      toast.error(`Failed to generate Excel: ${error.message}`);
+    } finally {
+      setGeneratingProposal(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!hasMinimumQuoteData(quoteData)) {
+      toast.error("Need complete proposal data first");
+      return;
+    }
+
+    setGeneratingProposal(true);
+    try {
+      const response = await fetch(
+        `/api/workspace/${workspace.slug}/generate-proposal`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...baseHeaders(),
+          },
+          body: JSON.stringify({
+            ...quoteData,
+            outputFormat: 'pdf',
+            margin: quoteData.marginPercent ? (quoteData.marginPercent / 100) : 0.30,
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.downloadUrl) {
+        // Download the file
+        const link = document.createElement('a');
+        link.href = data.downloadUrl;
+        link.download = data.filename || 'proposal.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('PDF proposal downloaded');
+      } else {
+        throw new Error(data.error || 'Failed to generate PDF');
+      }
+    } catch (error) {
+      console.error('PDF download error:', error);
+      toast.error(`Failed to download PDF: ${error.message}`);
+    } finally {
+      setGeneratingProposal(false);
+    }
+  };
+
   return (
     <div
       style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
@@ -798,6 +947,16 @@ export default function ChatContainer({
           </div>
         </div>
       )}
+
+      {/* ANC Proposal Preview Slider */}
+      <ProposalPreviewSlider
+        quoteData={quoteData}
+        isOpen={previewSliderOpen}
+        onToggle={() => setPreviewSliderOpen(!previewSliderOpen)}
+        onGenerateExcel={handleGenerateExcel}
+        onDownloadPdf={handleDownloadPdf}
+        isGenerating={generatingProposal}
+      />
     </div>
   );
 }

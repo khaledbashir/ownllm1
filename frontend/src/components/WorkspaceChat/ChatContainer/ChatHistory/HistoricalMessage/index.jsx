@@ -298,6 +298,11 @@ const RenderChatContent = memo(
                 const match = /language-(\w+)/.exec(className || "");
                 const lang = match ? match[1].toLowerCase() : "";
 
+                // Hide JSON blocks for ANC proposal data (still parsed by frontend)
+                if (lang === "json" && typeof children === "string" && children.includes("width")) {
+                  return null; // Don't render JSON blocks for proposal data
+                }
+
                 // Add robustness for React/HTML
                 const isReact = [
                   "react",
