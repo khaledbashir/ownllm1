@@ -868,7 +868,10 @@ export default function ChatContainer({
       )}
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto no-scroll">
+      <div 
+        className="flex-1 overflow-y-auto no-scroll transition-all duration-300"
+        style={{ marginRight: previewSliderOpen && !isMobile ? '450px' : '0' }}
+      >
         {activeTab === "chat" || externalEditorRef ? (
           <DnDFileUploaderWrapper>
             <MetricsProvider>

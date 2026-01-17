@@ -37,8 +37,8 @@ export function extractAndValidateJson(message = '') {
   }
 
   // Defensive regex: handle optional whitespace/newlines
-  // Pattern: ```json\n...optional content...\n```
-  const jsonBlockRegex = /```\s*json\s*\n([\s\S]*?)\n\s*```/;
+  // Pattern: ```json ... ``` (relaxed newlines)
+  const jsonBlockRegex = /```\s*(?:json)?\s*([\s\S]*?)```/;
   const match = message.match(jsonBlockRegex);
 
   if (!match || !match[1]) {

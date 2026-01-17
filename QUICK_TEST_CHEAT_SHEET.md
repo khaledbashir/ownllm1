@@ -1,53 +1,62 @@
-# 🚀 ANC FORMULA BANK - QUICK TEST CHEAT SHEET
+# 🚀 ANC CPQ v2.0 - QUICK TEST GUIDE
 
-## ⚡ 5-MINUTE QUICK TEST
+## ⚡ 1-MINUTE "MEGA PROMPT" TEST
 
-### 1️⃣ Start Server (if not running)
-```bash
-cd /root/everythingllm/ownllm1/server
-yarn dev
+Use this prompt to instantly verify the **Waterfall Pricing Logic** and **21-Field Schema**.
+
+### 📋 COPY & PASTE THIS INTO CHAT:
+
+```text
+I need a formal proposal for a new stadium project.
+Details:
+- Product: Outdoor Scoreboard
+- Size: 40ft wide x 20ft high
+- Tech: 10mm Pixel Pitch, Rear Access
+- Structure: Curved shape on New Steel structure
+- Logistics: Union Labor required, Power is Far (over 100ft)
+- Commercials: Bond Required, ANC handles Permits, Gold Service Level
+- Financial: Target Margin 35%
 ```
 
-### 2️⃣ Open Browser
-```
-http://localhost:3001
-```
+### ✅ EXPECTED RESULT (In the Slider)
 
-### 3️⃣ Login & Create Workspace
-- Workspace Name: `ANC Test`
-- Workspace Type: `Standard`
+1. **Specs Tab:**
+   - [x] Size: 40' x 20' (800 sq ft)
+   - [x] Env: Outdoor
+   - [x] Shape: Curved (+5% Structural Mod)
 
-### 4️⃣ Enable ANC Skills
-Go to: Workspace Settings → Agent Skills
-- ✅ Turn ON `ANC_SYSTEM_INTERNAL_CALCULATOR`
-- ✅ Turn ON `ANC_AUDIT_EXPORT`
+2. **Logistics Tab:** (New!)
+   - [x] Structure: New (+Cost)
+   - [x] Labor: Union (+15% Rate)
+   - [x] Bond: Yes (+1.5% Cost)
 
-### 5️⃣ Test Calculation (Copy & Paste)
-```
-Calculate a 24ft by 10ft indoor LED display with 1.5mm pixel pitch at 32% margin.
-```
-
-**Expected:** $1,704,294 sell price at 32% margin
-
-### 6️⃣ Test Audit Export (Copy & Paste)
-```
-Generate internal audit Excel for this quote.
-```
-
-**Expected:** Download link appears, click it
-
-### 7️⃣ Verify Excel
-Open downloaded file and check:
-- ✅ 8 tabs exist
-- ✅ Formula Reference tab shows all ANC formulas
+3. **Pricing Tab:**
+   - [x] Hardware: ~$1,280,000 (Based on $1600/sqft base)
+   - [x] Labor: Higher due to Union rate
+   - [x] Final Price: Should include the 35% margin calculation
 
 ---
 
-## 📋 EXPECTED VALUES
+## 🔍 UNIT TEST PROMPTS (Step-by-Step)
 
-| Test | Dimensions | Pixel | Environment | Margin | Expected Price |
-|------|------------|--------|-------------|---------|---------------|
-| 1 | 24' x 10' | 1.5mm | Indoor | 32% | $1,704,294 |
+If you want to test the conversational collection flow:
+
+**Step 1: The Hook**
+> "I need a quote for a small indoor lobby screen."
+
+**Step 2: Dimensions**
+> "It is 12ft wide and 7ft high."
+
+**Step 3: Tech Specs**
+> "We want very high resolution, maybe 1.5mm pitch."
+
+**Step 4: Logistics**
+> "It's a wall mount on existing drywall. Non-union labor."
+
+**Step 5: Commercials**
+> "Standard service level, no bond needed."
+
+Result: The quote slider should update progressively after each turn.
 | 2 | 50' x 30' | 6mm | Outdoor | 30% | $20,865,638 |
 | 3 | 100' x 3' | 10mm | Outdoor | 35% | $3,803,077 |
 

@@ -121,6 +121,10 @@ export const ANC_QUOTE_SCHEMA = {
           type: "number",
           description: "Manual override for unit cost per sq ft"
         },
+        baseRatePerSqFt: {
+          type: "number",
+          description: "Base hardware rate per sq ft"
+        },
         targetMargin: {
           type: "number",
           minimum: 0,
@@ -166,6 +170,16 @@ export const ANC_QUOTE_SCHEMA = {
           type: "number",
           minimum: 0,
           description: "Contingency amount"
+        },
+        shippingCost: {
+          type: "number",
+          minimum: 0,
+          description: "Shipping and freight cost"
+        },
+        bondCost: {
+          type: "number",
+          minimum: 0,
+          description: "Surety bond cost"
         },
         totalCost: {
           type: "number",
@@ -231,8 +245,8 @@ export const ALLOWED_FIELDS = [
   "clientName", "projectName", "address", "productClass", "serviceLevel",
   "steelType", "powerDistance", "budget", "shape", "mountingType", "serviceAccess",
   "laborType", "permits", "controlSystem", "bondRequired", "installComplexity",
-  "unitCostOverride", "targetMargin",
-  "hardwareCost", "structuralCost", "laborCost", "pmFee",
+  "unitCostOverride", "baseRatePerSqFt", "targetMargin",
+  "hardwareCost", "structuralCost", "laborCost", "pmFee", "shippingCost", "bondCost",
   "contingency", "totalCost", "finalPrice", "grossProfit", "marginPercent",
   "status"
 ];

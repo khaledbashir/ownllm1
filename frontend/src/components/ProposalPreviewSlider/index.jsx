@@ -1,6 +1,26 @@
 import React, { useState } from 'react';
-import { CaretLeft, Download, FileText, X } from '@phosphor-icons/react';
+import { CaretLeft, Download, FileText, X, CurrencyDollar, Screwdriver, Wrench } from '@phosphor-icons/react';
 import { toast } from 'react-toastify';
+
+const DetailRow = ({ label, value, subtext }) => {
+  if (value === undefined || value === null || value === '') return null;
+  return (
+    <div className="border-b border-gray-100 last:border-0 pb-2 mb-2 last:mb-0">
+      <label className="text-xs uppercase text-gray-400 font-bold tracking-wider block mb-0.5">
+        {label}
+      </label>
+      <p className="text-sm font-semibold text-gray-800 break-words">{value}</p>
+      {subtext && <p className="text-xs text-gray-500">{subtext}</p>}
+    </div>
+  );
+};
+
+const SectionHeader = ({ title, icon: Icon }) => (
+  <div className="flex items-center gap-2 mb-3 pb-1 border-b border-gray-200">
+    {Icon && <Icon size={16} className="text-blue-600" />}
+    <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide">{title}</h4>
+  </div>
+);
 
 export const ProposalPreviewSlider = ({
   quoteData = {},
@@ -38,11 +58,15 @@ export const ProposalPreviewSlider = ({
   };
 
   const hasQuoteData = quoteData && Object.keys(quoteData).length > 0;
+  // Consider 'complete' if we have a calculated price
   const isComplete = quoteData?.finalPrice > 0;
+
+  // Formatting helper
+  const fmtCurrency = (val) => val ? `$${val.toLocaleString()}` : '-';
 
   return (
     <>
-      {/* Overlay when open */}
+      {/* Overlay for mobile */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/20 z-30 md:hidden"
@@ -50,249 +74,234 @@ export const ProposalPreviewSlider = ({
         />
       )}
 
-      {/* Toggle Button (Always handle visibility) */}
-      {!isOpen && (
-        <button
-          onClick={() => onToggle()}
-          className="fixed right-0 top-24 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-l-lg transition-colors z-40 shadow-lg"
-          title="Open proposal preview"
-        >
-          <CaretLeft size={20} weight="bold" />
-        </button>
-      )}
+      {/* Floating Toggle Button (Always visible logic) */}
+      <button
+        onClick={() => onToggle()}
+        className={`fixed right-0 top-32 transition-all duration-300 z-[41] shadow-lg flex items-center gap-2
+          ${isOpen ? 'right-[450px] bg-slate-800 text-white rounded-l-lg p-2' : 'bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-l-lg'}
+        `}
+        title={isOpen ? "Close preview" : "Open proposal preview"}
+      >
+        <CaretLeft size={20} weight="bold" className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        {!isOpen && <span className="text-xs font-bold hidden md:inline">QUOTE</span>}
+      </button>
 
-      {/* Slider Container */}
+      {/* Main Drawer */}
       <div
         className={`
           fixed right-0 top-0 bottom-0 
           bg-white border-l border-gray-200 shadow-2xl 
           transition-all duration-300 z-40
-          ${isOpen ? 'w-full md:w-96' : 'w-0'}
-          overflow-hidden flex flex-col
+          ${isOpen ? 'w-full md:w-[450px]' : 'w-0'}
+          overflow-hidden flex flex-col font-sans
         `}
       >
         {isOpen && (
           <>
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 border-b border-blue-800">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-5 border-b border-slate-700 shadow-sm shrink-0">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-lg">📋 Proposal Preview</h3>
+                <div className="flex items-center gap-2">
+                  <div className="bg-blue-500 p-1.5 rounded-lg">
+                    <FileText size={20} weight="fill" className="text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg tracking-tight">Proposal Engine</h3>
+                </div>
                 <button
                   onClick={() => onToggle()}
-                  className="hover:bg-blue-500 p-1 rounded transition-colors"
+                  className="hover:bg-slate-700 p-1.5 rounded-full transition-colors text-slate-300 hover:text-white"
                 >
                   <X size={20} />
                 </button>
               </div>
-              <p className="text-sm text-blue-100">
-                {quoteData?.clientName || 'ANC Project'}
+              <p className="text-sm text-slate-400 pl-11 truncate">
+                {quoteData?.clientName || 'New Project'}
               </p>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b bg-gray-50">
-              <button
-                onClick={() => setActiveTab('specs')}
-                className={`flex-1 py-2 text-sm font-medium transition-all border-b-2 ${
-                  activeTab === 'specs'
-                    ? 'border-blue-600 text-blue-600 bg-white'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Specifications
-              </button>
-              <button
-                onClick={() => setActiveTab('pricing')}
-                className={`flex-1 py-2 text-sm font-medium transition-all border-b-2 ${
-                  activeTab === 'pricing'
-                    ? 'border-blue-600 text-blue-600 bg-white'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Pricing
-              </button>
+            <div className="flex border-b border-gray-200 bg-gray-50 shrink-0">
+              {['specs', 'logistics', 'pricing'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`
+                    flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2
+                    ${activeTab === tab
+                      ? 'border-blue-600 text-blue-600 bg-white'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'}
+                  `}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 overflow-y-auto p-4">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-5 bg-white">
               {!hasQuoteData ? (
-                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
-                  <FileText size={48} className="mb-3 text-gray-300" />
-                  <p className="text-sm">Start a conversation to see proposal details</p>
+                <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 space-y-4">
+                  <div className="bg-gray-50 p-6 rounded-full">
+                    <Screwdriver size={48} className="text-gray-300" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-600">No Data Yet</p>
+                    <p className="text-xs text-gray-400 max-w-[200px] mx-auto mt-1">
+                      Start describing the project to the AI to build your quote.
+                    </p>
+                  </div>
                 </div>
               ) : (
-                <>
-                  {/* Specifications Tab */}
+                <div className="space-y-6">
+                  
+                  {/* --- SPECS TAB --- */}
                   {activeTab === 'specs' && (
-                    <div className="space-y-4">
-                      {quoteData?.width && quoteData?.height && (
-                        <div className="border rounded-lg p-3 bg-gray-50">
-                          <label className="text-xs uppercase text-gray-500 font-semibold block mb-1">
-                            Display Dimensions
-                          </label>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {quoteData.width} × {quoteData.height} ft
-                          </p>
-                          {quoteData.screenArea && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              {quoteData.screenArea.toLocaleString()} sq ft
-                            </p>
-                          )}
+                    <div className="animate-fadeIn">
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
+                        <SectionHeader title="Display Configuration" icon={Screwdriver} />
+                        <div className="grid grid-cols-2 gap-4">
+                          <DetailRow label="Dimensions" value={`${quoteData.width || 0}' × ${quoteData.height || 0}'`} />
+                          <DetailRow label="Total Area" value={`${Number(quoteData.screenArea || 0).toLocaleString()} sq ft`} />
+                          <DetailRow label="Pixel Pitch" value={quoteData.pixelPitch ? `${quoteData.pixelPitch}mm` : null} />
+                          <DetailRow label="Shape" value={quoteData.shape} />
+                          <DetailRow label="Product Type" value={quoteData.productClass} />
+                          <DetailRow label="Aspect Ratio" value={quoteData.width && quoteData.height ? (quoteData.width / quoteData.height).toFixed(2) : null} />
                         </div>
-                      )}
+                      </div>
 
-                      {quoteData?.environment && (
-                        <div className="border rounded-lg p-3 bg-gray-50">
-                          <label className="text-xs uppercase text-gray-500 font-semibold block mb-1">
-                            Environment
-                          </label>
-                          <p className="text-lg font-bold text-gray-900">
-                            {quoteData.environment}
-                          </p>
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <SectionHeader title="Environment & Access" icon={Wrench} />
+                        <div className="grid grid-cols-2 gap-4">
+                          <DetailRow label="Environment" value={quoteData.environment} />
+                          <DetailRow label="Mounting" value={quoteData.mountingType} />
+                          <DetailRow label="Service Access" value={quoteData.serviceAccess} />
+                          <DetailRow label="Service Level" value={quoteData.serviceLevel} />
                         </div>
-                      )}
-
-                      {quoteData?.pixelPitch && (
-                        <div className="border rounded-lg p-3 bg-gray-50">
-                          <label className="text-xs uppercase text-gray-500 font-semibold block mb-1">
-                            Pixel Pitch
-                          </label>
-                          <p className="text-lg font-bold text-gray-900">
-                            {quoteData.pixelPitch} mm
-                          </p>
-                        </div>
-                      )}
-
-                      {quoteData?.productCategory && (
-                        <div className="border rounded-lg p-3 bg-gray-50">
-                          <label className="text-xs uppercase text-gray-500 font-semibold block mb-1">
-                            Product Category
-                          </label>
-                          <p className="text-lg font-bold text-gray-900">
-                            {quoteData.productCategory}
-                          </p>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   )}
 
-                  {/* Pricing Tab */}
+                  {/* --- LOGISTICS TAB --- */}
+                  {activeTab === 'logistics' && (
+                    <div className="animate-fadeIn">
+                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
+                        <SectionHeader title="Site Conditions" icon={Wrench} />
+                        <div className="space-y-1">
+                           <DetailRow label="Structure Status" value={quoteData.steelType} subtext={quoteData.steelType === 'New' ? '+ Structure Cost Included' : null} />
+                           <DetailRow label="Labor Jurisdiction" value={quoteData.laborType} subtext={quoteData.laborType === 'Union' ? '+ Premium Rate Applied' : null} />
+                           <DetailRow label="Power Distance" value={quoteData.powerDistance} />
+                           <DetailRow label="Install Complexity" value={quoteData.installComplexity} />
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <SectionHeader title="Commercial Terms" icon={FileText} />
+                        <div className="space-y-1">
+                           <DetailRow label="Permits" value={quoteData.permits} />
+                           <DetailRow label="Surety Bond" value={quoteData.bondRequired} />
+                           <DetailRow label="Warranty" value="5 Year Standard" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* --- PRICING TAB --- */}
                   {activeTab === 'pricing' && (
-                    <div className="space-y-3">
-                      {quoteData?.hardwareCost !== undefined && (
-                        <div className="border-b pb-3">
-                          <label className="text-xs uppercase text-gray-500 font-semibold block mb-1">
-                            Hardware (Panels + Drivers)
-                          </label>
-                          <p className="text-lg font-bold text-gray-900">
-                            ${quoteData.hardwareCost.toLocaleString()}
-                          </p>
+                    <div className="animate-fadeIn space-y-4">
+                      {/* Price Card */}
+                      <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-5 text-white shadow-lg relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                          <CurrencyDollar size={100} weight="fill" />
                         </div>
-                      )}
+                        <label className="text-xs uppercase text-blue-200 font-bold tracking-wider block mb-1">
+                          Estimated Client Price
+                        </label>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-bold tracking-tight">
+                            {fmtCurrency(quoteData.finalPrice)}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex gap-3 text-xs text-blue-100">
+                          <span className="bg-white/20 px-2 py-1 rounded">Margin: {quoteData.marginPercent || 30}%</span>
+                          <span className="bg-white/20 px-2 py-1 rounded">GP: {fmtCurrency(quoteData.grossProfit)}</span>
+                        </div>
+                      </div>
 
-                      {quoteData?.structuralCost !== undefined && (
-                        <div className="border-b pb-3">
-                          <label className="text-xs uppercase text-gray-500 font-semibold block mb-1">
-                            Structural Materials (20%)
-                          </label>
-                          <p className="text-lg font-bold text-gray-900">
-                            ${quoteData.structuralCost.toLocaleString()}
-                          </p>
-                        </div>
-                      )}
-
-                      {quoteData?.laborCost !== undefined && (
-                        <div className="border-b pb-3">
-                          <label className="text-xs uppercase text-gray-500 font-semibold block mb-1">
-                            Labor & Installation
-                          </label>
-                          <p className="text-lg font-bold text-gray-900">
-                            ${quoteData.laborCost.toLocaleString()}
-                          </p>
-                        </div>
-                      )}
-
-                      {quoteData?.pmFee !== undefined && (
-                        <div className="border-b pb-3">
-                          <label className="text-xs uppercase text-gray-500 font-semibold block mb-1">
-                            PM & Engineering (8%)
-                          </label>
-                          <p className="text-lg font-bold text-gray-900">
-                            ${quoteData.pmFee.toLocaleString()}
-                          </p>
-                        </div>
-                      )}
-
-                      {quoteData?.totalCost !== undefined && (
-                        <div className="bg-gray-100 rounded-lg p-3 border border-gray-300 mb-3">
-                          <label className="text-xs uppercase text-gray-600 font-semibold block mb-1">
-                            Total Cost Basis
-                          </label>
-                          <p className="text-xl font-bold text-gray-900">
-                            ${quoteData.totalCost.toLocaleString()}
-                          </p>
-                        </div>
-                      )}
-
-                      {quoteData?.finalPrice !== undefined && (
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border-2 border-blue-300">
-                          <label className="text-xs uppercase text-blue-700 font-bold block mb-2">
-                            Client Price ({quoteData.marginPercent || 30}% Margin)
-                          </label>
-                          <p className="text-3xl font-bold text-blue-900">
-                            ${quoteData.finalPrice.toLocaleString()}
-                          </p>
-                          {quoteData?.grossProfit !== undefined && (
-                            <p className="text-sm text-blue-700 mt-2">
-                              Gross Profit: ${quoteData.grossProfit.toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      )}
+                      {/* Cost Breakdown */}
+                      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                         <div className="bg-gray-50 px-4 py-2 border-b border-gray-100">
+                           <h5 className="text-xs font-bold text-gray-500 uppercase">Cost Breakdown (Waterfall)</h5>
+                         </div>
+                         <div className="divide-y divide-gray-100 p-4">
+                            <div className="flex justify-between py-2">
+                              <span className="text-sm text-gray-600">Hardware (LED + Power)</span>
+                              <span className="text-sm font-semibold">{fmtCurrency(quoteData.hardwareCost)}</span>
+                            </div>
+                            <div className="flex justify-between py-2">
+                              <span className="text-sm text-gray-600">Structural Materials</span>
+                              <span className="text-sm font-semibold">{fmtCurrency(quoteData.structuralCost)}</span>
+                            </div>
+                            <div className="flex justify-between py-2">
+                              <span className="text-sm text-gray-600">Labor & Install</span>
+                              <span className="text-sm font-semibold">{fmtCurrency(quoteData.laborCost)}</span>
+                            </div>
+                            <div className="flex justify-between py-2">
+                              <span className="text-sm text-gray-600">PM & Engineering</span>
+                              <span className="text-sm font-semibold">{fmtCurrency(quoteData.pmFee)}</span>
+                            </div>
+                             <div className="flex justify-between py-2">
+                              <span className="text-sm text-gray-600">Contingency & Bond</span>
+                              <span className="text-sm font-semibold">
+                                {fmtCurrency((quoteData.contingency || 0) + (quoteData.bondCost || 0))}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-3 mt-2 bg-gray-50 -mx-4 px-4 border-t border-gray-200">
+                              <span className="text-sm font-bold text-gray-800">Total Cost Basis</span>
+                              <span className="text-sm font-bold text-gray-900">{fmtCurrency(quoteData.totalCost)}</span>
+                            </div>
+                         </div>
+                      </div>
                     </div>
                   )}
-                </>
+
+                </div>
               )}
             </div>
 
-            {/* Action Buttons */}
-            {hasQuoteData && (
-              <div className="border-t p-4 space-y-2 bg-gray-50">
-                <button
-                  onClick={handleGenerateExcel}
-                  disabled={!isComplete || generating}
-                  className={`
-                    w-full font-semibold py-3 rounded-lg flex items-center justify-center gap-2
-                    transition-all duration-200
-                    ${
-                      !isComplete || generating
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-green-600 hover:bg-green-700 text-white active:scale-95'
-                    }
-                  `}
-                >
-                  <FileText size={18} />
-                  {generating ? 'Generating...' : 'Generate Excel Audit'}
-                </button>
-
-                <button
+            {/* Footer Actions */}
+            <div className="bg-white p-5 border-t border-gray-200 shrink-0 space-y-3 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+              <button
+                onClick={handleGenerateExcel}
+                disabled={!isComplete || generating}
+                className={`
+                  w-full py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2
+                  transition-all duration-200 shadow-sm
+                  ${!isComplete || generating
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700 text-white hover:shadow hover:-translate-y-0.5 active:translate-y-0'}
+                `}
+              >
+                <div className="bg-white/20 p-1 rounded">
+                   <FileText size={18} weight="bold" />
+                </div>
+                {generating ? 'Processing...' : 'Generate Excel Cost Audit'}
+              </button>
+              
+               <button
                   onClick={handleDownloadPdf}
                   disabled={!isComplete || generating}
                   className={`
-                    w-full font-semibold py-3 rounded-lg flex items-center justify-center gap-2
-                    transition-all duration-200
-                    ${
-                      !isComplete || generating
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
-                    }
+                    w-full py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2
+                    transition-all duration-200 shadow-sm border
+                    ${!isComplete || generating
+                      ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'}
                   `}
                 >
-                  <Download size={18} />
-                  {generating ? 'Generating...' : 'Download PDF'}
-                </button>
-              </div>
-            )}
+                  <Download size={18} weight="bold" />
+                  {generating ? 'Processing...' : 'Download Client PDF'}
+              </button>
+            </div>
           </>
         )}
       </div>
