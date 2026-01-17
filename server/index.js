@@ -56,6 +56,7 @@ const { publicProposalsEndpoints } = require("./endpoints/publicProposals");
 const { clientPortalEndpoints } = require("./endpoints/clientPortal");
 const { documentProcessorEndpoints } = require("./routes/documentProcessor");
 const { httpLogger } = require("./middleware/httpLogger");
+const proposalsEndpoints = require("./endpoints/proposals");
 const app = express();
 const apiRouter = express.Router();
 const FILE_LIMIT = "3GB";
@@ -196,6 +197,7 @@ apiRouter.use("/exports", express.static(path.join(__dirname, "storage/exports")
 
 systemEndpoints(apiRouter);
 apiRouter.use("/system", systemDownloadEndpoints);
+proposalsEndpoints(apiRouter);
 extensionEndpoints(apiRouter);
 workspaceEndpoints(apiRouter);
 workspaceThreadEndpoints(apiRouter);

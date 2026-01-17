@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Excel Download</title>
+</head>
+<body>
+    <h1>Test Excel Download</h1>
+    <button onclick="testDownload()">Download Excel</button>
+    <pre id="output"></pre>
+
+    <script>
+        async function testDownload() {
+            const output = document.getElementById('output');
+            output.innerText = 'Testing Excel download...\n';
+
+            const quoteData = {
+                clientName: "Test Client",
+                screenWidth: 40,
+                screenHeight: 20,
+                screenArea: 800,
+                productType: "Test Product",
+                pixelPitch: 4,
+                basePricePerSqFt: 1800,
+                hardwareCost: 1440000,
+                structuralCost: 288000,
+                laborCost: 150000,
+                totalCost: 2000000,
+                finalPrice: 2857143,
+                grossProfit: 857143,
+                quoteDate: new Date().toISOString().split('T')[0]
+            };
+
+            output.innerText += 'Sending data:\n' + JSON.stringify(quoteData, null, 2) + '\n\n';
+
+            try {
+                const response = await fetch('/api/workspace/anc/download-audit-excel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ quoteData })
+                });
+
+                output.innerText += 'Response status: ' + response.status + '\n';
+                output.innerText += 'Response headers:\n';
+                for (let [key, value] of response.headers) {
+                    output.innerText += '  ' + key + ': ' + value + '\n';
+                }
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    output.innerText += '\n✅ Success! File size: ' + blob.size + ' bytes\n';
+                    
+                    // Download the file
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'test_quote.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    const text = await response.text();
+                    output.innerText += '\n❌ Error:\n' + text + '\n';
+                }
+            } catch (error) {
+                output.innerText += '\n❌ Exception: ' + error.message + '\n' + error.stack;
+            }
+        }
+    </script>
+</body>
+</html>
