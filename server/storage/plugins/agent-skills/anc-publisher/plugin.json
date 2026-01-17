@@ -1,0 +1,27 @@
+{
+  "hubId": "anc-publisher",
+  "name": "ANC_DOCUMENT_PUBLISHER",
+  "active": true,
+  "imported": true,
+  "description": "Publishes a professional markdown proposal to the current Workspace Thread Notes (Doc Editor). Use this after generating the 'Pretty' summary in chat.",
+  "entrypoint": {
+    "file": "handler.js",
+    "params": {
+      "content": {
+        "description": "The Markdown content of the proposal.",
+        "type": "string"
+      },
+      "title": {
+        "description": "The title of the document (e.g. 'MSG Ribbon Board Proposal').",
+        "type": "string"
+      }
+    }
+  },
+  "examples": [
+    {
+      "prompt": "Publish this proposal to the workspace document.",
+      "call": "{\"title\": \"Project MSG Proposal\", \"content\": \"# Proposal...\"}"
+    }
+  ],
+  "setup_instructions": "This tool requires a thread-id context which is automatically provided when called via @agent in a workspace thread."
+}

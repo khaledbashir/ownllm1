@@ -1,0 +1,27 @@
+{
+    "schema": "skill-1.0.0",
+    "version": "1.0.0",
+    "hubId": "anc-audit-generator",
+    "name": "ANC Audit Generator",
+    "description": "Generates the internal audit Excel file via n8n integration.",
+    "active": true,
+    "imported": true,
+    "author": "@VibeCoder",
+    "author_url": "https://anc.com",
+    "license": "Private",
+    "entrypoint": {
+        "file": "handler.js",
+        "params": {
+            "quoteData": {
+                "type": "object",
+                "description": "The full JSON object containing pricing breakdown."
+            }
+        }
+    },
+    "examples": [
+        {
+            "prompt": "The user accepted the quote. Generate the audit file.",
+            "call": "{\"quoteData\": {\"clientName\": \"ABC\", \"total\": 10000}}"
+        }
+    ]
+}

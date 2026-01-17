@@ -1,0 +1,26 @@
+{
+  "hubId": "anc-pdf-export",
+  "name": "ANC_PDF_OFFICIAL_PROPOSAL",
+  "active": true,
+  "imported": true,
+  "description": "Generates a branded ANC Sports PDF Proposal. Use this as the final step to provide the 'Pretty' document to the user.",
+  "entrypoint": {
+    "file": "handler.js",
+    "params": {
+      "markdown": {
+        "description": "The Markdown content for the proposal body.",
+        "type": "string"
+      },
+      "project_name": {
+        "description": "Name of the project for the header.",
+        "type": "string"
+      }
+    }
+  },
+  "examples": [
+    {
+      "prompt": "Export this as a professional ANC PDF.",
+      "call": "{\"project_name\": \"MSG Ribbon Board\", \"markdown\": \"# Proposal...\"}"
+    }
+  ]
+}

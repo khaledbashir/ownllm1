@@ -201,7 +201,7 @@ module.exports.runtime = {
       // ========================================
       const fs = require('fs');
       const path = require('path');
-      
+
       const outputDir = '/app/server/storage/documents';
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
