@@ -7,11 +7,7 @@ Use this prompt to instantly verify the **Waterfall Pricing Logic** and **21-Fie
 ### 📋 COPY & PASTE THIS INTO CHAT:
 
 ```text
-I need a formal proposal for a new stadium project.
-Details:
-- Product: Outdoor Scoreboard
-- Size: 40ft wide x 20ft high
-- Tech: 10mm Pixel Pitch, Rear Access
+ 10mm Pixel Pitch, Rear Access
 - Structure: Curved shape on New Steel structure
 - Logistics: Union Labor required, Power is Far (over 100ft)
 - Commercials: Bond Required, ANC handles Permits, Gold Service Level
@@ -19,7 +15,11 @@ Details:
 ```
 
 ### ✅ EXPECTED RESULT (In the Slider)
-
+I need a formal proposal for a new stadium project.
+Details:
+- Product: Outdoor Scoreboard
+- Size: 40ft wide x 20ft high
+- Tech:
 1. **Specs Tab:**
    - [x] Size: 40' x 20' (800 sq ft)
    - [x] Env: Outdoor
