@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { CaretLeft, Download, FileText, X, CurrencyDollar, Screwdriver, Wrench, ChartLineUp, Calculator, ShieldCheck, Clock, Zap } from '@phosphor-icons/react';
+import { CaretLeft, Download, FileText, X, CurrencyDollar, Screwdriver, Wrench, ChartLineUp, Calculator, ShieldCheck, Clock, Lightning } from '@phosphor-icons/react';
 import { toast } from 'react-toastify';
 import { calculateANCQuote } from '@/utils/ancCalculator';
 import { ANCLogo } from './ANCLogo';
@@ -434,7 +434,7 @@ export const ProposalPreviewSlider = ({
 
                       <div className="grid grid-cols-3 gap-3 mb-8">
                         <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-xl border border-slate-100 text-center gap-1 group">
-                          <Zap size={16} className="text-amber-500 group-hover:scale-110 transition-transform" />
+                          <Lightning size={16} className="text-amber-500 group-hover:scale-110 transition-transform" />
                           <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none">Professional<br />Grade</span>
                         </div>
                         <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-xl border border-slate-100 text-center gap-1 group">
