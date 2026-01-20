@@ -830,11 +830,10 @@ export default function ChatContainer({
         <div className="flex items-center border-b border-theme-sidebar-border bg-theme-bg-secondary/80 px-2">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
-              activeTab === "chat"
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
                 ? "border-theme-text-primary text-theme-text-primary"
                 : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-            }`}
+              }`}
           >
             <ChatText size={18} />
             Chat
@@ -842,11 +841,10 @@ export default function ChatContainer({
           {threadSlug && (
             <button
               onClick={() => setActiveTab("notes")}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
-                activeTab === "notes"
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
                   ? "border-theme-text-primary text-theme-text-primary"
                   : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-              }`}
+                }`}
             >
               <FileText size={18} />
               Doc
@@ -854,11 +852,10 @@ export default function ChatContainer({
           )}
           <button
             onClick={() => setActiveTab("forms")}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${
-              activeTab === "forms"
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "forms"
                 ? "border-theme-text-primary text-theme-text-primary"
                 : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
-            }`}
+              }`}
           >
             <NotePencil size={18} />
             Forms
@@ -867,7 +864,7 @@ export default function ChatContainer({
       )}
 
       {/* Content Area */}
-      <div 
+      <div
         className="flex-1 overflow-y-auto no-scroll transition-all duration-300"
         style={{ marginRight: previewSliderOpen && !isMobile ? '450px' : '0' }}
       >
@@ -963,6 +960,7 @@ export default function ChatContainer({
         onGenerateExcel={handleGenerateExcel}
         onDownloadPdf={handleDownloadPdf}
         isGenerating={generatingProposal}
+        onUpdateQuoteData={(data) => setQuoteData(prev => ({ ...prev, ...data }))}
       />
     </div>
   );

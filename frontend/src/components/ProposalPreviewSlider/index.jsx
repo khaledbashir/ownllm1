@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { CaretLeft, Download, FileText, X, CurrencyDollar, Screwdriver, Wrench } from '@phosphor-icons/react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { CaretLeft, Download, FileText, X, CurrencyDollar, Screwdriver, Wrench, ChartLineUp, Calculator } from '@phosphor-icons/react';
 import { toast } from 'react-toastify';
+import { calculateANCQuote } from '@/utils/ancCalculator';
 
 const DetailRow = ({ label, value, subtext }) => {
   if (value === undefined || value === null || value === '') return null;
@@ -23,15 +24,29 @@ const SectionHeader = ({ title, icon: Icon }) => (
 );
 
 export const ProposalPreviewSlider = ({
-  quoteData = {},
+  quoteData: externalQuoteData = {},
   isOpen = false,
-  onToggle = () => {},
-  onGenerateExcel = async () => {},
-  onDownloadPdf = async () => {},
+  onToggle = () => { },
+  onGenerateExcel = async () => { },
+  onDownloadPdf = async () => { },
   isGenerating = false,
+  onUpdateQuoteData = (data) => { }, // Callback to sync overrides
 }) => {
   const [activeTab, setActiveTab] = useState('specs');
   const [generating, setGenerating] = useState(false);
+  const [localOverrides, setLocalOverrides] = useState({});
+  const [isManualMode, setIsManualMode] = useState(false);
+
+  // Merge external data with local overrides and re-calculate
+  const quoteData = useMemo(() => {
+    const base = { ...externalQuoteData, ...localOverrides };
+    return calculateANCQuote(base);
+  }, [externalQuoteData, localOverrides]);
+
+  const handleOverride = (field, value) => {
+    setLocalOverrides(prev => ({ ...prev, [field]: value }));
+    onUpdateQuoteData({ ...localOverrides, [field]: value });
+  };
 
   const handleGenerateExcel = async () => {
     setGenerating(true);
@@ -139,21 +154,37 @@ export const ProposalPreviewSlider = ({
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-5 bg-white">
-              {!hasQuoteData ? (
-                <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 space-y-4">
+              {!hasQuoteData && !isManualMode ? (
+                <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 space-y-6">
                   <div className="bg-gray-50 p-6 rounded-full">
                     <Screwdriver size={48} className="text-gray-300" />
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-600">No Data Yet</p>
-                    <p className="text-xs text-gray-400 max-w-[200px] mx-auto mt-1">
-                      Start describing the project to the AI to build your quote.
-                    </p>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="font-medium text-gray-600 uppercase tracking-widest text-xs">Awaiting Data Extraction</p>
+                      <p className="text-[10px] text-gray-400 max-w-[200px] mx-auto mt-2 leading-relaxed">
+                        The AI will extract specs from your chat.
+                        Or, initialize the quote engine manually.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsManualMode(true);
+                        setActiveTab('pricing');
+                        handleOverride('width', 20);
+                        handleOverride('height', 10);
+                        handleOverride('pixelPitch', 4);
+                      }}
+                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md active:scale-95"
+                    >
+                      <Calculator size={14} weight="bold" />
+                      Initialize Manual Quote
+                    </button>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  
+
                   {/* --- SPECS TAB --- */}
                   {activeTab === 'specs' && (
                     <div className="animate-fadeIn">
@@ -184,22 +215,22 @@ export const ProposalPreviewSlider = ({
                   {/* --- LOGISTICS TAB --- */}
                   {activeTab === 'logistics' && (
                     <div className="animate-fadeIn">
-                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
+                      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
                         <SectionHeader title="Site Conditions" icon={Wrench} />
                         <div className="space-y-1">
-                           <DetailRow label="Structure Status" value={quoteData.steelType} subtext={quoteData.steelType === 'New' ? '+ Structure Cost Included' : null} />
-                           <DetailRow label="Labor Jurisdiction" value={quoteData.laborType} subtext={quoteData.laborType === 'Union' ? '+ Premium Rate Applied' : null} />
-                           <DetailRow label="Power Distance" value={quoteData.powerDistance} />
-                           <DetailRow label="Install Complexity" value={quoteData.installComplexity} />
+                          <DetailRow label="Structure Status" value={quoteData.steelType} subtext={quoteData.steelType === 'New' ? '+ Structure Cost Included' : null} />
+                          <DetailRow label="Labor Jurisdiction" value={quoteData.laborType} subtext={quoteData.laborType === 'Union' ? '+ Premium Rate Applied' : null} />
+                          <DetailRow label="Power Distance" value={quoteData.powerDistance} />
+                          <DetailRow label="Install Complexity" value={quoteData.installComplexity} />
                         </div>
                       </div>
 
                       <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                         <SectionHeader title="Commercial Terms" icon={FileText} />
                         <div className="space-y-1">
-                           <DetailRow label="Permits" value={quoteData.permits} />
-                           <DetailRow label="Surety Bond" value={quoteData.bondRequired} />
-                           <DetailRow label="Warranty" value="5 Year Standard" />
+                          <DetailRow label="Permits" value={quoteData.permits} />
+                          <DetailRow label="Surety Bond" value={quoteData.bondRequired} />
+                          <DetailRow label="Warranty" value="5 Year Standard" />
                         </div>
                       </div>
                     </div>
@@ -207,59 +238,133 @@ export const ProposalPreviewSlider = ({
 
                   {/* --- PRICING TAB --- */}
                   {activeTab === 'pricing' && (
-                    <div className="animate-fadeIn space-y-4">
-                      {/* Price Card */}
-                      <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-5 text-white shadow-lg relative overflow-hidden">
+                    <div className="animate-fadeIn space-y-6">
+                      {/* Interactive Controls (The "Vibe") */}
+                      <div className="bg-gray-900 border border-slate-700 rounded-xl p-6 text-white shadow-xl space-y-6 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full group-hover:bg-blue-500/20 transition-colors duration-700" />
+
+                        <div className="relative z-10 space-y-4">
+                          <header className="flex justify-between items-center mb-2">
+                            <div className="flex items-center gap-2">
+                              <ChartLineUp size={16} className="text-blue-400" />
+                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Precision Scaling</span>
+                            </div>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Manual Overrides</span>
+                          </header>
+
+                          {/* Pixel Pitch Slider */}
+                          <div className="space-y-3">
+                            <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
+                              <span>Pixel Pitch (mm)</span>
+                              <span className="text-blue-200">Level {quoteData.pixelPitch || 4}</span>
+                            </div>
+                            <input
+                              type="range" min="1.0" max="10.0" step="0.5"
+                              value={quoteData.pixelPitch || 4}
+                              onChange={(e) => handleOverride('pixelPitch', parseFloat(e.target.value))}
+                              className="w-full h-1 bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
+                            />
+                          </div>
+
+                          {/* Margin Slider */}
+                          <div className="space-y-3">
+                            <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
+                              <span>Target Margin (%)</span>
+                              <span className="text-emerald-400">{quoteData.marginPercent || 30}%</span>
+                            </div>
+                            <input
+                              type="range" min="10" max="60" step="1"
+                              value={quoteData.marginPercent || 30}
+                              onChange={(e) => handleOverride('marginPercent', parseInt(e.target.value))}
+                              className="w-full h-1 bg-slate-800 rounded-full appearance-none cursor-pointer accent-emerald-500"
+                            />
+                          </div>
+
+                          {/* Base Dimensions (Quick Toggles) */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold uppercase text-slate-500">Width (ft)</label>
+                              <input
+                                type="number"
+                                value={quoteData.width || 0}
+                                onChange={(e) => handleOverride('width', parseFloat(e.target.value))}
+                                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm font-bold text-white outline-none focus:border-blue-500"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold uppercase text-slate-500">Height (ft)</label>
+                              <input
+                                type="number"
+                                value={quoteData.height || 0}
+                                onChange={(e) => handleOverride('height', parseFloat(e.target.value))}
+                                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm font-bold text-white outline-none focus:border-blue-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Main Price Display (The "Vibe" result) */}
+                      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-6 text-white shadow-2xl relative overflow-hidden transition-all duration-300">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
-                          <CurrencyDollar size={100} weight="fill" />
+                          <CurrencyDollar size={120} weight="fill" />
                         </div>
-                        <label className="text-xs uppercase text-blue-200 font-bold tracking-wider block mb-1">
-                          Estimated Client Price
-                        </label>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold tracking-tight">
-                            {fmtCurrency(quoteData.finalPrice)}
-                          </span>
-                        </div>
-                        <div className="mt-3 flex gap-3 text-xs text-blue-100">
-                          <span className="bg-white/20 px-2 py-1 rounded">Margin: {quoteData.marginPercent || 30}%</span>
-                          <span className="bg-white/20 px-2 py-1 rounded">GP: {fmtCurrency(quoteData.grossProfit)}</span>
+                        <div className="relative z-10 flex flex-col items-center py-2">
+                          <label className="text-[10px] uppercase text-blue-100 font-extrabold tracking-[0.3em] block mb-4">
+                            Estimated Client Price
+                          </label>
+                          <div className="flex items-baseline gap-1 animate-pulse-subtle">
+                            <span className="text-6xl font-black tracking-tighter tabular-nums drop-shadow-lg">
+                              {fmtCurrency(quoteData.finalPrice)}
+                            </span>
+                          </div>
+
+                          <div className="mt-8 flex gap-3 w-full">
+                            <div className="flex-1 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-lg border border-white/5">
+                              <span className="text-[9px] font-bold text-blue-200 uppercase block mb-1">Gross Profit</span>
+                              <span className="text-sm font-bold tabular-nums">{fmtCurrency(quoteData.grossProfit)}</span>
+                            </div>
+                            <div className="flex-1 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-lg border border-white/5">
+                              <span className="text-[9px] font-bold text-blue-200 uppercase block mb-1">Total sq ft</span>
+                              <span className="text-sm font-bold tabular-nums">{Math.round(quoteData.screenArea || 0).toLocaleString()}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
                       {/* Cost Breakdown */}
                       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                         <div className="bg-gray-50 px-4 py-2 border-b border-gray-100">
-                           <h5 className="text-xs font-bold text-gray-500 uppercase">Cost Breakdown (Waterfall)</h5>
-                         </div>
-                         <div className="divide-y divide-gray-100 p-4">
-                            <div className="flex justify-between py-2">
-                              <span className="text-sm text-gray-600">Hardware (LED + Power)</span>
-                              <span className="text-sm font-semibold">{fmtCurrency(quoteData.hardwareCost)}</span>
-                            </div>
-                            <div className="flex justify-between py-2">
-                              <span className="text-sm text-gray-600">Structural Materials</span>
-                              <span className="text-sm font-semibold">{fmtCurrency(quoteData.structuralCost)}</span>
-                            </div>
-                            <div className="flex justify-between py-2">
-                              <span className="text-sm text-gray-600">Labor & Install</span>
-                              <span className="text-sm font-semibold">{fmtCurrency(quoteData.laborCost)}</span>
-                            </div>
-                            <div className="flex justify-between py-2">
-                              <span className="text-sm text-gray-600">PM & Engineering</span>
-                              <span className="text-sm font-semibold">{fmtCurrency(quoteData.pmFee)}</span>
-                            </div>
-                             <div className="flex justify-between py-2">
-                              <span className="text-sm text-gray-600">Contingency & Bond</span>
-                              <span className="text-sm font-semibold">
-                                {fmtCurrency((quoteData.contingency || 0) + (quoteData.bondCost || 0))}
-                              </span>
-                            </div>
-                            <div className="flex justify-between py-3 mt-2 bg-gray-50 -mx-4 px-4 border-t border-gray-200">
-                              <span className="text-sm font-bold text-gray-800">Total Cost Basis</span>
-                              <span className="text-sm font-bold text-gray-900">{fmtCurrency(quoteData.totalCost)}</span>
-                            </div>
-                         </div>
+                        <div className="bg-gray-50 px-4 py-2 border-b border-gray-100">
+                          <h5 className="text-xs font-bold text-gray-500 uppercase">Cost Breakdown (Waterfall)</h5>
+                        </div>
+                        <div className="divide-y divide-gray-100 p-4">
+                          <div className="flex justify-between py-2">
+                            <span className="text-sm text-gray-600">Hardware (LED + Power)</span>
+                            <span className="text-sm font-semibold">{fmtCurrency(quoteData.hardwareCost)}</span>
+                          </div>
+                          <div className="flex justify-between py-2">
+                            <span className="text-sm text-gray-600">Structural Materials</span>
+                            <span className="text-sm font-semibold">{fmtCurrency(quoteData.structuralCost)}</span>
+                          </div>
+                          <div className="flex justify-between py-2">
+                            <span className="text-sm text-gray-600">Labor & Install</span>
+                            <span className="text-sm font-semibold">{fmtCurrency(quoteData.laborCost)}</span>
+                          </div>
+                          <div className="flex justify-between py-2">
+                            <span className="text-sm text-gray-600">PM & Engineering</span>
+                            <span className="text-sm font-semibold">{fmtCurrency(quoteData.pmFee)}</span>
+                          </div>
+                          <div className="flex justify-between py-2">
+                            <span className="text-sm text-gray-600">Contingency & Bond</span>
+                            <span className="text-sm font-semibold">
+                              {fmtCurrency((quoteData.contingency || 0) + (quoteData.bondCost || 0))}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-3 mt-2 bg-gray-50 -mx-4 px-4 border-t border-gray-200">
+                            <span className="text-sm font-bold text-gray-800">Total Cost Basis</span>
+                            <span className="text-sm font-bold text-gray-900">{fmtCurrency(quoteData.totalCost)}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -282,24 +387,24 @@ export const ProposalPreviewSlider = ({
                 `}
               >
                 <div className="bg-white/20 p-1 rounded">
-                   <FileText size={18} weight="bold" />
+                  <FileText size={18} weight="bold" />
                 </div>
                 {generating ? 'Processing...' : 'Generate Excel Cost Audit'}
               </button>
-              
-               <button
-                  onClick={handleDownloadPdf}
-                  disabled={!isComplete || generating}
-                  className={`
+
+              <button
+                onClick={handleDownloadPdf}
+                disabled={!isComplete || generating}
+                className={`
                     w-full py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2
                     transition-all duration-200 shadow-sm border
                     ${!isComplete || generating
-                      ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'}
+                    ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'}
                   `}
-                >
-                  <Download size={18} weight="bold" />
-                  {generating ? 'Processing...' : 'Download Client PDF'}
+              >
+                <Download size={18} weight="bold" />
+                {generating ? 'Processing...' : 'Download Client PDF'}
               </button>
             </div>
           </>
