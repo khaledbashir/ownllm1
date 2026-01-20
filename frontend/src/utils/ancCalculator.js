@@ -7,7 +7,7 @@ const RULES = {
     hardware: {
         baseRate: (input) => {
             let rate = 800; // Default Indoor/Standard
-            if (input.productType === 'Ribbon') rate = 1200;
+            if (input.productClass === 'Ribbon Board' || input.productType === 'Ribbon') rate = 1200;
             if (input.pixelPitch <= 4) rate += 400; // Fine pitch premium
             if (input.pixelPitch <= 2.5) rate += 800; // Ultra fine
             if (input.environment === 'Outdoor') rate += 200; // Weatherproofing

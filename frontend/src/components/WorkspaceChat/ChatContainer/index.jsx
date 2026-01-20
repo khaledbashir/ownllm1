@@ -445,8 +445,8 @@ export default function ChatContainer({
         return merged;
       });
 
-      // Auto-open slider when we have meaningful data
-      if (newQuoteData.fields && Object.keys(newQuoteData.fields).length > 0) {
+      // Auto-open slider when we have meaningful data (at least 1 valid field)
+      if (Object.keys(newQuoteData).length > 0) {
         setPreviewSliderOpen(true);
       }
     }
