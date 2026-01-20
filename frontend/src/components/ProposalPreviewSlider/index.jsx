@@ -112,11 +112,7 @@ export const ProposalPreviewSlider = ({
   }, [externalQuoteData]);
 
   const hasQuoteData = hasAidata || isManualMode;
-
-  // Consider 'complete' if we have a calculated price and area
   const isComplete = quoteData?.finalPrice > 0 && quoteData?.screenArea > 0;
-
-  // Formatting helper
   const fmtCurrency = (val) => val ? `$${val.toLocaleString()}` : '-';
 
   return (
@@ -129,7 +125,7 @@ export const ProposalPreviewSlider = ({
         />
       )}
 
-      {/* Floating Toggle Button (Always visible logic) */}
+      {/* Floating Toggle Button */}
       <button
         onClick={() => onToggle()}
         className={`fixed right-0 top-32 transition-all duration-300 z-[41] shadow-lg flex items-center gap-2
@@ -153,7 +149,7 @@ export const ProposalPreviewSlider = ({
       >
         {isOpen && (
           <>
-            {/* Header */}
+            {/* Header section (Sticky) */}
             <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-5 border-b border-slate-700 shadow-sm shrink-0">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -174,7 +170,7 @@ export const ProposalPreviewSlider = ({
               </p>
             </div>
 
-            {/* Tabs */}
+            {/* Tabs section (Sticky) */}
             <div className="flex border-b border-gray-200 bg-gray-50 shrink-0">
               {['specs', 'logistics', 'pricing'].map((tab) => (
                 <button
@@ -192,7 +188,7 @@ export const ProposalPreviewSlider = ({
               ))}
             </div>
 
-            {/* Scrollable Content */}
+            {/* Scrollable Content section */}
             <div className="flex-1 overflow-y-auto p-5 bg-white">
               {!hasQuoteData && !isManualMode ? (
                 <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 space-y-6">
@@ -203,8 +199,7 @@ export const ProposalPreviewSlider = ({
                     <div>
                       <p className="font-medium text-gray-600 uppercase tracking-widest text-xs">Awaiting Data Extraction</p>
                       <p className="text-[10px] text-gray-400 max-w-[200px] mx-auto mt-2 leading-relaxed">
-                        The AI will extract specs from your chat.
-                        Or, initialize the quote engine manually.
+                        The AI will extract specs from your chat. Or, initialize the quote engine manually.
                       </p>
                     </div>
                     <button
@@ -215,7 +210,7 @@ export const ProposalPreviewSlider = ({
                         handleOverride('height', 10);
                         handleOverride('pixelPitch', 4);
                       }}
-                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md active:scale-95"
+                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-md"
                     >
                       <Calculator size={14} weight="bold" />
                       Initialize Manual Quote
@@ -224,18 +219,15 @@ export const ProposalPreviewSlider = ({
                 </div>
               ) : (
                 <div className="space-y-6">
-
                   {/* --- SPECS TAB --- */}
                   {activeTab === 'specs' && (
                     <div className="animate-fadeIn font-inter">
                       <BrandingHeader quoteData={quoteData} />
-
                       <div className="mb-8 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
                         <p className="text-[11px] text-slate-600 leading-relaxed text-justify font-medium">
                           This memorandum sets forth the summary terms and technical specifications by which <strong>{quoteData.clientName || 'Purchaser'}</strong> and ANC Sports Enterprises, LLC agree to proceed with the procurement and installation of the LED Display Systems described herein.
                         </p>
                       </div>
-
                       <SectionTitle>Technical Specifications</SectionTitle>
                       <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm mb-6">
                         <table className="w-full text-[11px] border-collapse bg-white">
@@ -284,7 +276,6 @@ export const ProposalPreviewSlider = ({
                           </div>
                         </div>
                       </div>
-
                       <div>
                         <SectionTitle>Payment Schedule</SectionTitle>
                         <div className="space-y-4 mt-4">
@@ -303,7 +294,6 @@ export const ProposalPreviewSlider = ({
                           ))}
                         </div>
                       </div>
-
                       <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                         <SectionTitle>Clarifications</SectionTitle>
                         <div className="space-y-3 mt-4">
@@ -323,10 +313,8 @@ export const ProposalPreviewSlider = ({
                   {/* --- PRICING TAB --- */}
                   {activeTab === 'pricing' && (
                     <div className="animate-fadeIn space-y-6">
-                      {/* Interactive Controls (The "Vibe") */}
                       <div className="bg-gray-900 border border-slate-700 rounded-xl p-6 text-white shadow-xl space-y-6 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full group-hover:bg-blue-500/20 transition-colors duration-700" />
-
                         <div className="relative z-10 space-y-4">
                           <header className="flex justify-between items-center mb-2">
                             <div className="flex items-center gap-2">
@@ -335,8 +323,6 @@ export const ProposalPreviewSlider = ({
                             </div>
                             <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Manual Overrides</span>
                           </header>
-
-                          {/* Pixel Pitch Slider */}
                           <div className="space-y-3">
                             <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
                               <span>Pixel Pitch (mm)</span>
@@ -349,8 +335,6 @@ export const ProposalPreviewSlider = ({
                               className="w-full h-1 bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
                             />
                           </div>
-
-                          {/* Margin Slider */}
                           <div className="space-y-3">
                             <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500">
                               <span>Target Margin (%)</span>
@@ -363,8 +347,6 @@ export const ProposalPreviewSlider = ({
                               className="w-full h-1 bg-slate-800 rounded-full appearance-none cursor-pointer accent-emerald-500"
                             />
                           </div>
-
-                          {/* Base Dimensions (Quick Toggles) */}
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <label className="text-[10px] font-bold uppercase text-slate-500">Width (ft)</label>
@@ -388,7 +370,6 @@ export const ProposalPreviewSlider = ({
                         </div>
                       </div>
 
-                      {/* Main Price Display (The "Vibe" result) */}
                       <div className="bg-gradient-to-br from-[#003D82] to-blue-900 rounded-xl p-6 text-white shadow-2xl relative overflow-hidden transition-all duration-300">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
                           <CurrencyDollar size={120} weight="fill" />
@@ -402,7 +383,6 @@ export const ProposalPreviewSlider = ({
                               {fmtCurrency(quoteData.finalPrice)}
                             </span>
                           </div>
-
                           <div className="mt-8 flex gap-3 w-full">
                             <div className="flex-1 bg-white/10 backdrop-blur-md px-3 py-3 rounded-xl border border-white/10 shadow-inner">
                               <span className="text-[9px] font-black text-blue-200 uppercase tracking-widest block mb-1">Gross Profit</span>
@@ -416,7 +396,6 @@ export const ProposalPreviewSlider = ({
                         </div>
                       </div>
 
-                      {/* Cost Breakdown (Natalia Style Table) */}
                       <SectionTitle>Investment Breakout</SectionTitle>
                       <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm mb-6">
                         <table className="w-full text-[11px] border-collapse bg-white">
@@ -453,7 +432,6 @@ export const ProposalPreviewSlider = ({
                         </table>
                       </div>
 
-                      {/* Professional Badges */}
                       <div className="grid grid-cols-3 gap-3 mb-8">
                         <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-xl border border-slate-100 text-center gap-1 group">
                           <Zap size={16} className="text-amber-500 group-hover:scale-110 transition-transform" />
@@ -468,50 +446,43 @@ export const ProposalPreviewSlider = ({
                           <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none">Quote Valid<br />30 Days</span>
                         </div>
                       </div>
-                    )}
                     </div>
                   )}
                 </div>
+              )}
+            </div>
 
-        {/* Footer Actions */}
-              <div className="bg-white p-5 border-t border-gray-200 shrink-0 space-y-3 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <button
-                  onClick={handleGenerateExcel}
-                  disabled={!isComplete || generating}
-                  className={`
-                  w-full py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2
-                  transition-all duration-200 shadow-sm
-                  ${!isComplete || generating
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700 text-white hover:shadow hover:-translate-y-0.5 active:translate-y-0'}
+            {/* Footer section (Sticky) */}
+            <div className="bg-white p-5 border-t border-gray-200 shrink-0 space-y-3 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+              <button
+                onClick={handleGenerateExcel}
+                disabled={!isComplete || generating}
+                className={`w-full py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-200 shadow-sm
+                  ${!isComplete || generating ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white shadow hover:-translate-y-0.5'}
                 `}
-                >
-                  <div className="bg-white/20 p-1 rounded">
-                    <FileText size={18} weight="bold" />
-                  </div>
-                  {generating ? 'Processing...' : 'Generate Excel Cost Audit'}
-                </button>
+              >
+                <div className="bg-white/20 p-1 rounded">
+                  <FileText size={18} weight="bold" />
+                </div>
+                {generating ? 'Processing...' : 'Generate Excel Cost Audit'}
+              </button>
 
-                <button
-                  onClick={handleDownloadPdf}
-                  disabled={!isComplete || generating}
-                  className={`
-                    w-full py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2
-                    transition-all duration-200 shadow-sm border
-                    ${!isComplete || generating
-                      ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'}
-                  `}
-                >
-                  <Download size={18} weight="bold" />
-                  {generating ? 'Processing...' : 'Download Client PDF'}
-                </button>
-              </div>
-            </>
+              <button
+                onClick={handleDownloadPdf}
+                disabled={!isComplete || generating}
+                className={`w-full py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-200 shadow-sm border
+                  ${!isComplete || generating ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300'}
+                `}
+              >
+                <Download size={18} weight="bold" />
+                {generating ? 'Processing...' : 'Download Client PDF'}
+              </button>
+            </div>
+          </>
         )}
-          </div >
-      </>
-      );
+      </div>
+    </>
+  );
 };
 
-      export default ProposalPreviewSlider;
+export default ProposalPreviewSlider;
