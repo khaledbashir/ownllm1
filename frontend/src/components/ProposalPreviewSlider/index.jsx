@@ -468,53 +468,50 @@ export const ProposalPreviewSlider = ({
                           <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none">Quote Valid<br />30 Days</span>
                         </div>
                       </div>
+                    )}
                     </div>
-                    </div>
-              )}
-
-            </div>
-              )}
-          </div>
+                  )}
+                </div>
 
         {/* Footer Actions */}
-        <div className="bg-white p-5 border-t border-gray-200 shrink-0 space-y-3 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          <button
-            onClick={handleGenerateExcel}
-            disabled={!isComplete || generating}
-            className={`
+              <div className="bg-white p-5 border-t border-gray-200 shrink-0 space-y-3 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <button
+                  onClick={handleGenerateExcel}
+                  disabled={!isComplete || generating}
+                  className={`
                   w-full py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2
                   transition-all duration-200 shadow-sm
                   ${!isComplete || generating
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700 text-white hover:shadow hover:-translate-y-0.5 active:translate-y-0'}
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700 text-white hover:shadow hover:-translate-y-0.5 active:translate-y-0'}
                 `}
-          >
-            <div className="bg-white/20 p-1 rounded">
-              <FileText size={18} weight="bold" />
-            </div>
-            {generating ? 'Processing...' : 'Generate Excel Cost Audit'}
-          </button>
+                >
+                  <div className="bg-white/20 p-1 rounded">
+                    <FileText size={18} weight="bold" />
+                  </div>
+                  {generating ? 'Processing...' : 'Generate Excel Cost Audit'}
+                </button>
 
-          <button
-            onClick={handleDownloadPdf}
-            disabled={!isComplete || generating}
-            className={`
+                <button
+                  onClick={handleDownloadPdf}
+                  disabled={!isComplete || generating}
+                  className={`
                     w-full py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2
                     transition-all duration-200 shadow-sm border
                     ${!isComplete || generating
-                ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'}
+                      ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'}
                   `}
-          >
-            <Download size={18} weight="bold" />
-            {generating ? 'Processing...' : 'Download Client PDF'}
-          </button>
-        </div>
-      </>
+                >
+                  <Download size={18} weight="bold" />
+                  {generating ? 'Processing...' : 'Download Client PDF'}
+                </button>
+              </div>
+            </>
         )}
-    </div >
-    </>
-  );
+          </div >
+      </>
+      );
 };
 
-export default ProposalPreviewSlider;
+      export default ProposalPreviewSlider;
