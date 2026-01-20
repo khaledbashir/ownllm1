@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import DynamicQuoteSlider from "./DynamicQuoteSlider";
 
 const PLANS = [
   {
@@ -59,6 +60,19 @@ export function Pricing() {
           </p>
         </div>
 
+        {/* Interactive Dynamic Scaling */}
+        <div className="mb-32 max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] mb-4 block">
+              Precision Quote Engine
+            </span>
+            <h3 className="text-2xl font-bold text-white uppercase tracking-tight">
+              Slide to configure your build.
+            </h3>
+          </div>
+          <DynamicQuoteSlider />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {PLANS.map((plan, i) => (
             <motion.div
@@ -67,16 +81,16 @@ export function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className={`relative p-10 border transition-all duration-500 ${
-                plan.featured
+              className={`relative p-10 border transition-all duration-500 ${plan.featured
                   ? "bg-white border-white text-black scale-105 z-10"
                   : "bg-zinc-950 border-white/10 text-white"
-              }`}
+                }`}
             >
               <div className="flex flex-col h-full">
                 <div className="mb-8">
                   <span
-                    className={`text-[10px] font-bold uppercase tracking-widest mb-4 block ${plan.featured ? "text-black/50" : "text-zinc-400"}`}
+                    className={`text-[10px] font-bold uppercase tracking-widest mb-4 block ${plan.featured ? "text-black/50" : "text-zinc-400"
+                      }`}
                   >
                     {plan.name}
                   </span>
@@ -86,13 +100,15 @@ export function Pricing() {
                         ${plan.price}
                       </span>
                       <span
-                        className={`text-[10px] font-bold uppercase tracking-widest ${plan.featured ? "text-black/50" : "text-zinc-400"}`}
+                        className={`text-[10px] font-bold uppercase tracking-widest ${plan.featured ? "text-black/50" : "text-zinc-400"
+                          }`}
                       >
                         Build Fee
                       </span>
                     </div>
                     <div
-                      className={`text-xs font-bold uppercase tracking-widest ${plan.featured ? "text-black/60" : "text-zinc-300"}`}
+                      className={`text-xs font-bold uppercase tracking-widest ${plan.featured ? "text-black/60" : "text-zinc-300"
+                        }`}
                     >
                       + $400/mo Infrastructure
                     </div>
@@ -100,7 +116,8 @@ export function Pricing() {
                 </div>
 
                 <p
-                  className={`text-sm mb-10 min-h-[40px] ${plan.featured ? "text-black/60 font-medium" : "text-zinc-300 font-normal"}`}
+                  className={`text-sm mb-10 min-h-[40px] ${plan.featured ? "text-black/60 font-medium" : "text-zinc-300 font-normal"
+                    }`}
                 >
                   {plan.desc}
                 </p>
@@ -109,11 +126,10 @@ export function Pricing() {
                   {plan.features.map((feature, idx) => (
                     <div key={idx} className="flex items-center gap-3">
                       <Check
-                        className={`size-4 shrink-0 ${plan.featured ? "text-black" : "text-zinc-400"}`}
+                        className={`size-4 shrink-0 ${plan.featured ? "text-black" : "text-zinc-400"
+                          }`}
                       />
-                      <span
-                        className={`text-xs font-bold uppercase tracking-wide ${plan.featured ? "text-black/80" : "text-white"}`}
-                      >
+                      <span className="text-xs font-bold uppercase tracking-wide">
                         {feature}
                       </span>
                     </div>
@@ -122,11 +138,10 @@ export function Pricing() {
 
                 <Link to="/register">
                   <Button
-                    className={`w-full h-14 rounded-lg font-bold uppercase tracking-widest text-[10px] group ${
-                      plan.featured
+                    className={`w-full h-14 rounded-lg font-bold uppercase tracking-widest text-[10px] group ${plan.featured
                         ? "bg-black text-white hover:bg-zinc-800"
                         : "bg-white text-black hover:bg-zinc-200"
-                    }`}
+                      }`}
                   >
                     {plan.button}{" "}
                     <ArrowRight className="ml-2 size-3 group-hover:translate-x-1 transition-transform" />
