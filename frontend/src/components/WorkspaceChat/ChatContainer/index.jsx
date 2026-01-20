@@ -749,11 +749,11 @@ export default function ChatContainer({
       }
 
       const data = await response.json();
-      if (data.success && data.downloadUrl) {
+      if (data.success && data.files?.excel?.downloadUrl) {
         // Download the file
         const link = document.createElement('a');
-        link.href = data.downloadUrl;
-        link.download = data.filename || 'proposal.xlsx';
+        link.href = data.files.excel.downloadUrl;
+        link.download = data.files.excel.filename || 'proposal.xlsx';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -798,11 +798,11 @@ export default function ChatContainer({
       }
 
       const data = await response.json();
-      if (data.success && data.downloadUrl) {
+      if (data.success && data.files?.pdf?.downloadUrl) {
         // Download the file
         const link = document.createElement('a');
-        link.href = data.downloadUrl;
-        link.download = data.filename || 'proposal.pdf';
+        link.href = data.files.pdf.downloadUrl;
+        link.download = data.files.pdf.filename || 'proposal.pdf';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -831,8 +831,8 @@ export default function ChatContainer({
           <button
             onClick={() => setActiveTab("chat")}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "chat"
-                ? "border-theme-text-primary text-theme-text-primary"
-                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              ? "border-theme-text-primary text-theme-text-primary"
+              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
               }`}
           >
             <ChatText size={18} />
@@ -842,8 +842,8 @@ export default function ChatContainer({
             <button
               onClick={() => setActiveTab("notes")}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "notes"
-                  ? "border-theme-text-primary text-theme-text-primary"
-                  : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+                ? "border-theme-text-primary text-theme-text-primary"
+                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
                 }`}
             >
               <FileText size={18} />
@@ -853,8 +853,8 @@ export default function ChatContainer({
           <button
             onClick={() => setActiveTab("forms")}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 ${activeTab === "forms"
-                ? "border-theme-text-primary text-theme-text-primary"
-                : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
+              ? "border-theme-text-primary text-theme-text-primary"
+              : "border-transparent text-theme-text-secondary hover:text-theme-text-primary"
               }`}
           >
             <NotePencil size={18} />

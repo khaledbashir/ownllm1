@@ -60,14 +60,14 @@ class AncPricingEngine {
    * Main Calculation Method
    */
   calculate(
-    width, 
-    height, 
+    width,
+    height,
     pixelPitch = 4, // Int or float
-    environment = 'Indoor', 
-    margin = 0.30, 
-    clientName = '', 
+    environment = 'Indoor',
+    margin = 0.30,
+    clientName = '',
     productClass = 'Scoreboard', // "Scoreboard", "Ribbon Board", "Center Hung", "Vomitory"
-    serviceAccess = 'Front', 
+    serviceAccess = 'Front',
     steelType = 'Existing',
     laborType = 'Non-Union',
     shape = 'Flat',
@@ -77,7 +77,7 @@ class AncPricingEngine {
   ) {
     // A. Validation
     if (!width || !height || width <= 0) throw new Error("Invalid dimensions");
-    
+
     // Normalization
     const env = environment.toLowerCase() === 'outdoor' ? 'Outdoor' : 'Indoor';
     const pitch = Number(pixelPitch) || 10;
@@ -128,7 +128,7 @@ class AncPricingEngine {
     // STEP 2: STRUCTURAL MATERIALS
     // ==========================================================
     // Base: 20% of Hardware
-    let structBase = totalHardwareCost * this.RATES['STRUCTURAL_BASE_ PCT'];
+    let structBase = totalHardwareCost * this.RATES['STRUCTURAL_BASE_PCT'];
     let structModifiers = 0;
 
     if (isCurved) structModifiers += this.STRUCTURAL_MODIFIERS.CURVED;
@@ -161,7 +161,7 @@ class AncPricingEngine {
     // ==========================================================
     const shippingCost = totalHardwareCost * this.RATES.SHIPPING;
     const pmFee = (totalHardwareCost + totalStructuralCost + totalLaborCost) * this.RATES.PM_FEE;
-    
+
     // Subtotal before contingency and margin
     const subtotal = totalHardwareCost + totalStructuralCost + totalLaborCost + shippingCost + pmFee;
 
@@ -195,7 +195,7 @@ class AncPricingEngine {
       screenArea: area,
       screenWidth: width,
       screenHeight: height,
-      
+
       // Breakdown
       baseRatePerSqFt,
       unitCostOverride,
@@ -206,13 +206,13 @@ class AncPricingEngine {
       pmFee,
       contingency: contingencyAmt,
       bondCost,
-      
+
       // Totals
       totalCost: totalCostBasis,
       finalPrice: Math.round(finalSellPrice * 100) / 100,
       grossProfit: Math.round(grossProfit * 100) / 100,
       marginPercent: (margin * 100).toFixed(1),
-      
+
       calculationMethod: "ANC Waterfall v2.0",
       productClass,
       steelType,
