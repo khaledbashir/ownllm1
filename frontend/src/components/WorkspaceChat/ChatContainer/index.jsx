@@ -412,21 +412,19 @@ export default function ChatContainer({
   // Parse and validate JSON quote data from assistant messages (ANC Proposal System)
   // Runs in all workspaces for testing
   useEffect(() => {
-    // Removed isANCWorkspace check for debugging
+    // ANC: Extract quote data from ALL assistant messages (live during streaming)
     if (!chatHistory || chatHistory.length === 0) return;
 
-    // Scan last 5 assistant messages to find the most recent quote data
-    // This prevents losing data if the bot sends a short follow-up message
-    const assistantMsgs = chatHistory
-      .slice(-5) // Look at last 5
-      .filter(m => m.role === 'assistant');
+    // Scan ALL assistant messages to ensure we capture data during streaming
+    // (not just last 5, which could miss data during long conversations)
+    const assistantMsgs = chatHistory.filter(m => m.role === 'assistant');
 
     if (assistantMsgs.length === 0) return;
 
     let foundData = false;
     let newQuoteData = {};
 
-    // Process messages from oldest to newest in the slice to build up state
+    // Process messages from oldest to newest to build up cumulative state
     for (const msg of assistantMsgs) {
       const content = msg.content || '';
       if (!content) continue;
@@ -442,15 +440,22 @@ export default function ChatContainer({
     if (foundData) {
       setQuoteData(prev => {
         const merged = mergeQuoteData(prev, newQuoteData);
-        return merged;
+        
+        // Only update if there's an actual change (prevents infinite loops)
+        const hasChanged = JSON.stringify(prev) !== JSON.stringify(merged);
+        if (hasChanged) {
+          logQuoteUpdate('[ChatContainer] Live quote update detected', merged);
+          return merged;
+        }
+        return prev;
       });
 
       // Auto-open slider when we have meaningful data (at least 1 valid field)
-      if (Object.keys(newQuoteData).length > 0) {
+      if (Object.keys(newQuoteData).length > 0 && !previewSliderOpen) {
         setPreviewSliderOpen(true);
       }
     }
-  }, [chatHistory, isANCWorkspace]);
+  }, [chatHistory, isANCWorkspace, previewSliderOpen]);
 
   // Maintain state of message from whatever is in PromptInput
   const handleMessageChange = (event) => {

@@ -12,16 +12,24 @@ router.get('/download/:filename', async (request, response) => {
     
     // SECURITY: Prevent directory traversal
     const safeName = path.basename(filename);
-    const filepath = path.join('/app/server/storage/documents', safeName);
+    const storageDir = path.join(__dirname, '..', 'storage', 'documents');
+    const filepath = path.join(storageDir, safeName);
+    const tmpPath = path.join('/tmp', safeName);
 
-    if (fs.existsSync(filepath)) {
-      response.download(filepath, safeName, (err) => {
+    // Check storage directory first, then fallback to /tmp
+    let downloadPath = filepath;
+    if (!fs.existsSync(filepath) && fs.existsSync(tmpPath)) {
+      downloadPath = tmpPath;
+    }
+
+    if (fs.existsSync(downloadPath)) {
+      response.download(downloadPath, safeName, (err) => {
         if (err) {
           console.error(`[Download Error] Failed to send file ${safeName}:`, err);
         }
       });
     } else {
-      console.warn(`[Download Warning] File not found: ${filepath}`);
+      console.warn(`[Download Warning] File not found: ${safeName}`);
       response.status(404).json({ success: false, message: 'File not found' });
     }
   } catch (error) {

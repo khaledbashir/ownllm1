@@ -76,10 +76,14 @@ function proposalsEndpoints(app) {
       const timestamp = Date.now();
       const sanitizedName = clientName.replace(/[^a-z0-9]/gi, "_");
       const excelFilename = `ANC_Audit_${sanitizedName}_${timestamp}.xlsx`;
-      const excelPath = path.join(
-        "/tmp",
-        excelFilename
-      );
+      const storageDir = path.join(__dirname, "..", "storage", "documents");
+      
+      // Ensure storage directory exists
+      if (!fs.existsSync(storageDir)) {
+        fs.mkdirSync(storageDir, { recursive: true });
+      }
+      
+      const excelPath = path.join(storageDir, excelFilename);
 
       let excelBuffer;
       try {
@@ -99,10 +103,7 @@ function proposalsEndpoints(app) {
 
       // ===== STEP 3: GENERATE PDF (Client Proposal) =====
       const pdfFilename = `ANC_Proposal_${sanitizedName}_${timestamp}.pdf`;
-      const pdfPath = path.join(
-        "/tmp",
-        pdfFilename
-      );
+      const pdfPath = path.join(storageDir, pdfFilename);
 
       let pdfBuffer;
       try {
@@ -120,7 +121,7 @@ function proposalsEndpoints(app) {
 
       // ===== STEP 4: CREATE ZIP (Optional) =====
       const zipFilename = `ANC_Proposal_${sanitizedName}_${timestamp}.zip`;
-      const zipPath = path.join("/tmp", zipFilename);
+      const zipPath = path.join(storageDir, zipFilename);
 
       try {
         if (excelBuffer && pdfBuffer) {
