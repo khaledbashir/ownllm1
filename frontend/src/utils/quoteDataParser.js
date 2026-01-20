@@ -36,17 +36,40 @@ export function extractAndValidateJson(message = '') {
     return { valid: false, data: null, error: 'Invalid message type' };
   }
 
-  // Defensive regex: handle optional whitespace/newlines, case insensitive for language
-  // Pattern: ```json ... ``` (relaxed newlines and lang)
-  // Matches ```json, ```JSON, or just ``` if it looks like start of block
-  const jsonBlockRegex = /```\s*(?:json|JSON)?\s*([\s\S]*?)```/;
-  const match = message.match(jsonBlockRegex);
+  // Try multiple extraction strategies in order:
+  // 1) Triple-backtick code block (```json ... ```)
+  // 2) HTML <pre><code> blocks (rendered by some UIs)
+  // 3) Fallback: find first top-level JSON object in the text
 
-  if (!match || !match[1]) {
-    return { valid: false, data: null, error: 'No JSON code block found' };
+  // Strategy 1: Triple-backticks (original)
+  const jsonBlockRegex = /```\s*(?:json|JSON)?\s*([\s\S]*?)```/;
+  let match = message.match(jsonBlockRegex);
+  let jsonStr = match && match[1] ? match[1].trim() : null;
+
+  // Strategy 2: HTML code block
+  if (!jsonStr) {
+    const htmlCodeRegex = /<pre[^>]*>\s*<code[^>]*>([\s\S]*?)<\/code>\s*<\/pre>/i;
+    match = message.match(htmlCodeRegex);
+    if (match && match[1]) {
+      // Decode common HTML entities and trim
+      jsonStr = match[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim();
+    }
   }
 
-  const jsonStr = match[1].trim();
+  // Strategy 3: Inline JSON heuristic - find first balanced { ... } up to limits
+  if (!jsonStr) {
+    const inlineJsonMatch = message.match(/\{[\s\S]*\}/);
+    if (inlineJsonMatch && inlineJsonMatch[0]) {
+      jsonStr = inlineJsonMatch[0].trim();
+    }
+  }
+
+  if (!jsonStr) {
+    // Helpful debug: include short excerpt for easier troubleshooting
+    const excerpt = message.slice(0, 200).replace(/\n/g, ' ');
+    console.debug('[ANC Quote Parser] No JSON block found in message excerpt:', excerpt);
+    return { valid: false, data: null, error: 'No JSON code block found' };
+  }
 
   // SAFETY CHECK 1: Payload size limit
   if (jsonStr.length > VALIDATION_LIMITS.MAX_JSON_BLOCK_LENGTH) {
@@ -62,6 +85,7 @@ export function extractAndValidateJson(message = '') {
   try {
     parsed = JSON.parse(jsonStr);
   } catch (e) {
+    console.debug('[ANC Quote Parser] JSON parse failed, snippet:', jsonStr.slice(0, 300));
     return {
       valid: false,
       data: null,
@@ -165,7 +189,12 @@ export function hasMinimumQuoteData(quoteData = {}) {
 export function removeJsonBlockFromText(message = '') {
   if (!message) return message;
   return message
-    .replace(/```\s*json\s*\n[\s\S]*?\n\s*```\n?/g, '')
+    // Remove triple-backtick blocks (with or without language)
+    .replace(/```[\s\S]*?```/g, '')
+    // Remove HTML <pre><code> blocks
+    .replace(/<pre[^>]*>[\s\S]*?<code[^>]*>[\s\S]*?<\/code>[\s\S]*?<\/pre>/gi, '')
+    // Remove inline JSON objects (best-effort single occurrence)
+    .replace(/\{[\s\S]*\}/, '')
     .trim();
 }
 

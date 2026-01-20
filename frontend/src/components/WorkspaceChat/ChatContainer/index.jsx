@@ -434,6 +434,13 @@ export default function ChatContainer({
         foundData = true;
         // Merge this message's data into our accumulator
         newQuoteData = mergeQuoteData(newQuoteData, validationResult.data);
+      } else {
+        // Debug: show why the extraction failed for this assistant message (short excerpt)
+        const excerpt = content.slice(0, 300).replace(/\n/g, ' ');
+        console.debug('[ANC Quote Parser] No valid JSON in message chunk:', {
+          reason: validationResult.error,
+          excerpt
+        });
       }
     }
 
@@ -444,7 +451,8 @@ export default function ChatContainer({
         // Only update if there's an actual change (prevents infinite loops)
         const hasChanged = JSON.stringify(prev) !== JSON.stringify(merged);
         if (hasChanged) {
-          logQuoteUpdate('[ChatContainer] Live quote update detected', merged);
+          // Log sanitized update and indicate validation passed
+          logQuoteUpdate(merged, { valid: true });
           return merged;
         }
         return prev;
