@@ -1616,6 +1616,56 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
   useImperativeHandle(ref, () => ({
     isReady: () => isReady,
 
+    insertPricingTableWithData: (tableData) => {
+      if (!editorRef.current?.doc) {
+        console.warn("Editor not ready for insertPricingTableWithData");
+        return;
+      }
+      try {
+        const doc = editorRef.current.doc;
+
+        // 1. Get the current note block (parent)
+        let noteBlockId = null;
+        // Try to find the last note block explicitly
+        // If selection exists, maybe use that? For now, stick to last note for consistency.
+        const noteBlocks = doc.getBlocksByFlavour("affine:note");
+        if (noteBlocks && noteBlocks.length > 0) {
+          noteBlockId = noteBlocks[noteBlocks.length - 1].id;
+        }
+
+        if (!noteBlockId) {
+          console.error("No note block found to insert pricing table");
+          toast.error("No valid note block found. Please create a note first.");
+          return;
+        }
+
+        // 2. Insert the block safely
+        doc.transact(() => {
+          const blockId = doc.addBlock(
+            "affine:embed-pricing-table",
+            {
+              title: tableData.title,
+              currency: tableData.currency,
+              rows: tableData.rows,
+              discountPercent: tableData.discountPercent || 0,
+              gstPercent: tableData.gstPercent || 10,
+            },
+            noteBlockId
+          );
+
+          console.log(`✅ Inserted pricing table block: ${blockId}`);
+        });
+
+        // 3. Single undo step
+        if (typeof doc.captureSync === "function") {
+          doc.captureSync();
+        }
+      } catch (e) {
+        console.error("Failed to insert pricing table:", e);
+        toast.error("Failed to insert pricing table");
+      }
+    },
+
     // === Programmatic Control API (SiYuan-like) ===
 
     // Get the full document structure as a JSON tree
