@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { CaretLeft, Download, FileText, X, CurrencyDollar, ChartLineUp, Calculator, ShieldCheck, Clock, Lightning, Warning, CheckCircle, ArrowRight } from '@phosphor-icons/react';
 import { toast } from 'react-toastify';
+import { baseHeaders } from '@/utils/request';
 import { calculateANCQuote } from '@/utils/ancCalculator';
 import { ANCLogo } from './ANCLogo';
 
@@ -111,7 +112,28 @@ export const ProposalPreviewSlider = ({
   const handleGenerateExcel = async () => {
     setLocalGenerating(true);
     try {
-      await onGenerateExcel();
+      // Direct call to new endpoint
+      const response = await fetch('/api/anc/generate-excel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...baseHeaders()
+        },
+        body: JSON.stringify({ quoteData })
+      });
+
+      if (!response.ok) throw new Error('Excel generation failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ANC_Audit_${Date.now()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
       toast.success('Excel audit generated successfully!');
     } catch (err) {
       console.error('Excel generation error:', err);
@@ -124,7 +146,28 @@ export const ProposalPreviewSlider = ({
   const handleDownloadPdf = async () => {
     setLocalGenerating(true);
     try {
-      await onDownloadPdf();
+      // Direct call to new endpoint
+      const response = await fetch('/api/anc/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...baseHeaders()
+        },
+        body: JSON.stringify({ quoteData })
+      });
+
+      if (!response.ok) throw new Error('PDF generation failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ANC_Quote_${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
       toast.success('PDF proposal downloaded successfully!');
     } catch (err) {
       console.error('PDF download error:', err);
