@@ -24,6 +24,7 @@ export default function ChatHistory({
   updateHistory,
   regenerateAssistantMessage,
   hasAttachments = false,
+  onOpenQuoteSlider = () => {},
 }) {
   const { t } = useTranslation();
   const lastScrollTopRef = useRef(0);
@@ -156,6 +157,7 @@ export default function ChatHistory({
         saveEditedMessage,
         forkThread,
         getMessageAlignment,
+        onOpenQuoteSlider,
       }),
     [
       workspace,
@@ -163,6 +165,7 @@ export default function ChatHistory({
       regenerateAssistantMessage,
       saveEditedMessage,
       forkThread,
+      onOpenQuoteSlider,
     ]
   );
   const lastMessageInfo = useMemo(() => getLastMessageInfo(history), [history]);
@@ -279,18 +282,19 @@ function WorkspaceChatSuggestions({ suggestions = [], sendSuggestion }) {
 }
 
 /**
- * Builds the history of messages for the chat.
- * This is mostly useful for rendering the history in a way that is easy to understand.
- * as well as compensating for agent thinking and other messages that are not part of the history, but
- * are still part of the chat.
+ * Builds history of messages for chat.
+ * This is mostly useful for rendering history in a way that is easy to understand.
+ * as well as compensating for agent thinking and other messages that are not part of history, but
+ * are still part of chat.
  *
- * @param {Object} param0 - The parameters for building the messages.
+ * @param {Object} param0 - The parameters for building messages.
  * @param {Array} param0.history - The history of messages.
  * @param {Object} param0.workspace - The workspace object.
- * @param {Function} param0.regenerateAssistantMessage - The function to regenerate the assistant message.
+ * @param {Function} param0.regenerateAssistantMessage - The function to regenerate assistant message.
  * @param {Function} param0.saveEditedMessage - The function to save the edited message.
  * @param {Function} param0.forkThread - The function to fork the thread.
  * @param {Function} param0.getMessageAlignment - The function to get the alignment of the message (returns class).
+ * @param {Function} param0.onOpenQuoteSlider - The function to open the quote slider with data.
  * @returns {Array} The compiled history of messages.
  */
 function buildMessages({
@@ -300,6 +304,7 @@ function buildMessages({
   saveEditedMessage,
   forkThread,
   getMessageAlignment,
+  onOpenQuoteSlider,
 }) {
   return history.reduce((acc, props, index) => {
     const isLastBotReply =
@@ -329,6 +334,7 @@ function buildMessages({
           error={props.error}
           workspace={workspace}
           closed={props.closed}
+          onOpenQuoteSlider={onOpenQuoteSlider}
         />
       );
     } else {

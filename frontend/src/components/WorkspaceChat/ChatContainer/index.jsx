@@ -429,9 +429,29 @@ export default function ChatContainer({
       const content = msg.content || '';
       if (!content) continue;
 
+      // ROBUST EXTRACTION: First try targeted regex for anc_quote_update
+      const ancQuoteRegex = /\{[\s\S]*?"type"\s*:\s*"anc_quote_update"[\s\S]*?\}/;
+      const ancMatch = content.match(ancQuoteRegex);
+
+      if (ancMatch) {
+        try {
+          const parsed = JSON.parse(ancMatch[0]);
+          if (parsed?.fields) {
+            console.log('[ANC Chat] Found anc_quote_update JSON via regex:', parsed);
+            foundData = true;
+            // Merge the fields directly (skip strict validation for now)
+            newQuoteData = { ...newQuoteData, ...parsed.fields };
+            continue;
+          }
+        } catch (e) {
+          console.warn('[ANC Chat] Failed to parse anc_quote_update JSON:', e);
+        }
+      }
+
+      // FALLBACK: Try strict parser
       const validationResult = extractAndValidateJson(content);
       if (validationResult.valid) {
-        console.log('[ANC Chat] Quote data extracted:', validationResult.data);
+        console.log('[ANC Chat] Quote data extracted via strict parser:', validationResult.data);
         foundData = true;
         // Merge this message's data into our accumulator
         newQuoteData = mergeQuoteData(newQuoteData, validationResult.data);
@@ -448,7 +468,7 @@ export default function ChatContainer({
     if (foundData) {
       setQuoteData(prev => {
         const merged = mergeQuoteData(prev, newQuoteData);
-        
+
         // Only update if there's an actual change (prevents infinite loops)
         const hasChanged = JSON.stringify(prev) !== JSON.stringify(merged);
         if (hasChanged) {
@@ -822,13 +842,40 @@ export default function ChatContainer({
         document.body.removeChild(link);
         toast.success('PDF proposal downloaded');
       } else {
-        throw new Error(data.error || 'Failed to generate PDF');
+        throw new Error(data.error || 'Failed to download PDF');
       }
     } catch (error) {
       console.error('PDF download error:', error);
       toast.error(`Failed to download PDF: ${error.message}`);
     } finally {
       setGeneratingProposal(false);
+    }
+  };
+
+  const handleOpenQuoteSlider = (messageContent) => {
+    // Manual trigger: try to extract JSON from specific message
+    const ancQuoteRegex = /\{[\s\S]*?"type"\s*:\s*"anc_quote_update"[\s\S]*?\}/;
+    const match = messageContent.match(ancQuoteRegex);
+
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[0]);
+        if (parsed?.fields) {
+          console.log('[ANC Chat] Manual quote extraction:', parsed);
+          setQuoteData(prev => {
+            const merged = { ...prev, ...parsed.fields };
+            logQuoteUpdate(merged, { valid: true });
+            return merged;
+          });
+          setPreviewSliderOpen(true);
+          toast.success('Quote data loaded into Estimator!');
+        }
+      } catch (e) {
+        console.error('[ANC Chat] Failed to parse JSON for manual trigger:', e);
+        toast.error('Could not extract quote data from message');
+      }
+    } else {
+      toast.error('No quote data found in this message');
     }
   };
 
@@ -892,6 +939,7 @@ export default function ChatContainer({
                 updateHistory={setChatHistory}
                 regenerateAssistantMessage={regenerateAssistantMessage}
                 hasAttachments={files.length > 0}
+                onOpenQuoteSlider={handleOpenQuoteSlider}
               />
             </MetricsProvider>
             <PromptInput
