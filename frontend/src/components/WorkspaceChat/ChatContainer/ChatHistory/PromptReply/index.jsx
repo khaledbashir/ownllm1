@@ -9,6 +9,7 @@ import {
   THOUGHT_REGEX_OPEN,
   ThoughtChainComponent,
 } from "../ThoughtContainer";
+import { removeJsonBlockFromText } from "@/utils/quoteDataParser";
 
 const PromptReply = ({
   uuid,
@@ -123,11 +124,14 @@ function RenderAssistantChatContent({ message }) {
     const completeThoughtChain = message.match(THOUGHT_REGEX_COMPLETE)?.[0];
     const msgToRender = message.replace(THOUGHT_REGEX_COMPLETE, "");
 
+    // Remove anc_quote_update JSON blocks from display (they're hidden system data)
+    const msgToDisplay = removeJsonBlockFromText(msgToRender);
+
     if (completeThoughtChain && thoughtChainRef.current) {
       thoughtChainRef.current.updateContent(completeThoughtChain);
     }
 
-    contentRef.current = msgToRender;
+    contentRef.current = msgToDisplay;
   }, [message]);
 
   const thinking =

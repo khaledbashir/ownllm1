@@ -177,8 +177,8 @@ export default function ChatContainer({
   const [previewSliderOpen, setPreviewSliderOpen] = useState(false);
   const [generatingProposal, setGeneratingProposal] = useState(false);
 
-  // Detect if this is an ANC workspace by checking system prompt
-  const isANCWorkspace = workspace?.inlineAiSystemPrompt?.includes('ANC Sports Proposal Engine');
+  // Detect if this is an ANC workspace by checking active logic module
+  const isANCWorkspace = workspace?.activeLogicModule === 'anc';
 
   // Ref for notes editor to allow AI to insert content
   // If external ref is provided, use it. Otherwise use internal ref.
@@ -431,6 +431,7 @@ export default function ChatContainer({
 
       const validationResult = extractAndValidateJson(content);
       if (validationResult.valid) {
+        console.log('[ANC Chat] Quote data extracted:', validationResult.data);
         foundData = true;
         // Merge this message's data into our accumulator
         newQuoteData = mergeQuoteData(newQuoteData, validationResult.data);
@@ -463,7 +464,7 @@ export default function ChatContainer({
         setPreviewSliderOpen(true);
       }
     }
-  }, [chatHistory, isANCWorkspace, previewSliderOpen]);
+  }, [chatHistory, previewSliderOpen]);
 
   // Maintain state of message from whatever is in PromptInput
   const handleMessageChange = (event) => {

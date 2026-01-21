@@ -148,39 +148,35 @@ PAYMENT TERMS:
 ---
 
 **Output 2: System Data (For Smart Action)**
-You MUST include this exact JSON block at the very end. Ensure "type" is "anc_estimate":
+You MUST include this exact JSON block at the very end. Ensure "type" is "anc_quote_update":
 
 \`\`\`json
 {
-  "pricingTable": {
-    "type": "anc_estimate",
-    "title": "ANC Sales Quotation",
+  "type": "anc_quote_update",
+  "schemaVersion": 1,
+  "fields": {
     "clientName": "[CLIENT COMPANY NAME]",
-    "specs": {
-      "productType": "[Product Type]",
-      "description": "[Product Description]",
-      "pitch": "[Pitch]",
-      "qty": [Qty],
-      "height": [Height],
-      "width": [Width],
-      "resolutionH": [ResH],
-      "resolutionW": [ResW]
-    },
-    "pricing": {
-      "ledDisplaySystem": [LED Display System],
-      "structuralMaterials": [Structural Materials],
-      "structuralLabor": [Structural Labor],
-      "electricalAndData": [Electrical and Data],
-      "projectManagement": [Project Management],
-      "submittalsAndEngineering": [Submittals and Engineering],
-      "contentManagement": [Content Management],
-      "subtotal": [SUBTOTAL],
-      "tax": [TAX],
-      "total": [TOTAL]
-    }
+    "productClass": "[Product Type]",
+    "width": [Width],
+    "height": [Height],
+    "environment": "[Indoor or Outdoor]",
+    "pixelPitch": [Pitch as number, e.g., 10 for 10mm],
+    "serviceAccess": "[Front or Rear]",
+    "steelType": "[New or Existing]",
+    "laborType": "[Union or Non-Union]",
+    "mountingType": "[Wall or Ground or Rigging or Pole]",
+    "hardwareCost": [LED Display System],
+    "structuralCost": [Structural Materials],
+    "laborCost": [Structural Labor],
+    "totalCost": [SUBTOTAL],
+    "finalPrice": [TOTAL],
+    "marginPercent": 30,
+    "status": "complete"
   }
 }
 \`\`\`
+
+IMPORTANT: This JSON block will be parsed automatically to populate the Proposal Preview Slider. Do NOT show this JSON to the user in your response.
 `,
 
   // Catering Mode (Future expansion example)
