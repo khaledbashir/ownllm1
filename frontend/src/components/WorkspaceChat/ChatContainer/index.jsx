@@ -974,6 +974,7 @@ export default function ChatContainer({
         onDownloadPdf={handleDownloadPdf}
         isGenerating={generatingProposal}
         onUpdateQuoteData={(data) => setQuoteData(prev => ({ ...prev, ...data }))}
+        editorRef={notesEditorRef}
       />
     </div>
   );
