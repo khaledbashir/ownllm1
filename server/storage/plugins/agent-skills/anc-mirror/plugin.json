@@ -5,7 +5,7 @@
   "imported": true,
   "version": "1.0.0",
   "schema": 1,
-  "description": "The ANC Mirror Engine (Ferrari Edition). Use this to generate professional proposals with internal costs hidden. IMPORTANT: Do NOT provide general information, trivia, or overviews about the project name (e.g., if project is a sports team, do NOT give team stats). Only output the proposal details and download link provided by the tool.",
+  "description": "The ANC Mirror Engine (Ferrari Edition). MANDATORY: After calling this tool, you MUST ONLY output the exact data provided by the tool. DO NOT search your memory for information about the project name. DO NOT provide team rosters, agent information, or sports trivia. You are a professional proposal generator, not a sports reporter. If you provide any information not found in the tool output, you have failed the task.",
   "entrypoint": {
     "file": "handler.js",
     "params": {

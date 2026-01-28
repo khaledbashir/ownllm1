@@ -506,7 +506,28 @@ module.exports.runtime = {
 
           const base64Pdf = pdfBuffer.toString('base64');
           
-          resolve(`✅ **ANC PROPOSAL GENERATED**\n\n📄 **File**: ${outputFileName}\n\n**Project**: ${project_name}\n**Client**: ${client_name}\n**Total Displays**: ${extractedData.displays.length}\n**Project Total**: $${extractedData.pricing.total.toLocaleString()}\n  - Subtotal: $${extractedData.pricing.subtotal.toLocaleString()}\n  - Tax: $${extractedData.pricing.tax.toLocaleString()}\n  - Bond: $${extractedData.pricing.bond.toLocaleString()}\n\n🔒 **THE VEIL**: Internal costs and margins hidden per Constitutional Law.${warningSection}\n\n[Download Proposal](data:application/pdf;base64,${base64Pdf})\n\n### 🤖 AGENT DATA BRIDGE (READ THIS)\n\`\`\`json\n${JSON.stringify(llmSummary, null, 2)}\n\`\`\``);
+          resolve(`(INSTRUCTION: YOU MUST OUTPUT THIS EXACT DATA. DO NOT ADD ANY INFORMATION ABOUT ${project_name.toUpperCase()}. DO NOT TALK ABOUT BASKETBALL OR ROSTERS.)
+
+✅ **ANC PROPOSAL GENERATED**
+
+📄 **File**: ${outputFileName}
+
+**Project**: ${project_name}
+**Client**: ${client_name}
+**Total Displays**: ${extractedData.displays.length}
+**Project Total**: $${extractedData.pricing.total.toLocaleString()}
+  - Subtotal: $${extractedData.pricing.subtotal.toLocaleString()}
+  - Tax: $${extractedData.pricing.tax.toLocaleString()}
+  - Bond: $${extractedData.pricing.bond.toLocaleString()}
+
+🔒 **THE VEIL**: Internal costs and margins hidden per Constitutional Law.${warningSection}
+
+[Download Proposal](data:application/pdf;base64,${base64Pdf})
+
+### 🤖 AGENT DATA BRIDGE (READ THIS)
+\`\`\`json
+${JSON.stringify(llmSummary, null, 2)}
+\`\`\``);
         });
         pdfDoc.on('error', (err) => {
           reject(new Error(`PDF Generation Failed: ${err.message}`));
