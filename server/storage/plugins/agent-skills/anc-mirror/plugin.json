@@ -1,0 +1,36 @@
+{
+  "hubId": "anc-mirror",
+  "name": "Mirror Engine",
+  "active": true,
+  "imported": true,
+  "version": "1.0.0",
+  "schema": 1,
+  "description": "The ANC Mirror Engine (Ferrari Edition). Includes a Smart Reader that deep-scans all Excel sheets and provides the agent with structured JSON data. 'Mirror' refers to data replication from Excel to PDF. Use this to generate professional proposals with internal costs hidden.",
+  "entrypoint": {
+    "file": "handler.js",
+    "params": {
+      "filename": {
+        "description": "Optional: Specific filename of the attached Excel sheet to process. If omitted, the most recent Excel attachment is used.",
+        "type": "string"
+      },
+      "project_name": {
+        "description": "Project name (e.g., 'Indiana Fever', 'ABCDE')",
+        "type": "string"
+      },
+      "client_name": {
+        "description": "Optional: Client name for the proposal header. Defaults to 'Valued Client'.",
+        "type": "string"
+      }
+    }
+  },
+  "examples": [
+    {
+      "prompt": "@mirror for Indiana Fever",
+      "call": "{\"project_name\": \"Indiana Fever\", \"client_name\": \"Indiana Fever\"}"
+    },
+    {
+      "prompt": "generate proposal using cost-analysis.xlsx",
+      "call": "{\"filename\": \"cost-analysis.xlsx\"}"
+    }
+  ]
+}

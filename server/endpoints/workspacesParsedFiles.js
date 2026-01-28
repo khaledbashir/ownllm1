@@ -1,5 +1,9 @@
+const path = require("path");
+const fs = require("fs");
+const { default: slugify } = require("slugify");
 const { reqBody, multiUserMode, userFromSession } = require("../utils/http");
 const { handleFileUpload } = require("../utils/files/multer");
+const { directUploadsPath } = require("../utils/files");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
 const { Telemetry } = require("../models/telemetry");
 const {
@@ -154,10 +158,22 @@ function workspaceParsedFilesEndpoints(app) {
           : null;
         const files = await Promise.all(
           documents.map(async (doc) => {
+            const filename = slugify(`${originalname}-${doc.id}.json`, {
+              lower: true,
+            });
             const metadata = { ...doc };
-            // Strip out pageContent
             delete metadata.pageContent;
-            const filename = `${originalname}-${doc.id}.json`;
+            metadata.location = filename;
+
+            if (!fs.existsSync(directUploadsPath))
+              fs.mkdirSync(directUploadsPath, { recursive: true });
+
+            fs.writeFileSync(
+              path.join(directUploadsPath, filename),
+              JSON.stringify(doc),
+              "utf8"
+            );
+
             const { file, error: dbError } = await WorkspaceParsedFiles.create({
               filename,
               workspaceId: workspace.id,

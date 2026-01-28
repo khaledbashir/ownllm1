@@ -1,0 +1,28 @@
+{
+  "hubId": "anc-strategic",
+  "name": "Strategic Estimator",
+  "active": true,
+  "imported": true,
+  "version": "1.0.0",
+  "schema": 1,
+  "description": "Calculates budgets using Natalia's Math and scans for compliance risks.",
+  "entrypoint": {
+    "file": "handler.js",
+    "params": {
+      "project_context": {
+        "description": "RFP text or manual specifications.",
+        "type": "string"
+      },
+      "margin": {
+        "description": "The target margin (e.g., 0.25)",
+        "type": "number"
+      }
+    }
+  },
+  "examples": [
+    {
+      "prompt": "@strategic for a stadium with 5 screens at 20% margin",
+      "call": "{\"project_context\": \"stadium with 5 screens\", \"margin\": 0.20}"
+    }
+  ]
+}
