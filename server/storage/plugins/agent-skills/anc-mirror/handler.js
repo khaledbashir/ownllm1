@@ -469,7 +469,7 @@ module.exports.runtime = {
         timestamp: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       });
 
-      const pdfmake = require('pdfmake');
+      const PdfPrinter = require('pdfmake');
       
       const outputsDir = '/app/server/storage/outputs';
       if (!fs.existsSync(outputsDir)) fs.mkdirSync(outputsDir, { recursive: true });
@@ -487,20 +487,29 @@ module.exports.runtime = {
         }
       };
 
-      pdfmake.setFonts(fonts);
-      const pdfDoc = pdfmake.createPdf(docDefinition);
-      const pdfBuffer = await pdfDoc.getBuffer();
-
-      // Save to outputs for record keeping
-      fs.writeFileSync(outputPath, pdfBuffer);
-
-      const warningSection = extractedData.warnings.length > 0 
-        ? `\n\n⚠️ **WARNINGS:**\n${extractedData.warnings.map(w => `  • ${w}`).join('\n')}`
-        : '';
-
-      const base64Pdf = pdfBuffer.toString('base64');
+      const printer = new PdfPrinter(fonts);
+      const pdfDoc = printer.createPdfKitDocument(docDefinition);
       
-      return `✅ **ANC PROPOSAL GENERATED**\n\n📄 **File**: ${outputFileName}\n\n**Project**: ${project_name}\n**Client**: ${client_name}\n**Total Displays**: ${extractedData.displays.length}\n**Project Total**: $${extractedData.pricing.total.toLocaleString()}\n  - Subtotal: $${extractedData.pricing.subtotal.toLocaleString()}\n  - Tax: $${extractedData.pricing.tax.toLocaleString()}\n  - Bond: $${extractedData.pricing.bond.toLocaleString()}\n\n🔒 **THE VEIL**: Internal costs and margins hidden per Constitutional Law.${warningSection}\n\n[Download Proposal](data:application/pdf;base64,${base64Pdf})\n\n### 🤖 AGENT DATA BRIDGE (READ THIS)\n\`\`\`json\n${JSON.stringify(llmSummary, null, 2)}\n\`\`\``;
+      return new Promise((resolve, reject) => {
+        const chunks = [];
+        pdfDoc.on('data', (chunk) => chunks.push(chunk));
+        pdfDoc.on('end', () => {
+          const pdfBuffer = Buffer.concat(chunks);
+          fs.writeFileSync(outputPath, pdfBuffer);
+
+          const warningSection = extractedData.warnings.length > 0 
+            ? `\n\n⚠️ **WARNINGS:**\n${extractedData.warnings.map(w => `  • ${w}`).join('\n')}`
+            : '';
+
+          const base64Pdf = pdfBuffer.toString('base64');
+          
+          resolve(`✅ **ANC PROPOSAL GENERATED**\n\n📄 **File**: ${outputFileName}\n\n**Project**: ${project_name}\n**Client**: ${client_name}\n**Total Displays**: ${extractedData.displays.length}\n**Project Total**: $${extractedData.pricing.total.toLocaleString()}\n  - Subtotal: $${extractedData.pricing.subtotal.toLocaleString()}\n  - Tax: $${extractedData.pricing.tax.toLocaleString()}\n  - Bond: $${extractedData.pricing.bond.toLocaleString()}\n\n🔒 **THE VEIL**: Internal costs and margins hidden per Constitutional Law.${warningSection}\n\n[Download Proposal](data:application/pdf;base64,${base64Pdf})\n\n### 🤖 AGENT DATA BRIDGE (READ THIS)\n\`\`\`json\n${JSON.stringify(llmSummary, null, 2)}\n\`\`\``);
+        });
+        pdfDoc.on('error', (err) => {
+          reject(new Error(`PDF Generation Failed: ${err.message}`));
+        });
+        pdfDoc.end();
+      });
 
     } catch (error) {
       console.error(error);
