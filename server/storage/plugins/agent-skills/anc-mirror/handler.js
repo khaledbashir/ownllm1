@@ -477,18 +477,21 @@ module.exports.runtime = {
       const outputFileName = `ANC_Proposal_${project_name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
       const outputPath = path.join(outputsDir, outputFileName);
       
-      // Load Work Sans from the Natalia project storage
+      // Fallback to Roboto if Work Sans is missing (it usually is on first deploy)
       const fonts = {
-        WorkSans: {
-          normal: '/app/server/public/fonts/WorkSans-Regular.ttf',
-          bold: '/app/server/public/fonts/WorkSans-Bold.ttf',
-          italics: '/app/server/public/fonts/WorkSans-Regular.ttf',
-          bolditalics: '/app/server/public/fonts/WorkSans-Bold.ttf'
+        Roboto: {
+          normal: '/app/node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
+          bold: '/app/node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
+          italics: '/app/node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
+          bolditalics: '/app/node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf'
         }
       };
 
       const printer = new PdfPrinter(fonts);
-      const pdfDoc = printer.createPdfKitDocument(docDefinition);
+      const pdfDoc = printer.createPdfKitDocument({
+        ...docDefinition,
+        defaultStyle: { font: 'Roboto' }
+      });
       
       return new Promise((resolve, reject) => {
         const chunks = [];
