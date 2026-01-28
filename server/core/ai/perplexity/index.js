@@ -21,7 +21,7 @@ class PerplexityLLM {
     const { OpenAI: OpenAIApi } = require("openai");
     this.openai = new OpenAIApi({
       baseURL: "https://api.perplexity.ai",
-      apiKey: process.env.PERPLEXITY_API_KEY ?? null,
+      apiKey: process.env.PERPLEXITY_API_KEY || null,
     });
     this.model =
       modelPreference ||
@@ -33,7 +33,7 @@ class PerplexityLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
   }
 

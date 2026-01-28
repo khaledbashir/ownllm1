@@ -235,7 +235,7 @@ You can fix this by restarting AnythingLLM so the model map is re-pulled.
       provider,
       model,
     });
-    // Returning null allows provider-specific defaults (via ??) to work correctly.
+    // Returning null allows provider-specific defaults (via ||) to work correctly.
     // Call sites that need a hard fallback should provide it themselves (e.g. `|| 4096`).
     return null;
   }

@@ -37,7 +37,7 @@ class OpenRouterLLM {
     this.basePath = "https://openrouter.ai/api/v1";
     this.openai = new OpenAIApi({
       baseURL: this.basePath,
-      apiKey: process.env.OPENROUTER_API_KEY ?? null,
+      apiKey: process.env.OPENROUTER_API_KEY || null,
       defaultHeaders: {
         "HTTP-Referer": "https://anythingllm.com",
         "X-Title": "AnythingLLM",
@@ -51,7 +51,7 @@ class OpenRouterLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.timeout = this.#parseTimeout();
 
@@ -100,7 +100,7 @@ class OpenRouterLLM {
    */
   #parseTimeout() {
     this.log(
-      `OpenRouter timeout is set to ${process.env.OPENROUTER_TIMEOUT_MS ?? this.defaultTimeout}ms`
+      `OpenRouter timeout is set to ${process.env.OPENROUTER_TIMEOUT_MS || this.defaultTimeout}ms`
     );
     if (isNaN(Number(process.env.OPENROUTER_TIMEOUT_MS)))
       return this.defaultTimeout;
@@ -164,9 +164,9 @@ class OpenRouterLLM {
     const cacheModelPath = path.resolve(cacheFolder, "models.json");
     const availableModels = fs.existsSync(cacheModelPath)
       ? safeJsonParse(
-          fs.readFileSync(cacheModelPath, { encoding: "utf-8" }),
-          {}
-        )
+        fs.readFileSync(cacheModelPath, { encoding: "utf-8" }),
+        {}
+      )
       : {};
     return availableModels[modelName]?.maxLength || 4096;
   }

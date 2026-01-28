@@ -6,7 +6,7 @@ class MistralEmbedder {
     const { OpenAI: OpenAIApi } = require("openai");
     this.openai = new OpenAIApi({
       baseURL: "https://api.mistral.ai/v1",
-      apiKey: process.env.MISTRAL_API_KEY ?? null,
+      apiKey: process.env.MISTRAL_API_KEY || null,
     });
     this.model = process.env.EMBEDDING_MODEL_PREF || "mistral-embed";
   }

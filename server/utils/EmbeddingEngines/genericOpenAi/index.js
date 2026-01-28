@@ -11,9 +11,9 @@ class GenericOpenAiEmbedder {
     this.basePath = process.env.EMBEDDING_BASE_PATH;
     this.openai = new OpenAIApi({
       baseURL: this.basePath,
-      apiKey: process.env.GENERIC_OPEN_AI_EMBEDDING_API_KEY ?? null,
+      apiKey: process.env.GENERIC_OPEN_AI_EMBEDDING_API_KEY || null,
     });
-    this.model = process.env.EMBEDDING_MODEL_PREF ?? null;
+    this.model = process.env.EMBEDDING_MODEL_PREF || null;;
     this.embeddingMaxChunkLength = maximumChunkLength();
 
     // this.maxConcurrentChunks is delegated to the getter below.

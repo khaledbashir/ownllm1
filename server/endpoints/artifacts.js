@@ -26,7 +26,7 @@ function artifactsEndpoints(app) {
 
         const result = await Artifacts.save({
           workspaceId: workspace.id,
-          userId: user?.id ?? null,
+          userId: (user && user.id) || null,
           name,
           code,
           language,

@@ -45,22 +45,22 @@ class AWSBedrockLLM {
     const requiredEnvVars = [
       ...(!["iam_role", "apiKey"].includes(this.authMethod)
         ? [
-            // required for iam and sessionToken
-            "AWS_BEDROCK_LLM_ACCESS_KEY_ID",
-            "AWS_BEDROCK_LLM_ACCESS_KEY",
-          ]
+          // required for iam and sessionToken
+          "AWS_BEDROCK_LLM_ACCESS_KEY_ID",
+          "AWS_BEDROCK_LLM_ACCESS_KEY",
+        ]
         : []),
       ...(this.authMethod === "sessionToken"
         ? [
-            // required for sessionToken
-            "AWS_BEDROCK_LLM_SESSION_TOKEN",
-          ]
+          // required for sessionToken
+          "AWS_BEDROCK_LLM_SESSION_TOKEN",
+        ]
         : []),
       ...(this.authMethod === "apiKey"
         ? [
-            // required for bedrock api key
-            "AWS_BEDROCK_LLM_API_KEY",
-          ]
+          // required for bedrock api key
+          "AWS_BEDROCK_LLM_API_KEY",
+        ]
         : []),
       "AWS_BEDROCK_LLM_REGION",
       "AWS_BEDROCK_LLM_MODEL_PREFERENCE",
@@ -73,7 +73,7 @@ class AWSBedrockLLM {
     }
 
     this.model =
-      modelPreference || process.env.AWS_BEDROCK_LLM_MODEL_PREFERENCE;
+      modelPreference ?? process.env.AWS_BEDROCK_LLM_MODEL_PREFERENCE ?? null;
 
     const contextWindowLimit = this.promptWindowLimit();
     this.limits = {
@@ -87,7 +87,7 @@ class AWSBedrockLLM {
       this.credentials
     );
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.#log(
       `Initialized with model: ${this.model}. Auth: ${this.authMethod}. Context Window: ${contextWindowLimit}.`
@@ -161,7 +161,7 @@ class AWSBedrockLLM {
    */
   static promptWindowLimit() {
     const limit =
-      process.env.AWS_BEDROCK_LLM_MODEL_TOKEN_LIMIT ??
+      process.env.AWS_BEDROCK_LLM_MODEL_TOKEN_LIMIT ||
       DEFAULT_CONTEXT_WINDOW_TOKENS;
     const numericLimit = Number(limit);
     if (isNaN(numericLimit) || numericLimit <= 0) {
@@ -404,7 +404,7 @@ class AWSBedrockLLM {
             messages: history,
             inferenceConfig: {
               maxTokens: maxTokensToSend,
-              temperature: temperature ?? this.defaultTemp,
+              temperature: temperature || this.defaultTemp,
             },
             system: systemBlock,
           })
@@ -445,9 +445,9 @@ class AWSBedrockLLM {
     return {
       textResponse: this.#parseReasoningFromResponse(response.output.message),
       metrics: {
-        prompt_tokens: response?.usage?.inputTokens ?? 0,
-        completion_tokens: outputTokens ?? 0,
-        total_tokens: response?.usage?.totalTokens ?? 0,
+        prompt_tokens: (response && response.usage && response.usage.inputTokens) || 0,
+        completion_tokens: outputTokens || 0,
+        total_tokens: (response && response.usage && response.usage.totalTokens) || 0,
         outputTps: outputTps,
         duration: result.duration,
       },
@@ -482,7 +482,7 @@ class AWSBedrockLLM {
           messages: history,
           inferenceConfig: {
             maxTokens: maxTokensToSend,
-            temperature: temperature ?? this.defaultTemp,
+            temperature: temperature || this.defaultTemp,
           },
           system: systemBlock,
         })
@@ -558,9 +558,9 @@ class AWSBedrockLLM {
                 hasUsageMetrics = true;
                 usage = {
                   // Overwrite with final metrics
-                  prompt_tokens: chunk.metadata.usage.inputTokens ?? 0,
-                  completion_tokens: chunk.metadata.usage.outputTokens ?? 0,
-                  total_tokens: chunk.metadata.usage.totalTokens ?? 0,
+                  prompt_tokens: chunk.metadata.usage.inputTokens || 0,
+                  completion_tokens: chunk.metadata.usage.outputTokens || 0,
+                  total_tokens: chunk.metadata.usage.totalTokens || 0,
                 };
               }
               break;
@@ -633,12 +633,12 @@ class AWSBedrockLLM {
                 usage = {
                   // Overwrite with final metrics if available
                   prompt_tokens:
-                    chunk.messageStop.usage.inputTokens ?? usage.prompt_tokens,
+                    chunk.messageStop.usage.inputTokens || usage.prompt_tokens,
                   completion_tokens:
-                    chunk.messageStop.usage.outputTokens ??
+                    chunk.messageStop.usage.outputTokens ||
                     usage.completion_tokens,
                   total_tokens:
-                    chunk.messageStop.usage.totalTokens ?? usage.total_tokens,
+                    chunk.messageStop.usage.totalTokens || usage.total_tokens,
                 };
               }
               // Ensure reasoning tag is closed if message stops mid-reasoning
@@ -706,9 +706,8 @@ class AWSBedrockLLM {
             textResponse: null,
             sources,
             close: true,
-            error: `AWSBedrock:streaming - error. ${
-              error?.message ?? "Unknown error"
-            }`,
+            error: `AWSBedrock:streaming - error. ${(error && error.message) || "Unknown error"
+              }`,
           });
         }
       } finally {

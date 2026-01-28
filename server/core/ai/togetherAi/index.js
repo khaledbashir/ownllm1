@@ -84,7 +84,7 @@ class TogetherAiLLM {
     const { OpenAI: OpenAIApi } = require("openai");
     this.openai = new OpenAIApi({
       baseURL: "https://api.together.xyz/v1",
-      apiKey: process.env.TOGETHER_AI_API_KEY ?? null,
+      apiKey: process.env.TOGETHER_AI_API_KEY || null,
     });
     this.model = modelPreference || process.env.TOGETHER_AI_MODEL_PREF;
     this.limits = {

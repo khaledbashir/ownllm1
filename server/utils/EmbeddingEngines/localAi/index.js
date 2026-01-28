@@ -10,7 +10,7 @@ class LocalAiEmbedder {
     const { OpenAI: OpenAIApi } = require("openai");
     this.openai = new OpenAIApi({
       baseURL: process.env.EMBEDDING_BASE_PATH,
-      apiKey: process.env.LOCAL_AI_API_KEY ?? null,
+      apiKey: process.env.LOCAL_AI_API_KEY || null,
     });
 
     // Limit of how many strings we can process in a single pass to stay with resource or network limits

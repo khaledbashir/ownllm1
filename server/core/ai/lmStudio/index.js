@@ -33,7 +33,7 @@ class LMStudioLLM {
       process.env.LMSTUDIO_MODEL_PREF ||
       "Loaded from Chat UI";
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
 
     // Lazy load the limits to avoid blocking the main thread on cacheContextWindows

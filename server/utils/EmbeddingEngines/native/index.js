@@ -60,7 +60,7 @@ class NativeEmbedder {
    */
   static _getEmbeddingModel() {
     const envModel =
-      process.env.EMBEDDING_MODEL_PREF ?? NativeEmbedder.defaultModel;
+      process.env.EMBEDDING_MODEL_PREF || NativeEmbedder.defaultModel;
     if (NativeEmbedder.supportedModels?.[envModel]) return envModel;
     return NativeEmbedder.defaultModel;
   }
@@ -95,7 +95,7 @@ class NativeEmbedder {
    */
   getEmbeddingModel() {
     const envModel =
-      process.env.EMBEDDING_MODEL_PREF ?? NativeEmbedder.defaultModel;
+      process.env.EMBEDDING_MODEL_PREF || NativeEmbedder.defaultModel;
     if (NativeEmbedder.supportedModels?.[envModel]) return envModel;
     return NativeEmbedder.defaultModel;
   }
@@ -148,16 +148,15 @@ class NativeEmbedder {
           cache_dir: this.cacheDir,
           ...(!this.modelDownloaded
             ? {
-                // Show download progress if we need to download any files
-                progress_callback: (data) => {
-                  if (!data.hasOwnProperty("progress")) return;
-                  console.log(
-                    `\x1b[36m[NativeEmbedder - Downloading model]\x1b[0m ${
-                      data.file
-                    } ${~~data?.progress}%`
-                  );
-                },
-              }
+              // Show download progress if we need to download any files
+              progress_callback: (data) => {
+                if (!data.hasOwnProperty("progress")) return;
+                console.log(
+                  `\x1b[36m[NativeEmbedder - Downloading model]\x1b[0m ${data.file
+                  } ${~~data?.progress}%`
+                );
+              },
+            }
             : {}),
         }),
         retry: false,

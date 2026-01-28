@@ -239,7 +239,7 @@ class MetaGenerator {
             props: {
               name: "title",
               content:
-                customTitle ??
+                customTitle ||
                 "AnythingLLM | Your personal LLM trained on anything",
             },
           };
@@ -251,7 +251,7 @@ class MetaGenerator {
             props: {
               property: "og:title",
               content:
-                customTitle ??
+                customTitle ||
                 "AnythingLLM | Your personal LLM trained on anything",
             },
           };
@@ -263,7 +263,7 @@ class MetaGenerator {
             props: {
               property: "twitter:title",
               content:
-                customTitle ??
+                customTitle ||
                 "AnythingLLM | Your personal LLM trained on anything",
             },
           };

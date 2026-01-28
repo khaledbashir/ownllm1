@@ -25,7 +25,7 @@ class CohereLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.#log(
       `Initialized with model ${this.model}. ctx: ${this.promptWindowLimit()}`
     );
@@ -71,11 +71,11 @@ class CohereLLM {
   }
 
   static promptWindowLimit(modelName) {
-    return MODEL_MAP.get("cohere", modelName) ?? 4_096;
+    return MODEL_MAP.get("cohere", modelName) || 4_096;
   }
 
   promptWindowLimit() {
-    return MODEL_MAP.get("cohere", this.model) ?? 4_096;
+    return MODEL_MAP.get("cohere", this.model) || 4_096;
   }
 
   async isValidChatCompletionModel() {

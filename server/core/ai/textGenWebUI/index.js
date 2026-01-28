@@ -19,7 +19,7 @@ class TextGenWebUILLM {
     this.basePath = process.env.TEXT_GEN_WEB_UI_BASE_PATH;
     this.openai = new OpenAIApi({
       baseURL: this.basePath,
-      apiKey: process.env.TEXT_GEN_WEB_UI_API_KEY ?? null,
+      apiKey: process.env.TEXT_GEN_WEB_UI_API_KEY || null,
     });
     this.model = null;
     this.limits = {
@@ -28,7 +28,7 @@ class TextGenWebUILLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.log(`Inference API: ${this.basePath} Model: ${this.model}`);
   }

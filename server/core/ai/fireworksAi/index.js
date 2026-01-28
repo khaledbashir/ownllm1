@@ -24,7 +24,7 @@ class FireworksAiLLM {
     const { OpenAI: OpenAIApi } = require("openai");
     this.openai = new OpenAIApi({
       baseURL: "https://api.fireworks.ai/inference/v1",
-      apiKey: process.env.FIREWORKS_AI_LLM_API_KEY ?? null,
+      apiKey: process.env.FIREWORKS_AI_LLM_API_KEY || null,
     });
     this.model = modelPreference || process.env.FIREWORKS_AI_LLM_MODEL_PREF;
     this.limits = {
@@ -102,9 +102,9 @@ class FireworksAiLLM {
     const cacheModelPath = path.resolve(cacheFolder, "models.json");
     const availableModels = fs.existsSync(cacheModelPath)
       ? safeJsonParse(
-          fs.readFileSync(cacheModelPath, { encoding: "utf-8" }),
-          {}
-        )
+        fs.readFileSync(cacheModelPath, { encoding: "utf-8" }),
+        {}
+      )
       : {};
     return availableModels[modelName]?.maxLength || 4096;
   }
@@ -227,7 +227,7 @@ async function fireworksAiModels(providedApiKey = null) {
           name: model.id.split("/").pop(),
           organization: model.owned_by,
           subtype: model.type,
-          maxLength: model.context_length ?? 4096,
+          maxLength: model.context_length || 4096,
         };
       });
 

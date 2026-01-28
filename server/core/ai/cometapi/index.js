@@ -29,7 +29,7 @@ class CometApiLLM {
     this.basePath = "https://api.cometapi.com/v1";
     this.openai = new OpenAIApi({
       baseURL: this.basePath,
-      apiKey: process.env.COMETAPI_LLM_API_KEY ?? null,
+      apiKey: process.env.COMETAPI_LLM_API_KEY || null,
       defaultHeaders: {
         "HTTP-Referer": "https://anythingllm.com",
         "X-CometAPI-Source": "anythingllm",
@@ -43,7 +43,7 @@ class CometApiLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.timeout = this.#parseTimeout();
 
@@ -67,7 +67,7 @@ class CometApiLLM {
    */
   #parseTimeout() {
     this.log(
-      `CometAPI timeout is set to ${process.env.COMETAPI_LLM_TIMEOUT_MS ?? this.defaultTimeout}ms`
+      `CometAPI timeout is set to ${process.env.COMETAPI_LLM_TIMEOUT_MS || this.defaultTimeout}ms`
     );
     if (isNaN(Number(process.env.COMETAPI_LLM_TIMEOUT_MS)))
       return this.defaultTimeout;
@@ -131,9 +131,9 @@ class CometApiLLM {
     const cacheModelPath = path.resolve(cacheFolder, "models.json");
     const availableModels = fs.existsSync(cacheModelPath)
       ? safeJsonParse(
-          fs.readFileSync(cacheModelPath, { encoding: "utf-8" }),
-          {}
-        )
+        fs.readFileSync(cacheModelPath, { encoding: "utf-8" }),
+        {}
+      )
       : {};
     return availableModels[modelName]?.maxLength || 4096;
   }

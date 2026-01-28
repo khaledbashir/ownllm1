@@ -28,7 +28,7 @@ class DeepSeekLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.log(
       `Initialized ${this.model} with context window ${this.promptWindowLimit()}`
@@ -56,11 +56,11 @@ class DeepSeekLLM {
   }
 
   static promptWindowLimit(modelName) {
-    return MODEL_MAP.get("deepseek", modelName) ?? 8192;
+    return MODEL_MAP.get("deepseek", modelName) || 8192;
   }
 
   promptWindowLimit() {
-    return MODEL_MAP.get("deepseek", this.model) ?? 8192;
+    return MODEL_MAP.get("deepseek", this.model) || 8192;
   }
 
   async isValidChatCompletionModel(modelName = "") {
