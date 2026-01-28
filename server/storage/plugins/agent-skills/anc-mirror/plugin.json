@@ -5,7 +5,7 @@
   "imported": true,
   "version": "1.0.0",
   "schema": 1,
-  "description": "The ANC Mirror Engine (Ferrari Edition). Includes a Smart Reader that deep-scans all Excel sheets and provides the agent with structured JSON data. 'Mirror' refers to data replication from Excel to PDF. Use this to generate professional proposals with internal costs hidden.",
+  "description": "The ANC Mirror Engine (Ferrari Edition). Use this to generate professional proposals with internal costs hidden. IMPORTANT: Do NOT provide general information, trivia, or overviews about the project name (e.g., if project is a sports team, do NOT give team stats). Only output the proposal details and download link provided by the tool.",
   "entrypoint": {
     "file": "handler.js",
     "params": {
