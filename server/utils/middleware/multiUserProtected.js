@@ -24,13 +24,16 @@ function strictMultiUserRoleValid(allowedRoles = DEFAULT_ROLES) {
     }
 
     const multiUserMode =
-      response.locals?.multiUserMode ??
-      (await SystemSettings.isMultiUserMode());
+      (response.locals && response.locals.multiUserMode !== undefined)
+        ? response.locals.multiUserMode
+        : (await SystemSettings.isMultiUserMode());
     if (!multiUserMode) return response.sendStatus(401).end();
 
     const user =
-      response.locals?.user ?? (await userFromSession(request, response));
-    if (allowedRoles.includes(user?.role)) {
+      (response.locals && response.locals.user)
+        ? response.locals.user
+        : (await userFromSession(request, response));
+    if (allowedRoles.includes(user && user.role)) {
       next();
       return;
     }
@@ -74,7 +77,7 @@ function flexUserRoleValid(allowedRoles = DEFAULT_ROLES) {
       next();
       return;
     }
-    
+
     console.warn(`[AUTH] 401 Blocked in flexUserRoleValid. User ID: ${user ? user.id : 'null'}, Role: ${user ? user.role : 'null'}. Allowed: ${allowedRoles}. MUM: ${multiUserMode}`);
     return response.sendStatus(401).end();
   };

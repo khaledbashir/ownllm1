@@ -134,7 +134,7 @@ const WorkspaceThread = {
     const { WorkspaceChats } = require("./workspaceChats");
     const chatCount = await WorkspaceChats.count({
       workspaceId: workspace.id,
-      user_id: user?.id || null,
+      user_id: (user && user.id) ? user.id : null,
       thread_id: thread.id,
     });
     if (chatCount !== 1) return { renamed: false, thread };

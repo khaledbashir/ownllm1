@@ -228,7 +228,7 @@ class MetaGenerator {
             tag: "title",
             props: null,
             content:
-              customTitle ??
+              customTitle ||
               "AnythingLLM | Your personal LLM trained on anything",
           };
         }

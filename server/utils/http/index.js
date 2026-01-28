@@ -44,7 +44,7 @@ function makeJWTWithOrg(info = {}, expiry = "30d") {
 // as single-user mode with password is not a "user"
 async function userFromSession(request, response = null) {
   console.log("[userFromSession] Checking session...");
-  if (!!response && !!response.locals?.user) {
+  if (!!response && response.locals && response.locals.user) {
     console.log("[userFromSession] Found user in response.locals");
     return response.locals.user;
   }
@@ -62,12 +62,12 @@ async function userFromSession(request, response = null) {
   }
 
   const user = await User.get({ id: valid.id });
-  
+
   if (response) {
     response.locals.organizationId = valid.organizationId || null;
     response.locals.userRole = valid.role || null;
   }
-  
+
   console.log(`[userFromSession] Returning user: ${user ? user.id : 'null'}`);
   return user;
 }
@@ -82,7 +82,7 @@ function decodeJWT(jwtToken) {
 }
 
 function multiUserMode(response) {
-  return response?.locals?.multiUserMode;
+  return (response && response.locals) ? response.locals.multiUserMode : undefined;
 }
 
 function parseAuthHeader(headerValue = null, apiKey = null) {
@@ -97,18 +97,19 @@ function safeJsonParse(jsonString, fallback = null) {
 
   try {
     return JSON.parse(jsonString);
-  } catch {}
+  } catch { }
 
-  if (jsonString?.startsWith("[") || jsonString?.startsWith("{")) {
+  if (jsonString && (jsonString.startsWith("[") || jsonString.startsWith("{"))) {
     try {
       const repairedJson = jsonrepair(jsonString);
       return JSON.parse(repairedJson);
-    } catch {}
+    } catch { }
   }
 
   try {
-    return extract(jsonString)?.[0] || fallback;
-  } catch {}
+    const extracted = extract(jsonString);
+    return (extracted && extracted[0]) || fallback;
+  } catch { }
 
   return fallback;
 }
@@ -118,7 +119,7 @@ function isValidUrl(urlString = "") {
     const url = new URL(urlString);
     if (!["http:", "https:"].includes(url.protocol)) return false;
     return true;
-  } catch (e) {}
+  } catch (e) { }
   return false;
 }
 

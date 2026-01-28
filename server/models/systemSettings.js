@@ -61,7 +61,7 @@ const SystemSettings = {
 
     // Hub settings
     "hub_api_key",
-    
+
     // Custom Generic OpenAI Providers
     "customGenericProviders",
   ],
@@ -159,8 +159,8 @@ const SystemSettings = {
         // Validate each provider has required fields
         return JSON.stringify(
           providers.map((provider, index) => ({
-            id: provider.id || `custom_${Date.now()}_${index}`,
-            name: provider.name || `Custom Provider ${index + 1}`,
+            id: provider.id || "custom_" + Date.now() + "_" + index,
+            name: provider.name || "Custom Provider " + (index + 1),
             basePath: provider.baseUrl || provider.basePath || "", // Accept both field names
             apiKey: provider.apiKey || "",
             model: provider.defaultModel || provider.model || "", // Accept both field names
@@ -186,7 +186,7 @@ const SystemSettings = {
         return JSON.stringify(updatedConnections);
       } catch (e) {
         console.error(`Failed to merge connections`);
-        return JSON.stringify(existingConnections ?? []);
+        return JSON.stringify(existingConnections || []);
       }
     },
     experimental_live_file_sync: (update) => {
@@ -231,7 +231,7 @@ const SystemSettings = {
     const { hasVectorCachedFiles } = require("../utils/files");
     const llmProvider = process.env.LLM_PROVIDER;
     const vectorDB = process.env.VECTOR_DB;
-    const embeddingEngine = process.env.EMBEDDING_ENGINE ?? "native";
+    const embeddingEngine = process.env.EMBEDDING_ENGINE || "native";
     return {
       // --------------------------------------------------------
       // General Settings
@@ -299,7 +299,7 @@ const SystemSettings = {
       TTSElevenLabsVoiceModel: process.env.TTS_ELEVEN_LABS_VOICE_MODEL,
       // Piper TTS
       TTSPiperTTSVoiceModel:
-        process.env.TTS_PIPER_VOICE_MODEL ?? "en_US-hfc_female-medium",
+        process.env.TTS_PIPER_VOICE_MODEL || "en_US-hfc_female-medium",
       // OpenAI Generic TTS
       TTSOpenAICompatibleKey: !!process.env.TTS_OPEN_AI_COMPATIBLE_KEY,
       TTSOpenAICompatibleModel: process.env.TTS_OPEN_AI_COMPATIBLE_MODEL,
@@ -364,7 +364,8 @@ const SystemSettings = {
   },
   getValueOrFallback: async function (clause = {}, fallback = null) {
     try {
-      return (await this.get(clause))?.value ?? fallback;
+      const setting = await this.get(clause);
+      return (setting && setting.value !== undefined) ? setting.value : fallback;
     } catch (error) {
       console.error(error.message);
       return fallback;
@@ -441,7 +442,7 @@ const SystemSettings = {
   isMultiUserMode: async function () {
     try {
       const setting = await this.get({ label: "multi_user_mode" });
-      return setting?.value === "true";
+      return setting && setting.value === "true";
     } catch (error) {
       console.error(error.message);
       return false;
@@ -554,8 +555,8 @@ const SystemSettings = {
       OllamaLLMBasePath: process.env.OLLAMA_BASE_PATH,
       OllamaLLMModelPref: process.env.OLLAMA_MODEL_PREF,
       OllamaLLMTokenLimit: process.env.OLLAMA_MODEL_TOKEN_LIMIT || null,
-      OllamaLLMKeepAliveSeconds: process.env.OLLAMA_KEEP_ALIVE_TIMEOUT ?? 300,
-      OllamaLLMPerformanceMode: process.env.OLLAMA_PERFORMANCE_MODE ?? "base",
+      OllamaLLMKeepAliveSeconds: process.env.OLLAMA_KEEP_ALIVE_TIMEOUT || 300,
+      OllamaLLMPerformanceMode: process.env.OLLAMA_PERFORMANCE_MODE || "base",
 
       // Novita LLM Keys
       NovitaLLMApiKey: !!process.env.NOVITA_LLM_API_KEY,
@@ -668,7 +669,7 @@ const SystemSettings = {
       DellProAiStudioBasePath: process.env.DPAIS_LLM_BASE_PATH,
       DellProAiStudioModelPref: process.env.DPAIS_LLM_MODEL_PREF,
       DellProAiStudioTokenLimit:
-        process.env.DPAIS_LLM_MODEL_TOKEN_LIMIT ?? 4096,
+        process.env.DPAIS_LLM_MODEL_TOKEN_LIMIT || 4096,
 
       // CometAPI LLM Keys
       CometApiLLMApiKey: !!process.env.COMETAPI_LLM_API_KEY,
@@ -702,8 +703,8 @@ const SystemSettings = {
   getFeatureFlags: async function () {
     return {
       experimental_live_file_sync:
-        (await SystemSettings.get({ label: "experimental_live_file_sync" }))
-          ?.value === "enabled",
+        (await SystemSettings.get({ label: "experimental_live_file_sync" })) &&
+        (await SystemSettings.get({ label: "experimental_live_file_sync" })).value === "enabled",
     };
   },
 
@@ -739,7 +740,7 @@ const SystemSettings = {
       try {
         let url = new URL(process.env.SIMPLE_SSO_NO_LOGIN_REDIRECT);
         return url.toString();
-      } catch {}
+      } catch { }
 
       // if the no login redirect is not a valid URL or is not set, return null
       return null;

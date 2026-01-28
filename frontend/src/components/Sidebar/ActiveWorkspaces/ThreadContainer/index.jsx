@@ -117,10 +117,10 @@ export default function ThreadContainer({ workspace }) {
     );
   }
 
-  const activeThreadIdx = !!threads.find(
+  const activeThreadIdx = (threads || []).find(
     (thread) => thread?.slug === threadSlug
   )
-    ? threads.findIndex((thread) => thread?.slug === threadSlug) + 1
+    ? (threads || []).findIndex((thread) => thread?.slug === threadSlug) + 1
     : 0;
 
   return (
