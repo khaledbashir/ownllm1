@@ -1616,55 +1616,6 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
   useImperativeHandle(ref, () => ({
     isReady: () => isReady,
 
-    insertPricingTableWithData: (tableData) => {
-      if (!editorRef.current?.doc) {
-        console.warn("Editor not ready for insertPricingTableWithData");
-        return;
-      }
-      try {
-        const doc = editorRef.current.doc;
-
-        // 1. Get the current note block (parent)
-        let noteBlockId = null;
-        // Try to find the last note block explicitly
-        // If selection exists, maybe use that? For now, stick to last note for consistency.
-        const noteBlocks = doc.getBlocksByFlavour("affine:note");
-        if (noteBlocks && noteBlocks.length > 0) {
-          noteBlockId = noteBlocks[noteBlocks.length - 1].id;
-        }
-
-        if (!noteBlockId) {
-          console.error("No note block found to insert pricing table");
-          toast.error("No valid note block found. Please create a note first.");
-          return;
-        }
-
-        // 2. Insert the block safely
-        doc.transact(() => {
-          const blockId = doc.addBlock(
-            "affine:embed-pricing-table",
-            {
-              title: tableData.title,
-              currency: tableData.currency,
-              rows: tableData.rows,
-              discountPercent: tableData.discountPercent || 0,
-              gstPercent: tableData.gstPercent || 10,
-            },
-            noteBlockId
-          );
-
-          console.log(`✅ Inserted pricing table block: ${blockId}`);
-        });
-
-        // 3. Single undo step
-        if (typeof doc.captureSync === "function") {
-          doc.captureSync();
-        }
-      } catch (e) {
-        console.error("Failed to insert pricing table:", e);
-        toast.error("Failed to insert pricing table");
-      }
-    },
 
     // === Programmatic Control API (SiYuan-like) ===
 
@@ -1795,12 +1746,12 @@ const BlockSuiteEditor = forwardRef(function BlockSuiteEditor(
           type: col.type || "text",
           data: col.options
             ? {
-                options: col.options.map((o) => ({
-                  id: window.crypto.randomUUID(),
-                  value: o,
-                  color: "var(--affine-tag-blue)",
-                })),
-              }
+              options: col.options.map((o) => ({
+                id: window.crypto.randomUUID(),
+                value: o,
+                color: "var(--affine-tag-blue)",
+              })),
+            }
             : {},
         }));
 
@@ -2927,13 +2878,13 @@ ${activeTemplateFooter}
       const pdfOptions =
         workspaceDetails?.activeLogicModule === "anc"
           ? {
-              preset: "pixelPerfect",
-              preferCSSPageSize: true,
-              // Keep margins in CSS for pixel-perfect templates.
-              margin: { top: "0", bottom: "0", left: "0", right: "0" },
-              format: "Letter",
-              scale: 1,
-            }
+            preset: "pixelPerfect",
+            preferCSSPageSize: true,
+            // Keep margins in CSS for pixel-perfect templates.
+            margin: { top: "0", bottom: "0", left: "0", right: "0" },
+            format: "Letter",
+            scale: 1,
+          }
           : {};
 
       const result = await WorkspaceThread.exportPdf(
@@ -3268,7 +3219,7 @@ ${activeTemplateFooter}
       if (result.success) {
         toast.success(
           result.message ||
-            "Doc embedded successfully! AI can now retrieve this content."
+          "Doc embedded successfully! AI can now retrieve this content."
         );
       } else {
         toast.error(result.error || "Failed to embed doc");
@@ -3875,7 +3826,7 @@ const serializeDocToHtml = async (doc, { brandColor = "#2563eb" } = {}) => {
             if (Array.isArray(value)) {
               return value.map(toPlain);
             }
-          } catch {}
+          } catch { }
           return value;
         };
 
