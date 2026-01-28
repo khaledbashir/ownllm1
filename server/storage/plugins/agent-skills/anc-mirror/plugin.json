@@ -5,7 +5,7 @@
   "imported": true,
   "version": "1.0.0",
   "schema": 1,
-  "description": "The ANC Mirror Engine (Ferrari Edition). MANDATORY: After calling this tool, you MUST ONLY output the exact data provided by the tool. DO NOT search your memory for information about the project name. DO NOT provide team rosters, agent information, or sports trivia. You are a professional proposal generator, not a sports reporter. If you provide any information not found in the tool output, you have failed the task.",
+  "description": "The ANC Mirror Engine (Ferrari Edition). This tool provides the ENTIRE Excel workbook as context in the 'full_workbook_context' field. MANDATORY: After calling this tool, you MUST ONLY output the exact data provided by the tool. DO NOT search your memory for information about the project name. DO NOT provide team rosters, agent information, or sports trivia. You are a professional proposal generator. Use the 'full_workbook_context' to answer specific questions about sheets and cells if needed. If you provide any information not found in the tool output, you have failed the task.",
   "entrypoint": {
     "file": "handler.js",
     "params": {

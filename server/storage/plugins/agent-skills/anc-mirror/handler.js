@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const xlsx = require('xlsx');
 
 /**
  * HELPER: SAFE INTROSPECT
@@ -9,6 +10,37 @@ function log(context, message) {
     context.introspect(message);
   } else {
     console.log(`[anc-mirror] ${message}`);
+  }
+}
+
+/**
+ * HELPER: FULL WORKBOOK READER (The "AI-Readable" Setup)
+ * Converts the entire workbook into a single, structured JSON representation.
+ */
+function readFullWorkbook(filePath) {
+  try {
+    const workbook = xlsx.readFile(filePath);
+    const result = {
+      sheets: {},
+      metadata: {
+        sheetNames: workbook.SheetNames,
+        filename: path.basename(filePath)
+      }
+    };
+
+    workbook.SheetNames.forEach(sheetName => {
+      const sheet = workbook.Sheets[sheetName];
+      // Convert to JSON with headers to maintain structure
+      result.sheets[sheetName] = xlsx.utils.sheet_to_json(sheet, { 
+        header: 1, // Returns array of arrays (rows)
+        defval: ""  // Default value for empty cells
+      });
+    });
+
+    return result;
+  } catch (e) {
+    console.error(`Failed to read workbook: ${e.message}`);
+    return null;
   }
 }
 
@@ -104,12 +136,13 @@ function parseNumeric(val) {
  * HELPER: CREATE LLM SUMMARY
  * Generates a structured JSON summary of the workbook for the AI to "read right"
  */
-function createLLMSummary(workbook, activeSheetName, extractedData) {
+function createLLMSummary(workbook, activeSheetName, extractedData, fullWorkbookData = null) {
   return {
     workbook_overview: {
       sheets_found: Object.keys(workbook),
       active_sheet_used: activeSheetName
     },
+    full_workbook_context: fullWorkbookData, // This is the "AI-Readable" blob
     project_summary: {
       total_displays: extractedData.displays.length,
       financials: {
@@ -403,42 +436,79 @@ module.exports.runtime = {
   handler: async function ({ filename, project_name = "PROJECT", client_name = "Valued Client" }) {
     try {
       const directUploadsPath = '/app/server/storage/direct-uploads';
+      const hotdirPath = '/app/collector/hotdir';
+      const documentsPath = '/app/server/storage/documents';
+      
       let targetFolder = null;
+      let originalFile = null;
 
-      // 1. AUTO-DETECT FILE
-      if (filename) {
-        log(this, `🔍 Searching for attached file: ${filename}...`);
-        const folders = fs.readdirSync(directUploadsPath);
-        targetFolder = folders.find(f => f.startsWith(filename) && fs.lstatSync(path.join(directUploadsPath, f)).isDirectory());
+      // 1. AUTO-DETECT FILE (Parsed Folder and Original XLSX)
+      const scanForFiles = () => {
+        const folders = fs.existsSync(directUploadsPath) ? fs.readdirSync(directUploadsPath) : [];
+        const hotdirFiles = fs.existsSync(hotdirPath) ? fs.readdirSync(hotdirPath) : [];
+        const docFiles = fs.existsSync(documentsPath) ? fs.readdirSync(documentsPath) : [];
+
+        // Try to find the original XLSX first (The "AI-Readable" priority)
+        let foundXlsx = null;
+        if (filename) {
+          foundXlsx = [...hotdirFiles, ...docFiles].find(f => f.toLowerCase() === filename.toLowerCase() && f.endsWith('.xlsx'));
+        }
+        
+        if (!foundXlsx) {
+          foundXlsx = [...hotdirFiles, ...docFiles]
+            .filter(f => f.endsWith('.xlsx'))
+            .map(f => {
+              const p = hotdirFiles.includes(f) ? path.join(hotdirPath, f) : path.join(documentsPath, f);
+              return { name: f, path: p, time: fs.statSync(p).mtime.getTime() };
+            })
+            .sort((a, b) => b.time - a.time)[0]?.path;
+        } else {
+          foundXlsx = hotdirFiles.includes(foundXlsx) ? path.join(hotdirPath, foundXlsx) : path.join(documentsPath, foundXlsx);
+        }
+
+        // Also find the parsed folder for fallback
+        let foundFolder = null;
+        if (filename) {
+          foundFolder = folders.find(f => f.startsWith(filename) && fs.lstatSync(path.join(directUploadsPath, f)).isDirectory());
+        }
+        if (!foundFolder) {
+          foundFolder = folders
+            .filter(f => f.includes('.xlsx-') && fs.lstatSync(path.join(directUploadsPath, f)).isDirectory())
+            .map(f => ({ name: f, time: fs.statSync(path.join(directUploadsPath, f)).mtime.getTime() }))
+            .sort((a, b) => b.time - a.time)[0]?.name;
+        }
+
+        return { original: foundXlsx, parsed: foundFolder ? path.join(directUploadsPath, foundFolder) : null };
+      };
+
+      const detection = scanForFiles();
+      originalFile = detection.original;
+      const folderPath = detection.parsed;
+
+      if (!originalFile && !folderPath) {
+        return "❌ Error: No Excel attachment found. Please attach the cost analysis Excel file first.";
       }
 
-      if (!targetFolder) {
-        log(this, "📂 No filename provided or found. Searching for the most recent Excel attachment...");
-        const folders = fs.readdirSync(directUploadsPath)
-          .filter(f => f.includes('.xlsx-') && fs.lstatSync(path.join(directUploadsPath, f)).isDirectory())
-          .map(f => ({
-            name: f,
-            time: fs.statSync(path.join(directUploadsPath, f)).mtime.getTime()
-          }))
-          .sort((a, b) => b.time - a.time);
+      // 2. READ WORKBOOK DATA
+      let workbook = {};
+      let fullWorkbookData = null;
 
-        if (folders.length > 0) {
-          targetFolder = folders[0].name;
-          log(this, `✅ Found latest attachment: ${targetFolder}`);
+      if (originalFile) {
+        log(this, `✅ Found original Excel: ${path.basename(originalFile)}`);
+        fullWorkbookData = readFullWorkbook(originalFile);
+        if (fullWorkbookData) {
+          workbook = fullWorkbookData.sheets;
         }
       }
 
-      if (!targetFolder) {
-        return "❌ Error: No Excel attachment found in this workspace. Please attach the cost analysis Excel file first.";
+      // Fallback to parsed folder if xlsx read failed or not found
+      if (Object.keys(workbook).length === 0 && folderPath) {
+        log(this, "📊 Falling back to parsed JSON sheets...");
+        workbook = deepScanWorkbook(folderPath);
       }
 
-      const folderPath = path.join(directUploadsPath, targetFolder);
-      
-      // 2. DEEP SCAN WORKBOOK (The New Attachment Engine)
-      log(this, "📊 Deep Scanning Workbook... Extracting structured data...");
-      const workbook = deepScanWorkbook(folderPath);
       if (Object.keys(workbook).length === 0) {
-        return `❌ Error: Could not read any sheet data in ${targetFolder}. Ensure the file is a valid Excel/CSV.`;
+        return `❌ Error: Could not read any sheet data. Ensure the file is a valid Excel/CSV.`;
       }
 
       // 3. FIND BEST DATA SOURCE
@@ -454,9 +524,9 @@ module.exports.runtime = {
         return `❌ **EXTRACTION FAILED**\n\nCould not find any display items in sheet "${activeSheetName}".\n\n**Sheets scanned:** ${sheetsFound}\n\n**Warnings:**\n${extractedData.warnings.join('\n')}`;
       }
 
-      // 5. CREATE LLM-OPTIMIZED SUMMARY (So the AI can "read right")
-      const llmSummary = createLLMSummary(workbook, activeSheetName, extractedData);
-      log(this, "🧠 Context injection successful. AI is now 'Reading Right'.");
+      // 5. CREATE LLM-OPTIMIZED SUMMARY (The "AI-Readable" Context)
+      const llmSummary = createLLMSummary(workbook, activeSheetName, extractedData, fullWorkbookData);
+      log(this, "🧠 Full context injection successful. AI is now 'Reading Right'.");
 
       // 6. BUILD PDF
       log(this, "🎨 Applying ANC Branding... Generating PDF...");
@@ -477,13 +547,23 @@ module.exports.runtime = {
       const outputFileName = `ANC_Proposal_${project_name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
       const outputPath = path.join(outputsDir, outputFileName);
       
-      // Load Work Sans from the Natalia project storage
-      const fonts = {
+      // Font detection and fallback
+      const fontPath = '/app/server/public/fonts';
+      const hasWorkSans = fs.existsSync(path.join(fontPath, 'WorkSans-Regular.ttf'));
+
+      const fonts = hasWorkSans ? {
         WorkSans: {
-          normal: '/app/server/public/fonts/WorkSans-Regular.ttf',
-          bold: '/app/server/public/fonts/WorkSans-Bold.ttf',
-          italics: '/app/server/public/fonts/WorkSans-Regular.ttf',
-          bolditalics: '/app/server/public/fonts/WorkSans-Bold.ttf'
+          normal: path.join(fontPath, 'WorkSans-Regular.ttf'),
+          bold: path.join(fontPath, 'WorkSans-Bold.ttf'),
+          italics: path.join(fontPath, 'WorkSans-Regular.ttf'),
+          bolditalics: path.join(fontPath, 'WorkSans-Bold.ttf')
+        }
+      } : {
+        WorkSans: {
+          normal: 'Helvetica',
+          bold: 'Helvetica-Bold',
+          italics: 'Helvetica-Oblique',
+          bolditalics: 'Helvetica-BoldOblique'
         }
       };
 
