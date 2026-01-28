@@ -154,8 +154,8 @@ const QDrant = {
           const { chunks } = cacheResult;
           const documentVectors = [];
           vectorDimension =
-            chunks[0][0]?.vector?.length ??
-            chunks[0][0]?.values?.length ??
+            (chunks[0][0] && chunks[0][0].vector && chunks[0][0].vector.length) ||
+            (chunks[0][0] && chunks[0][0].values && chunks[0][0].values.length) ||
             null;
 
           const collection = await this.getOrCreateCollection(

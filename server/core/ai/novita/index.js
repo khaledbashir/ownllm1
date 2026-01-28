@@ -29,7 +29,7 @@ class NovitaLLM {
     this.basePath = "https://api.novita.ai/v3/openai";
     this.openai = new OpenAIApi({
       baseURL: this.basePath,
-      apiKey: process.env.NOVITA_LLM_API_KEY ?? null,
+      apiKey: process.env.NOVITA_LLM_API_KEY || null,
       defaultHeaders: {
         "HTTP-Referer": "https://anythingllm.com",
         "X-Novita-Source": "anythingllm",
@@ -45,7 +45,7 @@ class NovitaLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.timeout = this.#parseTimeout();
 
@@ -69,7 +69,7 @@ class NovitaLLM {
    */
   #parseTimeout() {
     this.log(
-      `Novita timeout is set to ${process.env.NOVITA_LLM_TIMEOUT_MS ?? this.defaultTimeout}ms`
+      `Novita timeout is set to ${process.env.NOVITA_LLM_TIMEOUT_MS || this.defaultTimeout}ms`
     );
     if (isNaN(Number(process.env.NOVITA_LLM_TIMEOUT_MS)))
       return this.defaultTimeout;
@@ -131,9 +131,9 @@ class NovitaLLM {
     const cacheModelPath = path.resolve(cacheFolder, "models.json");
     const availableModels = fs.existsSync(cacheModelPath)
       ? safeJsonParse(
-          fs.readFileSync(cacheModelPath, { encoding: "utf-8" }),
-          {}
-        )
+        fs.readFileSync(cacheModelPath, { encoding: "utf-8" }),
+        {}
+      )
       : {};
     return availableModels[modelName]?.maxLength || 4096;
   }

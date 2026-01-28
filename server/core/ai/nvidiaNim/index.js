@@ -26,7 +26,7 @@ class NvidiaNimLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.#log(
       `Loaded with model: ${this.model} with context window: ${this.promptWindowLimit()}`

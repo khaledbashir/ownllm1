@@ -49,7 +49,7 @@ class GeminiLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
 
     if (!fs.existsSync(cacheFolder))
@@ -108,7 +108,7 @@ class GeminiLLM {
     try {
       const cacheModelPath = path.resolve(cacheFolder, "models.json");
       if (!fs.existsSync(cacheModelPath))
-        return MODEL_MAP.get("gemini", modelName) ?? 30_720;
+        return MODEL_MAP.get("gemini", modelName) || 30_720;
 
       const models = safeJsonParse(fs.readFileSync(cacheModelPath));
       const model = models.find((model) => model.id === modelName);
@@ -119,14 +119,14 @@ class GeminiLLM {
       return model.contextWindow;
     } catch (e) {
       console.error(`GeminiLLM:promptWindowLimit`, e.message);
-      return MODEL_MAP.get("gemini", modelName) ?? 30_720;
+      return MODEL_MAP.get("gemini", modelName) || 30_720;
     }
   }
 
   promptWindowLimit() {
     try {
       if (!fs.existsSync(this.cacheModelPath))
-        return MODEL_MAP.get("gemini", this.model) ?? 30_720;
+        return MODEL_MAP.get("gemini", this.model) || 30_720;
       const models = safeJsonParse(fs.readFileSync(this.cacheModelPath));
       const model = models.find((model) => model.id === this.model);
       if (!model)
@@ -136,7 +136,7 @@ class GeminiLLM {
       return model.contextWindow;
     } catch (e) {
       console.error(`GeminiLLM:promptWindowLimit`, e.message);
-      return MODEL_MAP.get("gemini", this.model) ?? 30_720;
+      return MODEL_MAP.get("gemini", this.model) || 30_720;
     }
   }
 
@@ -198,7 +198,7 @@ class GeminiLLM {
         .then((res) => res.json())
         .then((data) => {
           if (data.error) throw new Error(data.error.message);
-          return data.models ?? [];
+          return data.models || [];
         })
         .then((models) => {
           return models
@@ -246,7 +246,7 @@ class GeminiLLM {
         .then((res) => res.json())
         .then((data) => {
           if (data.error) throw new Error(data.error.message);
-          return data.models ?? [];
+          return data.models || [];
         })
         .then((models) => {
           return models

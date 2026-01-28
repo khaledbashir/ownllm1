@@ -24,7 +24,7 @@ class ZAiLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.log(
       `Initialized ${this.model} with context window ${this.promptWindowLimit()}`
@@ -52,11 +52,11 @@ class ZAiLLM {
   }
 
   static promptWindowLimit(modelName) {
-    return MODEL_MAP.get("zai", modelName) ?? 131072;
+    return MODEL_MAP.get("zai", modelName) || 131072;
   }
 
   promptWindowLimit() {
-    return MODEL_MAP.get("zai", this.model) ?? 131072;
+    return MODEL_MAP.get("zai", this.model) || 131072;
   }
 
   async isValidChatCompletionModel(modelName = "") {

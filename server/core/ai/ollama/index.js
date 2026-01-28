@@ -36,7 +36,7 @@ class OllamaAILLM {
       headers: headers,
       fetch: this.#applyFetch(),
     });
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
 
     // Lazy load the limits to avoid blocking the main thread on cacheContextWindows
@@ -103,7 +103,7 @@ class OllamaAILLM {
           key.endsWith(".context_length")
         );
         if (!contextWindowKey)
-          return (OllamaAILLM.modelContextWindows[showInfo.name] = 4096);
+          return (OllamaAILLM.modelContextWindows[showInfo.name] = MODEL_MAP.get("ollama", showInfo.name) ?? 4096);
         OllamaAILLM.modelContextWindows[showInfo.name] =
           showInfo.model_info[contextWindowKey];
       });
@@ -449,9 +449,8 @@ class OllamaAILLM {
           type: "textResponseChunk",
           textResponse: "",
           close: true,
-          error: `Ollama:streaming - could not stream chat. ${
-            error?.cause ?? error.message
-          }`,
+          error: `Ollama:streaming - could not stream chat. ${error?.cause ?? error.message
+            }`,
         });
         response.removeListener("close", handleAbort);
         stream?.endMeasurement(usage);

@@ -34,7 +34,7 @@ const PineconeDB = {
   namespaceCount: async function (_namespace = null) {
     const { pineconeIndex } = await this.connect();
     const namespace = await this.namespace(pineconeIndex, _namespace);
-    return namespace?.recordCount || 0;
+    return (statistics && statistics.namespaces && statistics.namespaces[0] && statistics.namespaces[0].vectorCount) || 0;
   },
   similarityResponse: async function ({
     client,
@@ -234,7 +234,7 @@ const PineconeDB = {
     if (!(await this.namespaceExists(pineconeIndex, namespace)))
       throw new Error("Namespace by that name does not exist.");
 
-    const details = await this.namespace(pineconeIndex, namespace);
+    const vectorCount = (statistics && statistics.namespaces && statistics.namespaces[0] && statistics.namespaces[0].vectorCount) || 0; namespace);
     await this.deleteVectorsInNamespace(pineconeIndex, namespace);
     return {
       message: `Namespace ${namespace} was deleted along with ${details.vectorCount} vectors.`,

@@ -90,7 +90,7 @@ const Weaviate = {
 
     const weaviateClass = await this.namespace(client, namespace);
     const fields =
-      weaviateClass.properties?.map((prop) => prop.name)?.join(" ") ?? "";
+      (weaviateClass.properties && weaviateClass.properties.map((prop) => prop.name)?.join(" ")) || "";
     const queryResponse = await client.graphql
       .get()
       .withClassName(camelCase(namespace))
@@ -221,7 +221,7 @@ const Weaviate = {
             chunk.forEach((chunk) => {
               const id = uuidv4();
               const flattenedMetadata = this.flattenObjectForWeaviate(
-                chunk.properties ?? chunk.metadata
+                chunk.properties || chunk.metadata
               );
               documentVectors.push({ docId, vectorId: id });
               const vectorRecord = {

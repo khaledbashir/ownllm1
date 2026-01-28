@@ -83,7 +83,7 @@
  */
 function getVectorDbClass(getExactly = null) {
   const { LanceDb } = require("../../core/vector/lance");
-  const vectorSelection = getExactly ?? process.env.VECTOR_DB ?? "lancedb";
+  const vectorSelection = getExactly || process.env.VECTOR_DB || "lancedb";
   switch (vectorSelection) {
     case "pinecone":
       const { Pinecone } = require("../../core/vector/pinecone");
@@ -128,7 +128,7 @@ function getVectorDbClass(getExactly = null) {
  * @returns {BaseLLMProvider}
  */
 function getLLMProvider({ provider = null, model = null, customProviderConfig = null } = {}) {
-  const LLMSelection = provider ?? process.env.LLM_PROVIDER ?? "openai";
+  const LLMSelection = provider || process.env.LLM_PROVIDER || "openai";
   const embedder = getEmbeddingEngineSelection();
 
   // If custom provider config is provided and provider is custom, use that config

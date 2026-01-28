@@ -34,7 +34,7 @@ class GiteeAILLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
 
     if (!fs.existsSync(cacheFolder))
@@ -359,11 +359,11 @@ async function giteeAiModels() {
       const validModels = {};
       models.forEach(
         (model) =>
-          (validModels[model.id] = {
-            id: model.id,
-            name: model.id,
-            organization: model.owned_by,
-          })
+        (validModels[model.id] = {
+          id: model.id,
+          name: model.id,
+          organization: model.owned_by,
+        })
       );
       // Cache all response information
       if (!fs.existsSync(cacheFolder))

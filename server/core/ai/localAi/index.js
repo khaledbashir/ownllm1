@@ -15,7 +15,7 @@ class LocalAiLLM {
     const { OpenAI: OpenAIApi } = require("openai");
     this.openai = new OpenAIApi({
       baseURL: process.env.LOCAL_AI_BASE_PATH,
-      apiKey: process.env.LOCAL_AI_API_KEY ?? null,
+      apiKey: process.env.LOCAL_AI_API_KEY || null,
     });
     this.model = modelPreference || process.env.LOCAL_AI_MODEL_PREF;
     this.limits = {
@@ -24,7 +24,7 @@ class LocalAiLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
   }
 
@@ -94,11 +94,11 @@ class LocalAiLLM {
   #parseReasoningFromResponse({ message }) {
     let textResponse = message?.content;
     // Support multiple reasoning field formats from different AI providers
-    const reasoningContent = 
+    const reasoningContent =
       message?.reasoning_content || // DeepSeek, GiteeAI format
       message?.reasoning ||        // OpenRouter format  
       message?.thinking;           // Ollama format
-    
+
     if (!!reasoningContent && reasoningContent.trim().length > 0)
       textResponse = `<think>${reasoningContent}</think>${textResponse}`;
     return textResponse;

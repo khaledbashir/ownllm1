@@ -24,7 +24,7 @@ class GroqLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
   }
 
@@ -49,7 +49,7 @@ class GroqLLM {
   }
 
   static promptWindowLimit(modelName) {
-    return MODEL_MAP.get("groq", modelName) ?? 8192;
+    return MODEL_MAP.get("groq", modelName) || 8192;
   }
 
   promptWindowLimit() {

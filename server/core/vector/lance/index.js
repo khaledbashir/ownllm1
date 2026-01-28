@@ -52,7 +52,8 @@ const LanceDb = {
     if (!exists) return 0;
 
     const table = await client.openTable(_namespace);
-    return (await table.countRows()) || 0;
+    const tableInfo = await table.countRows(); // Assuming tableInfo is meant to be the result of countRows()
+    return (tableInfo && tableInfo.numRows) || 0;
   },
   /**
    * Performs a SimilaritySearch + Reranking on a namespace.
@@ -219,7 +220,8 @@ const LanceDb = {
     if (hasNamespace) {
       const collection = await client.openTable(namespace);
       await collection.add(data);
-      return true;
+      const tableInfo = await collection.countRows(); // Assuming tableInfo is meant to be the result of countRows()
+      return (tableInfo && tableInfo.numRows) || 0;
     }
 
     await client.createTable(namespace, data);
@@ -264,6 +266,8 @@ const LanceDb = {
 
     const { DocumentVectors } = require("../../../models/vectors");
     const table = await client.openTable(namespace);
+    const tableInfo = await table.countRows(); // Assuming tableInfo is meant to be the result of countRows()
+    const vectorCount = (tableInfo && tableInfo.numRows) || 0;
     const vectorIds = (await DocumentVectors.where({ docId })).map(
       (record) => record.vectorId
     );

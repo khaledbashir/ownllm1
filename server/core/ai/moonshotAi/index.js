@@ -29,7 +29,7 @@ class MoonshotAiLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.log(
       `Initialized ${this.model} with context window ${this.promptWindowLimit()}`
@@ -79,7 +79,7 @@ class MoonshotAiLLM {
   }
 
   promptWindowLimit() {
-    return MODEL_MAP.get("moonshot", this.model) ?? 8_192;
+    return MODEL_MAP.get("moonshot", this.model) || 8_192;
   }
 
   constructPrompt({

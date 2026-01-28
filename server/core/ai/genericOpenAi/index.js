@@ -14,10 +14,10 @@ const { MODEL_MAP } = require("../modelMap");
 class GenericOpenAiLLM {
   constructor(embedder = null, modelPreference = null, customProviderConfig = null) {
     const { OpenAI: OpenAIApi } = require("openai");
-    
+
     // Use custom provider config if provided, otherwise use environment variables
     const basePath = customProviderConfig?.basePath || process.env.GENERIC_OPEN_AI_BASE_PATH;
-    const apiKey = customProviderConfig?.apiKey || process.env.GENERIC_OPEN_AI_API_KEY ?? null;
+    const apiKey = (customProviderConfig && customProviderConfig.apiKey) || process.env.GENERIC_OPEN_AI_API_KEY || null;
     const maxTokens = customProviderConfig?.maxTokens || process.env.GENERIC_OPEN_AI_MAX_TOKENS;
     const streamingDisabled = customProviderConfig?.streamingDisabled || process.env.GENERIC_OPENAI_STREAMING_DISABLED === "true";
 
@@ -35,7 +35,7 @@ class GenericOpenAiLLM {
         "User-Agent": getAnythingLLMUserAgent(),
       },
     });
-    this.model = modelPreference ?? customProviderConfig?.model ?? process.env.GENERIC_OPEN_AI_MODEL_PREF ?? null;
+    this.model = modelPreference || (customProviderConfig && customProviderConfig.model) || process.env.GENERIC_OPEN_AI_MODEL_PREF || null;
     this.maxTokens = maxTokens
       ? toValidNumber(maxTokens, 1024)
       : 1024;
@@ -48,7 +48,7 @@ class GenericOpenAiLLM {
     };
 
     this.customConfig = customProviderConfig;
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.log(`Inference API: ${this.basePath} Model: ${this.model}`);
   }

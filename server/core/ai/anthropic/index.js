@@ -32,7 +32,7 @@ class AnthropicLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.log(
       `Initialized with ${this.model}. Cache ${this.cacheControl ? `enabled (${this.cacheControl.ttl})` : "disabled"}`
@@ -48,11 +48,11 @@ class AnthropicLLM {
   }
 
   static promptWindowLimit(modelName) {
-    return MODEL_MAP.get("anthropic", modelName) ?? 100_000;
+    return MODEL_MAP.get("anthropic", modelName) || 100_000;
   }
 
   promptWindowLimit() {
-    return MODEL_MAP.get("anthropic", this.model) ?? 100_000;
+    return MODEL_MAP.get("anthropic", this.model) || 100_000;
   }
 
   isValidChatCompletionModel(_modelName = "") {
@@ -156,7 +156,7 @@ class AnthropicLLM {
           max_tokens: 4096,
           system: this.#buildSystemPrompt(systemContent),
           messages: messages.slice(1), // Pop off the system message
-          temperature: Number(temperature ?? this.defaultTemp),
+          temperature: Number(temperature || this.defaultTemp),
         })
       );
 
@@ -187,7 +187,7 @@ class AnthropicLLM {
         max_tokens: 4096,
         system: this.#buildSystemPrompt(systemContent),
         messages: messages.slice(1), // Pop off the system message
-        temperature: Number(temperature ?? this.defaultTemp),
+        temperature: Number(temperature || this.defaultTemp),
       }),
       messages,
       false
@@ -226,9 +226,8 @@ class AnthropicLLM {
         const parseErrorMsg = (event) => {
           const error = event?.error?.error;
           if (!!error)
-            return `Anthropic Error:${error?.type || "unknown"} ${
-              error?.message || "unknown error."
-            }`;
+            return `Anthropic Error:${error?.type || "unknown"} ${error?.message || "unknown error."
+              }`;
           return event.message;
         };
 

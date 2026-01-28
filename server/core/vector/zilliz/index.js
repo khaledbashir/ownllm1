@@ -53,7 +53,7 @@ const Zilliz = {
       const statistics = await client.getCollectionStatistics({
         collection_name: this.normalize(collection_name),
       });
-      return Number(acc) + Number(statistics?.data?.row_count ?? 0);
+      return Number(acc) + Number((statistics && statistics.data && statistics.data.row_count) || 0);
     }, 0);
     return total;
   },
@@ -62,7 +62,7 @@ const Zilliz = {
     const statistics = await client.getCollectionStatistics({
       collection_name: this.normalize(_namespace),
     });
-    return Number(statistics?.data?.row_count ?? 0);
+    return Number((statistics && statistics.data && statistics.data.row_count) || 0);
   },
   namespace: async function (client, namespace = null) {
     if (!namespace) throw new Error("No namespace value provided.");
@@ -378,7 +378,7 @@ const Zilliz = {
 
     const statistics = await this.namespace(client, namespace);
     await this.deleteVectorsInNamespace(client, namespace);
-    const vectorCount = Number(statistics?.data?.row_count ?? 0);
+    const vectorCount = Number((statistics && statistics.data && statistics.data.row_count) || 0);
     return {
       message: `Namespace ${namespace} was deleted along with ${vectorCount} vectors.`,
     };

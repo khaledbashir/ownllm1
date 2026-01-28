@@ -16,7 +16,7 @@ class MistralLLM {
     const { OpenAI: OpenAIApi } = require("openai");
     this.openai = new OpenAIApi({
       baseURL: "https://api.mistral.ai/v1",
-      apiKey: process.env.MISTRAL_API_KEY ?? null,
+      apiKey: process.env.MISTRAL_API_KEY || null,
     });
     this.model =
       modelPreference || process.env.MISTRAL_MODEL_PREF || "mistral-tiny";
@@ -26,7 +26,7 @@ class MistralLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.0;
     this.log("Initialized with model:", this.model);
   }

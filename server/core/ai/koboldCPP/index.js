@@ -23,7 +23,7 @@ class KoboldCPPLLM {
       baseURL: this.basePath,
       apiKey: null,
     });
-    this.model = modelPreference ?? process.env.KOBOLD_CPP_MODEL_PREF ?? null;
+    this.model = modelPreference || process.env.KOBOLD_CPP_MODEL_PREF || null;
     if (!this.model) throw new Error("KoboldCPP must have a valid model set.");
     this.limits = {
       history: this.promptWindowLimit() * 0.15,
@@ -31,7 +31,7 @@ class KoboldCPPLLM {
       user: this.promptWindowLimit() * 0.7,
     };
 
-    this.embedder = embedder ?? new NativeEmbedder();
+    this.embedder = embedder || new NativeEmbedder();
     this.defaultTemp = 0.7;
     this.maxTokens = Number(process.env.KOBOLD_CPP_MAX_TOKENS) || 2048;
     this.log(`Inference API: ${this.basePath} Model: ${this.model}`);
