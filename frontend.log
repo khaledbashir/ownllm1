@@ -1,0 +1,8 @@
+yarn run v1.22.22
+$ cd frontend && yarn dev
+$ cross-env NODE_ENV=development vite --debug --host=0.0.0.0 --port 4000
+/bin/sh: 1: cross-env: not found
+error Command failed with exit code 127.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+error Command failed with exit code 127.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
